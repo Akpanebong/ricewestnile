@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.3;
+        margin: 0; padding: 8px;
+    }
+
+    .container { border: 1px solid #333; padding: 8px; }
+
+    .logo { width:120px; }
+
+    .header {
+        width: 100%;
+        border: 0;
+        margin-bottom: 10px;
+    }
+
+    .header td {
+        vertical-align: middle;
+    }
+
+    .title {
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    .subtitle {
+        font-size: 10px;
+    }
+
+    table.main {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    table.main td, table.main th {
+        border: 1px solid #000;
+        padding: 5px;
+        vertical-align: top;
+        word-wrap: break-word;
+    }
+
+    table.main td:first-child { width: 35%; }
+    table.main td:last-child { width: 65%; }
+
+    .label {
+        font-weight: bold;
+        background: #f5f5f5;
+    }
+
+    .value {
+    }
+
+    .section-title {
+        font-weight: bold;
+        background: #ddd;
+    }
+
+    .two-col td {
+        width: 50%;
+    }
+
+    .signature {
+        height: 50px;
+    }
+
+    .footer {
+        margin-top: 10px;
+        font-size: 10px;
+        font-style: italic;
+    }
+
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <table class="header" style="border:none">
+        <tr style="text-align:left; border:none">
+            <td style="width: 250px">
+        <img src="{{ logo_path }}" alt="logo" style="width:150px"/>
+        </td>
+            <td>
+                P.O. Box 481 Arua - Uganda<br />
+            Tel: +256...<br/>
+            E: jambo@ricewestnile.org | ricearua@yahoo.com | ricewn@gmail.com<br/>
+           www.ricewestnile.org
+            </td>
+        </tr>
+    </table>
+<!-- MAIN TABLE -->
+<table class="main">
+
+<tr>
+    <td class="label">Name of staff</td>
+    <td class="value">{{ appraisal.employee|upper }}</td>
+</tr>
+
+<tr>
+    <td>Title of staff</td>
+    <td>{{ appraisal.employee.job_title|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td>Duty station</td>
+    <td>{{ appraisal.duty_station|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td>Years/months spent</td>
+    <td>{{ appraisal.years_in_org|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td>Year of appraisal</td>
+    <td>{{ appraisal.year|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td >Avg marks (Job description)</td>
+    <td>{{ appraisal.job_description_score|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td >Interpretation of Marks</td>
+    <td>{{ appraisal.job_description_interpretation|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td >Avg marks (Service)</td>
+    <td>{{ appraisal.service_score|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td >Interpretation of Marks</td>
+    <td>{{ appraisal.service_interpretation|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td >Significant event</td>
+    <td>{{ appraisal.significant_event|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td >Job Fit</td>
+    <td>{{ appraisal.job_fit|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td >Staff Opinion on Contract renewal</td>
+    <td>{{ appraisal.staff_opinion|default:"-" }}</td>
+</tr>
+
+<tr>
+    <td >Supervisor comment</td>
+    <td>{{ appraisal.supervisor_comment|default:"-"  }}</td>
+</tr>
+
+<!-- STRENGTHS / WEAKNESSES -->
+<tr>
+    <td><strong>Staff Weaknesses </strong>{{ appraisal.weaknesses|linebreaks }}</td>
+    <td><strong>Staff Strengths </strong>{{ appraisal.strengths|linebreaks }}</td>
+</tr>
+
+<tr>
+    <td >Capacity Development / Gaps</td>
+    <td>{{ appraisal.capacity_gaps|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td >CMT Comments</td>
+    <td>{{ appraisal.cmt_comment|default:"-"  }}</td>
+</tr>
+
+<tr>
+    <td >Verdict</td>
+    <td>{{ appraisal.verdict|default:"-"  }}</td>
+</tr>
+
+{% if appraisal.verdict == "Renewed with Probation" %}
+<tr>
+    <td>Probation Duration</td>
+    <td>
+      {% if appraisal.probation_mode == "date_range" %}
+        {{ appraisal.probation_start_date|default:"-" }} to {{ appraisal.probation_end_date|default:"-" }}
+      {% elif appraisal.probation_mode == "months" %}
+        {{ appraisal.probation_months|default:"-" }} month(s)
+      {% else %}
+        -
+      {% endif %}
+    </td>
+</tr>
+{% endif %}
+
+<tr>
+    <td >Signature of staff</td>
+    <td class="signature">{% if appraisal.employee.user.signature %}
+            <img src="{{ appraisal.employee.user.signature.url }}" height="50%">
+        {% endif %}</td>
+</tr>
+
+<tr>
+    <td >Signature of supervisor</td>
+    <td class="signature">
+        {% if appraisal.supervisor.user.signature %}
+            <img src="{{ appraisal.supervisor.user.signature.url }}">
+        {% endif %}
+    </td>
+</tr>
+
+<tr>
+    <td >Signature of Executive Director</td>
+    <td class="signature">
+        {% if appraisal.cmt_signature %}
+            <img src="{{ appraisal.cmt_signature.url }}" height="50">
+        {% endif %}
+    </td>
+</tr>
+
+</table>
+
+<div class="footer">
+This form is to be completed by all supervisors after appraisal of their supervisees
+</div>
+  </div>
+</body>
+</html>

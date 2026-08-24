@@ -1,0 +1,11 @@
+Hi {{ user.username }},
+
+We received a request to reset your password for your RICE West Nile Procurement System account.
+
+Click the link below to reset your password:
+{{ reset_link }}
+
+If you didn’t request a password reset, you can safely ignore this email.
+
+Best regards,  
+RICE WN Support Team

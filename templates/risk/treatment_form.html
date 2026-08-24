@@ -1,0 +1,85 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+<div class="card shadow-lg border-0">
+<div class="card-body">
+
+<h4 class="mb-4">Risk Treatment Plan</h4>
+
+<form method="post">
+{% csrf_token %}
+
+<div class="row g-4">
+
+<!-- DESCRIPTION -->
+<div class="col-md-12">
+    <label class="form-label">Mitigation Description</label>
+    <textarea name="description" class="form-control" rows="3" required></textarea>
+</div>
+
+<!-- OWNER -->
+<div class="col-md-6">
+    <label class="form-label">Responsible Owner</label>
+    <input type="text" name="owner" class="form-control" required>
+</div>
+
+<!-- STATUS -->
+<div class="col-md-6">
+    <label class="form-label">Status</label>
+    <select name="status" class="form-select">
+        <option value="pending">Pending</option>
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+    </select>
+</div>
+
+<!-- DUE DATE -->
+<div class="col-md-4">
+    <label class="form-label">Due Date</label>
+    <input type="date" name="due_date" class="form-control">
+</div>
+
+<!-- PROGRESS -->
+<div class="col-md-4">
+    <label class="form-label">Progress (%)</label>
+    <input type="range" name="progress_percent" min="0" max="100" class="form-range"
+           oninput="progressOutput.value = this.value">
+    <output id="progressOutput">0</output>%
+</div>
+
+<!-- PROJECT ACTIVITY -->
+<div class="col-md-4">
+    <label class="form-label">Linked Project Activity</label>
+    <input type="text" name="project_activity" class="form-control">
+</div>
+
+<!-- RESOURCES -->
+<div class="col-md-6">
+    <label class="form-label">Resources Required</label>
+    <textarea name="resources" class="form-control" rows="2"></textarea>
+</div>
+
+<!-- LESSONS -->
+<div class="col-md-6">
+    <label class="form-label">Lessons Learned</label>
+    <textarea name="lessons_learned" class="form-control" rows="2"></textarea>
+</div>
+
+</div>
+
+<!-- ACTIONS -->
+<div class="mt-4 d-flex justify-content-end gap-2">
+    <a href="#" class="btn btn-light">Cancel</a>
+    <button type="submit" class="btn btn-dark">Save Treatment Plan</button>
+</div>
+
+</form>
+
+</div>
+</div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Interview Result</title>
+    <style>
+        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+        .header { margin-bottom: 12px; }
+        .title { font-size: 16px; font-weight: bold; }
+        .muted { color: #666666; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #dddddd; padding: 8px; text-align: left; }
+        th { background: #f3f5f7; }
+        .badge { padding: 2px 6px; border: 1px solid #cccccc; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">Interview Result</div>
+        <div class="muted">Generated: {{ generated_at|date:"M d, Y H:i" }}</div>
+    </div>
+
+    <table>
+        <tr>
+            <th>Applicant</th>
+            <td>{{ applicant.full_name }}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{ applicant.email }}</td>
+        </tr>
+        <tr>
+            <th>Position</th>
+            <td>{{ request_obj.title }}</td>
+        </tr>
+        <tr>
+            <th>Department</th>
+            <td>{{ request_obj.department }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td><span class="badge">{{ applicant.status }}</span></td>
+        </tr>
+        <tr>
+            <th>Interview Score</th>
+            <td>{% if applicant.interview_score is not None %}{{ applicant.interview_score }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Notes</th>
+            <td>{% if applicant.interview_notes %}{{ applicant.interview_notes }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Reviewed By</th>
+            <td>
+                {% if reviewed_by %}
+                    {{ reviewed_by.get_full_name|default:reviewed_by.username }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>Reviewed At</th>
+            <td>{% if reviewed_at %}{{ reviewed_at|date:"M d, Y H:i" }}{% else %}N/A{% endif %}</td>
+        </tr>
+    </table>
+
+    <p class="muted" style="margin-top: 14px;">
+        This document is system-generated and intended for the applicant’s records.
+    </p>
+</body>
+</html>
+

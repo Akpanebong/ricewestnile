@@ -1,0 +1,42 @@
+{% extends "hr/base.html" %}
+{% block title %}Exit Flow (HR){% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Exit Flow (HR)</h5>
+  </div>
+  <div class="card-body">
+    {% if processes %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>Staff</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for process in processes %}
+              <tr>
+                <td>{{ process.staff.get_full_name|default:process.staff.username }}</td>
+                <td>{{ process.staff.department.name|default:"-" }}</td>
+                <td><span class="badge bg-danger">Exit</span></td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-success" href="{% url 'account_exit_process_update' staff_slug=process.staff.slug %}">
+                    Update flow
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0">No staff are marked Exit.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

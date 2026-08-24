@@ -1,0 +1,309 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Notification Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    {% include "message.html" %}
+
+    <!-- ================= HEADER ================= -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4">
+
+        <div>
+            <h3 class="fw-bold text-dark mb-1">
+                <i class="fa fa-bell text-success me-2"></i>
+                Notification Details
+            </h3>
+
+            <p class="text-muted mb-0">
+                View notification information, attachments and related actions.
+            </p>
+        </div>
+
+        <nav aria-label="breadcrumb" class="mt-3 mt-lg-0">
+            <ol class="breadcrumb mb-0">
+
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard' %}" class="text-decoration-none">
+                        <i class="fa fa-home me-1"></i>
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item">
+                    <a href="{% url 'notifications:list' %}" class="text-decoration-none">
+                        Notifications
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item active">
+                    Details
+                </li>
+
+            </ol>
+        </nav>
+
+    </div>
+
+
+    <!-- ================= CARD ================= -->
+
+    <div class="row justify-content-center">
+
+        <div class="col-xl-9 col-lg-10">
+
+            <div class="card shadow border-0">
+
+                <!-- Card Header -->
+
+                <div class="card-header bg-white">
+
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+
+                        <div>
+
+                            <h4 class="fw-bold mb-1">
+
+                                {{ notification.title|default:"Notification" }}
+
+                            </h4>
+
+                            <div class="text-muted small">
+
+                                <i class="fa fa-calendar-alt me-1"></i>
+
+                                {% if notification.created %}
+                                    {{ notification.created|date:"d M Y H:i" }}
+                                {% else %}
+                                    {{ notification.created_at|date:"d M Y H:i" }}
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                        <div class="mt-2 mt-md-0">
+
+                            {% if notification.badge_class %}
+                                <span class="badge bg-{{ notification.badge_class }}">
+                                    {{ notification.notification.get_category_display }}
+                                </span>
+                            {% elif notification.category %}
+                                <span class="badge bg-primary">
+                                    {{ notification.get_category_display }}
+                                </span>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Card Body -->
+
+                <div class="card-body">
+
+                    <!-- Sender -->
+
+                    <div class="mb-4">
+
+                        <h6 class="text-uppercase text-muted">
+
+                            <i class="fa fa-user me-2"></i>
+
+                            Sender
+
+                        </h6>
+
+                        <p class="mb-0">
+
+                            {% if notification.notification.created_by %}
+                                {{ notification.notification.created_by.get_full_name|default:notification.notification.created_by.username }}
+                            {% elif notification.created_by %}
+                                {{ notification.created_by.get_full_name|default:notification.created_by.username }}
+                            {% else %}
+                                System
+                            {% endif %}
+
+                        </p>
+
+                    </div>
+
+
+                    <!-- Message -->
+
+                    <div class="mb-4">
+
+                        <h6 class="text-uppercase text-muted">
+
+                            <i class="fa fa-envelope-open-text me-2"></i>
+
+                            Message
+
+                        </h6>
+
+                        <div class="fs-6">
+
+                            {{ notification.message|linebreaks }}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Attachment -->
+
+                    {% if notification.attachment %}
+
+                    <div class="mb-4">
+
+                        <h6 class="text-uppercase text-muted">
+
+                            <i class="fa fa-paperclip me-2"></i>
+
+                            Attachment
+
+                        </h6>
+
+                        <a href="{{ notification.attachment.url }}"
+                           target="_blank"
+                           class="btn btn-outline-primary">
+
+                            <i class="fa fa-download me-1"></i>
+
+                            Download Attachment
+
+                        </a>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- Action URL -->
+
+                    {% if notification.notification.action_url %}
+
+                    <div class="mb-4">
+
+                        <h6 class="text-uppercase text-muted">
+
+                            <i class="fa fa-link me-2"></i>
+
+                            Related Action
+
+                        </h6>
+
+                        <a href="{{ notification.notification.action_url }}"
+                           class="btn btn-primary">
+
+                            <i class="fa fa-arrow-right me-1"></i>
+
+                            Open Related Record
+
+                        </a>
+
+                    </div>
+
+                    {% elif notification.url %}
+
+                    <div class="mb-4">
+
+                        <h6 class="text-uppercase text-muted">
+
+                            <i class="fa fa-link me-2"></i>
+
+                            External Link
+
+                        </h6>
+
+                        <a href="{{ notification.url }}"
+                           target="_blank"
+                           class="btn btn-primary">
+
+                            <i class="fa fa-external-link-alt me-1"></i>
+
+                            Open Link
+
+                        </a>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Footer -->
+
+                <div class="card-footer bg-white">
+
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+                        <div>
+
+                            {% if notification.is_read or notification.read %}
+
+                                <span class="badge bg-success px-3 py-2">
+
+                                    <i class="fa fa-check-circle me-1"></i>
+
+                                    Read
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-danger px-3 py-2">
+
+                                    <i class="fa fa-envelope me-1"></i>
+
+                                    Unread
+
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                        <div class="mt-3 mt-md-0">
+
+                            <a href="{% url 'notifications:list' %}"
+                               class="btn btn-outline-secondary">
+
+                                <i class="fa fa-arrow-left me-1"></i>
+
+                                Back
+
+                            </a>
+
+                            {% if request.user.is_superuser and not notification.is_read %}
+
+                                <a href="{% url 'notifications:update' notification.notification.pk %}"
+                                   class="btn btn-warning">
+
+                                    <i class="fa fa-edit me-1"></i>
+
+                                    Edit
+
+                                </a>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

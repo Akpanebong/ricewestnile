@@ -1,0 +1,478 @@
+{% extends "mne/base.html" %}
+{% load static %}
+
+{% block title %}RICEWN MEAL Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+  .meal-dashboard { max-width: 1680px; margin: 0 auto; }
+  .dashboard-hero {
+    background: linear-gradient(135deg, #073b2a 0%, #0f766e 48%, #1d4ed8 100%);
+    color: #fff;
+    border-radius: 8px;
+    padding: 22px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .18);
+  }
+  .dashboard-hero .eyebrow { color: rgba(255,255,255,.72); font-size: 12px; text-transform: uppercase; font-weight: 700; }
+  .dashboard-hero h1 { font-size: clamp(26px, 3vw, 42px); font-weight: 800; margin: 4px 0; letter-spacing: 0; }
+  .dashboard-toolbar, .metric-card, .chart-card, .filter-panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .07);
+  }
+  .dashboard-toolbar { padding: 14px; }
+  .filter-panel { padding: 16px; }
+  .filter-panel label { font-size: 12px; color: #475569; text-transform: uppercase; font-weight: 800; }
+  .metric-card { height: 100%; padding: 18px; border-left: 4px solid var(--metric-accent, #0f766e); }
+  .metric-icon {
+    width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 8px; background: color-mix(in srgb, var(--metric-accent, #0f766e) 14%, #fff);
+    color: var(--metric-accent, #0f766e);
+  }
+  .metric-label { color: #64748b; font-size: 12px; text-transform: uppercase; font-weight: 800; margin-top: 14px; }
+  .metric-value { color: #0f172a; font-size: 30px; line-height: 1.1; font-weight: 800; }
+  .chart-card { padding: 18px; height: 100%; }
+  .chart-title { color: #0f172a; font-weight: 800; font-size: 15px; margin: 0; }
+  .chart-subtitle { color: #64748b; font-size: 12px; margin: 2px 0 14px; }
+  .chart-container { height: 340px; }
+  .btn-dashboard { border-radius: 6px; font-weight: 700; }
+  @media (max-width: 767px) {
+    .dashboard-hero { padding: 18px; }
+    .chart-container { height: 300px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="meal-dashboard">
+  <section class="dashboard-hero mb-3">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+      <div>
+        <div class="eyebrow">Monitoring and Evaluation Intelligence</div>
+        <h1>MEAL Dashboard</h1>
+        <div class="text-white-50">Filtered operational performance across participants, locations, projects, and enterprise outcomes.</div>
+      </div>
+      <div class="d-flex align-items-start gap-2">
+        <button class="btn btn-light btn-dashboard" data-bs-toggle="collapse" data-bs-target="#dashboardFilters" aria-expanded="false" aria-controls="dashboardFilters">
+          <i class="fa fa-filter me-1"></i> Filters
+        </button>
+        <button onclick="exportDashboardExcel()" class="btn btn-success btn-dashboard">
+          <i class="fa fa-download me-1"></i> Export Excel
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="filter-panel collapse mb-3" id="dashboardFilters">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-2">
+        <label class="form-label" for="yearFilter">Year</label>
+        <select id="yearFilter" class="form-select">
+          <option value="">All Years</option>
+          {% for y in years %}
+          <option value="{{ y }}" {% if selected_filters.year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="quarterFilter">Quarter</label>
+        <select id="quarterFilter" class="form-select">
+          <option value="">All Quarters</option>
+          {% for key,label in quarters %}
+          <option value="{{ key }}" {% if selected_filters.quarter == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="projectFilter">Project</label>
+        <select id="projectFilter" class="form-select">
+          <option value="">All Projects</option>
+          {% for p in projects %}
+          <option value="{{ p.id }}" {% if selected_filters.project == p.id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="locationFilter">Location</label>
+        <select id="locationFilter" class="form-select">
+          <option value="">All Locations</option>
+          {% for l in locations %}
+          <option value="{{ l.id }}" {% if selected_filters.location == l.id|stringformat:"s" %}selected{% endif %}>{{ l.district }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="statusFilter">Status</label>
+        <select id="statusFilter" class="form-select">
+          <option value="">All Statuses</option>
+          <option value="Refugee" {% if selected_filters.status == "Refugee" %}selected{% endif %}>Refugee</option>
+          <option value="National" {% if selected_filters.status == "National" %}selected{% endif %}>National</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="sexFilter">Sex</label>
+        <select id="sexFilter" class="form-select">
+          <option value="">All Sexes</option>
+          <option value="M" {% if selected_filters.sex == "M" %}selected{% endif %}>Male</option>
+          <option value="F" {% if selected_filters.sex == "F" %}selected{% endif %}>Female</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" for="enterpriseFilter">Enterprise Type</label>
+        <select id="enterpriseFilter" class="form-select">
+          <option value="">All Enterprise Types</option>
+          {% for key,label in enterprise_types %}
+          <option value="{{ key }}" {% if selected_filters.enterprise_type == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-9 d-flex gap-2 justify-content-md-end">
+        <button class="btn btn-primary btn-dashboard" onclick="applyDashboardFilters()">
+          <i class="fa fa-check me-1"></i> Apply
+        </button>
+        <button class="btn btn-outline-secondary btn-dashboard" onclick="resetDashboardFilters()">
+          <i class="fa fa-rotate-left me-1"></i> Reset
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-3 mb-3">
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#2563eb">
+        <span class="metric-icon"><i class="fa fa-mars"></i></span>
+        <div class="metric-label">Refugee Male</div>
+        <div class="metric-value counter" data-kpi="refugee_male" data-target="{{ refugee_male }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#16a34a">
+        <span class="metric-icon"><i class="fa fa-mars"></i></span>
+        <div class="metric-label">National Male</div>
+        <div class="metric-value counter" data-kpi="national_male" data-target="{{ national_male }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#db2777">
+        <span class="metric-icon"><i class="fa fa-venus"></i></span>
+        <div class="metric-label">Refugee Female</div>
+        <div class="metric-value counter" data-kpi="refugee_female" data-target="{{ refugee_female }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#f59e0b">
+        <span class="metric-icon"><i class="fa fa-venus"></i></span>
+        <div class="metric-label">National Female</div>
+        <div class="metric-value counter" data-kpi="national_female" data-target="{{ national_female }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#334155">
+        <span class="metric-icon"><i class="fa fa-wheelchair"></i></span>
+        <div class="metric-label">PWD Reached</div>
+        <div class="metric-value counter" data-kpi="pwd_total" data-target="{{ pwd_total }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#0f766e">
+        <span class="metric-icon"><i class="fa fa-flag"></i></span>
+        <div class="metric-label">PWD Nationals</div>
+        <div class="metric-value counter" data-kpi="pwd_nationals" data-target="{{ pwd_nationals }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#b91c1c">
+        <span class="metric-icon"><i class="fa fa-users"></i></span>
+        <div class="metric-label">PWD Refugees</div>
+        <div class="metric-value counter" data-kpi="pwd_refugees" data-target="{{ pwd_refugees }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#1d4ed8">
+        <span class="metric-icon"><i class="fa fa-mars"></i></span>
+        <div class="metric-label">PWD National Males</div>
+        <div class="metric-value counter" data-kpi="pwd_national_males" data-target="{{ pwd_national_males }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#dc2626">
+        <span class="metric-icon"><i class="fa fa-mars"></i></span>
+        <div class="metric-label">PWD Refugee Males</div>
+        <div class="metric-value counter" data-kpi="pwd_refugee_males" data-target="{{ pwd_refugee_males }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#0891b2">
+        <span class="metric-icon"><i class="fa fa-venus"></i></span>
+        <div class="metric-label">PWD National Females</div>
+        <div class="metric-value counter" data-kpi="pwd_national_females" data-target="{{ pwd_national_females }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#db2777">
+        <span class="metric-icon"><i class="fa fa-venus"></i></span>
+        <div class="metric-label">PWD Refugee Females</div>
+        <div class="metric-value counter" data-kpi="pwd_refugee_females" data-target="{{ pwd_refugee_females }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#059669">
+        <span class="metric-icon"><i class="fa fa-flag"></i></span>
+        <div class="metric-label">Total Nationals</div>
+        <div class="metric-value counter" data-kpi="national_total" data-target="{{ national_total }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#dc2626">
+        <span class="metric-icon"><i class="fa fa-users"></i></span>
+        <div class="metric-label">Total Refugees</div>
+        <div class="metric-value counter" data-kpi="refugee_total" data-target="{{ refugee_total }}">0</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="metric-card" style="--metric-accent:#7c3aed">
+        <span class="metric-icon"><i class="fa fa-chart-simple"></i></span>
+        <div class="metric-label">Total Participants</div>
+        <div class="metric-value counter" data-kpi="total_participants" data-target="{{ total_male|add:total_female }}">0</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-3">
+    <div class="col-xl-6">
+      <div class="chart-card">
+        <h2 class="chart-title">Sex Distribution</h2>
+        <p class="chart-subtitle">Male and female totals grouped by status.</p>
+        <div class="chart-container"><canvas id="sexChart"></canvas></div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="chart-card">
+        <h2 class="chart-title">Status Distribution</h2>
+        <p class="chart-subtitle">National and refugee participant mix.</p>
+        <div class="chart-container"><canvas id="statusChart"></canvas></div>
+      </div>
+    </div>
+    <div class="col-xl-12">
+      <div class="chart-card">
+        <h2 class="chart-title">Yearly Participants Trend</h2>
+        <p class="chart-subtitle">Participant totals for the selected scope.</p>
+        <div class="chart-container"><canvas id="yearlyTrendChart"></canvas></div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="chart-card">
+        <h2 class="chart-title">PWD Distribution</h2>
+        <p class="chart-subtitle">PWD reached compared with non-PWD participants.</p>
+        <div class="chart-container"><canvas id="pwdChart"></canvas></div>
+      </div>
+    </div>
+    <div class="col-xl-6">
+      <div class="chart-card">
+        <h2 class="chart-title">Project Breakdown</h2>
+        <p class="chart-subtitle">Groups reached by project.</p>
+        <div class="chart-container"><canvas id="projectChart"></canvas></div>
+      </div>
+    </div>
+    <div class="col-xl-7">
+      <div class="chart-card">
+        <h2 class="chart-title">Enterprise Type Distribution</h2>
+        <p class="chart-subtitle">Enterprise reach split by national and refugee status.</p>
+        <div class="chart-container"><canvas id="enterpriseChart"></canvas></div>
+      </div>
+    </div>
+    <div class="col-xl-5">
+      <div class="chart-card">
+        <h2 class="chart-title">Location Distribution</h2>
+        <p class="chart-subtitle">Entry counts by district.</p>
+        <div class="chart-container"><canvas id="locationChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script>
+Chart.register(ChartDataLabels)
+
+const charts = {}
+const chartUrl = "{% url 'monitoring:chart_data' %}"
+const exportUrl = "{% url 'monitoring:export_excel' %}"
+
+function getFilters(){
+  return {
+    year: document.getElementById('yearFilter')?.value || '',
+    quarter: document.getElementById('quarterFilter')?.value || '',
+    status: document.getElementById('statusFilter')?.value || '',
+    project: document.getElementById('projectFilter')?.value || '',
+    location: document.getElementById('locationFilter')?.value || '',
+    sex: document.getElementById('sexFilter')?.value || '',
+    enterprise_type: document.getElementById('enterpriseFilter')?.value || ''
+  }
+}
+
+async function fetchChartData(type){
+  const params = new URLSearchParams({...getFilters(), type})
+  const response = await fetch(`${chartUrl}?${params}`)
+  if(!response.ok) return null
+  return response.json()
+}
+
+function destroyChart(key){
+  if(charts[key]){
+    charts[key].destroy()
+    delete charts[key]
+  }
+}
+
+function setCounterValue(counter, target, animate=true){
+  counter.dataset.target = target
+  if(!animate){
+    counter.innerText = target
+    return
+  }
+  const duration = 700
+  const step = Math.max(target / (duration / 16), 1)
+  let current = 0
+  function update(){
+    current += step
+    if(current < target){
+      counter.innerText = Math.floor(current)
+      requestAnimationFrame(update)
+    }else{
+      counter.innerText = target
+    }
+  }
+  update()
+}
+
+async function updateSummaryCards(){
+  const data = await fetchChartData('summary')
+  if(!data) return
+  const totalParticipants = (data.total_male || 0) + (data.total_female || 0)
+  document.querySelectorAll('[data-kpi]').forEach(counter => {
+    const key = counter.dataset.kpi
+    const value = key === 'total_participants' ? totalParticipants : (data[key] || 0)
+    setCounterValue(counter, value)
+  })
+}
+
+async function renderSingleDatasetChart(type, canvasId, label, colors, chartType='bar'){
+  const canvas = document.getElementById(canvasId)
+  if(!canvas) return
+  const data = await fetchChartData(type)
+  destroyChart(type)
+  if(!data || !data.labels) return
+  const ctx = canvas.getContext('2d')
+  charts[type] = new Chart(ctx, {
+    type: chartType,
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label,
+        data: data.values,
+        backgroundColor: chartType === 'line' ? 'rgba(37, 99, 235, .18)' : colors.slice(0, data.values.length),
+        borderColor: chartType === 'line' ? colors[0] : colors.slice(0, data.values.length),
+        borderWidth: 2,
+        fill: chartType === 'line',
+        tension: .35
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: chartType !== 'bar' },
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+          color: '#fff',
+          backgroundColor: 'rgba(15, 23, 42, .78)',
+          borderRadius: 4,
+          padding: 4,
+          font: { weight: '700', size: 10 },
+          formatter: (value, ctx) => {
+            if(chartType === 'pie' || chartType === 'doughnut'){
+              const sum = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0)
+              return sum ? ((value / sum) * 100).toFixed(1) + '%' : '0%'
+            }
+            return value
+          }
+        }
+      },
+      scales: (chartType === 'bar' || chartType === 'line') ? { y: { beginAtZero: true } } : {}
+    }
+  })
+}
+
+async function renderEnterpriseChart(){
+  const type = 'enterprise_type'
+  const canvas = document.getElementById('enterpriseChart')
+  if(!canvas) return
+  const data = await fetchChartData(type)
+  destroyChart(type)
+  if(!data || !data.labels) return
+  charts[type] = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: data.labels,
+      datasets: [
+        { label: 'National', data: data.national, backgroundColor: '#16a34a' },
+        { label: 'Refugee', data: data.refugee, backgroundColor: '#dc2626' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' }, datalabels: { display: false } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+    }
+  })
+}
+
+async function renderProjectGroupsChart(){
+  await renderSingleDatasetChart('project_groups', 'projectChart', 'Groups Reached', ['#4f46e5', '#0f766e', '#f97316'], 'bar')
+}
+
+async function updateAllCharts(){
+  await Promise.all([
+    updateSummaryCards(),
+    renderSingleDatasetChart('sex', 'sexChart', 'Sex Distribution', ['#2563eb', '#16a34a', '#dc2626', '#f59e0b'], 'bar'),
+    renderSingleDatasetChart('status', 'statusChart', 'Status', ['#16a34a', '#dc2626'], 'pie'),
+    renderSingleDatasetChart('pwd', 'pwdChart', 'PWD Distribution', ['#334155', '#94a3b8'], 'doughnut'),
+    renderSingleDatasetChart('location', 'locationChart', 'Location Distribution', ['#0f766e', '#2563eb', '#f97316', '#7c3aed'], 'bar'),
+    renderSingleDatasetChart('yearly_trend', 'yearlyTrendChart', 'Participants Trend', ['#2563eb'], 'line'),
+    renderEnterpriseChart(),
+    renderProjectGroupsChart()
+  ])
+}
+
+function applyDashboardFilters(){
+  updateAllCharts()
+  const params = new URLSearchParams(getFilters())
+  history.replaceState(null, '', `${window.location.pathname}?${params}`)
+}
+
+function resetDashboardFilters(){
+  ['yearFilter', 'quarterFilter', 'projectFilter', 'locationFilter', 'statusFilter', 'sexFilter', 'enterpriseFilter'].forEach(id => {
+    const el = document.getElementById(id)
+    if(el) el.value = ''
+  })
+  updateAllCharts()
+  history.replaceState(null, '', window.location.pathname)
+}
+
+function exportDashboardExcel(){
+  const params = new URLSearchParams(getFilters())
+  window.location.href = `${exportUrl}?${params}`
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.counter').forEach(counter => setCounterValue(counter, Number(counter.dataset.target || 0)))
+  updateAllCharts()
+})
+</script>
+{% endblock %}

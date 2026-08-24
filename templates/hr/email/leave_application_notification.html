@@ -1,0 +1,318 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Leave Application</title>
+
+</head>
+
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 0;">
+
+<tr>
+
+<td align="center">
+
+<table width="700"
+       cellpadding="0"
+       cellspacing="0"
+       style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08);">
+
+<!-- ================= HEADER ================= -->
+
+<tr>
+
+<td style="background:green;padding:30px;text-align:center;">
+
+<img src="cid:company_logo"
+     alt="Organization Logo"
+     width="150">
+<h2 style="margin:0;color:#ffffff;">
+
+Leave Application Notification
+
+</h2>
+
+<p style="margin:8px 0 0;color:#dce8f5;font-size:15px;">
+
+Human Resource Management System
+
+</p>
+
+</td>
+
+</tr>
+
+<!-- ================= BODY ================= -->
+
+<tr>
+
+<td style="padding:35px;">
+
+<p style="font-size:16px;color:#333;">
+
+Dear <strong>{{ leave.supervisor }}</strong>,
+
+</p>
+
+<p style="font-size:15px;color:#555;line-height:1.8;">
+
+A new leave application has been submitted and is awaiting your review and approval.
+
+Please review the details below and take the appropriate action.
+
+</p>
+
+<!-- Employee Card -->
+
+<table width="100%"
+       cellpadding="12"
+       cellspacing="0"
+       style="margin-top:25px;border:1px solid #e8e8e8;border-radius:8px;">
+
+<tr style="background:#f8f9fb;">
+
+<td colspan="2">
+
+<strong style="font-size:17px;color:#0F4C81;">
+
+Applicant Information
+
+</strong>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td width="35%"><strong>Employee</strong></td>
+
+<td>{{ leave.employee.get_full_name }}</td>
+
+</tr>
+
+<tr>
+
+<td><strong>Department</strong></td>
+
+<td>{{ leave.employee.department }}</td>
+
+</tr>
+
+<tr>
+
+<td><strong>Unit</strong></td>
+
+<td>{{ leave.employee.unit }}</td>
+
+</tr>
+
+<tr>
+
+<td><strong>Email</strong></td>
+
+<td>{{ leave.employee.email }}</td>
+
+</tr>
+
+</table>
+
+<!-- Leave Card -->
+
+<table width="100%"
+       cellpadding="12"
+       cellspacing="0"
+       style="margin-top:25px;border:1px solid #e8e8e8;border-radius:8px;">
+
+<tr style="background:#f8f9fb;">
+
+<td colspan="2">
+
+<strong style="font-size:17px;color:#0F4C81;">
+
+Leave Details
+
+</strong>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td width="35%">
+
+<strong>Leave Type</strong>
+
+</td>
+
+<td>
+
+{{ leave.leave_type }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+<strong>Start Date</strong>
+
+</td>
+
+<td>
+
+{{ leave.start_date }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+<strong>End Date</strong>
+
+</td>
+
+<td>
+
+{{ leave.end_date }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+<strong>Duration</strong>
+
+</td>
+
+<td>
+
+{{ leave.days_requested}} day{{ leave.days_requested|pluralize }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+<strong>Reason</strong>
+
+</td>
+
+<td>
+
+{{ leave.reason }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+<strong>Applied On</strong>
+
+</td>
+
+<td>
+
+{{ leave.applied_date|date:"d M Y H:i" }}
+
+</td>
+
+</tr>
+
+</table>
+
+<!-- CTA -->
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:35px;">
+
+<tr>
+
+<td align="center">
+
+<a href="{{ review_url }}"
+style="background:green;
+color:#ffffff;
+text-decoration:none;
+padding:15px 35px;
+font-size:16px;
+font-weight:bold;
+border-radius:6px;
+display:inline-block;">
+
+Review Leave Application
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+<p style="margin-top:35px;color:#666;font-size:14px;line-height:1.8;">
+
+This notification was generated automatically by the Enterprise Human Resource Management System.
+
+If you have already reviewed this application, no further action is required.
+
+</p>
+
+</td>
+
+</tr>
+
+<!-- ================= FOOTER ================= -->
+
+<tr>
+
+<td style="background:#f8f9fb;padding:25px;text-align:center;">
+
+<p style="margin:0;font-size:14px;color:#666;">
+
+<strong>{{ leave.employee.organization|default:"Enterprise HRMS" }}</strong>
+
+</p>
+
+<p style="margin:8px 0 0;color:#999;font-size:13px;">
+
+© {% now "Y" %} All Rights Reserved
+
+</p>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</body>
+
+</html>

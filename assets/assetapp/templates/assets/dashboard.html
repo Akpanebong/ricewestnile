@@ -1,0 +1,120 @@
+{% extends "asset/base.html" %}
+{% block title %}Asset Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- KPI ROW -->
+    <div class="row g-3 mb-4">
+
+        {% include "assets/partials/kpi_card.html" with icon="bi-box-seam" title="Total Assets" value=total_assets color="success" %}
+
+        {% include "assets/partials/kpi_card.html" with icon="bi-cash-stack" title="Total Asset Value" value=total_asset_value color="primary" %}
+
+        {% include "assets/partials/kpi_card.html" with icon="bi-graph-down" title="Total Depreciation" value=total_depreciation color="danger" %}
+
+        {% include "assets/partials/kpi_card.html" with icon="bi-bar-chart-line" title="Net Book Value" value=total_net_value color="success" %}
+
+    </div>
+
+    <!-- STATUS ROW -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-person-check"></i> Asset Allocation Status
+                </div>
+                <div class="card-body">
+                    <p>Allocated Assets: <strong>{{ allocated_assets }}</strong></p>
+                    <p>Unallocated Assets: <strong>{{ unallocated_assets }}</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-wrench-adjustable"></i> Maintenance Alerts
+                </div>
+                <div class="card-body">
+                    <p class="text-warning">
+                        Upcoming (30 days): {{ upcoming_maintenance.count }}
+                    </p>
+                    <p class="text-danger">
+                        Overdue: {{ overdue_maintenance.count }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ACTIVITY FEEDS -->
+    <div class="row g-3">
+
+        <!-- Recent Assets -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-plus-circle"></i> Recent Assets
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for asset in recent_assets %}
+                        <li class="list-group-item">
+                            {{ asset.asset_no }}<br>
+                            <small class="text-muted">{{ asset.category }}</small>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No records</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Recent Maintenance -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-tools"></i> Recent Maintenance
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for m in recent_maintenances %}
+                        <li class="list-group-item">
+                            {{ m.asset.asset_no }}<br>
+                            <small class="text-muted">
+                                {{ m.maintenance_date }} – {{ m.cost }}
+                            </small>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No maintenance</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Audit Logs -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-shield-check"></i> Audit Trail
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for log in recent_logs %}
+                        <li class="list-group-item">
+                            {{ log.action }} – {{ log.model_name }}<br>
+                            <small class="text-muted">
+                                {{ log.timestamp|date:"Y-m-d H:i" }}
+                            </small>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No logs</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

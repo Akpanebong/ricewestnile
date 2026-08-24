@@ -1,0 +1,390 @@
+{% extends "procurement/base.html" %}
+{% load custom_tags %}
+{% load humanize %}
+
+{% block title %}Project Management{% endblock %}
+
+{% block content %}
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        <!-- Enterprise Header -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+
+            <div class="card-body px-4 py-4">
+
+                <div class="row align-items-center justify-content-between g-3">
+
+                    <!-- Left -->
+                    <div class="col-lg-8">
+
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+
+                            <!-- Icon -->
+                            <div class="project-icon">
+
+                                <i class="fa fa-diagram-project"></i>
+
+                            </div>
+
+                            <!-- Content -->
+                            <div>
+
+                                <h2 class="fw-bold text-dark mb-1">
+
+                                    Project Management
+
+                                </h2>
+
+                                <!-- Breadcrumb -->
+                                <nav aria-label="breadcrumb">
+
+                                    <ol class="breadcrumb enterprise-breadcrumb mb-0">
+
+                                        <li class="breadcrumb-item">
+
+                                            <a href="{% url 'dashboard' %}">
+
+                                                <i class="fa fa-home me-1"></i>
+
+                                                Dashboard
+
+                                            </a>
+
+                                        </li>
+
+                                        <li class="breadcrumb-item">
+                                            Procurement
+                                        </li>
+
+                                        <li class="breadcrumb-item active">
+                                            Projects
+                                        </li>
+
+                                    </ol>
+
+                                </nav>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Right -->
+                    <div class="col-lg-auto">
+
+                        <div class="analytics-card compact-card">
+
+                            <div class="analytics-icon bg-primary-subtle text-primary">
+
+                                <i class="fa fa-folder"></i>
+
+                            </div>
+
+                            <div class="text-nowrap">
+
+                                <small class="text-muted d-block">
+                                    Total Projects
+                                </small>
+
+                                <h4 class="fw-bold mb-0">
+
+                                    {{ projects|length }}
+
+                                </h4>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Main Card -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+            <!-- Header -->
+            <div class="card-header bg-white border-0 px-4 py-4">
+
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+
+                    <!-- Left -->
+                    <div>
+
+                        <h5 class="fw-bold text-dark mb-1">
+
+                            <i class="fa fa-list text-primary me-2"></i>
+
+                            Project Directory
+
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Manage enterprise procurement projects and project leaders.
+                        </p>
+
+                    </div>
+
+                    <!-- Right -->
+                    <div class="d-flex gap-2">
+
+                        <!-- Search -->
+<!--                        <div class="enterprise-search">-->
+
+<!--                            <i class="fa fa-search"></i>-->
+
+<!--                            <input type="text"-->
+<!--                                   id="projectSearch"-->
+<!--                                   placeholder="Search projects...">-->
+
+<!--                        </div>-->
+
+                        <form method="get" class="d-flex gap-2">
+                            <input type="text"
+                                   name="fiscal_year"
+                                   value="{{ fiscal_year }}"
+                                   class="form-control"
+                                   style="max-width:120px"
+                                   placeholder="Fiscal year">
+                            <button class="btn btn-outline-primary enterprise-btn px-3" type="submit">
+                                <i class="fa fa-filter"></i>
+                            </button>
+                        </form>
+
+                        <!-- Add -->
+                        <a href="{% url 'core:project_create'  %}"
+                           class="btn btn-primary enterprise-btn px-4">
+
+                            <i class="fa fa-plus-circle me-2"></i>
+
+                            New Project
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+
+                <table class="table enterprise-table align-middle mb-0">
+
+                    <thead>
+
+                        <tr>
+
+                            <th width="80" class="ps-4">
+                                #
+                            </th>
+
+                            <th>
+                                Project Name
+                            </th>
+
+                            <th>
+                                Project Head
+                            </th>
+
+                            <th class="text-end">
+                                FY {{ fiscal_year }} Budget
+                            </th>
+
+                            <th class="text-end">
+                                Amount Used
+                            </th>
+
+                            <th class="text-end">
+                                Remaining
+                            </th>
+
+                            <th class="text-end pe-4">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="projectTable">
+
+                        {% for pro in projects %}
+
+                        <tr>
+
+                            <td class="ps-4 text-muted fw-semibold">
+
+                                {{ forloop.counter }}
+
+                            </td>
+
+                            <!-- Name -->
+                            <td>
+
+                                <div class="d-flex align-items-center">
+
+                                    <div class="project-avatar me-3">
+
+                                        {{ pro.name|slice:":1"|upper }}
+
+                                    </div>
+
+                                    <div class="fw-semibold text-dark">
+
+                                        {{ pro.name }}
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <!-- Head -->
+                            <td>
+
+                                {{ pro.project_head }}
+
+                            </td>
+
+                            <td class="text-end fw-semibold">
+                                {{ pro.budget_summary.budget_amount|money:request }}
+                            </td>
+
+                            <td class="text-end text-warning fw-semibold">
+                                {{ pro.budget_summary.amount_used|money:request }}
+                            </td>
+
+                            <td class="text-end text-success fw-semibold">
+                                {{ pro.budget_summary.amount_remaining|money:request }}
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-end pe-4">
+
+                                <div class="dropdown">
+
+                                    <button class="btn btn-light border btn-sm action-btn"
+                                            data-bs-toggle="dropdown">
+
+                                        <i class="fa fa-ellipsis-h"></i>
+
+                                    </button>
+
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-3">
+
+                                        <li>
+
+                                            <a class="dropdown-item"
+                                               href="{% url 'core:project_update' pro.pk pro.slug %}">
+
+                                                <i class="fa fa-edit text-primary me-2"></i>
+
+                                                Edit Project
+
+                                            </a>
+
+                                        </li>
+
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+
+                                        <li>
+
+                                            <a class="dropdown-item text-danger"
+                                               href="{% url 'core:trash_project' pro.pk pro.name %}">
+
+                                                <i class="fa fa-trash me-2"></i>
+
+                                                Delete Project
+
+                                            </a>
+
+                                        </li>
+
+                                    </ul>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td colspan="7" class="text-center py-5">
+
+                                <div class="empty-state">
+
+                                    <div class="empty-icon mb-4">
+
+                                        <i class="fa fa-folder-open"></i>
+
+                                    </div>
+
+                                    <h5 class="fw-bold text-dark">
+
+                                        No Projects Found
+
+                                    </h5>
+
+                                    <p class="text-muted mb-4">
+
+                                        No procurement projects currently exist.
+
+                                    </p>
+
+                                    <a href="{% url 'core:project_create'  %}"
+                                       class="btn btn-primary px-4">
+
+                                        <i class="fa fa-plus-circle me-2"></i>
+
+                                        Create First Project
+
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+
+            <div class="card-footer bg-white border-0 py-3 px-4">
+
+                {% include 'pagination.html' %}
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</main>
+
+{% endblock %}

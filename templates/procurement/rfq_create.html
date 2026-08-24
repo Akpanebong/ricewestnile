@@ -1,0 +1,174 @@
+{% extends "procurement/base.html" %}
+{% block content %}
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        <!-- Header / Breadcrumb -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+            <div class="card-body px-4 py-3">
+
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+
+                    <div>
+
+                        <h3 class="fw-bold text-dark mb-1">
+                            Create RFQ
+                        </h3>
+
+                        <p class="text-muted mb-0">
+                            Requisition: <strong>{{ requisition}}</strong>
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="row justify-content-center">
+
+            <!-- Main Form Card -->
+            <div class="col-xl-6 col-lg-7 col-md-9">
+
+                <div class="card border-0 shadow-sm rounded-4">
+
+                    <!-- Card Header -->
+                    <div class="card-header bg-white border-0 px-4 pt-4">
+
+                        <h5 class="fw-bold text-dark mb-1">
+
+                            <i class="fa fa-file-text-o text-primary me-2"></i>
+
+                            RFQ Details
+
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Select supplier and set submission deadline.
+                        </p>
+
+                    </div>
+
+                    <!-- Form Body -->
+                    <div class="card-body p-4">
+
+                        <form method="post">
+
+                            {% csrf_token %}
+
+                            <div class="row g-4">
+
+                                <!-- Supplier -->
+                                <div class="col-12">
+
+                                    <label class="form-label fw-semibold">
+                                        Supplier
+                                    </label>
+
+                                    {{ form.supplier }}
+
+                                    {% if form.supplier.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.supplier.errors }}
+                                        </div>
+                                    {% endif %}
+
+                                </div>
+
+                                <!-- Deadline -->
+                                <div class="col-12">
+
+                                    <label class="form-label fw-semibold">
+                                        Deadline for Submission
+                                    </label>
+
+                                    {{ form.deadline }}
+
+                                    {% if form.deadline.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.deadline.errors }}
+                                        </div>
+                                    {% endif %}
+
+                                    <small class="text-muted d-block mt-1">
+                                        Suppliers will not be able to submit after this date.
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+
+                                <a href="javascript:history.back()"
+                                   class="btn btn-light border px-4">
+
+                                    Cancel
+
+                                </a>
+
+                                <button type="submit"
+                                        class="btn btn-success px-4 shadow-sm">
+
+                                    <i class="fa fa-paper-plane me-2"></i>
+                                    Generate RFQ
+
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Enterprise Styling -->
+<style>
+
+.card {
+    overflow: hidden;
+}
+
+.form-label {
+    margin-bottom: 8px;
+    color: #344054;
+    font-weight: 600;
+}
+
+.form-control,
+.form-select {
+    border-radius: 12px;
+    min-height: 48px;
+    border: 1px solid #d0d5dd;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 4px rgba(25,135,84,.1);
+}
+
+.btn {
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+</style>
+
+{% endblock %}

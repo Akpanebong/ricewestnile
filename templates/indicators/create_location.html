@@ -1,0 +1,741 @@
+{% extends active_base_template|default:'base.html' %}
+
+{% block title %}
+{% if is_update %}Update{% else %}Create{% endif %} Location
+{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       LOCATION FORM
+       Enterprise M&E Interface
+       ========================================================= */
+
+    .location-form-page {
+        --lf-primary: #198754;
+        --lf-primary-dark: #146c43;
+        --lf-primary-soft: #eaf7f0;
+        --lf-border: #e1e7e3;
+        --lf-text: #26332c;
+        --lf-muted: #6c757d;
+    }
+
+    /* =========================================================
+       BREADCRUMB
+       ========================================================= */
+
+    .lf-breadcrumb {
+        background: #fff;
+        border: 1px solid var(--lf-border);
+        border-radius: 10px;
+        padding: 9px 14px;
+        margin-bottom: 18px;
+    }
+
+    .lf-breadcrumb a {
+        color: var(--lf-primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .lf-breadcrumb a:hover {
+        color: var(--lf-primary-dark);
+    }
+
+    /* =========================================================
+       PAGE HEADER
+       ========================================================= */
+
+    .lf-page-header {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f3faf6 100%
+        );
+        border: 1px solid var(--lf-border);
+        border-radius: 16px;
+        padding: 20px 22px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .035);
+    }
+
+    .lf-header-icon {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: var(--lf-primary-soft);
+        color: var(--lf-primary);
+        font-size: 20px;
+    }
+
+    .lf-page-title {
+        color: #1e3027;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .lf-page-subtitle {
+        color: var(--lf-muted);
+        font-size: .78rem;
+        margin: 0;
+    }
+
+    .lf-mode-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 11px;
+        border-radius: 8px;
+        background: var(--lf-primary-soft);
+        color: var(--lf-primary-dark);
+        font-size: .68rem;
+        font-weight: 700;
+        border: 1px solid #d6eee0;
+    }
+
+    /* =========================================================
+       MAIN FORM CARD
+       ========================================================= */
+
+    .lf-form-card {
+        background: #fff;
+        border: 1px solid var(--lf-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .04);
+    }
+
+    .lf-form-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--lf-border);
+        background: #fff;
+    }
+
+    .lf-form-header-title {
+        color: #2d3b33;
+        font-size: .95rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .lf-form-header-text {
+        color: #858e89;
+        font-size: .7rem;
+        margin-top: 3px;
+    }
+
+    .lf-form-body {
+        padding: 24px;
+    }
+
+    /* =========================================================
+       FORM ELEMENTS
+       ========================================================= */
+
+    .lf-form-body input,
+    .lf-form-body select,
+    .lf-form-body textarea {
+        border-color: #dce2df;
+        border-radius: 8px;
+        font-size: .8rem;
+    }
+
+    .lf-form-body input:focus,
+    .lf-form-body select:focus,
+    .lf-form-body textarea:focus {
+        border-color: #83c5a1;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    .lf-form-body label {
+        color: #3f4c45;
+        font-size: .76rem;
+        font-weight: 650;
+    }
+
+    /* =========================================================
+       FORM FOOTER
+       ========================================================= */
+
+    .lf-form-footer {
+        padding: 16px 24px;
+        background: #fbfcfb;
+        border-top: 1px solid var(--lf-border);
+    }
+
+    .lf-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 39px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: .76rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .18s ease;
+    }
+
+    .lf-btn-cancel {
+        background: #fff;
+        color: #66716b;
+        border: 1px solid #d8dfdb;
+    }
+
+    .lf-btn-cancel:hover {
+        background: #f5f7f6;
+        color: #39443e;
+    }
+
+    .lf-btn-submit {
+        background: var(--lf-primary);
+        color: #fff;
+        border: 1px solid var(--lf-primary);
+        box-shadow: 0 3px 8px rgba(25, 135, 84, .15);
+    }
+
+    .lf-btn-submit:hover {
+        background: var(--lf-primary-dark);
+        border-color: var(--lf-primary-dark);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       SIDEBAR
+       ========================================================= */
+
+    .lf-sidebar-card {
+        background: #fff;
+        border: 1px solid var(--lf-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .035);
+    }
+
+    .lf-sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--lf-border);
+    }
+
+    .lf-sidebar-icon {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: var(--lf-primary-soft);
+        color: var(--lf-primary);
+        font-size: .75rem;
+    }
+
+    .lf-sidebar-title {
+        color: #334038;
+        font-size: .85rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .lf-sidebar-body {
+        padding: 18px;
+    }
+
+    .lf-tip {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid #edf0ee;
+    }
+
+    .lf-tip:last-child {
+        padding-bottom: 0;
+        margin-bottom: 0;
+        border-bottom: 0;
+    }
+
+    .lf-tip i {
+        color: var(--lf-primary);
+        font-size: .7rem;
+        margin-top: 3px;
+    }
+
+    .lf-tip span {
+        color: #6e7872;
+        font-size: .73rem;
+        line-height: 1.55;
+    }
+
+    /* =========================================================
+       LOCATION CONTEXT
+       ========================================================= */
+
+    .lf-context {
+        margin-top: 18px;
+        padding: 14px;
+        border-radius: 10px;
+        background: #f7faf8;
+        border: 1px solid #e3eee7;
+    }
+
+    .lf-context-label {
+        color: #849089;
+        font-size: .65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-bottom: 4px;
+    }
+
+    .lf-context-value {
+        color: #334139;
+        font-size: .76rem;
+        font-weight: 600;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 991.98px) {
+
+        .lf-sidebar {
+            margin-top: 20px;
+        }
+
+    }
+
+    @media (max-width: 767.98px) {
+
+        .lf-page-header {
+            padding: 16px;
+            border-radius: 13px;
+        }
+
+        .lf-page-title {
+            font-size: 1.08rem;
+        }
+
+        .lf-mode-wrapper {
+            margin-top: 13px;
+            width: 100%;
+        }
+
+        .lf-mode-badge {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .lf-form-body {
+            padding: 18px;
+        }
+
+        .lf-form-footer {
+            padding: 14px 18px;
+        }
+
+        .lf-form-actions {
+            flex-direction: column-reverse;
+            gap: 9px;
+        }
+
+        .lf-form-actions .lf-btn {
+            width: 100%;
+        }
+
+    }
+</style>
+
+<div class="container-fluid location-form-page">
+
+```
+<!-- =====================================================
+     BREADCRUMB
+====================================================== -->
+
+<div class="lf-breadcrumb">
+
+    <ol class="breadcrumb mb-0 small">
+
+        <li class="breadcrumb-item">
+
+            <a href="{% url 'monitoring:dashboard' %}">
+                <i class="fa fa-home me-1"></i>
+                Dashboard
+            </a>
+
+        </li>
+
+        <li class="breadcrumb-item">
+
+            <a href="{% url core_url_namespace|add:':location_list' %}">
+                Locations
+            </a>
+
+        </li>
+
+        <li class="breadcrumb-item active">
+
+            {% if is_update %}
+                Update
+            {% else %}
+                New Location
+            {% endif %}
+
+        </li>
+
+    </ol>
+
+</div>
+
+
+{% include "message.html" %}
+
+
+<!-- =====================================================
+     PAGE HEADER
+====================================================== -->
+
+<div class="lf-page-header">
+
+    <div class="d-flex flex-column flex-md-row
+                align-items-start align-items-md-center
+                justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <div class="lf-header-icon me-3">
+
+                <i class="fa fa-map-marker"></i>
+
+            </div>
+
+            <div>
+
+                <h1 class="lf-page-title">
+
+                    {% if is_update %}
+                        Update Location
+                    {% else %}
+                        Create Location
+                    {% endif %}
+
+                </h1>
+
+                <p class="lf-page-subtitle">
+
+                    {% if is_update %}
+
+                        Modify the geographic information
+                        associated with this programme location.
+
+                    {% else %}
+
+                        Register a new programme location
+                        for monitoring and reporting.
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="lf-mode-wrapper">
+
+            <span class="lf-mode-badge">
+
+                <i class="fa fa-map-marker"></i>
+
+                {% if is_update %}
+                    EDITING LOCATION
+                {% else %}
+                    NEW LOCATION
+                {% endif %}
+
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     FORM + SIDEBAR
+====================================================== -->
+
+<div class="row g-4 align-items-start">
+
+    <!-- =================================================
+         MAIN FORM
+    ================================================== -->
+
+    <div class="col-lg-8 col-xl-8">
+
+        <div class="lf-form-card">
+
+            <!-- Form Header -->
+
+            <div class="lf-form-header">
+
+                <h2 class="lf-form-header-title">
+
+                    <i class="fa fa-globe me-2 text-success"></i>
+
+                    Location Information
+
+                </h2>
+
+                <div class="lf-form-header-text">
+
+                    {% if is_update %}
+
+                        Review and update the location details below.
+
+                    {% else %}
+
+                        Enter the administrative and settlement
+                        information for the new location.
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- Form -->
+
+            <form method="post" novalidate>
+
+                {% csrf_token %}
+
+                <div class="lf-form-body">
+
+                    {% include 'form.html' %}
+
+                </div>
+
+
+                <!-- Form Actions -->
+
+                <div class="lf-form-footer">
+
+                    <div class="lf-form-actions
+                                d-flex justify-content-between
+                                align-items-center">
+
+                        <a href="{% url core_url_namespace|add:':location_list' %}"
+                           class="lf-btn lf-btn-cancel">
+
+                            <i class="fa fa-arrow-left"></i>
+
+                            Cancel
+
+                        </a>
+
+
+                        <button type="submit"
+                                class="lf-btn lf-btn-submit">
+
+                            {% if is_update %}
+
+                                <i class="fa fa-save"></i>
+                                Update Location
+
+                            {% else %}
+
+                                <i class="fa fa-plus-circle"></i>
+                                Create Location
+
+                            {% endif %}
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SIDEBAR
+    ================================================== -->
+
+    <div class="col-lg-4 col-xl-4 lf-sidebar">
+
+        <!-- Tips -->
+
+        <div class="lf-sidebar-card">
+
+            <div class="lf-sidebar-header">
+
+                <div class="lf-sidebar-icon">
+
+                    <i class="fa fa-lightbulb-o"></i>
+
+                </div>
+
+                <h3 class="lf-sidebar-title">
+                    Location Data Standards
+                </h3>
+
+            </div>
+
+
+            <div class="lf-sidebar-body">
+
+                <div class="lf-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Use the official district name
+                        consistently across the system.
+                    </span>
+
+                </div>
+
+
+                <div class="lf-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Use the recognized settlement name
+                        used by the programme and field teams.
+                    </span>
+
+                </div>
+
+
+                <div class="lf-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Ensure the sub-county corresponds
+                        correctly to the selected district.
+                    </span>
+
+                </div>
+
+
+                <div class="lf-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Avoid creating duplicate locations.
+                        Check existing records before adding a new one.
+                    </span>
+
+                </div>
+
+
+                <div class="lf-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Keep naming consistent so that M&E reports
+                        can aggregate data accurately.
+                    </span>
+
+                </div>
+
+
+                <!-- Context -->
+
+                <div class="lf-context">
+
+                    <div class="lf-context-label">
+                        M&E Location Hierarchy
+                    </div>
+
+                    <div class="lf-context-value">
+
+                        <i class="fa fa-map-marker text-success me-1"></i>
+
+                        District
+
+                        <i class="fa fa-angle-right mx-1 text-muted"></i>
+
+                        Settlement
+
+                        <i class="fa fa-angle-right mx-1 text-muted"></i>
+
+                        Sub-County
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Information Card -->
+
+        <div class="lf-sidebar-card mt-3">
+
+            <div class="lf-sidebar-body">
+
+                <div class="d-flex align-items-start">
+
+                    <i class="fa fa-info-circle
+                              text-success me-2 mt-1"></i>
+
+                    <div>
+
+                        <div class="fw-semibold small mb-1">
+                            Why location data matters
+                        </div>
+
+                        <div class="text-muted"
+                             style="font-size:.72rem; line-height:1.55;">
+
+                            Accurate location records allow the
+                            M&E system to produce reliable geographic
+                            analysis and programme performance reports.
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Edit Job Opening{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center
+                justify-content-between mb-4">
+
+        <div>
+            <h3 class="fw-bold mb-1 text-dark">
+                <i class="fa fa-pen-to-square text-success me-2"></i>
+                Edit Job Opening
+            </h3>
+            <small class="text-muted">
+                Update vacancy details and publish changes
+            </small>
+        </div>
+
+        <nav aria-label="breadcrumb" class="mt-3 mt-md-0">
+            <ol class="breadcrumb mb-0 bg-transparent p-0">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard' %}" class="text-decoration-none text-success">
+                        <i class="fa fa-home"></i> Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'vacancy:job_list' %}" class="text-decoration-none text-success">
+                        Job Openings
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    Edit
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- ===== FORM CARD ===== -->
+    <div class="row justify-content-center">
+        <div class="col-xl-9 col-lg-10">
+
+            <div class="card border-0 shadow-sm rounded-4">
+
+                <!-- Card Header -->
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold text-dark">
+                        <i class="fa fa-briefcase me-1"></i>
+                        Job Opening Details
+                    </h6>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body p-4">
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Reusable Form -->
+                        {% include "form.html" %}
+
+                        <hr class="my-4">
+
+                        <!-- ===== ACTION BAR ===== -->
+                        <div class="d-flex flex-column flex-md-row
+                                    justify-content-between align-items-center gap-3">
+
+                            <a href="{% url 'vacancy:job_list' %}"
+                               class="btn btn-outline-secondary px-4">
+                                <i class="fa fa-arrow-left me-1"></i>
+                                Cancel
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-success px-4"
+                                    onclick="this.disabled=true;this.form.submit();">
+                                <i class="fa fa-check-circle me-1"></i>
+                                Save Changes
+                            </button>
+
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== ENTERPRISE STYLING ===== -->
+<style>
+.card {
+    border-radius: 16px;
+}
+
+.card-header {
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.form-control,
+.form-select {
+    border-radius: 8px;
+}
+
+hr {
+    opacity: 0.08;
+}
+</style>
+{% endblock %}

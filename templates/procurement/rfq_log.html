@@ -1,0 +1,458 @@
+{% extends "procurement/base.html" %}
+{% load custom_tags %}
+{% load humanize %}
+
+{% block title %}RFQ Award Log{% endblock %}
+
+{% block content %}
+
+<style>
+
+    .elite-card{
+        border:none;
+        border-radius:18px;
+        overflow:hidden;
+        background:#fff;
+        box-shadow:0 4px 25px rgba(0,0,0,.06);
+    }
+
+    .elite-header{
+        background:linear-gradient(135deg,#0f172a,#1e293b);
+        color:white;
+        padding:24px;
+    }
+
+    .elite-header h4{
+        margin:0;
+        font-weight:800;
+        color:white;
+    }
+
+    .kpi-card{
+        background:white;
+        border-radius:16px;
+        padding:22px;
+        box-shadow:0 3px 16px rgba(0,0,0,.05);
+        height:100%;
+    }
+
+    .kpi-icon{
+        width:60px;
+        height:60px;
+        border-radius:14px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:24px;
+        margin-bottom:15px;
+    }
+
+    .table-enterprise thead{
+        background:#f8fafc;
+    }
+
+    .table-enterprise th{
+        font-size:13px;
+        text-transform:uppercase;
+        letter-spacing:.5px;
+        color:#475569;
+        border:none;
+        padding:16px;
+    }
+
+    .table-enterprise td{
+        vertical-align:middle;
+        padding:16px;
+        border-color:#f1f5f9;
+    }
+
+    .badge-status{
+        padding:8px 14px;
+        border-radius:30px;
+        font-size:12px;
+        font-weight:700;
+    }
+
+    .badge-sent{
+        background:#dcfce7;
+        color:#166534;
+    }
+
+    .badge-pending{
+        background:#fef3c7;
+        color:#92400e;
+    }
+
+    .btn-enterprise{
+        border-radius:12px;
+        padding:8px 16px;
+        font-weight:600;
+    }
+
+    .search-box{
+        border-radius:14px;
+        overflow:hidden;
+        border:1px solid #dbe2ea;
+        background:white;
+    }
+
+    .search-box input{
+        border:none;
+        box-shadow:none;
+        padding:14px;
+    }
+
+    .search-box .input-group-text{
+        border:none;
+        background:white;
+    }
+
+    .supplier-avatar{
+        width:42px;
+        height:42px;
+        border-radius:50%;
+        background:#0d6efd;
+        color:white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-weight:700;
+    }
+
+</style>
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        <!-- PAGE HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+                <h2 class="fw-bold mb-1">
+                    RFQ Award Management
+                </h2>
+
+                <div class="text-muted">
+                    Enterprise Procurement & Supplier Award Workflow
+                </div>
+            </div>
+
+            <a href="{% url 'rfq_list' %}"
+               class="btn btn-dark btn-enterprise">
+
+                <i class="fa fa-arrow-left"></i>
+                Back to RFQs
+
+            </a>
+
+        </div>
+
+        {% include 'message.html' %}
+
+        <!-- KPI ROW -->
+        <div class="row mb-4">
+
+            <div class="col-lg-4 mb-3">
+
+                <div class="kpi-card">
+
+                    <div class="kpi-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fa fa-paper-plane"></i>
+                    </div>
+
+                    <div class="text-muted small">
+                        Suppliers Contacted
+                    </div>
+
+                    <h3 class="fw-bold">
+                        {{ rfq_log|length }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-4 mb-3">
+
+                <div class="kpi-card">
+
+                    <div class="kpi-icon bg-success bg-opacity-10 text-success">
+                        <i class="fa fa-file-contract"></i>
+                    </div>
+
+                    <div class="text-muted small">
+                        Award Status
+                    </div>
+
+                    <h4 class="fw-bold">
+
+                        {% if po and po.sent %}
+                            Awarded
+                        {% else %}
+                            Pending Award
+                        {% endif %}
+
+                    </h4>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-4 mb-3">
+
+                <div class="kpi-card">
+
+                    <div class="kpi-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fa fa-money-bill-wave"></i>
+                    </div>
+
+                    <div class="text-muted small">
+                        Awarded Supplier
+                    </div>
+
+                    <h5 class="fw-bold">
+
+                        {% if po and po.sent %}
+                            {{ po.supplier }}
+                        {% else %}
+                            Not Yet Assigned
+                        {% endif %}
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- MAIN CARD -->
+        <div class="elite-card">
+
+            <!-- HEADER -->
+            <div class="elite-header">
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+                    <div>
+                        <h4>
+                            <i class="fa fa-clipboard-list me-2"></i>
+                            RFQ Supplier Log
+                        </h4>
+
+                        <small>
+                            Procurement audit trail & supplier award management
+                        </small>
+                    </div>
+
+                    <div class="search-box input-group mt-3 mt-lg-0"
+                         style="max-width:400px;">
+
+                        <span class="input-group-text">
+                            <i class="fa fa-search"></i>
+                        </span>
+
+                        <input type="text"
+                               id="profileSearch"
+                               class="form-control"
+                               placeholder="Search supplier, RFQ, amount...">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- TABLE -->
+            <div class="p-4">
+
+                <div class="table-responsive">
+
+                    <table id="profileTable"
+                           class="table table-hover table-enterprise align-middle">
+
+                        <thead>
+
+                            <tr>
+                                <th>#</th>
+                                <th>Supplier</th>
+                                <th>RFQ Reference</th>
+                                <th>Quoted Amount</th>
+                                <th>Date Sent</th>
+                                <th>LPO Status</th>
+                                <th>Actions</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for req in rfq_log %}
+
+                            {% with po=req.purchase_orders.first %}
+
+                            <tr>
+
+                                <td>
+                                    {{ forloop.counter }}
+                                </td>
+
+                                <td>
+
+                                    <div class="d-flex align-items-center">
+
+                                        <div>
+
+                                            <div class="fw-bold">
+                                                {{ req.supplier }}
+                                            </div>
+
+                                            <small class="text-muted">
+                                                Supplier Record
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <td>
+
+                                    <strong>
+                                        {{ req.rfq.reference_no }}
+                                    </strong>
+
+                                </td>
+
+                                <td>
+
+                                    <strong class="text-success">
+                                        {{ rfq.req.total|money:request }}
+                                    </strong>
+
+                                </td>
+
+                                <td>
+
+                                    {{ req.date_sent|date:"d M Y H:i" }}
+
+                                </td>
+
+                                <td>
+
+                                    {% if po and po.sent %}
+
+                                        <span class="badge-status badge-sent">
+                                            <i class="fa fa-check-circle"></i>
+                                            LPO Sent
+                                        </span>
+
+                                        <div class="small text-muted mt-1">
+                                            {{ po.po_number }}
+                                        </div>
+
+                                    {% else %}
+
+                                        <span class="badge-status badge-pending">
+                                            <i class="fa fa-clock"></i>
+                                            Pending
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+
+                                    <div class="d-flex gap-2">
+
+                                        {% if po and po.sent %}
+
+                                            <button class="btn btn-success btn-sm btn-enterprise"
+                                                    disabled>
+
+                                                <i class="fa fa-check"></i>
+                                                Awarded
+
+                                            </button>
+
+                                            <a href="{% url 'po_cancel' po.slug %}"
+                                               class="btn btn-danger btn-sm btn-enterprise">
+
+                                                <i class="fa fa-times"></i>
+
+                                            </a>
+
+                                        {% elif awarded_po %}
+
+                                            <button class="btn btn-secondary btn-sm btn-enterprise"
+                                                    disabled>
+
+                                                <i class="fa fa-lock"></i>
+                                                Closed
+
+                                            </button>
+
+                                        {% else %}
+
+                                            <a href="{% url 'create_purchase_order' req.pk %}"
+                                               class="btn btn-primary btn-sm btn-enterprise">
+
+                                                <i class="fa fa-file-contract"></i>
+                                                Generate LPO
+
+                                            </a>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endwith %}
+
+                            {% empty %}
+
+                            <tr>
+
+                                <td colspan="7" class="text-center py-5">
+
+                                    <div class="text-muted">
+
+                                        <i class="fa fa-inbox fa-3x mb-3"></i>
+
+                                        <h5>
+                                            No RFQ Logs Available
+                                        </h5>
+
+                                        <p>
+                                            No suppliers have received this RFQ yet.
+                                        </p>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+{% endblock %}

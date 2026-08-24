@@ -1,0 +1,324 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Purchase Order {{  plan.number }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.2cm;
+        }
+
+        body {
+            font-family: "Helvetica", Arial, sans-serif;
+            font-size: 12px;
+            color: #000;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #e0e0e0;
+        }
+
+        .no-border td, .no-border th {
+            border: none;
+        }
+
+        .header {
+            width: 100%;
+            border-bottom: 2px solid #000;
+        }
+
+        .header td {
+            vertical-align: top;
+        }
+
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            text-decoration: underline;
+            margin: 10px 0;
+        }
+
+        .small {
+            font-size: 11px;
+        }
+
+        .table-header th {
+            background-color: #d9d9d9;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        .signature td {
+            border: none;
+            padding-top: 20px;
+            font-size: 11px;
+        }
+
+        .line {
+            border-top: 1px solid #000;
+            width: 150px;
+            margin-top: 20px;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <table class="no-border">
+        <tr>
+            <td style="width:30%;">
+            <img src="{{logo_url}}" width="200">
+            </td>
+              <td style="width: 70%; text-align: left; font-size: 12px;border: none;">
+        P.O. Box 481 Arua - Uganda<br>
+        <strong>T:</strong> +256 393 238 163 | M: 0773 472234 | 0702 857349<br/>
+        <strong>E:</strong> procurement@ricewestnile.org | ricearua@yahoo.com | ricewn@gmail.com<br/>
+         www.ricewestnile.org
+      </td>
+        </tr>
+    </table>
+
+    <div class="title">PURCHASE ORDER</div>
+
+    <!-- Header Info -->
+    <table>
+        <tr>
+            <td><strong>Order Date:</strong> {{  po.issue_date}}</td>
+            <td><strong>Purchase Order No:</strong> {{  po.po_number }}</td>
+        </tr>
+        <tr>
+            <td><strong>Requisition Ref:</strong> {{  po.requisition.number }}</td>
+            <td><strong>A. Requested by:</strong> {{plan.requester}}</td>
+
+        </tr>
+        <tr style="border:none">
+            <td colspan="2" style="border:none"><strong>Supplier:</strong> {{  po.supplier }}</td>
+        </tr>
+        <tr style="border:none">
+            <td colspan="2" style="border:none"><b>Address</b><br/>
+                <strong>Tel.:</strong> {{  po.supplier.phone|default:"-" }} |
+                <strong>Fax:</strong> ____________________________________________ |
+                <strong>Email:</strong> {{  po.supplier.email|default:"-" }}
+            </td>
+        </tr>
+    </table>
+<br/>
+    <b class="small"><em>PLEASE ENTER OUR ORDER AND FURNISH GOODS OR SERVICES SPECIFIED BELOW IN ACCORDANCE
+    WITH TERMS OF THIS PURCHASE ORDER INCLUDING THOSE TERMS AND CONDITIONS PROVIDED</em></b>
+
+    <!-- Item Table -->
+    <table>
+        <thead>
+      <tr>
+        <th>S/N</th>
+        <th>Description</th>
+        <th>Program</th>
+        <th>Unit</th>
+        <th>Qty</th>
+        <th>Unit Price</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+       {% for item in products %}
+
+      <tr>
+        <td width="20">{{ forloop.counter }}</td>
+        <td>{{ item.procurement_item.product.name|default:"-"}}</td>
+        <td>{{ plan.project|default:"-" }}</td>
+        <td width="50">{% if item.unit_measure %}{{ item.unit_measure }}{% else %}{{ item.procurement_item.unit_measure }}{%endif%}</td>
+        <td width="50">{{ item.procurement_item.qty|default:"-"}}</td>
+        <td width="50">{{ item.unit_price|default:"-" }}</td>
+        <td width="70">{{ item.line_total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+        <tfoot>
+           <tr >
+               <td colspan="4" rowspan="2">TERMS AND CONDITIONS<br/>
+                Place of Delivery: __________________________<br/>
+                Date of Delivery:  __________________________<br/>
+                Terms of payment:  __________________________<br/>
+                Method of payment:  _________________________<br/>
+                Transportation: ___________________________
+               </td>
+
+
+          <td colspan="2" class="left">VAT (if applicable) 18%</td>
+          <td style="color: white">-</td>
+        </tr>
+         <tr class="total">
+          <td colspan="2" class="left">Total Amount Payable ({{ display_currency }})</td>
+          <td>{{ total_amount }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+
+    <!-- Signature Section -->
+    <table class="signature" width="100%">
+        <tr>
+            <td>
+                <strong></strong><br><br>
+                <strong>Prepared by: {{purchase_or.issued_by}}</strong>
+                <strong>Reviewed by:</strong>
+                <strong>Approved by:</strong>
+
+            </td>
+            <td class="small" align="right">Name</td>
+            <td align="right">Title</td>
+            <td align="right">Signature</td>
+            <td align="right">Date</td>
+        </tr>
+    </table>
+
+    <!-- Vendor Acknowledgment -->
+    <u><p class="section-title">B. VERIFIED AND AGREED BY VENDOR</p></u>
+    DISCLAIMER: Incase of any failure  by the vendor to meet  the pre agreed requirements of quality, quantity and delivery
+time, RICE West Nile reserves the right  to cancel purchase order.
+
+
+     <table>
+        <tr style="border:none">
+            <td colspan="2" style="border:none"><b>Reviewed and<br/>Agreed by Vendor:</b>
+                <em style="color:none">Name</em> ---------------------------------------------
+                <em style="color:none">Title</em> ----------------
+                <em style="color:none">Signature</em> --------------------------
+                <em>Date</em> _______
+            </td>
+        </tr>
+    </table>
+
+
+    <table>
+        <thead>
+        <tr>
+            <th>White (Original) PROCUREMENT</th>
+            <th>SUPPLIER blue (copy)</th>
+            <th>Pink (copy) BOOK</th>
+        </tr>
+        </thead>
+    </table>
+
+</body>
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--  <style>-->
+<!--    body {-->
+<!--      font-family: 'Segoe UI', sans-serif;-->
+<!--      color: #333;-->
+<!--      margin: 0;-->
+<!--      padding: 0;-->
+<!--      background-color: #f9fafb;-->
+<!--    }-->
+<!--    .container {-->
+<!--      max-width: 600px;-->
+<!--      margin: 20px auto;-->
+<!--      background: white;-->
+<!--      border-radius: 10px;-->
+<!--      overflow: hidden;-->
+<!--      box-shadow: 0 2px 8px rgba(0,0,0,0.1);-->
+<!--    }-->
+<!--    .header {-->
+<!--      background-color: #166534;-->
+<!--      color: white;-->
+<!--      text-align: center;-->
+<!--      padding: 20px;-->
+<!--    }-->
+<!--    .content {-->
+<!--      padding: 25px;-->
+<!--    }-->
+<!--    .footer {-->
+<!--      text-align: center;-->
+<!--      font-size: 13px;-->
+<!--      color: #555;-->
+<!--      padding: 15px;-->
+<!--      background-color: #f3f4f6;-->
+<!--    }-->
+<!--    .button {-->
+<!--      background-color: #166534;-->
+<!--      color: white;-->
+<!--      padding: 10px 16px;-->
+<!--      text-decoration: none;-->
+<!--      border-radius: 6px;-->
+<!--      display: inline-block;-->
+<!--      margin-top: 15px;-->
+<!--    }-->
+<!--    .details {-->
+<!--      border-collapse: collapse;-->
+<!--      width: 100%;-->
+<!--      margin-top: 15px;-->
+<!--    }-->
+<!--    .details th, .details td {-->
+<!--      border: 1px solid #e5e7eb;-->
+<!--      padding: 8px;-->
+<!--      text-align: left;-->
+<!--    }-->
+<!--    .details th {-->
+<!--      background-color: #f9fafb;-->
+<!--    }-->
+<!--  </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--  <div class="container">-->
+<!--    <div class="header">-->
+<!--      <h2>Purchase Order: {{ po.po_number }}</h2>-->
+<!--    </div>-->
+<!--    <div class="content">-->
+<!--      <p>Dear {{ po.supplier.name }},</p>-->
+<!--      <p>-->
+<!--        We are pleased to inform you that your quotation for <strong>RFQ {{ po.rfq.id }}</strong> has been approved.-->
+<!--      </p>-->
+<!--      <p>The purchase order has been generated and attached to this email.</p>-->
+
+<!--      <table class="details">-->
+<!--        <tr><th>Purchase Order No.</th><td>{{ po.po_number }}</td></tr>-->
+<!--        <tr><th>Amount</th><td>{{ po.final_amount }}</td></tr>-->
+<!--        <tr><th>Issue Date</th><td>{{ po.issue_date }}</td></tr>-->
+<!--        <tr><th>Due Date</th><td>{{ po.due_date|default:"N/A" }}</td></tr>-->
+<!--      </table>-->
+
+<!--      <p>Please review the attached purchase order and confirm receipt at your earliest convenience.</p>-->
+
+<!--      <a href="{% if po.pdf %}{{ po.pdf.url }}{% endif %}" class="button">View Purchase Order</a>-->
+<!--    </div>-->
+<!--    <div class="footer">-->
+<!--      <p>Best regards,<br>-->
+<!--      <strong>Procurement Department</strong><br>-->
+<!--      {{ po.procurement_plan.school_name|default:"RICE West Nile" }}</p>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</body>-->
+<!--</html>-->

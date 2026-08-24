@@ -1,0 +1,30 @@
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const searchInput = document.getElementById("profileSearch");
+  const table = document.getElementById("profileTable");
+  const rows = table.getElementsByTagName("tr");
+
+  searchInput.addEventListener("keyup", function() {
+    const query = searchInput.value.toLowerCase();
+
+    // Loop through all rows except the header
+    for (let i = 1; i < rows.length; i++) {
+      const cells = rows[i].getElementsByTagName("td");
+      let match = false;
+
+      // Loop through all cells in a row
+      for (let j = 0; j < cells.length; j++) {
+        const cell = cells[j];
+        if (cell && cell.textContent.toLowerCase().includes(query)) {
+          match = true;
+          break;
+        }
+      }
+
+      // Show or hide row based on match
+      rows[i].style.display = match ? "" : "none";
+    }
+  });
+});
+</script>

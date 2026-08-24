@@ -1,0 +1,479 @@
+
+{% extends "hr/base.html" %}
+{% load form_tags %}
+
+{% block content %}
+<div class="container-fluid employee-admin-editor">
+
+    <div class="editor-hero">
+        <div>
+            <div class="eyebrow">Employee Master Record</div>
+            <h4>{{ profile.get_full_name|default:profile.username }}</h4>
+            <p>{{ profile.profile_type|default:"Staff" }}{% if profile.department %} &middot; {{ profile.department }}{% endif %}</p>
+        </div>
+        <div class="hero-actions">
+            <a href="{% url 'profile_list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-arrow-left me-1"></i> Profiles
+            </a>
+            <a class="btn btn-outline-warning btn-sm" href="{% url 'account_exit_process_hr_list' %}">
+                Onboarding / Exit
+            </a>
+        </div>
+    </div>
+
+    <div class="leave-panel">
+        <div class="leave-head">
+            <div>
+                <h5>Leave Balances</h5>
+                <p>{% if leave_start and leave_end %}{{ leave_start }} to {{ leave_end }}{% else %}Full year{% endif %}</p>
+            </div>
+            <form method="get" class="leave-filter">
+                <input type="number" name="leave_year" value="{{ leave_year }}" class="form-control" />
+                <input type="date" name="leave_start" value="{{ leave_start }}" class="form-control" />
+                <input type="date" name="leave_end" value="{{ leave_end }}" class="form-control" />
+                <button class="btn btn-outline-success">Filter</button>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Leave Type</th>
+                        <th class="text-end">Allotted</th>
+                        <th class="text-end">Taken</th>
+                        <th class="text-end">Remaining</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in leave_balance_rows %}
+                    <tr>
+                        <td class="fw-semibold">{{ row.leave_type.name }}</td>
+                        <td class="text-end">{{ row.allotted_days }}</td>
+                        <td class="text-end text-success fw-bold">{{ row.taken_days }}</td>
+                        <td class="text-end fw-bold">{{ row.remaining_days }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-3">No leave balance data.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr class="fw-bold">
+                        <td class="text-end">TOTAL</td>
+                        <td class="text-end">{{ leave_total_allotted }}</td>
+                        <td class="text-end text-success">{{ leave_total_taken }}</td>
+                        <td class="text-end">{{ leave_total_remaining }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    {% if profile_form.non_field_errors or employee_form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ profile_form.non_field_errors }}
+            {{ employee_form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" class="editor-form">
+        {% csrf_token %}
+
+        <section class="editor-section">
+            <div class="section-copy">
+                <span>01</span>
+                <h5>Profile Information</h5>
+                <p>Login identity, department, program area, profile type, status, and base contact details.</p>
+            </div>
+            <div class="section-fields">
+
+
+                {% for group, fields in profile_form.get_groups.items %}
+                    <div class="field-group">
+                        <h6>{{ group }}</h6>
+                        <div class="row g-3">
+                            {% for field_name in fields %}
+                                {% with f=profile_form|get_field:field_name %}
+                                <div class="col-lg-6">
+                                    {% if f.field.widget.input_type == "checkbox" %}
+                                        <div class="form-check mt-4">
+                                            {{ f }}
+                                            <label for="{{ f.id_for_label }}" class="form-check-label">{{ f.label }}</label>
+                                        </div>
+                                    {% else %}
+                                        <label for="{{ f.id_for_label }}" class="form-label">{{ f.label }}</label>
+                                        {{ f }}
+                                    {% endif %}
+                                    {% if f.help_text %}<div class="form-text">{{ f.help_text|safe }}</div>{% endif %}
+                                    {% if f.errors %}<div class="text-danger small mt-1">{{ f.errors }}</div>{% endif %}
+                                </div>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="editor-section">
+            <div class="section-copy">
+                <span>02</span>
+                <h5>Employee Bio Data</h5>
+                <p>Full employee bio-data record from the HR employee personal details form.</p>
+            </div>
+            <div class="section-fields">
+                {% for group, fields in employee_form.get_groups.items %}
+                    <div class="field-group">
+                        <h6>{{ group }}</h6>
+                        <div class="row g-3">
+                            {% for field_name in fields %}
+                                {% with f=employee_form|get_field:field_name %}
+                                <div class="col-lg-6">
+                                    <label for="{{ f.id_for_label }}" class="form-label">{{ f.label }}</label>
+                                    {{ f }}
+                                    {% if f.help_text %}<div class="form-text">{{ f.help_text|safe }}</div>{% endif %}
+                                    {% if f.errors %}<div class="text-danger small mt-1">{{ f.errors }}</div>{% endif %}
+                                </div>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="editor-section readonly-records-section">
+            <div class="section-copy">
+                <span><i class="fa fa-lock"></i></span>
+                <h5>Complete Employee Record</h5>
+                <p>All employee bio-data models are shown here as protected read-only records for review and audit.</p>
+            </div>
+            <div class="section-fields readonly-records">
+                {% for section in employee_readonly_sections %}
+                    <article class="record-panel" id="readonly-{{ section.key }}">
+                        <div class="record-panel-head">
+                            <div class="record-icon"><i class="fa {{ section.icon }}"></i></div>
+                            <div>
+                                <div class="record-number">{{ section.number }}</div>
+                                <h6>{{ section.title }}</h6>
+                                <p>{{ section.description }}</p>
+                            </div>
+                        </div>
+
+                        {% if section.records %}
+                            <div class="record-grid">
+                                {% for record in section.records %}
+                                    <div class="record-card">
+                                        {% if section.records|length > 1 %}
+                                            <div class="record-card-title">{{ record.label }}</div>
+                                        {% endif %}
+                                        <dl class="record-field-grid">
+                                            {% for item in record.fields %}
+                                                <div class="record-field">
+                                                    <dt>{{ item.label }}</dt>
+                                                    <dd>{{ item.value }}</dd>
+                                                </div>
+                                            {% endfor %}
+                                        </dl>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-record">
+                                <i class="fa fa-info-circle"></i>
+                                No {{ section.title|lower }} records have been captured.
+                            </div>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <div class="editor-actions">
+            <a href="{% url 'profile_list' %}" class="btn btn-light border">Cancel</a>
+            <button type="submit" class="btn btn-success px-4">
+                <i class="fa fa-save me-1"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+.employee-admin-editor {
+    background: #f6f8f7;
+    padding-bottom: 32px;
+}
+
+.editor-hero,
+.leave-panel,
+.editor-section,
+.editor-actions {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.editor-hero,
+.leave-panel,
+.editor-section,
+.editor-actions {
+    background: #ffffff;
+    border: 1px solid #e1e9e4;
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(22, 48, 34, 0.06);
+}
+
+.editor-hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: center;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+
+.eyebrow {
+    color: #1f7a3a;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.editor-hero h4,
+.leave-head h5,
+.section-copy h5,
+.field-group h6 {
+    font-weight: 800;
+    color: #14251b;
+}
+
+.editor-hero p,
+.leave-head p,
+.section-copy p {
+    margin: 2px 0 0;
+    color: #66746c;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.leave-panel {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.leave-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: end;
+    margin-bottom: 12px;
+}
+
+.leave-filter {
+    display: grid;
+    grid-template-columns: 110px 150px 150px auto;
+    gap: 8px;
+}
+
+.editor-section {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.section-copy span {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #e8f4ed;
+    color: #1f7a3a;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.field-group {
+    padding-bottom: 18px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #edf2ef;
+}
+
+.field-group:last-child {
+    border-bottom: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.readonly-records-section {
+    align-items: start;
+}
+
+.readonly-records {
+    display: grid;
+    gap: 16px;
+}
+
+.record-panel {
+    border: 1px solid #dfe9e3;
+    border-radius: 8px;
+    background: #fbfdfc;
+    overflow: hidden;
+}
+
+.record-panel-head {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 16px;
+    border-bottom: 1px solid #e8efeb;
+    background: linear-gradient(180deg, #ffffff, #f7fbf8);
+}
+
+.record-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #e8f4ed;
+    color: #1f7a3a;
+}
+
+.record-number {
+    color: #1f7a3a;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.record-panel h6 {
+    margin: 2px 0 4px;
+    color: #14251b;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.record-panel p {
+    margin: 0;
+    color: #66746c;
+}
+
+.record-grid {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+}
+
+.record-card {
+    border: 1px solid #edf2ef;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.record-card-title {
+    padding: 12px 14px 0;
+    color: #17261d;
+    font-weight: 800;
+}
+
+.record-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 8px 14px 14px;
+}
+
+.record-field {
+    min-width: 0;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f4f2;
+}
+
+.record-field:nth-last-child(-n + 2) {
+    border-bottom: 0;
+}
+
+.record-field dt {
+    margin-bottom: 4px;
+    color: #718077;
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.record-field dd {
+    margin: 0;
+    color: #18271e;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.empty-record {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 14px;
+    padding: 14px;
+    border: 1px dashed #cfdcd4;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #68786f;
+    font-weight: 700;
+}
+
+.form-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #2c3d33;
+}
+
+.editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    position: sticky;
+    bottom: 0;
+    padding: 14px 18px;
+}
+
+@media (max-width: 991px) {
+    .editor-section {
+        grid-template-columns: 1fr;
+    }
+
+    .leave-head,
+    .editor-hero {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .leave-filter {
+        grid-template-columns: 1fr;
+    }
+
+    .record-field-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .record-field:nth-last-child(-n + 2) {
+        border-bottom: 1px solid #f0f4f2;
+    }
+
+    .record-field:last-child {
+        border-bottom: 0;
+    }
+}
+</style>
+{% endblock %}

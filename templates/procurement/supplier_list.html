@@ -1,0 +1,709 @@
+{% extends 'procurement/base.html' %}
+{% load static %}
+
+{% block title %}Supplier Management{% endblock %}
+
+{% block content %}
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        <!-- Enterprise Header -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+
+            <div class="card-body px-4 py-4">
+
+                <div class="row align-items-center g-4">
+
+                    <!-- Left -->
+                    <div class="col-lg-7">
+
+                        <div class="d-flex align-items-start">
+
+                            <!-- Icon -->
+                            <div class="supplier-icon-wrapper me-3">
+
+                                <i class="fa fa-building"></i>
+
+                            </div>
+
+                            <!-- Text -->
+                            <div>
+
+                                <h2 class="fw-bold text-dark mb-1">
+                                    Supplier Management
+                                </h2>
+
+                                <p class="text-muted mb-3">
+                                    Centralized supplier onboarding, vendor management and procurement partner administration.
+                                </p>
+
+                                <!-- Breadcrumb -->
+                                <nav aria-label="breadcrumb">
+
+                                    <ol class="breadcrumb enterprise-breadcrumb mb-0">
+
+                                        <li class="breadcrumb-item">
+
+                                            <a href="{% url 'dashboard' %}">
+
+                                                <i class="fa fa-home me-1"></i>
+                                                Dashboard
+
+                                            </a>
+
+                                        </li>
+
+                                        <li class="breadcrumb-item">
+                                            Procurement
+                                        </li>
+
+                                        <li class="breadcrumb-item active">
+                                            Suppliers
+                                        </li>
+
+                                    </ol>
+
+                                </nav>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Right -->
+                    <div class="col-lg-5">
+
+                        <div class="row g-3">
+
+                            <!-- Stats -->
+                            <div class="col-6">
+
+                                <div class="mini-stat-card">
+
+                                    <div class="stat-icon bg-primary-subtle text-primary">
+
+                                        <i class="fa fa-users"></i>
+
+                                    </div>
+
+                                    <div>
+
+                                        <h4 class="fw-bold mb-0">
+                                            {{ object_list|length }}
+                                        </h4>
+
+                                        <small class="text-muted">
+                                            Total Suppliers
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- Active -->
+                            <div class="col-6">
+
+                                <div class="mini-stat-card">
+
+                                    <div class="stat-icon bg-success-subtle text-success">
+
+                                        <i class="fa fa-check-circle"></i>
+
+                                    </div>
+
+                                    <div>
+
+                                        <h4 class="fw-bold mb-0">
+                                            {{ active_count|default:"0" }}
+                                        </h4>
+
+                                        <small class="text-muted">
+                                            Active Vendors
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% include "message.html" %}
+
+        <!-- Main Table Card -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+            <!-- Toolbar -->
+            <div class="card-header bg-white border-0 px-4 py-4">
+
+                <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3">
+
+                    <!-- Left -->
+                    <div>
+
+                        <h5 class="fw-bold text-dark mb-1">
+
+                            <i class="fa fa-address-book text-primary me-2"></i>
+
+                            Supplier Directory
+
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            View, manage and monitor all supplier accounts.
+                        </p>
+
+                    </div>
+
+                    <!-- Right -->
+                    <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch">
+
+                        <!-- Search -->
+                        <div class="enterprise-search">
+
+                            <i class="fa fa-search"></i>
+
+                            <input type="text"
+                                   id="profileSearch"
+                                   placeholder="Search suppliers, phone, organization...">
+
+                        </div>
+
+                        <!-- Add -->
+                        <a href="{% url 'supplier_register' %}"
+                           class="btn btn-primary px-4 enterprise-btn">
+
+                            <i class="fa fa-plus-circle me-2"></i>
+
+                            New Supplier
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+
+                <table class="table enterprise-table align-middle mb-0">
+
+                    <thead>
+
+                        <tr>
+
+                            <th width="80" class="ps-4">
+                                #
+                            </th>
+
+                            <th>
+                                Supplier
+                            </th>
+
+                            <th>
+                                Contact
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th class="text-end pe-4">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="profileTable">
+
+                        {% for s in object_list %}
+
+                        <tr>
+
+                            <!-- Number -->
+                            <td class="ps-4 text-muted fw-semibold">
+
+                                {{ forloop.counter }}
+
+                            </td>
+
+                            <!-- Supplier -->
+                            <td>
+
+                                <div class="d-flex align-items-center">
+
+                                    <!-- Avatar -->
+                                    <div class="supplier-avatar me-3">
+
+                                        {{ s.organisation_name|default:s.full_name|slice:":1"|upper }}
+
+                                    </div>
+
+                                    <!-- Details -->
+                                    <div>
+
+                                        <div class="fw-semibold text-dark">
+
+                                            {{ s.organisation_name|default:s.full_name }}
+
+                                        </div>
+
+                                        {% if s.tin_number %}
+
+                                        <small class="text-muted">
+
+                                            TIN: {{ s.tin_number }}
+
+                                        </small>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <!-- Contact -->
+                            <td>
+
+                                <div class="small">
+
+                                    {% if s.phone %}
+
+                                    <div class="mb-1">
+
+                                        <i class="fa fa-phone text-muted me-1"></i>
+
+                                        {{ s.phone }}
+
+                                    </div>
+
+                                    {% endif %}
+
+                                    {% if s.email %}
+
+                                    <div>
+
+                                        <i class="fa fa-envelope text-muted me-1"></i>
+
+                                        {{ s.email }}
+
+                                    </div>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                            <!-- Status -->
+                            <td>
+
+                                {% if s.active %}
+
+                                <span class="enterprise-badge success">
+
+                                    <i class="fa fa-check-circle me-1"></i>
+
+                                    Active
+
+                                </span>
+
+                                {% else %}
+
+                                <span class="enterprise-badge warning">
+
+                                    <i class="fa fa-clock me-1"></i>
+
+                                    Pending
+
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-end pe-4">
+
+                                <div class="dropdown">
+
+                                    <button class="btn btn-light border btn-sm action-btn"
+                                            data-bs-toggle="dropdown">
+
+                                        <i class="fa fa-ellipsis-h"></i>
+
+                                    </button>
+
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3">
+
+                                        {% if s.phone %}
+
+                                        <li>
+
+                                            <a class="dropdown-item"
+                                               href="{% url 'update_supplier' s.pk s.phone %}">
+
+                                                <i class="fa fa-edit text-primary me-2"></i>
+
+                                                Edit Supplier
+
+                                            </a>
+
+                                        </li>
+
+                                        {% endif %}
+
+                                        <li>
+
+                                            <a class="dropdown-item"
+                                               href="#">
+
+                                                <i class="fa fa-eye text-info me-2"></i>
+
+                                                View Profile
+
+                                            </a>
+
+                                        </li>
+
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+
+                                        <li>
+
+                                            <a class="dropdown-item text-danger"
+                                               href="#">
+
+                                                <i class="fa fa-trash me-2"></i>
+
+                                                Delete Supplier
+
+                                            </a>
+
+                                        </li>
+
+                                    </ul>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <!-- Empty State -->
+                        <tr>
+
+                            <td colspan="5" class="text-center py-5">
+
+                                <div class="empty-state">
+
+                                    <div class="empty-icon mb-4">
+
+                                        <i class="fa fa-database"></i>
+
+                                    </div>
+
+                                    <h4 class="fw-bold text-dark mb-2">
+
+                                        No Suppliers Found
+
+                                    </h4>
+
+                                    <p class="text-muted mb-4">
+
+                                        No supplier records currently exist in the procurement system.
+
+                                    </p>
+
+                                    <a href="{% url 'supplier_register' %}"
+                                       class="btn btn-primary px-4">
+
+                                        <i class="fa fa-plus-circle me-2"></i>
+
+                                        Add First Supplier
+
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="card-footer bg-white border-0 py-3 px-4">
+
+                {% include "pagination.html" %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Enterprise Styles -->
+<style>
+
+:root{
+    --primary-color:#0d6efd;
+    --success-color:#198754;
+    --warning-color:#f59e0b;
+    --border-color:#e9ecef;
+    --text-muted:#667085;
+    --card-radius:18px;
+}
+
+/* Cards */
+.card{
+    border-radius:var(--card-radius);
+}
+
+/* Header Icon */
+.supplier-icon-wrapper{
+    width:64px;
+    height:64px;
+    border-radius:18px;
+    background:rgba(13,110,253,.1);
+    color:var(--primary-color);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+}
+
+/* Breadcrumb */
+.enterprise-breadcrumb{
+    --bs-breadcrumb-divider:'›';
+    margin:0;
+}
+
+.enterprise-breadcrumb a{
+    text-decoration:none;
+    color:#667085;
+    transition:.2s ease;
+}
+
+.enterprise-breadcrumb a:hover{
+    color:var(--primary-color);
+}
+
+/* Search */
+.enterprise-search{
+    position:relative;
+    min-width:320px;
+}
+
+.enterprise-search i{
+    position:absolute;
+    top:50%;
+    left:16px;
+    transform:translateY(-50%);
+    color:#98a2b3;
+}
+
+.enterprise-search input{
+    width:100%;
+    height:48px;
+    border-radius:14px;
+    border:1px solid var(--border-color);
+    padding-left:46px;
+    padding-right:16px;
+    transition:.2s ease;
+}
+
+.enterprise-search input:focus{
+    outline:none;
+    border-color:var(--primary-color);
+    box-shadow:0 0 0 4px rgba(13,110,253,.1);
+}
+
+/* Buttons */
+.enterprise-btn{
+    border-radius:14px;
+    height:48px;
+    display:flex;
+    align-items:center;
+    font-weight:600;
+}
+
+/* Stats */
+.mini-stat-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:#fff;
+    border:1px solid var(--border-color);
+    border-radius:16px;
+    padding:18px;
+}
+
+.stat-icon{
+    width:48px;
+    height:48px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+}
+
+/* Table */
+.enterprise-table thead th{
+    background:#f8fafc;
+    color:#667085;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    border-bottom:none;
+    padding-top:16px;
+    padding-bottom:16px;
+}
+
+.enterprise-table tbody tr{
+    transition:.2s ease;
+}
+
+.enterprise-table tbody tr:hover{
+    background:#f8fbff;
+}
+
+.enterprise-table td{
+    vertical-align:middle;
+    padding-top:18px;
+    padding-bottom:18px;
+    border-color:#f1f3f5;
+}
+
+/* Avatar */
+.supplier-avatar{
+    width:48px;
+    height:48px;
+    border-radius:14px;
+    background:linear-gradient(135deg,#0d6efd,#3b82f6);
+    color:#fff;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+}
+
+/* Badges */
+.enterprise-badge{
+    display:inline-flex;
+    align-items:center;
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+}
+
+.enterprise-badge.success{
+    background:rgba(25,135,84,.1);
+    color:var(--success-color);
+}
+
+.enterprise-badge.warning{
+    background:rgba(245,158,11,.12);
+    color:var(--warning-color);
+}
+
+/* Actions */
+.action-btn{
+    border-radius:10px;
+    width:38px;
+    height:38px;
+}
+
+/* Empty State */
+.empty-state{
+    padding:40px 20px;
+}
+
+.empty-icon{
+    width:90px;
+    height:90px;
+    border-radius:24px;
+    background:#f8f9fa;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:38px;
+    color:#98a2b3;
+}
+
+/* Mobile */
+@media(max-width:768px){
+
+    .enterprise-search{
+        min-width:100%;
+    }
+
+    .mini-stat-card{
+        padding:14px;
+    }
+
+}
+
+</style>
+
+<!-- Smart Search -->
+<script>
+
+const searchInput = document.getElementById('profileSearch');
+
+searchInput.addEventListener('keyup', function(){
+
+    const value = this.value.toLowerCase();
+
+    const rows = document.querySelectorAll('#profileTable tr');
+
+    rows.forEach((row)=>{
+
+        const text = row.innerText.toLowerCase();
+
+        row.style.display = text.includes(value)
+            ? ''
+            : 'none';
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

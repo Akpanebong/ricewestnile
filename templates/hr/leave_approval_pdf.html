@@ -1,0 +1,86 @@
+
+{% autoescape off %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Application Status</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; border: 1px solid #dddddd; border-radius: 10px; background-color: #ffffff;">
+
+                    <!-- Header Row -->
+                    <tr>
+                        <td style="padding: 15px; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="background-color: white; padding: 20px; color: #4CAF50; font-size: 24px;
+                            font-weight: bold; border-top-left-radius: 10px; border-top-right-radius: 10px;" align="center">
+                                        <img src="{{ logo_base64 }}" alt="RICE WEST NILE Logo"
+                                             style="height: 150%; width:150%">
+                                    </td>
+<!--                                    <td align="left" style="color: #4CAF50; font-size: 28px; font-weight: bold;">-->
+<!--                                        RICE WEST NILE-->
+<!--                                    </td>-->
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Section Title -->
+                    <tr>
+                        <td align="center"
+                            style="background-color: #4CAF50; padding: 15px; color: white; font-size: 22px;
+                            font-weight: bold;">
+                            Leave Application Status
+                        </td>
+                    </tr>
+
+                    <!-- Main Body -->
+                    <tr>
+                        <td style="padding: 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                            <h2 style="color: #333333; font-size: 20px;">Dear {{ full_name }},</h2>
+                            <p>
+                                Your leave request from
+                                <strong>{{ leave.start_date }}</strong> to
+                                <strong>{{ leave.end_date }}</strong> has been:
+                            </p>
+                            <div style="background-color: #e8f5e9; padding: 15px; text-align: center;
+                                        font-size: 24px; color: #2e7d32; font-weight: bold;
+                                        border-radius: 5px; margin: 20px 0;">
+                                {% if leave.status == "Approved" %}
+                                    Approved
+                                {% elif leave.status == "Denied" %}
+                                <p style="color:red">Denied</p>
+                                {% else %}
+                                    Pending
+                                {% endif %}
+                            </div>
+                            <p align="justify"><strong>Reason provided:</strong><br/> {{ leave.reason }}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding: 10px; background-color: #eeeeee;
+                                                  color: #777777; font-size: 12px;">
+                            <p style="margin: 0;">
+                                This is an automated notification from
+                                <strong>RICE WEST NILE HR System</strong>.
+                                Please do not reply to this email.
+                                <P>Generated on: {% now 'M d, Y' %}
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+{% endautoescape %}

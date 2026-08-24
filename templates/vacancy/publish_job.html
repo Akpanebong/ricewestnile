@@ -1,0 +1,111 @@
+
+
+
+
+
+{% extends "base.html" %}
+{% block title %}Publish Job Opening{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- ===============================
+        PAGE HEADER
+    ================================ -->
+    <div class="bg-white p-4 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="fw-bold text-success mb-1">
+                <i class="fa fa-briefcase me-2"></i>
+                Publish Job Opening
+            </h4>
+            <small class="text-muted">
+                Create and publish a new job listing for recruitment.
+                <p class="text-success">{{req.title}}</p>
+            </small>
+        </div>
+
+        <a href="{% url 'vacancy:recruitment_request_list' %}"
+           class="btn btn-outline-secondary">
+            <i class="ti-arrow-left me-1"></i> Back
+        </a>
+    </div>
+
+
+    <!-- ===============================
+        FORM CARD
+    ================================ -->
+      <div class="row justify-content-center">
+
+        <div class="col-xl-9">
+
+            <div class="card shadow border-0 recruitment-card">
+        <div class="card-body p-4">
+
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-4">
+
+                    <!-- Job Description -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">
+                            Job Description
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.description.errors }}
+                            </div>
+                        {% endif %}
+                        <small class="text-muted">
+                            Provide a clear overview of responsibilities, qualifications, and expectations.
+                        </small>
+                    </div>
+
+                    <!-- Deadline -->
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">
+                            Application Deadline
+                        </label>
+                        {{ form.deadline }}
+                        {% if form.deadline.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.deadline.errors }}
+                            </div>
+                        {% endif %}
+                        <small class="text-muted">
+                            Last date candidates can apply.
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <!-- ===============================
+                    ACTION SECTION
+                ================================ -->
+                <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top">
+
+                    <a href="{% url 'vacancy:recruitment_request_list' %}"
+                       class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-success px-4">
+                        <i class="ti-check me-1"></i>
+                        Publish Job
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+</div>
+</div>
+{% endblock %}

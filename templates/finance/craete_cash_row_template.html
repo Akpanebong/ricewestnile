@@ -1,0 +1,50 @@
+<script type="text/template" id="empty-row">
+<tr>
+
+    <td>
+        <input type="text"
+               name="items[__index__][activity_code]"
+               class="form-control form-control-sm">
+    </td>
+
+    <td>
+        <input type="text"
+               name="items[__index__][program_code]"
+               class="form-control form-control-sm">
+    </td>
+
+    <td>
+        <input type="text"
+               name="items[__index__][particulars]"
+               class="form-control form-control-sm">
+    </td>
+
+    <td>
+        <input type="number"
+               class="form-control form-control-sm qty"
+               name="items[__index__][quantity]"
+               min="0">
+    </td>
+
+    <td>
+        <input type="number"
+               class="form-control form-control-sm unit_cost"
+               name="items[__index__][unit_cost]"
+               min="0">
+    </td>
+
+    <td>
+        <input type="text"
+               readonly
+               class="form-control form-control-sm total bg-light">
+    </td>
+
+    <td class="text-center">
+        <button type="button"
+                class="btn btn-sm btn-danger remove-row">
+            ✕
+        </button>
+    </td>
+
+</tr>
+</script>

@@ -1,0 +1,1211 @@
+{% extends 'communication/base.html' %}
+{% load form_tags %}
+
+{% block title %}Submit Report{% endblock %}
+
+{% block content %}
+
+{% include 'upload_js.html' %}
+
+<div class="container-fluid py-3 py-lg-4">
+
+<!-- =========================================================
+     PAGE HEADER
+========================================================== -->
+<div class="page-header mb-4">
+    <div class="d-flex flex-column flex-lg-row
+                justify-content-between align-items-lg-center gap-3">
+
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="page-icon">
+                    <i class="bi bi-file-earmark-arrow-up"></i>
+                </span>
+
+                <span class="text-uppercase small fw-semibold text-muted">
+                    Communication
+                </span>
+            </div>
+
+            <h3 class="fw-bold mb-1 text-dark">
+                Submit Report
+            </h3>
+
+            <p class="text-muted mb-0">
+                Submit a finalized report to the organization's knowledge repository.
+            </p>
+        </div>
+
+        <div>
+            <a href="javascript:history.back()"
+               class="btn btn-outline-secondary px-3">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back
+            </a>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- =========================================================
+     MAIN CONTENT
+========================================================== -->
+<div class="row g-4 align-items-start">
+
+    <!-- =====================================================
+         FORM
+    ====================================================== -->
+    <div class="col-xl-8">
+
+        <div class="card report-card border-0 shadow-sm">
+
+            <!-- Card Header -->
+            <div class="card-header bg-white border-bottom p-4">
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <div class="section-icon">
+                        <i class="bi bi-file-text"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="fw-bold mb-1">
+                            Report Information
+                        </h5>
+
+                        <p class="small text-muted mb-0">
+                            Provide the necessary information about the report.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Card Body -->
+            <div class="card-body p-4 p-lg-5">
+
+                <form method="post"
+                      enctype="multipart/form-data"
+                      id="reportForm"
+                      novalidate>
+
+                    {% csrf_token %}
+
+
+                    <!-- =================================================
+                         FORM ERRORS
+                    ================================================== -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4">
+
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+
+                                <div>
+                                    <strong>Unable to submit report</strong>
+
+                                    {% for error in form.non_field_errors %}
+                                        <div class="small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                        </div>
+                    {% endif %}
+
+
+                    <!-- =================================================
+                         BASIC INFORMATION
+                    ================================================== -->
+                    <div class="form-section">
+
+                        <div class="form-section-title">
+                            <span>01</span>
+                            Basic Information
+                        </div>
+
+                        <div class="row g-4">
+
+                            <!-- Title -->
+                            <div class="col-12">
+
+                                <label for="{{ form.title.id_for_label }}"
+                                       class="form-label fw-semibold">
+                                    Report Title
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                {{ form.title|add_class:"form-control form-control-lg" }}
+
+                                {% for error in form.title.errors %}
+                                    <div class="text-danger small mt-1">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                                <div class="form-text">
+                                    Use a clear and descriptive title that identifies
+                                    the report.
+                                </div>
+
+                            </div>
+
+
+                            <!-- Report Type -->
+                            <div class="col-md-6">
+
+                                <label for="{{ form.report_type.id_for_label }}"
+                                       class="form-label fw-semibold">
+                                    Report Type
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                {{ form.report_type|add_class:"form-control select2" }}
+
+                                {% for error in form.report_type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+
+                            <!-- Focus Area -->
+                            <div class="col-md-6">
+
+                                <label for="{{ form.focus_area.id_for_label }}"
+                                       class="form-label fw-semibold">
+                                    Focus Area
+                                    <span class="text-danger">*</span>
+                                </label>
+
+                                {{ form.focus_area|add_class:"form-control select2" }}
+
+                                {% for error in form.focus_area.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                                <div class="form-text">
+                                    Select the programmatic area related to this report.
+                                </div>
+
+                            </div>
+
+
+                            <!-- Sub Group -->
+                            <div class="col-md-6">
+
+                                <label for="{{ form.sub_group.id_for_label }}"
+                                       class="form-label fw-semibold">
+                                    Sub Group
+                                </label>
+
+                                {{ form.sub_group|add_class:"form-control select2" }}
+
+                                {% for error in form.sub_group.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                                <div class="form-text">
+                                    Available options depend on the selected focus area.
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         REPORT DESCRIPTION
+                    ================================================== -->
+                    <div class="form-section mt-5">
+
+                        <div class="form-section-title">
+                            <span>02</span>
+                            Report Details
+                        </div>
+
+                        <div class="mb-0">
+
+                            <label for="{{ form.comment.id_for_label }}"
+                                   class="form-label fw-semibold">
+                                Additional Comments
+                            </label>
+
+                            {{ form.comment|add_class:"form-control" }}
+
+                            {% for error in form.comment.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+
+                            <div class="form-text">
+                                Add any relevant context, notes, or information
+                                recipients should know.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         FILE UPLOAD
+                    ================================================== -->
+                    <div class="form-section mt-5">
+
+                        <div class="form-section-title">
+                            <span>03</span>
+                            Report Document
+                        </div>
+
+                        <label class="form-label fw-semibold">
+                            Upload Report
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        <div id="dropZone"
+                             class="upload-zone">
+
+                            <div class="upload-icon">
+                                <i class="bi bi-file-earmark-word"></i>
+                            </div>
+
+                            <h6 class="fw-bold mb-1">
+                                Drop your Word document here
+                            </h6>
+
+                            <p class="text-muted small mb-3">
+                                or click anywhere in this area to browse
+                            </p>
+
+                            <span class="btn btn-outline-success btn-sm px-3">
+                                <i class="bi bi-folder2-open me-1"></i>
+                                Choose File
+                            </span>
+
+                            <div class="upload-file-name mt-3 d-none"
+                                 id="selectedFile">
+                                <i class="bi bi-file-earmark-check text-success me-1"></i>
+                                <span></span>
+                            </div>
+
+                        </div>
+
+                        <div class="d-none">
+                            {{ form.file|add_class:"form-control" }}
+                        </div>
+
+                        {% for error in form.file.errors %}
+                            <div class="text-danger small mt-2">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                {{ error }}
+                            </div>
+                        {% endfor %}
+
+                        <div class="upload-help mt-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Accepted formats:
+                            <strong>.DOC</strong> and <strong>.DOCX</strong>
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         UPLOAD PROGRESS
+                    ================================================== -->
+                    <div id="uploadProgress"
+                         class="upload-progress d-none mt-4">
+
+                        <div class="d-flex justify-content-between mb-2">
+
+                            <span class="small fw-semibold">
+                                Uploading report...
+                            </span>
+
+                            <span class="small text-muted"
+                                  id="progressText">
+                                0%
+                            </span>
+
+                        </div>
+
+                        <div class="progress"
+                             style="height: 7px;">
+
+                            <div id="progressBar"
+                                 class="progress-bar bg-success"
+                                 role="progressbar"
+                                 style="width: 0%;">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         ACTIONS
+                    ================================================== -->
+                    <div class="form-actions mt-5 pt-4">
+
+                        <a href="javascript:history.back()"
+                           class="btn btn-light border px-4">
+                            <i class="bi bi-x-lg me-1"></i>
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                                id="submitBtn"
+                                class="btn btn-success px-4 px-lg-5 fw-semibold">
+
+                            <i class="bi bi-cloud-arrow-up me-1"></i>
+                            Submit Report
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+    <div class="col-xl-4">
+
+        <!-- Submission Guide -->
+        <div class="card border-0 shadow-sm guide-card mb-4">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex align-items-center gap-3 mb-4">
+
+                    <div class="guide-icon">
+                        <i class="bi bi-lightbulb"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="fw-bold mb-0">
+                            Submission Guide
+                        </h5>
+
+                        <small class="text-muted">
+                            Before submitting your report
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <div class="guide-item">
+
+                    <div class="guide-number">
+                        1
+                    </div>
+
+                    <div>
+                        <h6 class="fw-semibold mb-1">
+                            Finalize the document
+                        </h6>
+
+                        <p class="small text-muted mb-0">
+                            Ensure the report has been reviewed and is ready
+                            for organizational use.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="guide-item">
+
+                    <div class="guide-number">
+                        2
+                    </div>
+
+                    <div>
+                        <h6 class="fw-semibold mb-1">
+                            Select the correct classification
+                        </h6>
+
+                        <p class="small text-muted mb-0">
+                            Choose the appropriate report type and focus area
+                            to make the document easier to find.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="guide-item">
+
+                    <div class="guide-number">
+                        3
+                    </div>
+
+                    <div>
+                        <h6 class="fw-semibold mb-1">
+                            Upload the final Word file
+                        </h6>
+
+                        <p class="small text-muted mb-0">
+                            Only Microsoft Word documents are accepted.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="guide-item border-0 pb-0">
+
+                    <div class="guide-number">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+
+                    <div>
+                        <h6 class="fw-semibold mb-1">
+                            Secure submission
+                        </h6>
+
+                        <p class="small text-muted mb-0">
+                            Your submission is securely stored and recorded
+                            with its submission details.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Classification Notice -->
+        <div class="card border-0 shadow-sm classification-card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex gap-3">
+
+                    <div class="classification-icon">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+
+                    <div>
+
+                        <h6 class="fw-bold mb-1">
+                            Smart Classification
+                        </h6>
+
+                        <p class="small text-muted mb-0">
+                            Selecting a <strong>Focus Area</strong> automatically
+                            loads the relevant <strong>Sub Groups</strong>.
+                            This helps maintain consistent report classification.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+<style>
+
+/* ============================================================
+   PAGE
+============================================================ */
+
+.page-header {
+    border-bottom: 1px solid #edf0f4;
+    padding-bottom: 1rem;
+}
+
+.page-icon {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(25, 135, 84, .10);
+    color: #198754;
+    font-size: 1.15rem;
+}
+
+
+/* ============================================================
+   CARDS
+============================================================ */
+
+.report-card,
+.guide-card,
+.classification-card {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.report-card {
+    background: #fff;
+}
+
+.report-card .card-header {
+    background: linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #fbfcfd 100%
+    );
+}
+
+
+/* ============================================================
+   SECTION ICONS
+============================================================ */
+
+.section-icon,
+.guide-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.section-icon {
+    background: rgba(25, 135, 84, .10);
+    color: #198754;
+}
+
+.guide-icon {
+    background: rgba(255, 193, 7, .13);
+    color: #b78103;
+}
+
+
+/* ============================================================
+   FORM SECTIONS
+============================================================ */
+
+.form-section {
+    position: relative;
+}
+
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .88rem;
+    font-weight: 700;
+    color: #344054;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 1.5rem;
+}
+
+.form-section-title span {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #198754;
+    font-size: .75rem;
+}
+
+
+/* ============================================================
+   FORM CONTROLS
+============================================================ */
+
+.form-control,
+.form-select,
+.select2-container--default .select2-selection--single {
+    border-color: #dfe4ea;
+    border-radius: 9px;
+    min-height: 44px;
+    box-shadow: none;
+    transition: all .2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 .2rem rgba(25, 135, 84, .10);
+}
+
+.form-label {
+    color: #344054;
+    font-size: .9rem;
+}
+
+
+/* ============================================================
+   UPLOAD ZONE
+============================================================ */
+
+.upload-zone {
+    border: 2px dashed #cfd8d3;
+    border-radius: 14px;
+    background: #fbfdfc;
+    min-height: 210px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all .25s ease;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+    border-color: #198754;
+    background: #f3fbf6;
+    transform: translateY(-1px);
+}
+
+.upload-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eaf7ef;
+    color: #198754;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.upload-file-name {
+    max-width: 100%;
+    padding: .55rem .9rem;
+    border-radius: 8px;
+    background: #eef8f2;
+    color: #344054;
+    font-size: .85rem;
+    word-break: break-word;
+}
+
+.upload-help {
+    color: #667085;
+    font-size: .78rem;
+}
+
+
+/* ============================================================
+   GUIDE
+============================================================ */
+
+.guide-item {
+    display: flex;
+    gap: 14px;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid #eef0f3;
+}
+
+.guide-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0fdf4;
+    color: #198754;
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.classification-card {
+    background: linear-gradient(
+        135deg,
+        #f8fbff 0%,
+        #ffffff 100%
+    );
+}
+
+.classification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #edf4ff;
+    color: #0d6efd;
+}
+
+
+/* ============================================================
+   ACTIONS
+============================================================ */
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #edf0f4;
+}
+
+
+/* ============================================================
+   SELECT2
+============================================================ */
+
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-container--default
+.select2-selection--single {
+    display: flex;
+    align-items: center;
+    padding: 0 .75rem;
+}
+
+.select2-container--default
+.select2-selection--single
+.select2-selection__rendered {
+    color: #344054;
+    line-height: normal;
+}
+
+.select2-container--default
+.select2-selection--single
+.select2-selection__arrow {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 767.98px) {
+
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .report-card .card-body {
+        padding: 1.25rem !important;
+    }
+
+    .upload-zone {
+        min-height: 180px;
+        padding: 1.5rem 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: .75rem;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .page-header h3 {
+        font-size: 1.35rem;
+    }
+
+}
+
+</style>
+
+<script>
+$(document).ready(function () {
+
+    /* ============================================================
+       SELECT2
+    ============================================================ */
+
+    $('.select2').select2({
+        width: '100%',
+        placeholder: 'Select an option',
+        allowClear: true
+    });
+
+
+    /* ============================================================
+       REFERENCES
+    ============================================================ */
+
+    const focusSelect = $('select[name="focus_area"]');
+    const subGroupSelect = $('select[name="sub_group"]');
+
+    const dropZone = $('#dropZone');
+    const fileInput = $('#id_file');
+    const selectedFile = $('#selectedFile');
+
+    const reportForm = $('#reportForm');
+    const submitBtn = $('#submitBtn');
+
+    const progressContainer = $('#uploadProgress');
+    const progressBar = $('#progressBar');
+    const progressText = $('#progressText');
+
+
+    /* ============================================================
+       INITIAL SUBGROUP STATE
+    ============================================================ */
+
+    if (subGroupSelect.length) {
+
+        if (!focusSelect.val()) {
+
+            subGroupSelect
+                .prop('disabled', true)
+                .html('<option value="">Select Focus Area First</option>')
+                .trigger('change');
+
+        }
+
+    }
+
+
+    /* ============================================================
+       DYNAMIC SUBGROUPS
+    ============================================================ */
+
+    focusSelect.on('change', function () {
+
+        const id = $(this).val();
+
+        if (!id) {
+
+            subGroupSelect
+                .prop('disabled', true)
+                .html('<option value="">Select Focus Area First</option>')
+                .trigger('change');
+
+            return;
+        }
+
+
+        subGroupSelect
+            .prop('disabled', true)
+            .html('<option value="">Loading sub groups...</option>')
+            .trigger('change');
+
+
+        fetch("{% url 'comm:ajax_subgroups' 0 %}".replace('/0/', '/' + id + '/'))
+
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error('Unable to load sub groups.');
+                }
+
+                return response.json();
+
+            })
+
+            .then(data => {
+
+                subGroupSelect.empty();
+
+
+                if (!data || data.length === 0) {
+
+                    subGroupSelect
+                        .append('<option value="">No Sub Groups Found</option>')
+                        .prop('disabled', true)
+                        .trigger('change');
+
+                    return;
+                }
+
+
+                /* Sort alphabetically */
+                data.sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                );
+
+
+                subGroupSelect.append(
+                    '<option value="">Select Sub Group</option>'
+                );
+
+
+                data.forEach(item => {
+
+                    const cleanName = item.name.includes('--')
+                        ? item.name.split('--').pop().trim()
+                        : item.name;
+
+                    subGroupSelect.append(
+                        $('<option>', {
+                            value: item.id,
+                            text: cleanName
+                        })
+                    );
+
+                });
+
+
+                subGroupSelect
+                    .prop('disabled', false)
+                    .trigger('change');
+
+
+                /* Auto-select only available subgroup */
+                if (data.length === 1) {
+
+                    subGroupSelect
+                        .val(data[0].id)
+                        .trigger('change');
+
+                }
+
+            })
+
+            .catch(error => {
+
+                console.error('Subgroup error:', error);
+
+                subGroupSelect
+                    .html('<option value="">Unable to load sub groups</option>')
+                    .prop('disabled', true)
+                    .trigger('change');
+
+            });
+
+    });
+
+
+    /* ============================================================
+       FILE VALIDATION
+    ============================================================ */
+
+    const allowedExtensions = ['doc', 'docx'];
+
+
+    function validateFile(file) {
+
+        if (!file) {
+            return false;
+        }
+
+
+        const extension = file.name
+            .split('.')
+            .pop()
+            .toLowerCase();
+
+
+        if (!allowedExtensions.includes(extension)) {
+
+            selectedFile
+                .removeClass('d-flex')
+                .addClass('d-none');
+
+
+            dropZone.addClass('border-danger');
+
+            alert('Only Microsoft Word files (.doc and .docx) are allowed.');
+
+            fileInput.val('');
+
+            return false;
+        }
+
+
+        dropZone.removeClass('border-danger');
+
+
+        selectedFile
+            .removeClass('d-none')
+            .addClass('d-flex')
+            .find('span')
+            .text(file.name);
+
+
+        return true;
+    }
+
+
+    /* ============================================================
+       CLICK TO UPLOAD
+    ============================================================ */
+
+    dropZone.on('click', function () {
+
+        fileInput.trigger('click');
+
+    });
+
+
+    /* ============================================================
+       FILE SELECTION
+    ============================================================ */
+
+    fileInput.on('change', function () {
+
+        const file = this.files[0];
+
+        validateFile(file);
+
+    });
+
+
+    /* ============================================================
+       DRAG & DROP
+    ============================================================ */
+
+    dropZone.on('dragover', function (event) {
+
+        event.preventDefault();
+
+        dropZone.addClass('dragover');
+
+    });
+
+
+    dropZone.on('dragleave', function () {
+
+        dropZone.removeClass('dragover');
+
+    });
+
+
+    dropZone.on('drop', function (event) {
+
+        event.preventDefault();
+
+        dropZone.removeClass('dragover');
+
+
+        const files = event.originalEvent.dataTransfer.files;
+
+        if (!files.length) {
+            return;
+        }
+
+
+        const file = files[0];
+
+
+        if (!validateFile(file)) {
+            return;
+        }
+
+
+        fileInput[0].files = files;
+
+    });
+
+
+    /* ============================================================
+       FORM SUBMISSION
+    ============================================================ */
+
+    reportForm.on('submit', function (event) {
+
+        const file = fileInput[0].files[0];
+
+
+        if (!file) {
+
+            event.preventDefault();
+
+            alert('Please select a Word document before submitting.');
+
+            dropZone.addClass('border-danger');
+
+            return false;
+        }
+
+
+        if (!validateFile(file)) {
+
+            event.preventDefault();
+
+            return false;
+        }
+
+
+        /*
+         * Visual upload feedback.
+         * The browser will continue with the normal Django POST.
+         */
+
+        progressContainer.removeClass('d-none');
+
+        submitBtn
+            .prop('disabled', true)
+            .html(
+                '<span class="spinner-border spinner-border-sm me-2"></span>' +
+                'Submitting...'
+            );
+
+
+        let progress = 0;
+
+
+        const interval = setInterval(function () {
+
+            progress += 10;
+
+            if (progress > 90) {
+                progress = 90;
+            }
+
+            progressBar.css('width', progress + '%');
+
+            progressText.text(progress + '%');
+
+
+            if (progress >= 90) {
+                clearInterval(interval);
+            }
+
+        }, 150);
+
+    });
+
+});
+</script>
+
+{% endblock %}

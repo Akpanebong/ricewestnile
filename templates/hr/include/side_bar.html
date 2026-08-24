@@ -1,0 +1,445 @@
+{% load group_tags %}
+
+{% with current_url=request.resolver_match.url_name %}
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<a href="{% url 'dashboard' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'dashboard' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-house"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Dashboard
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     WORKFORCE MANAGEMENT
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>WORKFORCE MANAGEMENT</span>
+</div>
+
+
+<!-- =====================================================
+     STAFF MANAGEMENT
+===================================================== -->
+
+<div class="sidebar-module
+{% if current_url == 'profile_list' %}
+module-open
+{% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#staffManagementMenu"
+            aria-expanded="{% if current_url == 'profile_list' %}true{% else %}false{% endif %}"
+            aria-controls="staffManagementMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-users"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Staff Management
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+    {% if current_url == 'profile_list' %}
+    show
+    {% endif %}"
+    id="staffManagementMenu">
+
+        <a href="{% url 'profile_list' %}?type=employee"
+           class="{% if current_url == 'profile_list' and request.GET.type == 'employee' %}active{% endif %}">
+            <i class="fa-solid fa-user"></i>
+            Employees
+        </a>
+
+        <a href="{% url 'profile_list' %}"
+           class="{% if current_url == 'profile_list' and not request.GET.type %}active{% endif %}">
+            <i class="fa-solid fa-address-book"></i>
+            Staff Directory
+        </a>
+
+        <a href="{% url 'profile_list' %}?type=volunteer"
+           class="{% if current_url == 'profile_list' and request.GET.type == 'volunteer' %}active{% endif %}">
+            <i class="fa-solid fa-handshake"></i>
+            Volunteers
+        </a>
+
+        <a href="{% url 'profile_list' %}?type=intern"
+           class="{% if current_url == 'profile_list' and request.GET.type == 'intern' %}active{% endif %}">
+            <i class="fa-solid fa-user-graduate"></i>
+            Interns
+        </a>
+
+        <a href="{% url 'profile_list' %}?type=community_structure"
+           class="{% if current_url == 'profile_list' and request.GET.type == 'community_structure' %}active{% endif %}">
+            <i class="fa-solid fa-sitemap"></i>
+            Community Structure
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ONBOARDING
+===================================================== -->
+
+<a
+{% if request.user|has_group:"HR" or request.user.is_superuser %}
+
+    href="{% url 'orientation_hr_list' %}"
+    class="sidebar-dashboard
+    {% if current_url == 'orientation_hr_list' %}active{% endif %}"
+
+{% elif request.user.is_CMT %}
+
+    href="{% url 'orientation_cmt_list' %}"
+    class="sidebar-dashboard
+    {% if current_url == 'orientation_cmt_list' %}active{% endif %}"
+
+{% elif request.user.headed_departments.all|length %}
+
+    href="{% url 'orientation_head_list' %}"
+    class="sidebar-dashboard
+    {% if current_url == 'orientation_head_list' %}active{% endif %}"
+
+{% else %}
+
+    href="{% url 'orientation_my' %}"
+    class="sidebar-dashboard
+    {% if current_url == 'orientation_my' %}active{% endif %}"
+
+{% endif %}>
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-compass"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Onboarding
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     OFFBOARDING
+===================================================== -->
+
+<div class="sidebar-module
+{% if current_url == 'account_exit_process_hr_list' or current_url == 'account_exit_process_cmt_list' %}
+module-open
+{% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#offboardingMenu"
+            aria-expanded="{% if current_url == 'account_exit_process_hr_list' or current_url == 'account_exit_process_cmt_list' %}true{% else %}false{% endif %}"
+            aria-controls="offboardingMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-user-minus"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Offboarding
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+    {% if current_url == 'account_exit_process_hr_list' or current_url == 'account_exit_process_cmt_list' %}
+    show
+    {% endif %}"
+    id="offboardingMenu">
+
+        <a href="{% url 'account_exit_process_hr_list' %}"
+           class="{% if current_url == 'account_exit_process_hr_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-user-xmark"></i>
+
+            Exit Staff
+
+        </a>
+
+
+        <a href="{% url 'account_exit_process_cmt_list' %}"
+           class="{% if current_url == 'account_exit_process_cmt_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-eye"></i>
+
+            CMT View
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     PEOPLE & OPERATIONS
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>PEOPLE & OPERATIONS</span>
+</div>
+
+
+<!-- =====================================================
+     LEAVE MANAGEMENT
+===================================================== -->
+
+<a href="{% url 'leave_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'leave_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-calendar-days"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Leave Management
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     FIELD ATTENDANCE
+===================================================== -->
+
+<a href="{% url 'attendance_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'attendance_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-clock"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Field Attendance
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     TRAINING
+===================================================== -->
+
+<a href="{% url 'training_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'training_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Training
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     RECRUITMENT
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>RECRUITMENT</span>
+</div>
+
+
+<!-- =====================================================
+     JOB VACANCIES
+===================================================== -->
+
+<a href="{% url 'vacancy:job_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'job_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-briefcase"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Job Vacancies
+    </span>
+
+</a>
+
+
+{% if request.user|has_group:"HR" or request.user.is_superuser %}
+
+<!-- =====================================================
+     APPLICANTS
+===================================================== -->
+
+<a href="{% url 'vacancy:applicants_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'applicants_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-user-group"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Applicants
+    </span>
+
+</a>
+
+{% endif %}
+
+
+<!-- =====================================================
+     PERFORMANCE & REPORTING
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>PERFORMANCE & REPORTING</span>
+</div>
+
+
+<!-- =====================================================
+     APPRAISALS
+===================================================== -->
+
+<a href="{% url 'appraisal_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'appraisal_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-star"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Appraisals
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     SITUATION REPORTS
+===================================================== -->
+
+<a href="{% url 'sitrep_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'sitrep_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-chart-line"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Situation Reports
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     COMMUNICATION
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>COMMUNICATION</span>
+</div>
+
+
+<!-- =====================================================
+     NOTIFICATIONS
+===================================================== -->
+
+<a href="{% url 'notifications:list' %}"
+   class="sidebar-dashboard
+   {% if request.resolver_match.namespace == 'notifications' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-bell"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Notifications
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     TEAM FORUM
+===================================================== -->
+
+<a href="{% url 'forum_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'forum_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-comments"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Team Forum
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     SUPPORT
+===================================================== -->
+
+<div class="sidebar-section sidebar-support-title">
+    <span>SUPPORT</span>
+</div>
+
+
+<a href="#"
+   class="sidebar-support-link">
+
+    <span class="sidebar-module-icon">
+        <i class="fa-solid fa-life-ring"></i>
+    </span>
+
+    <span>
+        Help & Support
+    </span>
+
+</a>
+
+{% endwith %}

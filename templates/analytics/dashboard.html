@@ -1,0 +1,44 @@
+{% extends "garcis/base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h3 class="mb-1">Analytics and Visualization</h3>
+            <p class="text-muted mb-0">Programs, projects, risk, compliance, and sustainability indicators in one place.</p>
+        </div>
+        <div class="quick-links">
+            <a href="{% url 'program_metric_list' %}" class="btn btn-dark">Program Metrics</a>
+        </div>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card p-3"><small>Metric Records</small><h3>{{ metric_count }}</h3></div></div>
+        <div class="col-md-3"><div class="card p-3"><small>Avg Budget Utilization</small><h3>{{ avg_budget_utilization|floatformat:1 }}%</h3></div></div>
+        <div class="col-md-3"><div class="card p-3"><small>Avg Outcome Score</small><h3>{{ avg_outcome_score|floatformat:1 }}</h3></div></div>
+        <div class="col-md-3"><div class="card p-3"><small>Avg Inclusion Score</small><h3>{{ avg_inclusion_score|floatformat:1 }}</h3></div></div>
+    </div>
+
+
+
+    <div class="card p-3">
+        <h5>Recent Program and Project Metrics</h5>
+        <table class="table">
+            <thead><tr><th>Date</th><th>Program</th><th>Project</th><th>Budget</th><th>Outcome</th><th>Sustainability</th></tr></thead>
+            <tbody>
+                {% for metric in recent_metrics %}
+                <tr>
+                    <td>{{ metric.metric_date }} </td>
+                    <td>{{ metric.program_name }}</td>
+                    <td>{{ metric.project_name|default:"-" }}</td>
+                    <td>{{ metric.budget_utilization }}%</td>
+                    <td>{{ metric.outcome_score }}</td>
+                    <td>{{ metric.sustainability_score }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-muted text-center">No analytics metrics recorded.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,463 @@
+{% if request.user.is_authenticated %}
+
+{% with current_url=request.resolver_match.url_name %}
+
+
+<!-- =====================================================
+     PRIMARY DASHBOARD
+===================================================== -->
+
+<a href="{% url 'garcis:dashboard' %}"
+   class="nav-link sidebar-dashboard
+   {% if current_url == 'dashboard' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-home"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Dashboard
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     MODULES LABEL
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>GARCIS MODULES</span>
+</div>
+
+
+<!-- =====================================================
+     GOVERNANCE
+===================================================== -->
+
+<div class="sidebar-module
+{% if current_url == 'governance_dashboard' or current_url == 'policy_list' or current_url == 'control_list' or current_url == 'decision_list' or current_url == 'engagement_list' or current_url == 'risk_whistleblower_list' %}
+module-open
+{% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#governanceMenu"
+            aria-expanded="{% if current_url == 'governance_dashboard' or current_url == 'policy_list' or current_url == 'control_list' or current_url == 'decision_list' or current_url == 'engagement_list' or current_url == 'risk_whistleblower_list' %}true{% else %}false{% endif %}"
+            aria-controls="governanceMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-landmark"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Governance
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+    {% if current_url == 'governance_dashboard' or current_url == 'policy_list' or current_url == 'control_list' or current_url == 'decision_list' or current_url == 'engagement_list' or current_url == 'risk_whistleblower_list' %}
+    show
+    {% endif %}"
+    id="governanceMenu">
+
+        <a href="{% url 'governance_dashboard' %}"
+           class="{% if current_url == 'governance_dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-chart-pie"></i>
+            Governance Dashboard
+        </a>
+
+        <a href="{% url 'policy_list' %}"
+           class="{% if current_url == 'policy_list' %}active{% endif %}">
+            <i class="fa-solid fa-file-shield"></i>
+            Policy Repository
+        </a>
+
+        <a href="{% url 'control_list' %}"
+           class="{% if current_url == 'control_list' %}active{% endif %}">
+            <i class="fa-solid fa-sliders"></i>
+            Governance Controls
+        </a>
+
+        <a href="{% url 'decision_list' %}"
+           class="{% if current_url == 'decision_list' %}active{% endif %}">
+            <i class="fa-solid fa-gavel"></i>
+            Decision Tracking
+        </a>
+
+        <a href="{% url 'engagement_list' %}"
+           class="{% if current_url == 'engagement_list' %}active{% endif %}">
+            <i class="fa-solid fa-comments"></i>
+            Stakeholder Engagement
+        </a>
+
+        <a href="{% url 'risk_whistleblower_list' %}"
+           class="{% if current_url == 'risk_whistleblower_list' %}active{% endif %}">
+            <i class="fa-solid fa-user-shield"></i>
+            Ethics & Integrity
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     RISK MANAGEMENT
+===================================================== -->
+
+<div class="sidebar-module
+{% if current_url == 'risk_list' or current_url == 'risk_matrix' or current_url == 'scenario_list' or current_url == 'risk_incident_list' or current_url == 'risk_kri_list' or current_url == 'risk_control_list' or current_url == 'risk_continuity_list' or current_url == 'risk_third_party_list' or current_url == 'risk_esg_list' %}
+module-open
+{% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#riskMenu"
+            aria-expanded="{% if current_url == 'risk_list' or current_url == 'risk_matrix' or current_url == 'scenario_list' or current_url == 'risk_incident_list' or current_url == 'risk_kri_list' or current_url == 'risk_control_list' or current_url == 'risk_continuity_list' or current_url == 'risk_third_party_list' or current_url == 'risk_esg_list' %}true{% else %}false{% endif %}"
+            aria-controls="riskMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Risk Management
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+    {% if current_url == 'risk_list' or current_url == 'risk_matrix' or current_url == 'scenario_list' or current_url == 'risk_incident_list' or current_url == 'risk_kri_list' or current_url == 'risk_control_list' or current_url == 'risk_continuity_list' or current_url == 'risk_third_party_list' or current_url == 'risk_esg_list' %}
+    show
+    {% endif %}"
+    id="riskMenu">
+
+        <a href="{% url 'risk_list' %}"
+           class="{% if current_url == 'risk_list' %}active{% endif %}">
+            <i class="fa-solid fa-list-check"></i>
+            Risk Register
+        </a>
+
+        <a href="{% url 'risk_matrix' %}"
+           class="{% if current_url == 'risk_matrix' %}active{% endif %}">
+            <i class="fa-solid fa-table-cells"></i>
+            Risk Scoring Matrix
+        </a>
+
+        <a href="{% url 'scenario_list' %}"
+           class="{% if current_url == 'scenario_list' %}active{% endif %}">
+            <i class="fa-solid fa-vial-circle-check"></i>
+            Scenario Testing
+        </a>
+
+        <a href="{% url 'risk_incident_list' %}"
+           class="{% if current_url == 'risk_incident_list' %}active{% endif %}">
+            <i class="fa-solid fa-bolt"></i>
+            Incidents & Events
+        </a>
+
+        <a href="{% url 'risk_kri_list' %}"
+           class="{% if current_url == 'risk_kri_list' %}active{% endif %}">
+            <i class="fa-solid fa-wave-square"></i>
+            Key Risk Indicators
+        </a>
+
+        <a href="{% url 'risk_control_list' %}"
+           class="{% if current_url == 'risk_control_list' %}active{% endif %}">
+            <i class="fa-solid fa-shield-halved"></i>
+            Control Library
+        </a>
+
+        <a href="{% url 'risk_continuity_list' %}"
+           class="{% if current_url == 'risk_continuity_list' %}active{% endif %}">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            Continuity Plans
+        </a>
+
+        <a href="{% url 'risk_third_party_list' %}"
+           class="{% if current_url == 'risk_third_party_list' %}active{% endif %}">
+            <i class="fa-solid fa-handshake"></i>
+            Third-Party Risk
+        </a>
+
+        <a href="{% url 'risk_esg_list' %}"
+           class="{% if current_url == 'risk_esg_list' %}active{% endif %}">
+            <i class="fa-solid fa-seedling"></i>
+            ESG Risk
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ASSURANCE SECTION
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>ASSURANCE</span>
+</div>
+
+
+<!-- =====================================================
+     AUDIT
+===================================================== -->
+
+<div class="sidebar-module
+{% if current_url == 'audit_dashboard' or current_url == 'audit_log_list' or current_url == 'audit_finding_list' or current_url == 'audit_evidence_list' or current_url == 'external_audit_dashboard' or current_url == 'external_audit_engagement_list' or current_url == 'external_audit_finding_list' %}
+module-open
+{% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#auditMenu"
+            aria-expanded="{% if current_url == 'audit_dashboard' or current_url == 'audit_log_list' or current_url == 'audit_finding_list' or current_url == 'audit_evidence_list' or current_url == 'external_audit_dashboard' or current_url == 'external_audit_engagement_list' or current_url == 'external_audit_finding_list' %}true{% else %}false{% endif %}"
+            aria-controls="auditMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Audit
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+    {% if current_url == 'audit_dashboard' or current_url == 'audit_log_list' or current_url == 'audit_finding_list' or current_url == 'audit_evidence_list' or current_url == 'external_audit_dashboard' or current_url == 'external_audit_engagement_list' or current_url == 'external_audit_finding_list' %}
+    show
+    {% endif %}"
+    id="auditMenu">
+
+        <a href="{% url 'audit_dashboard' %}">
+            <i class="fa-solid fa-chart-pie"></i>
+            Audit Dashboard
+        </a>
+
+        <a href="{% url 'audit_log_list' %}">
+            <i class="fa-solid fa-calendar-check"></i>
+            Audit Planning
+        </a>
+
+        <a href="{% url 'audit_finding_list' %}">
+            <i class="fa-solid fa-clipboard-list"></i>
+            Findings
+        </a>
+
+        <a href="{% url 'audit_evidence_list' %}">
+            <i class="fa-solid fa-folder-open"></i>
+            Evidence Repository
+        </a>
+
+        <a href="{% url 'external_audit_dashboard' %}">
+            <i class="fa-solid fa-building-shield"></i>
+            External Audit
+        </a>
+
+        <a href="{% url 'external_audit_engagement_list' %}">
+            <i class="fa-solid fa-briefcase"></i>
+            Audit Engagements
+        </a>
+
+        <a href="{% url 'external_audit_finding_list' %}">
+            <i class="fa-solid fa-list-ul"></i>
+            External Findings
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     COMPLIANCE
+===================================================== -->
+
+<div class="sidebar-module
+{% if current_url == 'compliance_dashboard' or current_url == 'compliance_register' or current_url == 'framework' or current_url == 'compliance_calendar' or current_url == 'compliance_assessment' or current_url == 'compliance_doc_list' or current_url == 'partner_due_diligence_list' or current_url == 'vendor_due_diligence_list' or current_url == 'compliance_report' %}
+module-open
+{% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#complianceMenu"
+            aria-expanded="{% if current_url == 'compliance_dashboard' or current_url == 'compliance_register' or current_url == 'framework' or current_url == 'compliance_calendar' or current_url == 'compliance_assessment' or current_url == 'compliance_doc_list' or current_url == 'partner_due_diligence_list' or current_url == 'vendor_due_diligence_list' or current_url == 'compliance_report' %}true{% else %}false{% endif %}"
+            aria-controls="complianceMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-scale-balanced"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Compliance
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+    {% if current_url == 'compliance_dashboard' or current_url == 'compliance_register' or current_url == 'framework' or current_url == 'compliance_calendar' or current_url == 'compliance_assessment' or current_url == 'compliance_doc_list' or current_url == 'partner_due_diligence_list' or current_url == 'vendor_due_diligence_list' or current_url == 'compliance_report' %}
+    show
+    {% endif %}"
+    id="complianceMenu">
+
+        <a href="{% url 'compliance_dashboard' %}">
+            <i class="fa-solid fa-chart-pie"></i>
+            Compliance Dashboard
+        </a>
+
+        <a href="{% url 'compliance_register' %}">
+            <i class="fa-solid fa-list-check"></i>
+            Compliance Register
+        </a>
+
+        <a href="{% url 'framework' %}">
+            <i class="fa-solid fa-book"></i>
+            Regulatory Frameworks
+        </a>
+
+        <a href="{% url 'compliance_calendar' %}">
+            <i class="fa-solid fa-calendar-days"></i>
+            Compliance Calendar
+        </a>
+
+        <a href="{% url 'compliance_assessment' %}">
+            <i class="fa-solid fa-clipboard-check"></i>
+            Assessments
+        </a>
+
+        <a href="{% url 'compliance_doc_list' %}">
+            <i class="fa-solid fa-file-circle-check"></i>
+            Documents
+        </a>
+
+        <a href="{% url 'partner_due_diligence_list' %}">
+            <i class="fa-solid fa-people-group"></i>
+            Partner Due Diligence
+        </a>
+
+        <a href="{% url 'vendor_due_diligence_list' %}">
+            <i class="fa-solid fa-truck-field"></i>
+            Vendor Due Diligence
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     REPORTING & ANALYTICS
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>INSIGHTS</span>
+</div>
+
+
+<div class="sidebar-module
+{% if current_url == 'analytics_dashboard' or current_url == 'program_metric_list' or current_url == 'compliance_report' or current_url == 'export_risk_excel' or current_url == 'export_risk_pdf' or current_url == 'compliance_report_pdf' %}
+module-open
+{% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#analyticsMenu"
+            aria-expanded="{% if current_url == 'analytics_dashboard' or current_url == 'program_metric_list' or current_url == 'compliance_report' or current_url == 'export_risk_excel' or current_url == 'export_risk_pdf' or current_url == 'compliance_report_pdf' %}true{% else %}false{% endif %}"
+            aria-controls="analyticsMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-chart-line"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Reporting & Analytics
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+    {% if current_url == 'analytics_dashboard' or current_url == 'program_metric_list' or current_url == 'compliance_report' or current_url == 'export_risk_excel' or current_url == 'export_risk_pdf' or current_url == 'compliance_report_pdf' %}
+    show
+    {% endif %}"
+    id="analyticsMenu">
+
+        <a href="{% url 'analytics_dashboard' %}">
+            <i class="fa-solid fa-chart-pie"></i>
+            Analytics Dashboard
+        </a>
+
+        <a href="{% url 'program_metric_list' %}">
+            <i class="fa-solid fa-chart-column"></i>
+            Program Metrics
+        </a>
+
+        <a href="{% url 'compliance_report' %}">
+            <i class="fa-solid fa-file-lines"></i>
+            Donor Reporting
+        </a>
+
+        <a href="{% url 'export_risk_excel' %}">
+            <i class="fa-solid fa-file-excel"></i>
+            Export Risk Data
+        </a>
+
+        <a href="{% url 'export_risk_pdf' %}">
+            <i class="fa-solid fa-file-pdf"></i>
+            Risk PDF Report
+        </a>
+
+        <a href="{% url 'compliance_report_pdf' %}">
+            <i class="fa-solid fa-file-pdf"></i>
+            Compliance Report
+        </a>
+
+    </div>
+
+</div>
+
+{% endwith %}
+{% endif %}

@@ -1,0 +1,726 @@
+
+
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}{{ title|default:"Update Employee Profile" }}{% endblock %}
+
+{% block content %}
+<div class="employee-self-service">
+
+    <div class="profile-shell">
+        <header class="profile-command">
+            <div class="profile-title">
+                <span class="profile-kicker">Employee Self Service</span>
+                <h1>{{ title|default:"Update Employee Profile" }}</h1>
+                <p>Keep your account, HR bio data, contacts, and compliance details accurate.</p>
+            </div>
+            <div class="profile-command-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fa fa-arrow-left me-1"></i> Dashboard
+                </a>
+                <button type="submit" form="employee-profile-form" class="btn btn-success">
+                    <i class="fa fa-floppy-disk me-1"></i> Save Changes
+                </button>
+            </div>
+        </header>
+
+        <section class="profile-overview" aria-label="Profile overview">
+            <div class="identity-card">
+                <div class="profile-avatar" aria-hidden="true">
+                    {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                </div>
+                <div class="identity-copy">
+                    <span>Signed in as</span>
+                    <h2>{{ request.user.get_full_name|default:request.user.username }}</h2>
+                    <p>
+                        {{ request.user.profile_type|default:"Staff" }}
+                        {% if request.user.department %}<span>&middot;</span> {{ request.user.department }}{% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="profile-status-grid">
+                <div class="status-tile">
+                    <span>Status</span>
+                    <strong>{{ request.user.status|default:"Active" }}</strong>
+                </div>
+                <div class="status-tile">
+                    <span>Username</span>
+                    <strong>{{ request.user.username }}</strong>
+                </div>
+                <div class="status-tile">
+                    <span>Email</span>
+                    <strong>{{ request.user.email|default:"Not provided" }}</strong>
+                </div>
+            </div>
+        </section>
+
+        {% if profile_form.non_field_errors or employee_form.non_field_errors %}
+            <div class="alert alert-danger form-alert" role="alert">
+                <div class="alert-icon"><i class="fa fa-circle-exclamation"></i></div>
+                <div>
+                    <strong>Review the highlighted information.</strong>
+                    {{ profile_form.non_field_errors }}
+                    {{ employee_form.non_field_errors }}
+                </div>
+            </div>
+        {% endif %}
+
+        <form id="employee-profile-form" method="post" enctype="multipart/form-data" class="profile-form" novalidate>
+            {% csrf_token %}
+
+            <aside class="section-index" aria-label="Profile sections">
+                <a href="#account-profile">
+                    <span>01</span>
+                    Account Profile
+                </a>
+                {% if employee_form %}
+                <a href="#employee-bio-data">
+                    <span>02</span>
+                    Employee Bio Data
+                </a>
+                {% for section in employee_sections %}
+                <a href="#employee-{{ section.key }}">
+                    <span>{{ section.number }}</span>
+                    {{ section.title }}
+                </a>
+                {% endfor %}
+                {% endif %}
+                {% if internship_form %}
+                <a href="#contact-details">
+                    <span>{% if employee_form %}03{% else %}02{% endif %}</span>
+                    Contact Details
+                </a>
+                {% endif %}
+            </aside>
+
+            <div class="form-workspace">
+                <section id="account-profile" class="profile-section">
+                    <div class="section-header">
+                        <div>
+                            <span class="section-number">01</span>
+                            <h2>Account Profile</h2>
+                            <p>Core identity, department, status, and account contact information.</p>
+                        </div>
+                        <i class="fa fa-id-badge"></i>
+                    </div>
+
+                    {% for group, fields in profile_form.get_groups.items %}
+                        <fieldset class="field-cluster">
+                            <legend>{{ group }}</legend>
+                            <div class="row g-3">
+                                {% for field_name in fields %}
+                                    {% with f=profile_form|get_field:field_name %}
+                                    <div class="col-xl-6">
+                                        <div class="smart-field {% if f.errors %}has-error{% endif %}">
+                                            {% if f.field.widget.input_type == "checkbox" %}
+                                                <div class="form-check form-switch smart-check">
+                                                    {{ f }}
+                                                    <label for="{{ f.id_for_label }}" class="form-check-label">{{ f.label }}</label>
+                                                </div>
+                                            {% else %}
+                                                <label for="{{ f.id_for_label }}" class="form-label">{{ f.label }}</label>
+                                                {{ f }}
+                                            {% endif %}
+                                            {% if f.help_text %}<div class="form-text">{{ f.help_text|safe }}</div>{% endif %}
+                                            {% if f.errors %}<div class="invalid-feedback d-block">{{ f.errors|striptags }}</div>{% endif %}
+                                        </div>
+                                    </div>
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+                    {% endfor %}
+                </section>
+
+                {% if employee_form %}
+                <section id="employee-bio-data" class="profile-section">
+                    <div class="section-header">
+                        <div>
+                            <span class="section-number">02</span>
+                            <h2>Employee Bio Data</h2>
+                            <p>Personal records, address history, next of kin, dependants, banking, and declarations.</p>
+                        </div>
+                        <i class="fa fa-user-tie"></i>
+                    </div>
+
+                    {% for group, fields in employee_form.get_groups.items %}
+                        <fieldset class="field-cluster">
+                            <legend>{{ group }}</legend>
+                            <div class="row g-3">
+                                {% for field_name in fields %}
+                                    {% with f=employee_form|get_field:field_name %}
+                                    <div class="col-xl-6">
+                                        <div class="smart-field {% if f.errors %}has-error{% endif %}">
+                                            {% if f.field.widget.input_type == "checkbox" %}
+                                                <div class="form-check form-switch smart-check">
+                                                    {{ f }}
+                                                    <label for="{{ f.id_for_label }}" class="form-check-label">{{ f.label }}</label>
+                                                </div>
+                                            {% else %}
+                                                <label for="{{ f.id_for_label }}" class="form-label">{{ f.label }}</label>
+                                                {{ f }}
+                                            {% endif %}
+                                            {% if f.help_text %}<div class="form-text">{{ f.help_text|safe }}</div>{% endif %}
+                                            {% if f.errors %}<div class="invalid-feedback d-block">{{ f.errors|striptags }}</div>{% endif %}
+                                        </div>
+                                    </div>
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+                    {% endfor %}
+                </section>
+
+                {% for section in employee_sections %}
+                <section id="employee-{{ section.key }}" class="profile-section">
+                    <div class="section-header">
+                        <div>
+                            <span class="section-number">{{ section.number }}</span>
+                            <h2>{{ section.title }}</h2>
+                            <p>{{ section.description }}</p>
+                        </div>
+                        <i class="fa {{ section.icon }}"></i>
+                    </div>
+
+                    {% if section.form %}
+                        {% if section.form.non_field_errors %}
+                            <div class="alert alert-danger">{{ section.form.non_field_errors }}</div>
+                        {% endif %}
+                        <fieldset class="field-cluster">
+                            <legend>{{ section.title }}</legend>
+                            <div class="row g-3">
+                                {% for hidden in section.form.hidden_fields %}{{ hidden }}{% endfor %}
+                                {% for f in section.form.visible_fields %}
+                                <div class="col-xl-6">
+                                    <div class="smart-field {% if f.errors %}has-error{% endif %}">
+                                        {% if f.field.widget.input_type == "checkbox" %}
+                                            <div class="form-check form-switch smart-check">
+                                                {{ f }}
+                                                <label for="{{ f.id_for_label }}" class="form-check-label">{{ f.label }}</label>
+                                            </div>
+                                        {% else %}
+                                            <label for="{{ f.id_for_label }}" class="form-label">{{ f.label }}</label>
+                                            {{ f }}
+                                        {% endif %}
+                                        {% if f.help_text %}<div class="form-text">{{ f.help_text|safe }}</div>{% endif %}
+                                        {% if f.errors %}<div class="invalid-feedback d-block">{{ f.errors|striptags }}</div>{% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+                    {% endif %}
+
+                    {% if section.formset %}
+                        {{ section.formset.management_form }}
+                        {% if section.formset.non_form_errors %}
+                            <div class="alert alert-danger">{{ section.formset.non_form_errors }}</div>
+                        {% endif %}
+                        <div class="formset-grid">
+                            {% for row_form in section.formset.forms %}
+                            <fieldset class="formset-record">
+                                <legend>Record {{ forloop.counter }}</legend>
+                                {% for hidden in row_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                {% if row_form.non_field_errors %}
+                                    <div class="alert alert-danger">{{ row_form.non_field_errors }}</div>
+                                {% endif %}
+                                <div class="row g-3">
+                                    {% for f in row_form.visible_fields %}
+                                    <div class="{% if f.field.widget.input_type == 'checkbox' %}col-12{% else %}col-xl-6{% endif %}">
+                                        <div class="smart-field {% if f.errors %}has-error{% endif %}">
+                                            {% if f.field.widget.input_type == "checkbox" %}
+                                                <div class="form-check form-switch smart-check delete-check">
+                                                    {{ f }}
+                                                    <label for="{{ f.id_for_label }}" class="form-check-label">{{ f.label }}</label>
+                                                </div>
+                                            {% else %}
+                                                <label for="{{ f.id_for_label }}" class="form-label">{{ f.label }}</label>
+                                                {{ f }}
+                                            {% endif %}
+                                            {% if f.help_text %}<div class="form-text">{{ f.help_text|safe }}</div>{% endif %}
+                                            {% if f.errors %}<div class="invalid-feedback d-block">{{ f.errors|striptags }}</div>{% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </fieldset>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </section>
+                {% endfor %}
+                {% endif %}
+
+                {% if internship_form %}
+                <section id="contact-details" class="profile-section">
+                    <div class="section-header">
+                        <div>
+                            <span class="section-number">{% if employee_form %}03{% else %}02{% endif %}</span>
+                            <h2>Contact Details</h2>
+                            <p>Internship profile address, phone, and location details.</p>
+                        </div>
+                        <i class="fa fa-address-book"></i>
+                    </div>
+
+                    <fieldset class="field-cluster">
+                        <legend>Internship Contact Profile</legend>
+                        <div class="row g-3">
+                            {% for f in internship_form %}
+                            <div class="col-xl-6">
+                                <div class="smart-field {% if f.errors %}has-error{% endif %}">
+                                    {% if f.field.widget.input_type == "checkbox" %}
+                                        <div class="form-check form-switch smart-check">
+                                            {{ f }}
+                                            <label for="{{ f.id_for_label }}" class="form-check-label">{{ f.label }}</label>
+                                        </div>
+                                    {% else %}
+                                        <label for="{{ f.id_for_label }}" class="form-label">{{ f.label }}</label>
+                                        {{ f }}
+                                    {% endif %}
+                                    {% if f.help_text %}<div class="form-text">{{ f.help_text|safe }}</div>{% endif %}
+                                    {% if f.errors %}<div class="invalid-feedback d-block">{{ f.errors|striptags }}</div>{% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                </section>
+                {% endif %}
+
+                <div class="profile-actions">
+                    <a href="{% url 'dashboard' %}" class="btn btn-light border">
+                        <i class="fa fa-xmark me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fa fa-floppy-disk me-1"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.employee-self-service {
+    min-height: calc(100vh - 90px);
+    margin: -12px -12px 0;
+    padding: 24px 12px 34px;
+    background:
+        linear-gradient(180deg, rgba(10, 107, 58, 0.08), rgba(245, 246, 251, 0) 260px),
+        #f5f6fb;
+}
+
+.profile-shell {
+    max-width: 1240px;
+    margin: 0 auto;
+}
+
+.profile-command,
+.profile-overview,
+.profile-section,
+.profile-actions,
+.section-index {
+    background: #ffffff;
+    border: 1px solid #dde6e1;
+    border-radius: 8px;
+    box-shadow: 0 16px 36px rgba(23, 38, 29, 0.07);
+}
+
+.profile-command {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px;
+    margin-bottom: 16px;
+}
+
+.profile-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #0a6b3a;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.profile-title h1 {
+    margin: 4px 0;
+    color: #14251b;
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.profile-title p,
+.identity-copy p,
+.section-header p {
+    margin: 0;
+    color: #65756c;
+}
+
+.profile-command-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.profile-overview {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(340px, 1.15fr);
+    gap: 18px;
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.identity-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.profile-avatar {
+    flex: 0 0 auto;
+    width: 64px;
+    height: 64px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: #0a6b3a;
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 800;
+    box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.16);
+}
+
+.identity-copy {
+    min-width: 0;
+}
+
+.identity-copy span,
+.status-tile span,
+.section-number {
+    color: #718077;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.identity-copy h2 {
+    margin: 2px 0;
+    color: #14251b;
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.profile-status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.status-tile {
+    min-width: 0;
+    padding: 13px 14px;
+    border: 1px solid #e7eee9;
+    border-radius: 8px;
+    background: #f8faf9;
+}
+
+.status-tile strong {
+    display: block;
+    margin-top: 4px;
+    color: #1c2e23;
+    font-size: 0.94rem;
+    overflow-wrap: anywhere;
+}
+
+.form-alert {
+    display: flex;
+    gap: 12px;
+    max-width: 1240px;
+    margin: 0 auto 16px;
+    border-radius: 8px;
+}
+
+.alert-icon {
+    font-size: 1.2rem;
+}
+
+.profile-form {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.section-index {
+    position: sticky;
+    top: 96px;
+    padding: 10px;
+}
+
+.section-index a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    color: #27392e;
+    font-weight: 700;
+}
+
+.section-index a:hover {
+    background: #edf7f1;
+    color: #0a6b3a;
+}
+
+.section-index span {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #e8f4ed;
+    color: #0a6b3a;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.form-workspace {
+    min-width: 0;
+}
+
+.profile-section {
+    margin-bottom: 16px;
+    padding: 22px;
+    scroll-margin-top: 100px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #e8efeb;
+}
+
+.section-header h2 {
+    margin: 4px 0;
+    color: #14251b;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.section-header > i {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    background: #f1f8f4;
+    color: #0a6b3a;
+}
+
+.field-cluster {
+    padding: 0 0 20px;
+    margin: 0 0 20px;
+    border: 0;
+    border-bottom: 1px solid #edf2ef;
+}
+
+.field-cluster:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: 0;
+}
+
+.field-cluster legend {
+    float: none;
+    width: auto;
+    margin-bottom: 14px;
+    color: #17261d;
+    font-size: 0.98rem;
+    font-weight: 800;
+}
+
+.formset-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.formset-record {
+    padding: 16px;
+    border: 1px solid #edf2ef;
+    border-radius: 8px;
+    background: #fbfcfb;
+}
+
+.formset-record legend {
+    float: none;
+    width: auto;
+    margin-bottom: 12px;
+    color: #17261d;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.smart-field {
+    height: 100%;
+}
+
+.smart-field .form-label {
+    margin-bottom: 6px;
+    color: #2c3d33;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.smart-field .form-control,
+.smart-field .form-select,
+.smart-field textarea,
+.smart-field select,
+.smart-field input:not([type="checkbox"]):not([type="radio"]) {
+    width: 100%;
+    min-height: 42px;
+    border-color: #d9e4de;
+    border-radius: 8px;
+    color: #17261d;
+}
+
+.smart-field textarea {
+    min-height: 108px;
+}
+
+.smart-field .form-control:focus,
+.smart-field .form-select:focus,
+.smart-field textarea:focus,
+.smart-field select:focus,
+.smart-field input:not([type="checkbox"]):not([type="radio"]):focus {
+    border-color: #0a6b3a;
+    box-shadow: 0 0 0 0.18rem rgba(10, 107, 58, 0.15);
+}
+
+.smart-check {
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px 10px 42px;
+    border: 1px solid #d9e4de;
+    border-radius: 8px;
+    background: #f8faf9;
+}
+
+.delete-check {
+    border-color: #f0d4d8;
+    background: #fff8f8;
+}
+
+.smart-field.has-error .form-control,
+.smart-field.has-error .form-select,
+.smart-field.has-error textarea,
+.smart-field.has-error select,
+.smart-field.has-error input:not([type="checkbox"]):not([type="radio"]) {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.profile-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 16px;
+}
+
+@media (max-width: 1199px) {
+    .profile-overview {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 991px) {
+    .employee-self-service {
+        margin: -8px -8px 0;
+        padding: 16px 8px 28px;
+    }
+
+    .profile-command {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .profile-command-actions {
+        justify-content: flex-start;
+    }
+
+    .profile-form {
+        grid-template-columns: 1fr;
+    }
+
+    .section-index {
+        position: static;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+    }
+
+    .section-index a {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 575px) {
+    .profile-command,
+    .profile-overview,
+    .profile-section {
+        padding: 16px;
+    }
+
+    .profile-command-actions,
+    .profile-actions {
+        flex-direction: column-reverse;
+    }
+
+    .profile-command-actions .btn,
+    .profile-actions .btn {
+        width: 100%;
+    }
+
+    .identity-card {
+        align-items: flex-start;
+    }
+
+    .profile-avatar {
+        width: 52px;
+        height: 52px;
+    }
+
+    .profile-status-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-header > i {
+        display: none;
+    }
+}
+</style>
+{% endblock %}

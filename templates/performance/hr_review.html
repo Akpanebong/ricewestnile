@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}HR Review{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- HEADER -->
+    <div class="bg-white p-3 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h5 class="fw-bold text-success mb-0">HR Review</h5>
+            <small class="text-muted">Appraisal Year: {{ appraisal.year }}</small>
+        </div>
+
+        <span class="badge bg-primary">
+            Pending HR Review
+        </span>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <!-- EMPLOYEE INFO -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold text-success mb-3">Employee Information</h6>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ appraisal.employee }}</p>
+                            <p><strong>Supervisor:</strong> {{ appraisal.supervisor }}</p>
+                        </div>
+
+                        <div class="col-md-6">
+                            <p><strong>Department:</strong> {{ appraisal.employee.user.department }}</p>
+                            <p><strong>Duty Station:</strong> {{ appraisal.duty_station|default:"-" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERFORMANCE SNAPSHOT -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold text-primary mb-3">Performance Summary</h6>
+
+                    <div class="row text-center">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <small class="text-muted">Job Description Score</small>
+                                <h5 class="fw-bold">{{ appraisal.job_description_score|default:"-" }}</h5>
+                                <span class="badge bg-light text-dark">
+                                    {{ appraisal.job_description_interpretation|default:"-" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <small class="text-muted">Service Excellence Score</small>
+                                <h5 class="fw-bold">{{ appraisal.service_score|default:"-" }}</h5>
+                                <span class="badge bg-light text-dark">
+                                    {{ appraisal.service_interpretation|default:"-" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STAFF INPUT -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold text-dark mb-3">Staff Self Assessment</h6>
+
+                    <div class="mb-3">
+                        <label class="fw-semibold">Staff Opinion</label>
+                        <div class="border rounded p-3 bg-light">
+                            {{ appraisal.staff_opinion|default:"Not provided"|linebreaks }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Strengths</label>
+                            <div class="border rounded p-3 bg-light">
+                                {{ appraisal.strengths|default:"-"|linebreaks }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Weaknesses</label>
+                            <div class="border rounded p-3 bg-light">
+                                {{ appraisal.weaknesses|default:"-"|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="fw-semibold">Capacity Gaps</label>
+                        <div class="border rounded p-3 bg-light">
+                            {{ appraisal.capacity_gaps|default:"-"|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUPERVISOR COMMENT -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold text-info mb-3">Supervisor Evaluation</h6>
+
+                    <div class="border rounded p-3 bg-light">
+                        {{ appraisal.supervisor_comment|default:"Pending"|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- HR FORM -->
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+
+                    <h6 class="fw-bold text-success mb-3">HR Final Review</h6>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                HR Comment
+                            </label>
+                            <textarea name="comment" class="form-control" rows="5" required
+                                placeholder="Provide HR evaluation, compliance review, and recommendations..."></textarea>
+                        </div>
+
+                        <!-- ACTIONS -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'appraisal_detail' appraisal.id %}" class="btn btn-outline-secondary">
+                                Back
+                            </a>
+
+                            <a href="{{ appraisal.filled_appraisal.url }}" class="btn btn-outline-info">Download File</a>
+
+                            <button type="submit" class="btn btn-success px-4">
+                                Submit to CMT
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

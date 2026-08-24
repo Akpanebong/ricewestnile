@@ -1,0 +1,1051 @@
+
+{% extends active_base_template|default:'base.html' %}
+
+{% block title %}Outputs | {{ so }}{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       STRATEGIC OBJECTIVE OUTPUTS
+       Enterprise M&E Interface
+       ========================================================= */
+
+    .so-output-page {
+        --so-primary: #198754;
+        --so-primary-dark: #146c43;
+        --so-primary-soft: #eaf7f0;
+        --so-border: #e3e8e5;
+        --so-text: #1f2937;
+        --so-muted: #6b7280;
+    }
+
+    /* =========================================================
+       BREADCRUMB
+       ========================================================= */
+
+    .so-output-breadcrumb {
+        background: #fff;
+        border: 1px solid var(--so-border);
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-bottom: 18px;
+    }
+
+    .so-output-breadcrumb a {
+        color: var(--so-primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .so-output-breadcrumb a:hover {
+        color: var(--so-primary-dark);
+    }
+
+    /* =========================================================
+       SO CONTEXT HEADER
+       ========================================================= */
+
+    .so-context {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f4faf7 100%
+        );
+        border: 1px solid var(--so-border);
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, .035);
+    }
+
+    .so-context-icon {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--so-primary-soft);
+        color: var(--so-primary);
+        font-size: 21px;
+    }
+
+    .so-context-label {
+        color: var(--so-muted);
+        font-size: .7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: 3px;
+    }
+
+    .so-context-title {
+        color: #172b21;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+        line-height: 1.35;
+    }
+
+    .so-context-subtitle {
+        color: var(--so-muted);
+        font-size: .82rem;
+        margin: 0;
+    }
+
+    .so-context-code {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        background: var(--so-primary-soft);
+        color: var(--so-primary-dark);
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: .74rem;
+        font-weight: 700;
+    }
+
+    /* =========================================================
+       ADD BUTTON
+       ========================================================= */
+
+    .btn-add-output {
+        background: var(--so-primary);
+        border: 1px solid var(--so-primary);
+        color: #fff;
+        border-radius: 9px;
+        padding: 9px 15px;
+        font-size: .8rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .18s ease;
+    }
+
+    .btn-add-output:hover {
+        background: var(--so-primary-dark);
+        border-color: var(--so-primary-dark);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       KPI CARDS
+       ========================================================= */
+
+    .so-output-stat {
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--so-border);
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, .025);
+        transition: all .2s ease;
+    }
+
+    .so-output-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, .06);
+    }
+
+    .so-output-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--so-primary-soft);
+        color: var(--so-primary);
+        font-size: 16px;
+    }
+
+    .so-output-stat-value {
+        color: #172b21;
+        font-size: 1.3rem;
+        font-weight: 750;
+        line-height: 1.1;
+    }
+
+    .so-output-stat-label {
+        color: var(--so-muted);
+        font-size: .74rem;
+        margin-top: 4px;
+    }
+
+    /* =========================================================
+       MAIN PANEL
+       ========================================================= */
+
+    .so-output-panel {
+        background: #fff;
+        border: 1px solid var(--so-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .04);
+    }
+
+    .so-output-panel-header {
+        padding: 19px 21px;
+        border-bottom: 1px solid var(--so-border);
+    }
+
+    .so-output-panel-title {
+        color: #25352d;
+        font-size: .98rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .so-output-panel-subtitle {
+        color: var(--so-muted);
+        font-size: .76rem;
+        margin: 0;
+    }
+
+    /* =========================================================
+       SEARCH
+       ========================================================= */
+
+    .so-output-search {
+        position: relative;
+    }
+
+    .so-output-search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9aa49e;
+        z-index: 3;
+    }
+
+    .so-output-search input {
+        height: 43px;
+        padding-left: 40px;
+        padding-right: 40px;
+        border: 1px solid #dce2de;
+        border-radius: 10px;
+        font-size: .82rem;
+        box-shadow: none;
+    }
+
+    .so-output-search input:focus {
+        border-color: #83c5a1;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    .so-output-search-clear {
+        position: absolute;
+        right: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 0;
+        background: transparent;
+        color: #9ca3af;
+        display: none;
+    }
+
+    /* =========================================================
+       OUTPUT ROW
+       ========================================================= */
+
+    .so-output-list {
+        padding: 0;
+    }
+
+    .so-output-item {
+        padding: 18px 21px;
+        border-bottom: 1px solid #edf0ee;
+        transition: all .15s ease;
+    }
+
+    .so-output-item:last-child {
+        border-bottom: 0;
+    }
+
+    .so-output-item:hover {
+        background: #fbfdfc;
+    }
+
+    .so-output-code {
+        width: 58px;
+        min-width: 58px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        background: var(--so-primary-soft);
+        color: var(--so-primary-dark);
+        font-family: monospace;
+        font-size: .73rem;
+        font-weight: 700;
+    }
+
+    .so-output-name {
+        color: #27362f;
+        font-size: .88rem;
+        font-weight: 650;
+        line-height: 1.4;
+    }
+
+    .so-output-description {
+        color: #707b75;
+        font-size: .77rem;
+        line-height: 1.5;
+        margin-top: 5px;
+        max-width: 780px;
+    }
+
+    .so-output-meta {
+        color: #929b96;
+        font-size: .7rem;
+        margin-top: 7px;
+    }
+
+    /* =========================================================
+       ACTION BUTTON
+       ========================================================= */
+
+    .so-output-action {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        border: 1px solid #dce4df;
+        background: #fff;
+        color: #65716b;
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+    .so-output-action:hover {
+        background: var(--so-primary-soft);
+        border-color: #cce5d6;
+        color: var(--so-primary-dark);
+    }
+
+    /* =========================================================
+       EMPTY STATE
+       ========================================================= */
+
+    .so-output-empty {
+        padding: 65px 20px;
+        text-align: center;
+    }
+
+    .so-output-empty-icon {
+        width: 66px;
+        height: 66px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        background: #f3f6f4;
+        color: #9aa49e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .so-output-empty h6 {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .so-output-empty p {
+        color: var(--so-muted);
+        font-size: .8rem;
+        margin-bottom: 16px;
+    }
+
+    /* =========================================================
+       SEARCH EMPTY
+       ========================================================= */
+
+    .so-search-empty {
+        display: none;
+        padding: 55px 20px;
+        text-align: center;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 991.98px) {
+
+        .so-context {
+            padding: 19px;
+        }
+
+        .so-context-action {
+            margin-top: 15px;
+        }
+
+    }
+
+    @media (max-width: 767.98px) {
+
+        .so-output-breadcrumb {
+            padding: 9px 12px;
+            margin-bottom: 14px;
+        }
+
+        .so-context {
+            padding: 17px;
+            border-radius: 13px;
+        }
+
+        .so-context-icon {
+            width: 44px;
+            min-width: 44px;
+            height: 44px;
+            border-radius: 10px;
+        }
+
+        .so-context-title {
+            font-size: 1.05rem;
+        }
+
+        .so-context-subtitle {
+            font-size: .75rem;
+        }
+
+        .so-context-action {
+            width: 100%;
+        }
+
+        .btn-add-output {
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .so-output-panel {
+            border-radius: 13px;
+        }
+
+        .so-output-panel-header {
+            padding: 15px;
+        }
+
+        .so-output-item {
+            padding: 15px;
+        }
+
+        .so-output-code {
+            width: 50px;
+            min-width: 50px;
+            height: 38px;
+        }
+
+        .so-output-name {
+            font-size: .83rem;
+        }
+
+        .so-output-description {
+            font-size: .75rem;
+        }
+
+        .so-output-action {
+            width: 32px;
+            height: 32px;
+        }
+
+    }
+</style>
+
+<div class="container-fluid so-output-page">
+
+<!-- =====================================================
+     BREADCRUMB
+====================================================== -->
+
+<div class="so-output-breadcrumb">
+
+    <ul class="list-inline mb-0 small">
+
+        <li class="list-inline-item">
+
+            <a href="{% url 'monitoring:dashboard' %}">
+                <i class="fa fa-home me-1"></i>
+                Dashboard
+            </a>
+
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item">
+
+            <a href="{% url 'monitoring:so_list' %}">
+                Strategic Objectives
+            </a>
+
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item text-muted">
+            Outputs
+        </li>
+
+    </ul>
+
+</div>
+
+
+<!-- =====================================================
+     STRATEGIC OBJECTIVE CONTEXT
+====================================================== -->
+
+<div class="so-context">
+
+    <div class="row align-items-center">
+
+        <div class="col-lg-8">
+
+            <div class="d-flex align-items-center">
+
+                <div class="so-context-icon me-3">
+
+                    <i class="fa fa-bullseye"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="so-context-label">
+                        Strategic Objective
+                    </div>
+
+                    <div class="so-context-title">
+                        {{ so }}
+                    </div>
+
+                    <p class="so-context-subtitle">
+                        Strategic outputs contributing to this
+                        organizational objective.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-lg-4">
+
+            <div class="so-context-action
+                        d-flex justify-content-lg-end">
+
+                <a href="{% url 'monitoring:create_output' so.pk %}"
+                   class="btn-add-output">
+
+                    <i class="fa fa-plus me-2"></i>
+                    Add Strategic Output
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     KPI SUMMARY
+====================================================== -->
+
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-lg-3">
+
+        <div class="so-output-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+
+                    <div class="so-output-stat-value"
+                         id="totalOutputs">
+
+                        {{ output|length|default:"0" }}
+
+                    </div>
+
+                    <div class="so-output-stat-label">
+                        Total Outputs
+                    </div>
+
+                </div>
+
+                <div class="so-output-stat-icon">
+                    <i class="fa fa-sitemap"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+        <div class="so-output-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+
+                    <div class="so-output-stat-value">
+                        <i class="fa fa-link text-success"></i>
+                    </div>
+
+                    <div class="so-output-stat-label">
+                        SO Linked
+                    </div>
+
+                </div>
+
+                <div class="so-output-stat-icon">
+                    <i class="fa fa-bullseye"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+        <div class="so-output-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+
+                    <div class="so-output-stat-value">
+                        <i class="fa fa-line-chart text-success"></i>
+                    </div>
+
+                    <div class="so-output-stat-label">
+                        Monitoring Ready
+                    </div>
+
+                </div>
+
+                <div class="so-output-stat-icon">
+                    <i class="fa fa-bar-chart"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+        <div class="so-output-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+
+                    <div class="so-output-stat-value">
+                        <i class="fa fa-check-circle text-success"></i>
+                    </div>
+
+                    <div class="so-output-stat-label">
+                        Framework Status
+                    </div>
+
+                </div>
+
+                <div class="so-output-stat-icon">
+                    <i class="fa fa-check"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     OUTPUT LIST
+====================================================== -->
+
+<div class="so-output-panel">
+
+    <!-- Header -->
+
+    <div class="so-output-panel-header">
+
+        <div class="row g-3 align-items-center">
+
+            <div class="col-lg-5">
+
+                <div class="so-output-panel-title">
+                    Strategic Outputs
+                </div>
+
+                <p class="so-output-panel-subtitle">
+                    Outputs currently linked to this strategic
+                    objective.
+                </p>
+
+                <div class="small text-muted mt-2">
+
+                    Showing
+                    <strong id="visibleOutputCount">
+                        {{ output|length|default:"0" }}
+                    </strong>
+                    output(s)
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-7">
+
+                <div class="so-output-search">
+
+                    <i class="fa fa-search so-output-search-icon"></i>
+
+                    <input type="text"
+                           id="profileSearch"
+                           class="form-control"
+                           placeholder="Search outputs by code, title or description..."
+                           autocomplete="off">
+
+                    <button type="button"
+                            id="clearSearch"
+                            class="so-output-search-clear">
+
+                        <i class="fa fa-times"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         OUTPUT ITEMS
+    ================================================== -->
+
+    {% if output %}
+
+    <div class="so-output-list"
+         id="outputList">
+
+        {% for output in output %}
+
+        <div class="so-output-item output-search-row">
+
+            <div class="row align-items-center g-3">
+
+                <!-- Code -->
+
+
+
+                <div class="col-auto">
+<a href="{% url 'monitoring:output_detail' output.pk output.title %}">
+                    <span class="so-output-code">
+                        {{ output.code }}
+                    </span>
+ </a>
+                </div>
+
+
+
+                <!-- Information -->
+
+                <div class="col">
+
+                    <div class="so-output-name">
+
+                        {{ output.title }}
+
+                    </div>
+
+
+                    <div class="so-output-description">
+
+                        {% if output.description %}
+
+                            {{ output.description|truncatechars:220 }}
+
+                        {% else %}
+
+                            <span class="text-muted">
+                                No description provided.
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="so-output-meta">
+
+                        <i class="fa fa-bullseye me-1"></i>
+
+                        Linked to:
+                        {{ so }}
+
+                    </div>
+
+                </div>
+
+
+                <!-- Action -->
+
+                <div class="col-auto">
+
+                   <a class="btn btn-sm btn-primary" href="{% url 'monitoring:update_output' output.title output.pk %}"><i class="fa fa-edit"></i></a>
+                <a class="btn btn-sm btn-danger" href="{% url 'monitoring:trash_output' output.pk output.title %}"><i class="fa fa-trash"></i></a>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- =================================================
+         SEARCH EMPTY STATE
+    ================================================== -->
+
+    <div id="searchEmpty"
+         class="so-search-empty">
+
+        <div class="so-output-empty-icon">
+
+            <i class="fa fa-search"></i>
+
+        </div>
+
+        <h6>
+            No matching outputs
+        </h6>
+
+        <p>
+            Try searching by output code, title or description.
+        </p>
+
+    </div>
+
+
+    {% else %}
+
+    <!-- =================================================
+         DATABASE EMPTY STATE
+    ================================================== -->
+
+    <div class="so-output-empty">
+
+        <div class="so-output-empty-icon">
+
+            <i class="fa fa-folder-open"></i>
+
+        </div>
+
+        <h6>
+            No outputs have been created
+        </h6>
+
+        <p>
+            Start building this strategic objective by adding
+            its first strategic output.
+        </p>
+
+        <a href="{% url 'monitoring:create_output' so.pk %}"
+           class="btn-add-output">
+
+            <i class="fa fa-plus me-1"></i>
+            Add First Output
+
+        </a>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <div class="border-top px-3 px-md-4 py-3">
+
+        {% include "pagination.html" %}
+
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- =========================================================
+     SEARCH SCRIPT
+========================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput =
+        document.getElementById("profileSearch");
+
+    const clearButton =
+        document.getElementById("clearSearch");
+
+    const visibleCount =
+        document.getElementById("visibleOutputCount");
+
+    const searchEmpty =
+        document.getElementById("searchEmpty");
+
+
+    if (!searchInput) return;
+
+
+    function performSearch() {
+
+        const term =
+            searchInput.value
+                .toLowerCase()
+                .trim();
+
+
+        const rows =
+            document.querySelectorAll(
+                ".output-search-row"
+            );
+
+
+        let visible = 0;
+
+
+        rows.forEach(function (row) {
+
+            const content =
+                row.innerText.toLowerCase();
+
+
+            const matches =
+                term === "" ||
+                content.includes(term);
+
+
+            row.style.display =
+                matches ? "" : "none";
+
+
+            if (matches) {
+                visible++;
+            }
+
+        });
+
+
+        if (visibleCount) {
+
+            visibleCount.textContent =
+                visible;
+
+        }
+
+
+        if (clearButton) {
+
+            clearButton.style.display =
+                term ? "block" : "none";
+
+        }
+
+
+        if (searchEmpty) {
+
+            if (visible === 0 && term !== "") {
+
+                searchEmpty.style.display =
+                    "block";
+
+            } else {
+
+                searchEmpty.style.display =
+                    "none";
+
+            }
+
+        }
+
+    }
+
+
+    searchInput.addEventListener(
+        "input",
+        performSearch
+    );
+
+
+    if (clearButton) {
+
+        clearButton.addEventListener(
+            "click",
+            function () {
+
+                searchInput.value = "";
+
+                searchInput.focus();
+
+                performSearch();
+
+            }
+        );
+
+    }
+
+});
+</script>
+
+{% endblock %}
+

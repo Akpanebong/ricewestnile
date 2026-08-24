@@ -1,0 +1,146 @@
+{% extends "hr/base.html" %}
+{% block title %}Apply Leave{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    {{ leave_type_meta|json_script:"leave-type-meta" }}
+
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">Apply Leave</h5>
+                <small class="opacity-75">Submit your leave request</small>
+            </div>
+            <div class="text-end">
+                <small class="d-block opacity-75"><span id="leaveTypeLabel">{{ selected_leave_type_name|default:"Leave" }}</span> ({{ year|default:"" }})</small>
+                <div class="fw-semibold">
+                    Remaining: <span id="remainingDays">{{ selected_remaining_days }}</span> / <span id="allottedDays">{{ selected_allotted_days }}</span>
+                </div>
+                <small class="opacity-75">Taken: <span id="takenDays">{{ selected_taken_days }}</span></small>
+            </div>
+        </div>
+{{logo_url}}
+        <div class="card-body">
+            <form method="post" id="leaveForm">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="row g-3">
+
+                    <!-- Leave Type -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Leave Type</label>
+                        {{ form.leave_type }}
+
+                        {% for error in form.leave_type.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Special Type (Hidden Initially) -->
+                            <div class="col-md-6 d-none" id="specialTypeField">
+                            <label class="form-label fw-semibold">Special Type</label>
+                            {{ form.special_type }}
+
+                            {% for error in form.special_type.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                    <!-- Start Date -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Start Date</label>
+                        {{ form.start_date }}
+
+                        {% for error in form.start_date.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- End Date -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">End Date</label>
+                        {{ form.end_date }}
+
+                        {% for error in form.end_date.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="col-md-12 d-none" id="reasonField">
+                        <label class="form-label fw-semibold">Reason</label>
+                        {{ form.reason }}
+
+                        {% for error in form.reason.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end">
+                    <button class="btn btn-success px-4">
+                        <i class="ti-save"></i> Submit Leave
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const leaveType = document.getElementById("id_leave_type");
+    const specialField = document.getElementById("specialTypeField");
+    const reasonField = document.getElementById("reasonField");
+    const metaEl = document.getElementById("leave-type-meta");
+    const leaveTypeMeta = metaEl ? JSON.parse(metaEl.textContent || "{}") : {};
+
+    const leaveTypeLabel = document.getElementById("leaveTypeLabel");
+    const remainingDays = document.getElementById("remainingDays");
+    const allottedDays = document.getElementById("allottedDays");
+    const takenDays = document.getElementById("takenDays");
+
+    function updateLeaveHeader() {
+        const id = String(leaveType.value || "");
+        const info = leaveTypeMeta[id];
+
+        if (!info) {
+            if (leaveTypeLabel) leaveTypeLabel.textContent = "Leave";
+            if (remainingDays) remainingDays.textContent = "0";
+            if (allottedDays) allottedDays.textContent = "0";
+            if (takenDays) takenDays.textContent = "0";
+            if (specialField) specialField.classList.add("d-none");
+            if (reasonField) reasonField.classList.add("d-none");
+            return;
+        }
+
+        if (leaveTypeLabel) leaveTypeLabel.textContent = info.name || "Leave";
+        if (remainingDays) remainingDays.textContent = String(info.remaining_days ?? 0);
+        if (allottedDays) allottedDays.textContent = String(info.allotted_days ?? 0);
+        if (takenDays) takenDays.textContent = String(info.taken_days ?? 0);
+
+        if (info.is_special) {
+            specialField.classList.remove("d-none");
+            reasonField.classList.remove("d-none");
+        } else {
+            specialField.classList.add("d-none");
+            reasonField.classList.add("d-none");
+        }
+    }
+
+    leaveType.addEventListener("change", updateLeaveHeader);
+    updateLeaveHeader(); // run on load
+});
+</script>
+
+{% endblock %}

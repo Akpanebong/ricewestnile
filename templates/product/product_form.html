@@ -1,0 +1,199 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        {% include 'message.html' %}
+
+        <!-- Header -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+            <div class="card-body px-4 py-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <h3 class="fw-bold text-dark mb-1">
+
+                            {{ title }}
+
+                        </h3>
+
+                        <p class="text-muted mb-0">
+
+                            Create and manage procurement products and pricing information.
+
+                        </p>
+
+                    </div>
+
+                    <a href="{% url 'product_list' %}"
+                       class="btn btn-light border enterprise-btn">
+
+                        <i class="fa fa-arrow-left me-2"></i>
+
+                        Back to Products
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Form Card -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+            <!-- Header -->
+            <div class="card-header bg-white border-0 px-4 py-4">
+
+                <h5 class="fw-bold text-dark mb-1">
+
+                    <i class="fa fa-cube text-primary me-2"></i>
+
+                    Product Information
+
+                </h5>
+
+                <p class="text-muted small mb-0">
+
+                    Fill in all required procurement product details.
+
+                </p>
+
+            </div>
+
+            <!-- Body -->
+            <div class="card-body px-4 py-4">
+
+                <form method="post" id="productForm">
+
+                    {% csrf_token %}
+
+                    <div class="row g-4">
+
+                        <!-- Name -->
+                        <div class="col-md-6">
+
+                            <label class="form-label fw-semibold">
+                                Product Name
+                            </label>
+
+                            {{ form.name }}
+
+                        </div>
+
+                        <!-- Unit Cost -->
+                        <div class="col-md-6">
+
+                            <label class="form-label fw-semibold">
+                                Estimated Unit Cost ({{ display_currency }})
+                            </label>
+
+                            {{ form.est_unit_cost }}
+
+                        </div>
+
+                        <!-- Category -->
+                        <div class="col-md-6">
+
+                            <label class="form-label fw-semibold">
+                                Category
+                            </label>
+
+                            {{ form.category }}
+
+                        </div>
+
+                        <!-- ABPC -->
+                        <div class="col-md-6">
+
+                            <label class="form-label fw-semibold d-block">
+                                ABPC Classification
+                            </label>
+
+                            <div class="form-check form-switch mt-2">
+
+                                {{ form.abpc }}
+
+                                <label class="form-check-label ms-2">
+                                    Mark as ABPC Product
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+
+                        <a href="{% url 'product_list' %}"
+                           class="btn btn-light border enterprise-btn px-4">
+
+                            Cancel
+
+                        </a>
+
+                        <button type="submit"
+                                class="btn btn-success enterprise-btn px-5">
+
+                            <i class="fa fa-save me-2"></i>
+
+                            {% if is_update %}
+                                Update Product
+                            {% else %}
+                                Create Product
+                            {% endif %}
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+<style>
+
+.form-control,
+.form-select{
+    height:50px;
+    border-radius:14px;
+    border:1px solid #d0d5dd;
+    transition:.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus{
+    border-color:#0d6efd;
+    box-shadow:0 0 0 4px rgba(13,110,253,.1);
+}
+
+.enterprise-btn{
+    height:48px;
+    border-radius:14px;
+    font-weight:600;
+}
+
+.card{
+    border-radius:18px;
+}
+
+</style>
+
+{% endblock %}

@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}Recruitment Request{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    {% with page_title="Recruitment Request" page_subtitle="Request approval to recruit for a vacant position." breadcrumb="Recruitment Request" %}
+        {% include "breadcrumb.html" %}
+    {% endwith %}
+
+    <div class="row justify-content-center">
+
+        <div class="col-xl-9">
+
+            <div class="card shadow border-0 recruitment-card">
+
+                <!-- Header -->
+                <div class="card-header bg-white border-0 py-4 px-4">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="header-icon me-3">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+
+                        <div>
+
+                            <h4 class="fw-bold mb-1">
+                                New Recruitment Request
+                            </h4>
+
+                            <small class="text-muted">
+
+                                Complete the information below to initiate a recruitment approval workflow.
+
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="card-body p-4">
+
+                   <form method="POST" enctype="multipart/form-data" novalidate>
+
+    {% csrf_token %}
+
+    <div class="row g-4">
+
+        <!-- Position Title -->
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">
+                Position Title
+                <span class="text-danger">*</span>
+            </label>
+
+            {{ form.title }}
+
+            <small class="text-muted">
+                Enter the position to be recruited.
+            </small>
+
+            {% if form.title.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.title.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Unit -->
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">
+                Unit
+                <span class="text-danger">*</span>
+            </label>
+
+            {{ form.unit }}
+
+            <small class="text-muted">
+                Select the requesting unit.
+            </small>
+
+            {% if form.unit.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.unit.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Justification -->
+        <div class="col-12">
+            <label class="form-label fw-semibold">
+                Business Justification
+                <span class="text-danger">*</span>
+            </label>
+
+            {{ form.justification }}
+
+            <small class="text-muted">
+                Explain the business need for this recruitment request.
+            </small>
+
+            {% if form.justification.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.justification.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Attachment -->
+        <div class="col-12">
+            <label class="form-label fw-semibold">
+                Supporting Document
+            </label>
+
+            <div class="upload-box">
+
+                <i class="fas fa-cloud-upload-alt fa-2x text-success mb-3"></i>
+
+                {{ form.attach_file }}
+
+                <small class="d-block mt-2 text-muted">
+                    Upload an approval memo, organogram, budget approval or any supporting document.
+                </small>
+
+            </div>
+
+            {% if form.attach_file.errors %}
+                <div class="text-danger small mt-2">
+                    {{ form.attach_file.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <hr class="my-4">
+
+    <div class="d-flex justify-content-between">
+
+        <a href="{% url 'vacancy:recruitment_request_list' %}"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>
+            Cancel
+        </a>
+
+        <button type="submit"
+                class="btn btn-success px-4">
+            <i class="fas fa-paper-plane me-2"></i>
+            Submit Request
+        </button>
+
+    </div>
+
+</form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+
+.recruitment-card{
+    border-radius:18px;
+}
+
+.header-icon{
+    width:64px;
+    height:64px;
+    border-radius:16px;
+    background:linear-gradient(135deg,#198754,#157347);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+}
+
+.form-control,
+.form-select{
+    border-radius:10px;
+    min-height:48px;
+    border:1px solid #d9dee5;
+}
+
+.form-control:focus,
+.form-select:focus{
+    border-color:#198754;
+    box-shadow:0 0 0 .18rem rgba(25,135,84,.15);
+}
+
+textarea.form-control{
+    min-height:150px;
+}
+
+.upload-box{
+    border:2px dashed #d8dde6;
+    border-radius:14px;
+    padding:30px;
+    background:#fafbfc;
+    text-align:center;
+    transition:.3s;
+}
+
+.upload-box:hover{
+    border-color:#198754;
+    background:#f6fffa;
+}
+
+.card{
+    overflow:hidden;
+}
+
+.btn{
+    border-radius:10px;
+}
+
+label{
+    margin-bottom:.55rem;
+}
+
+small{
+    font-size:.83rem;
+}
+
+</style>
+
+{% endblock %}

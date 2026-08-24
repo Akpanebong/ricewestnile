@@ -1,0 +1,187 @@
+{% extends "garcis/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+    <!-- ================= HEADER ================= -->
+    <div class="card shadow border-0 rounded-4 mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+
+            <div>
+                <h4 class="fw-bold mb-1">{{ engagement.title }}</h4>
+                <small class="text-muted">Engagement Ref: {{ engagement.id }}</small>
+            </div>
+
+            <div class="d-flex gap-2 align-items-center">
+                <span class="badge px-3 py-2
+                    {% if engagement.status == 'closed' %}bg-success
+                    {% elif engagement.status == 'reported' %}bg-info
+                    {% elif engagement.status == 'in_progress' %}bg-warning
+                    {% else %}bg-secondary{% endif %}">
+                    {{ engagement.get_status_display }}
+                </span>
+
+                <a href="{% url 'external_audit_edit' engagement.id %}" class="btn btn-primary btn-sm">Edit</a>
+                <a href="{% url 'external_audit_delete' engagement.id %}" class="btn btn-danger btn-sm">
+                    <i class="bi bi-trash"></i>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    {% if engagement.rejection_reason %}
+    <div class="alert alert-danger">
+        <strong>Rejection Reason:</strong><br>
+        {{ engagement.rejection_reason }}
+    </div>
+    {% endif %}
+
+    <!-- ================= META + STATS ================= -->
+    <div class="row g-4">
+
+        <!-- META -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-light fw-semibold">
+                    Engagement Overview
+                </div>
+
+                <div class="card-body row g-3">
+
+                    <div class="col-md-6">
+                        <small class="text-muted">Audit Firm</small>
+                        <div class="fw-semibold">{{ engagement.audit_firm }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <small class="text-muted">Audit Log</small>
+                        <div>{{ engagement.audit_log }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <small class="text-muted">Start Date</small>
+                        <div>{{ engagement.start_date }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <small class="text-muted">End Date</small>
+                        <div>{{ engagement.end_date|default:"—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <small class="text-muted">Donor Report Required</small>
+                        <div>
+                            {% if engagement.donor_report_required %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <small class="text-muted">Scope</small>
+                        <div>{{ engagement.scope|default:"No scope defined" }}</div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <small class="text-muted">Shared Data Scope</small>
+                        <div>{{ engagement.shared_data_scope|default:"Not specified" }}</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS / ACTIONS -->
+        <div class="col-md-4">
+
+            <div class="card shadow-sm border-0 rounded-4 mb-3 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Approval</h6>
+
+                    {% if not engagement.approved and not engagement.rejection_reason %}
+                        <a href="{% url 'external_audit_approve' engagement.id %}"
+                           class="btn btn-success w-100 mb-2" onclick="return confirm('N/B: There is no reversal after approval, confirm your approval.')">Approve</a>
+                    {% endif %}
+
+                    <a href="{% url 'external_audit_reject' engagement.id %}" class="btn btn-dark w-100">Reject</a>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 mb-3 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Findings</h6>
+                    <h2 class="fw-bold">{{ total_findings }}</h2>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 mb-3 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Open Findings</h6>
+                    <h2 class="fw-bold text-danger">{{ open_findings }}</h2>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Closed Findings</h6>
+                    <h2 class="fw-bold text-success">{{ closed_findings }}</h2>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ================= FINDINGS ================= -->
+    <div class="card shadow-sm border-0 rounded-4 mt-4">
+        <div class="card-header d-flex justify-content-between">
+            <h5 class="mb-0">External Findings</h5>
+            <span class="badge bg-dark">{{ total_findings }}</span>
+        </div>
+
+        <div class="card-body table-responsive">
+
+            <table class="table align-middle table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Internal Ref</th>
+                        <th>Risk</th>
+                        <th>Reference</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for f in findings %}
+                <tr>
+                    <td class="fw-semibold">{{ f.title }}</td>
+
+                    <td>
+                        <span class="badge
+                            {% if f.status == 'open' %}bg-danger
+                            {% elif f.status == 'in_progress' %}bg-warning
+                            {% else %}bg-success{% endif %}">
+                            {{ f.get_status_display }}
+                        </span>
+                    </td>
+
+                    <td>{{ f.related_internal_finding|default:"—" }}</td>
+                    <td>{{ f.related_risk|default:"—" }}</td>
+                    <td>{{ f.mapped_reference|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted">No findings</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

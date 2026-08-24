@@ -1,0 +1,226 @@
+
+{% extends "garcis/base.html" %}
+{% load form_tags %}
+
+{% block content %}
+<div class="container mt-4">
+
+<div class="card shadow-lg border-0 rounded-4">
+
+<!-- HEADER -->
+<div class="card-header bg-dark text-white d-flex justify-content-between">
+    <h5>
+        {% if form.instance.pk %}Update Audit{% else %}Create Audit{% endif %}
+    </h5>
+</div>
+
+<div class="card-body">
+
+<form method="post">
+{% csrf_token %}
+
+<!-- ================= AUDIT ================= -->
+<h6 class="text-muted fw-bold">Audit Info</h6>
+
+<div class="row g-3">
+    <div class="col-md-6">{{ form.title.label_tag }} {{ form.title|add_class:"form-control" }}</div>
+    <div class="col-md-6">{{ form.audit_type.label_tag }} {{ form.audit_type|add_class:"form-control" }}</div>
+    <div class="col-md-6">{{ form.lead_auditor.label_tag }} {{ form.lead_auditor|add_class:"form-control" }}</div>
+    <div class="col-md-3">{{ form.start_date.label_tag }} {{ form.start_date|add_class:"form-control" }}</div>
+    <div class="col-md-3">{{ form.end_date.label_tag }} {{ form.end_date|add_class:"form-control" }}</div>
+    <div class="col-md-12">{{ form.scope.label_tag }} {{ form.scope|add_class:"form-control" }}</div>
+    <div class="col-md-12">{{ form.status.label_tag }} {{ form.status|add_class:"form-control" }}</div>
+</div>
+
+<hr>
+
+<!-- ================= FINDINGS ================= -->
+<h6 class="fw-bold">Findings</h6>
+
+{{ finding_formset.management_form }}
+
+<div id="finding-container">
+{% for f in finding_formset %}
+<div class="formset-form border p-3 mb-3 rounded bg-light">
+
+    {{ f.id }}
+
+    <div class="row g-2">
+        <div class="col-md-6">{{ f.title.label_tag }} {{ f.title|add_class:"form-control" }}</div>
+        <div class="col-md-3">{{ f.severity.label_tag }} {{ f.severity|add_class:"form-control" }}</div>
+        <div class="col-md-3">{{ f.status.label_tag }} {{ f.status|add_class:"form-control" }}</div>
+        <div class="col-md-6">{{ f.issue.label_tag }} {{ f.issue|add_class:"form-control" }}</div>
+        <div class="col-md-6">{{ f.recommendation.label_tag }}{{ f.recommendation|add_class:"form-control" }}</div>
+        <div class="col-md-4">{{ f.owner.label_tag }} {{ f.owner|add_class:"form-control" }}</div>
+        <div class="col-md-4">{{ f.due_date.label_tag }}{{ f.due_date|add_class:"form-control" }}</div>
+        <div class="col-md-2">{{ f.DELETE.label_tag }} {{ f.DELETE }}</div>
+    </div>
+
+    <div class="text-end mt-2">
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+            Remove
+        </button>
+    </div>
+
+</div>
+{% endfor %}
+</div>
+
+<div id="empty-finding-form" class="d-none">
+    <div class="formset-form border p-3 mb-3 rounded bg-light">
+        {{ finding_formset.empty_form.id }}
+
+        <div class="row g-2">
+            <div class="col-md-6">{{ finding_formset.empty_form.title.label_tag }} {{ finding_formset.empty_form.title|add_class:"form-control" }}</div>
+            <div class="col-md-3">{{ finding_formset.empty_form.severity.label_tag }}{{ finding_formset.empty_form.severity|add_class:"form-control" }}</div>
+            <div class="col-md-3">{{ finding_formset.empty_form.status.label_tag }} {{ finding_formset.empty_form.status|add_class:"form-control" }}</div>
+            <div class="col-md-6">{{ finding_formset.empty_form.issue.label_tag }}{{ finding_formset.empty_form.issue|add_class:"form-control" }}</div>
+            <div class="col-md-6">{{ finding_formset.empty_form.recommendation.label_tag }}{{ finding_formset.empty_form.recommendation|add_class:"form-control" }}</div>
+            <div class="col-md-4">{{ finding_formset.empty_form.owner.label_tag }}{{ finding_formset.empty_form.owner|add_class:"form-control" }}</div>
+            <div class="col-md-4">{{ finding_formset.empty_form.due_date.label_tag }}{{ finding_formset.empty_form.due_date|add_class:"form-control" }}</div>
+            <div class="col-md-2">{{ finding_formset.empty_form.DELETE.label_tag }}{{ finding_formset.empty_form.DELETE }}</div>
+                <div class="text-end mt-2">
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+            Remove
+        </button>
+    </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn btn-outline-primary btn-sm" onclick="addFinding()">
+    + Add Finding
+</button>
+
+<hr>
+
+<!-- ================= EVIDENCE ================= -->
+<h6 class="fw-bold">Evidence</h6>
+
+{{ evidence_formset.management_form }}
+
+<div id="evidence-container">
+{% for e in evidence_formset %}
+<div class="formset-form border p-3 mb-3 rounded bg-light">
+
+    {{ e.id }}
+
+    <div class="row g-2">
+        <div class="col-md-6">{{ e.title.label_tag }} {{ e.title|add_class:"form-control" }}</div>
+        <div class="col-md-6">{{ e.evidence_type.label_tag }} {{ e.evidence_type|add_class:"form-control" }}</div>
+        <div class="col-md-6">{{ e.reference_code.label_tag }} {{ e.reference_code|add_class:"form-control" }}</div>
+        <div class="col-md-6">{{ e.document_tag.label_tag }} {{ e.document_tag|add_class:"form-control" }}</div>
+        <div class="col-md-6">{{ e.is_finance_reconciled.label_tag }} {{ e.is_finance_reconciled|add_class:"form-control" }}</div>
+        <div class="col-md-6">{{ e.DELETE.label_tag }} {{ e.DELETE }}</div>
+    </div>
+
+    <div class="text-end mt-2">
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+            Remove
+        </button>
+    </div>
+
+</div>
+{% endfor %}
+</div>
+
+<div id="empty-evidence-form" class="d-none">
+    <div class="formset-form border p-3 mb-3 rounded bg-light">
+        {{ evidence_formset.empty_form.id }}
+
+        <div class="row g-2">
+            <div class="col-md-6">{{ evidence_formset.empty_form.title.label_tag }} {{ finding_formset.empty_form.title|add_class:"form-control" }}</div>
+            <div class="col-md-6">{{ evidence_formset.empty_form.evidence_type.label_tag }}{{ evidence_formset.empty_form.evidence_type|add_class:"form-control" }}</div>
+            <div class="col-md-6">{{ evidence_formset.empty_form.document_tag.label_tag }}{{ evidence_formset.empty_form.document_tag|add_class:"form-control" }}</div>
+            <div class="col-md-6">{{ evidence_formset.empty_form.reference_code.label_tag }}{{ evidence_formset.empty_form.reference_code|add_class:"form-control" }}</div>
+            <div class="col-md-6">{{ evidence_formset.empty_form.is_finance_reconciled.label_tag }} {{ evidence_formset.empty_form.is_finance_reconciled|add_class:"form-control" }}</div>
+            <div class="col-md-2">{{ evidence_formset.empty_form.DELETE.label_tag }}{{ evidence_formset.empty_form.DELETE }}</div>
+                 <div class="text-end mt-2">
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">
+            Remove
+        </button>
+    </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" class="btn btn-outline-primary btn-sm" onclick="addEvidence()">
+    + Add Evidence
+</button>
+
+<hr>
+
+<!-- ACTION -->
+<div class="text-end">
+    <button type="submit" class="btn btn-primary px-4">Save</button>
+</div>
+
+</form>
+</div>
+</div>
+</div>
+
+<!-- ================= JS ================= -->
+
+<script>
+function addFinding() {
+    let total = document.getElementById('id_finding-TOTAL_FORMS');
+    let container = document.getElementById('finding-container');
+    let template = document.getElementById('empty-finding-form').innerHTML;
+
+    let index = parseInt(total.value);
+    container.insertAdjacentHTML('beforeend', template.replace(/__prefix__/g, index));
+    total.value = index + 1;
+}
+
+function addEvidence() {
+    let total = document.getElementById('id_evidence-TOTAL_FORMS');
+    let container = document.getElementById('evidence-container');
+    let template = document.getElementById('empty-evidence-form').innerHTML;
+
+    let index = parseInt(total.value);
+    container.insertAdjacentHTML('beforeend', template.replace(/__prefix__/g, index));
+    total.value = index + 1;
+}
+
+function removeRow(btn) {
+    let row = btn.closest('.formset-form');
+    let checkbox = row.querySelector('input[type="checkbox"][name$="DELETE"]');
+
+    if (checkbox) {
+        checkbox.checked = true;
+        row.style.display = "none";
+    } else {
+        row.remove();
+    }
+}
+</script>
+<script>
+    function addEvidence() {
+    let total = document.getElementById('id_evidence-TOTAL_FORMS');
+    let container = document.getElementById('evidence-container');
+    let template = document.getElementById('empty-evidence-form').innerHTML;
+
+    let index = parseInt(total.value);
+
+    let newForm = template.replace(/__prefix__/g, index);
+
+    container.insertAdjacentHTML('beforeend', newForm);
+    total.value = index + 1;
+}
+</script>
+<script>
+    function addFinding() {
+    let total = document.getElementById('id_finding-TOTAL_FORMS');
+    let container = document.getElementById('finding-container');
+    let template = document.getElementById('empty-finding-form').innerHTML;
+
+    let index = parseInt(total.value);
+
+    let newForm = template.replace(/__prefix__/g, index);
+
+    container.insertAdjacentHTML('beforeend', newForm);
+    total.value = index + 1;
+}
+</script>
+{% endblock %}

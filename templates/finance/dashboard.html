@@ -1,0 +1,233 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+{% block content %}
+<main class="ttr-wrapper">
+<div class="container-fluid py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Finance Dashboard</h3>
+            <p class="text-muted mb-0">Procurement & Expense Workflow Overview</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{% url 'finance:create_cash_req' %}" class="btn btn-primary shadow-sm">
+                + New Requisition
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body">
+                    <small class="text-muted">Pending Requests</small>
+                    <h3 class="fw-bold text-warning">{{ pending_requisitions.count }}</h3>
+                    <small class="text-muted">{{ total_pending_amount|money:request }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body">
+                    <small class="text-muted">Approved Requests</small>
+                    <h3 class="fw-bold text-success">{{ approved_requisitions.count }}</h3>
+                    <small class="text-muted">{{ total_approved_amount|money:request }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body">
+                    <small class="text-muted">Admin Expenses</small>
+                    <h3 class="fw-bold text-primary">{{ admin_expenses.count }}</h3>
+                    <small class="text-muted">{{ total_admin_expenses|money:request }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body">
+                    <small class="text-muted">Accounting Records</small>
+                    <h3 class="fw-bold text-info">{{ accountings.count }}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- PENDING REQUISITIONS -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white fw-bold">Pending Cash Requisitions</div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Donor Code</th>
+                        <th>Purpose</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th>Date</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in pending_requisitions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><a href="{% url 'finance:requisition_detail' req.id req.slug %}">
+                            {{ req.donor_code }}</a></td>
+                        <td>{{ req.purpose|truncatechars:40 }}</td>
+                        <td>
+                            <span class="badge
+                                {% if req.status == 'submitted' %}bg-secondary
+                                {% elif req.status == 'finance_review' %}bg-warning text-dark
+                                {% elif req.status == 'operations_review' %}bg-info text-dark
+                                {% else %}bg-light text-dark
+                                {% endif %}">
+                                {{ req.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ req.created_by }}</td>
+                        <td>{{ req.created_at|date:"M d, Y" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'finance:requisition_detail' req.id req.slug %}" class="btn btn-sm btn-success">
+                                Process
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">No pending requisitions</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- APPROVED REQUISITIONS -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white fw-bold">Approved Cash Requisitions</div>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Donor Code</th>
+                        <th>Purpose</th>
+                        <th>Total</th>
+                        <th>Approved By</th>
+                        <th>Date</th>
+                        <th class="text-end">PDF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in approved_requisitions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><a href="{% url 'finance:requisition_detail' req.id req.slug %}">{{ req.donor_code }}</a></td>
+                        <td>{{ req.purpose|truncatechars:40 }}</td>
+                        <td class="fw-bold">{{ req.total_amount|money:request }}</td>
+                        <td>{{ req.approved_by }}</td>
+                        <td>{{ req.date|date:"M d, Y" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'finance:cash_req_pdf' req.id req.slug %}" class="btn btn-sm btn-outline-dark">
+                                Download
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">No approved requisitions</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ADMIN EXPENSES -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white fw-bold">Administrative Expenses</div>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Department</th>
+                        <th>Project</th>
+                        <th>Purpose</th>
+                        <th>Budget</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exp in admin_expenses %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><a href="{% url 'finance:admin_expense_detail' exp.id exp.slug %}"> {{ exp.department }}</a></td>
+                        <td>{{ exp.project|default:"-" }}</td>
+                        <td>{{ exp.purpose|truncatechars:50 }}</td>
+                        <td>{{ exp.proposed_budget|money:request }}</td>
+                        <td>{{ exp.get_status_display }}</td>
+                        <td>{{ exp.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">No admin expenses</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ACCOUNTING RECORDS -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white fw-bold">Accounting Records</div>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Reference</th>
+                        <th>Linked Requisition</th>
+                        <th>Amount Received</th>
+                        <th>Amount Spent</th>
+                        <th>Balance</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in accountings %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><a href="{% url 'finance:accounting_detail' acc.id  acc.slug %}"> {{ acc.reference }}</a></td>
+                        <td>{% if acc.requisition %}{{ acc.requisition.donor_code }}{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
+                        <td class="text-primary fw-bold">{{ acc.total_received|money:request }}</td>
+                        <td class="text-danger fw-bold">{{ acc.total_spent|money:request }}</td>
+                            <td class="text-success fw-bold">{{ acc.total_balance|money:request }}</td>
+                        <td>{{ acc.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">No accounting records</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</main>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "asset/base.html" %}
+{% block title %}Add Asset{% endblock %}
+
+{% block content %}
+
+<h4 class="text-success mb-3">Asset Registration</h4>
+
+<form method="post" class="card shadow-sm">
+    {% csrf_token %}
+    <div class="card-body">
+        <div class="row g-3">
+          {% include 'form.html' %}
+        </div>
+    </div>
+
+    <div class="card-footer text-end">
+        <button class="btn btn-success">
+            <i class="bi bi-save"></i> Save Asset
+        </button>
+    </div>
+</form>
+
+{% endblock %}

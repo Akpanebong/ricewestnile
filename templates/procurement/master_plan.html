@@ -1,0 +1,149 @@
+{% extends "procurement/base.html" %}
+{% block title %}Master Procurement Plan {{ year }}{% endblock %}
+{% load custom_tags %}
+{% block content %}
+<main class="ttr-wrapper">
+  <div class="container-fluid py-3">
+    {% include 'message.html' %}
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <div>
+        <h4 class="mb-1">Master Procurement Plan</h4>
+        <div class="text-muted small">
+          Project-based view{% if filters.year %} for {{ filters.year }}{% endif %} · {{ items|length }} item{{ items|length|pluralize }}
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <a class="btn btn-outline-danger" href="{% if export_querystring %}?{{ export_querystring }}&format=pdf{% else %}?format=pdf{% endif %}">
+          <i class="fa fa-file-pdf me-1"></i> PDF
+        </a>
+        <a class="btn btn-outline-success" href="{% if export_querystring %}?{{ export_querystring }}&format=excel{% else %}?format=excel{% endif %}">
+          <i class="fa fa-file-excel me-1"></i> Excel
+        </a>
+      </div>
+    </div>
+
+    <form class="row g-2 align-items-end mb-3" method="get">
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label small text-muted mb-1">Project</label>
+        <select name="project" class="form-select">
+          <option value="">All projects</option>
+          {% for project in projects %}
+          <option value="{{ project.pk }}" {% if filters.project == project.pk|stringformat:"s" %}selected{% endif %}>{{ project.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-2 col-md-3">
+        <label class="form-label small text-muted mb-1">Fiscal year</label>
+        <input list="year-options" type="text" class="form-control" name="year" value="{{ filters.year }}" placeholder="All years">
+        <datalist id="year-options">
+          {% for option_year in available_years %}
+          <option value="{{ option_year }}"></option>
+          {% endfor %}
+        </datalist>
+      </div>
+
+      <div class="col-lg-2 col-md-3">
+        <label class="form-label small text-muted mb-1">Quarter</label>
+        <select name="period" class="form-select">
+          <option value="">All periods</option>
+          {% for value, label in period_choices %}
+          <option value="{{ value }}" {% if filters.period == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-2 col-md-3">
+        <label class="form-label small text-muted mb-1">Status</label>
+        <select name="status" class="form-select">
+          <option value="">All active statuses</option>
+          {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-lg-1 col-md-3">
+        <label class="form-label small text-muted mb-1">From</label>
+        <input type="date" class="form-control" name="delivery_from" value="{{ filters.delivery_from }}">
+      </div>
+
+      <div class="col-lg-1 col-md-3">
+        <label class="form-label small text-muted mb-1">To</label>
+        <input type="date" class="form-control" name="delivery_to" value="{{ filters.delivery_to }}">
+      </div>
+
+      <div class="col-lg-1 col-md-3 d-grid">
+        <button class="btn btn-primary" type="submit">
+          <i class="fa fa-filter me-1"></i> Apply
+        </button>
+      </div>
+    </form>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center border-top border-bottom py-2 mb-3">
+      <div class="small text-muted">
+        Currency: <strong>{{ display_currency }}</strong>
+      </div>
+      <div class="text-end">
+        <div class="small text-muted">Grand total</div>
+        <div class="fs-5 fw-bold">{{ grand_total|money:request }}</div>
+        <div class="small text-muted">{{ grand_total|num_to_words:request }}</div>
+      </div>
+    </div>
+
+    {% if items %}
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width:48px">#</th>
+            <th>Project</th>
+            <th>Department</th>
+            <th>Plan No.</th>
+            <th>Year</th>
+            <th>Quarter</th>
+            <th>Status</th>
+            <th>Description</th>
+            <th>Unit</th>
+            <th class="text-end">Qty</th>
+            <th class="text-end">Est. Unit Cost ({{ display_currency }})</th>
+            <th class="text-end">Line Total ({{ display_currency }})</th>
+            <th>Delivery Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ item.procurement.project|default:"Unassigned" }}</td>
+            <td>{{ item.procurement.project.department|default:"-" }}</td>
+            <td>{{ item.procurement.number }}</td>
+            <td>{{ item.procurement.fiscal_year|default:"-" }}</td>
+            <td>{{ item.procurement.get_budget_period_display }}</td>
+            <td>{{ item.procurement.status }}</td>
+            <td>{{ item.product.name|default:item.description }}</td>
+            <td>{{ item.unit_measure }}</td>
+            <td class="text-end">{{ item.qty }}</td>
+            <td class="text-end">{{ item.est_unit_cost|money:request }}</td>
+            <td class="text-end fw-semibold">{{ item.line_total|money:request }}</td>
+            <td>{{ item.delivery_date|date:"Y-m-d"|default:"-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <th colspan="11" class="text-end">Grand Total</th>
+            <th class="text-end">{{ grand_total|money:request }}</th>
+            <th></th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info mb-0">No procurement items match the selected filters.</div>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "garcis/base.html" %}
+{% load risk_tags %}
+{% block title %}Risk Register{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h3 class="mb-1">Risk Register</h3>
+            <p class="text-muted mb-0">Track identified, assessed, treated, and reviewed risks across programs and projects.</p>
+        </div>
+        <div class="quick-links">
+            <a href="{% url 'risk_create' %}" class="btn btn-primary">Add Risk</a>
+            <a href="{% url 'risk_matrix' %}" class="btn btn-outline-dark">Risk Matrix</a>
+            <a href="{% url 'scenario_list' %}" class="btn btn-outline-secondary">Scenarios</a>
+        </div>
+    </div>
+
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Risk ID</th>
+                        <th>Event</th>
+                        <th>Program</th>
+                        <th>Unit</th>
+                        <th>Category</th>
+                        <th>Score</th>
+                        <th>Level</th>
+                        <th>Flags</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for risk in object_list %}
+                    <tr>
+                        <td>{{ risk.risk_id|default:"Pending" }}</td>
+                        <td>{{ risk.event|truncatechars:80 }}</td>
+                        <td>{{ risk.program|default:"-" }}</td>
+                        <td>{{ risk.business_unit|default:"-" }}</td>
+                        <td>{{ risk.category.name|default:"-" }}</td>
+                        <td>{{ risk.risk_score }}</td>
+                        <td><span class="badge bg-{{ risk.risk_level|risk_badge }}">{{ risk.risk_level }}</span></td>
+                        <td>
+                            {% if risk.is_fraud_related %}<span class="badge bg-danger">Fraud</span>{% endif %}
+                            {% if risk.esg_area %}<span class="badge bg-success">ESG</span>{% endif %}
+                            {% if risk.continuity_dependency %}<span class="badge bg-dark">BCP</span>{% endif %}
+                        </td>
+                        <td>{{ risk.get_status_display }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'risk_detail' risk.pk %}" class="btn btn-sm btn-outline-dark">View</a>
+                            <a href="{% url 'risk_update' risk.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="10" class="text-center text-muted py-5">No risks recorded yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

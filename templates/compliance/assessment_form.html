@@ -1,0 +1,62 @@
+<!-- templates/compliance/assessment_form.html -->
+
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container py-4">
+
+<div class="card shadow-lg border-0">
+
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">
+            {% if assessment %}Update Assessment{% else %}New Assessment{% endif %}
+        </h5>
+        <small>{{ requirement.title }}</small>
+    </div>
+
+    <div class="card-body">
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label>Score</label>
+                    {{ form.score }}
+                </div>
+
+                <div class="col-md-8">
+                    <label>Gap Identified</label>
+                    {{ form.gap }}
+                </div>
+
+                <div class="col-md-12">
+                    <label>Recommendation</label>
+                    {{ form.recommendation }}
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'compliance_detail' requirement.id %}"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-primary">
+                    Save Assessment
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,505 @@
+{% extends 'procurement/base.html' %}
+{% load static %}
+
+{% block title %}
+    Supplier {% if is_update %}Update{% else %}Registration{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        <!-- Professional Header -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+            <div class="card-body px-4 py-3">
+
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+
+                    <div>
+
+                        <h3 class="fw-bold text-dark mb-1">
+                            Supplier {% if is_update %}Management{% else %}Onboarding{% endif %}
+                        </h3>
+
+                        <p class="text-muted mb-0">
+                            {% if is_update %}
+                                Update supplier information, compliance records and registration details.
+                            {% else %}
+                                Register a new supplier into the procurement management system.
+                            {% endif %}
+                        </p>
+
+                    </div>
+
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb">
+
+                        <ol class="breadcrumb mb-0">
+
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'dashboard' %}"
+                                   class="text-decoration-none text-muted">
+
+                                    <i class="fa fa-home me-1"></i>
+                                    Dashboard
+
+                                </a>
+                            </li>
+
+                            <li class="breadcrumb-item text-muted">
+                                Procurement
+                            </li>
+
+                            <li class="breadcrumb-item active fw-semibold text-dark">
+
+                                {% if is_update %}
+                                    Supplier Update
+                                {% else %}
+                                    Supplier Registration
+                                {% endif %}
+
+                            </li>
+
+                        </ol>
+
+                    </nav>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% include 'message.html' %}
+
+        <div class="row g-4">
+
+            <!-- Main Form -->
+            <div class="col-xl-8 col-lg-8">
+
+                <div class="card border-0 shadow-sm rounded-4">
+
+                    <!-- Card Header -->
+                    <div class="card-header bg-white border-0 px-4 pt-4">
+
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div>
+
+                                <h5 class="fw-bold mb-1 text-dark">
+
+                                    <i class="fa fa-building text-primary me-2"></i>
+
+                                    Supplier Information
+
+                                </h5>
+
+                                <p class="text-muted small mb-0">
+                                    Fill in all required supplier details carefully.
+                                </p>
+
+                            </div>
+
+                            {% if is_update %}
+
+                            <span class="badge bg-primary-subtle text-primary px-3 py-2">
+
+                                <i class="fa fa-edit me-1"></i>
+                                Edit Mode
+
+                            </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="card-body p-4">
+
+                        <form method="post"
+                              enctype="multipart/form-data">
+
+                            {% csrf_token %}
+
+                            <!-- Non Field Errors -->
+                            {% if form.non_field_errors %}
+
+                            <div class="alert alert-danger border-0 rounded-3">
+
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+
+                            </div>
+
+                            {% endif %}
+
+                            <div class="row g-4">
+
+                                <!-- Title -->
+                                <div class="col-md-2">
+
+                                    <label class="form-label fw-semibold">
+                                        {{ form.title.label }}
+                                    </label>
+
+                                    {{ form.title }}
+
+                                    {% for error in form.title.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                                <!-- Full Name -->
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        {{ form.full_name.label }}
+                                    </label>
+
+                                    {{ form.full_name }}
+
+                                    {% for error in form.full_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                                <!-- Email -->
+                                <div class="col-md-4">
+
+                                    <label class="form-label fw-semibold">
+                                        {{ form.email.label }}
+                                    </label>
+
+                                    {{ form.email }}
+
+                                    {% for error in form.email.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                                <!-- Organization -->
+                                <div class="col-md-12">
+
+                                    <label class="form-label fw-semibold">
+                                        {{ form.organisation_name.label }}
+                                    </label>
+
+                                    {{ form.organisation_name }}
+
+                                    {% for error in form.organisation_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                                <!-- Contact Person -->
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        {{ form.contact_person.label }}
+                                    </label>
+
+                                    {{ form.contact_person }}
+
+                                    {% for error in form.contact_person.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                                <!-- Phone -->
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        {{ form.phone.label }}
+                                    </label>
+
+                                    {{ form.phone }}
+
+                                    {% for error in form.phone.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                                <!-- Address -->
+                                <div class="col-md-12">
+
+                                    <label class="form-label fw-semibold">
+                                        {{ form.address.label }}
+                                    </label>
+
+                                    {{ form.address }}
+
+                                    {% for error in form.address.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                                <!-- TIN -->
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        {{ form.tin_number.label }}
+                                    </label>
+
+                                    {{ form.tin_number }}
+
+                                    {% for error in form.tin_number.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                                <!-- Documents -->
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        {{ form.documents.label }}
+                                    </label>
+
+                                    {{ form.documents }}
+
+                                    <small class="text-muted d-block mt-1">
+                                        Upload registration certificates or compliance documents.
+                                    </small>
+
+                                    {% for error in form.documents.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+                            <!-- Divider -->
+                            <hr class="my-4">
+
+                            <!-- Actions -->
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+
+                                <div class="d-flex gap-2">
+
+                                    <a href="javascript:history.back()"
+                                       class="btn btn-light border px-4">
+
+                                        Cancel
+
+                                    </a>
+
+                                    <button type="submit"
+                                            class="btn btn-primary px-4 shadow-sm">
+
+                                        <i class="fa fa-save me-2"></i>
+
+                                        {% if is_update %}
+                                            Update Supplier
+                                        {% else %}
+                                            Save Supplier
+                                        {% endif %}
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-xl-4 col-lg-4">
+
+                <!-- Information Panel -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+                    <div class="card-body p-4">
+
+                        <h5 class="fw-bold mb-3">
+
+                            <i class="fa fa-lightbulb text-warning me-2"></i>
+                            Registration Guidelines
+
+                        </h5>
+
+                        <div class="small text-muted">
+
+                            <div class="mb-3 d-flex">
+
+                                <i class="fa fa-check-circle text-success me-2 mt-1"></i>
+
+                                <span>
+                                    Ensure supplier names match official registration documents.
+                                </span>
+
+                            </div>
+
+                            <div class="mb-3 d-flex">
+
+                                <i class="fa fa-check-circle text-success me-2 mt-1"></i>
+
+                                <span>
+                                    Verify phone numbers and email addresses before submission.
+                                </span>
+
+                            </div>
+
+                            <div class="mb-3 d-flex">
+
+                                <i class="fa fa-check-circle text-success me-2 mt-1"></i>
+
+                                <span>
+                                    Upload valid compliance and tax registration documents.
+                                </span>
+
+                            </div>
+
+                            <div class="d-flex">
+
+                                <i class="fa fa-check-circle text-success me-2 mt-1"></i>
+
+                                <span>
+                                    Ensure TIN details are accurate for procurement compliance.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Actions Panel -->
+                {% if is_update %}
+
+                <div class="card border-0 shadow-sm rounded-4">
+
+                    <div class="card-body p-4">
+
+                        <h5 class="fw-bold mb-3">
+
+                            <i class="fa fa-cogs text-primary me-2"></i>
+                            Supplier Actions
+
+                        </h5>
+
+                        <div class="d-grid gap-2">
+
+                            <a class="btn {% if supplier.active %}btn-warning{% else %}btn-success{% endif %}"
+                               href="{% url 'activate_supplier' supplier.pk %}">
+
+                                <i class="fa fa-power-off me-2"></i>
+
+                                {% if supplier.active %}
+                                    Deactivate Supplier
+                                {% else %}
+                                    Activate Supplier
+                                {% endif %}
+
+                            </a>
+
+                            <a class="btn btn-outline-danger"
+                               href="{% url 'trash_supplier' supplier.pk supplier.phone supplier.title %}">
+
+                                <i class="fa fa-trash me-2"></i>
+                                Move to Trash
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+<style>
+
+.card {
+    overflow: hidden;
+}
+
+.form-label {
+    margin-bottom: 8px;
+    color: #344054;
+}
+
+.form-control,
+.form-select {
+    border-radius: 12px;
+    min-height: 48px;
+    border: 1px solid #d0d5dd;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 4px rgba(13,110,253,.1);
+}
+
+textarea.form-control {
+    min-height: 120px;
+}
+
+.breadcrumb {
+    --bs-breadcrumb-divider: '›';
+    font-size: 14px;
+}
+
+.btn {
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.alert {
+    border-radius: 12px;
+}
+
+</style>
+
+{% endblock %}

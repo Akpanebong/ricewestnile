@@ -1,0 +1,283 @@
+{% extends "procurement/base.html" %}
+{% load custom_tags %}
+{% load humanize %}
+{% load static %}
+{% block title %}Procurement {{ procurement.number }}{% endblock %}
+{% block content %}
+<main class="ttr-wrapper">
+  <div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb bg-light shadow-sm px-3 py-2 rounded">
+        <li class="breadcrumb-item">
+          <a href="{% url 'requisition_list' %}"><i class="fa fa-home"></i> Procurements</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+          {{ procurement.number }}
+        </li>
+      </ol>
+    </nav>
+
+
+
+    {% if procurement.status == 'Rejected' %}
+<div class="alert alert-danger mt-3">
+    <h6>Rejection Reason</h6>
+
+    <p class="mb-1">
+        {{ procurement.rejection_reason }}
+    </p>
+
+    <small>
+        Rejected by {{ procurement.rejected_by }}
+        on {{ procurement.rejected_at|date:"d M Y H:i" }}
+    </small>
+</div>
+{% endif %}
+
+    <!-- Requisition Overview -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fa fa-file-alt"></i> Procurement Plan #{{ procurement.number }}</h5>
+        <span class="badge bg-light text-success px-3 py-2">{{ procurement.status }}</span>
+      </div>
+
+      <div class="card-body">
+        <div class="row">
+          <!-- Left Column: Requisition Info -->
+          <div class="col-lg-6 border-end">
+            <h6 class="text-secondary mb-3"><i class="fa fa-info-circle"></i> Requisition Details</h6>
+            <div class="mb-2"><strong>Requester:</strong> {{ procurement.requester.get_full_name|default:procurement.requester.username }}</div>
+<!--            <div class="mb-2"><strong>Department:</strong> {{ procurement.department }}</div>-->
+            <div class="mb-2"><strong>Project / Program:</strong> {{ procurement.project|default:"—" }}</div>
+            <div class="mb-2"><strong>Budget:</strong> {{ procurement.budget|default:0.0|money:request }}</div>
+            <div class="mb-2"><strong>Fiscal Year:</strong>  {{ procurement.fiscal_year }}</div>
+            <div class="mb-2"><strong>Budget Period:</strong>  {{ procurement.get_budget_period_display }}</div>
+            <div class="mb-2"><strong>Project Budget:</strong>  {{ procurement.budget|money:request }}</div>
+
+          </div>
+
+          <!-- Right Column: Approval Progress -->
+          <div class="col-lg-6">
+            <h6 class="text-secondary mb-3"><i class="fa fa-sitemap"></i> Approval Progress</h6>
+<ul class="list-group list-group-flush shadow-sm rounded">
+
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>Programs Head Review</strong><br>
+
+            {% if procurement.reviewed_by %}
+                <small class="text-muted">
+                    By {{ procurement.reviewed_by }}
+                    on {{ procurement.reviewed_at|date:"d M Y H:i" }}
+                </small>
+            {% else %}
+                <small class="text-muted">
+                    Awaiting review by Programs Head
+                </small>
+            {% endif %}
+        </div>
+
+        <span class="badge px-3 py-2 text-white
+            {% if procurement.reviewed_by %}
+                bg-success
+            {% elif procurement.status == 'Rejected' %}
+                bg-danger
+            {% else %}
+                bg-warning text-dark
+            {% endif %}
+        ">
+            {% if procurement.reviewed_by %}
+                Reviewed
+            {% elif procurement.status == 'Rejected' %}
+                Rejected
+            {% else %}
+                Pending
+            {% endif %}
+        </span>
+
+    </li>
+
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>Executive Director Approval</strong><br>
+
+            {% if procurement.approved_by %}
+                <small class="text-muted">
+                    By {{ procurement.approved_by }}
+                    on {{ procurement.approved_at|date:"d M Y H:i" }}
+                </small>
+            {% else %}
+                <small class="text-muted">
+                    Awaiting ED approval
+                </small>
+            {% endif %}
+        </div>
+
+        <span class="badge px-3 py-2 text-white
+            {% if procurement.approved_by %}
+                bg-success
+            {% elif procurement.status == 'Rejected' %}
+                bg-danger
+            {% else %}
+                bg-warning text-dark
+            {% endif %}
+        ">
+            {% if procurement.approved_by %}
+                Approved
+            {% elif procurement.status == 'Rejected' %}
+                Rejected
+            {% else %}
+                Pending
+            {% endif %}
+        </span>
+
+    </li>
+
+</ul>
+            <!-- Optional: visual progress bar -->
+            <!-- Progress bar (put this where you want the visual indicator) -->
+<div class="mt-3">
+  <div class="d-flex justify-content-between align-items-center mb-1">
+    <small class="text-muted">{{ approvals }} / {{ total_stages }} approvals complete</small>
+    <small class="text-muted">
+      {% if procurement.ed_approval == 'Approved' %}
+        Fully approved
+      {% elif procurement.dept_approval == 'Rejected' or procurement.fina_approval == 'Rejected' or procurement.ed_approval == 'Rejected' %}
+        Rejected
+      {% else %}
+        In progress
+      {% endif %}
+    </small>
+  </div>
+
+  <div class="progress" style="height: 15px; width: {{ progress_percent }}%">
+    <div class="progress-bar"
+         role="progressbar"
+         style="width: {{ progress_percent }}%; background-color:green;"
+         aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">{{ progress_percent }}%
+    </div>
+  </div>
+</div>
+
+          </div>
+<!--          <div class="mb-3">-->
+<!--              <div class="border rounded p-2 bg-light mt-1"><strong>Activity Name:</strong>-->
+<!--                {{ procurement.activity_name|default:"No justification provided." }}-->
+<!--              </div>-->
+<!--            </div>-->
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-dark text-white">
+        <h6 class="mb-0"><i class="fa fa-list"></i> Requested Items</h6>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover table-striped align-middle">
+            <thead class="table-success text-center">
+              <tr>
+                <th>#</th>
+                <th>Description</th>
+                <th>Unit Measure</th>
+                <th>Qty</th>
+                <th>Unit Cost</th>
+                <th>Line Total</th>
+                <th>Delivery Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in procurement.items.all %}
+              <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td>{{ it.procurement_item.product }} {{ it.description }}</td>
+                <td>{{ it.unit_measure}}</td>
+                <td class="text-center">{{ it.qty }}</td>
+                <td class="text-end">{{ it.est_unit_cost|money_plain:request }}</td>
+                <td class="text-end fw-bold">{{ it.line_total|money_plain:request }}</td>
+                <td class="text-end fw-bold">{{ it.delivery_date }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="7" class="text-center text-muted">No items added to this requisition.</td></tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="bg-light">
+              <tr>
+                <th colspan="6" class="text-end">Grand Total</th>
+                <th class="text-end text-success">{{ procurement.total_amount|money:request }}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approval Buttons -->
+    {% if user.is_authenticated %}
+    <div class="card shadow-sm border-0">
+      <div class="card-body text-center">
+
+      <form method="post">
+    {% csrf_token %}
+    {% if request.user == programs_head and not procurement.reviewed_by and procurement.status == 'Pending' %}
+
+        <button
+            formaction="{% url 'requisition_review' procurement.pk %}"
+            name="action"
+            value="Reviewed"
+            class="btn btn-success">
+            Review
+        </button>
+
+       <button
+          type="button"
+          class="btn btn-danger"
+          data-bs-toggle="modal"
+          data-bs-target="#rejectModal"
+          data-action="{% url 'requisition_review' procurement.pk %}">
+          Reject
+      </button>
+
+    {% elif request.user|has_group:'ED' and procurement.reviewed_by and not procurement.approved_by and procurement.status == 'Reviewed' %}
+
+        <button
+            formaction="{% url 'requisition_approve' procurement.pk %}"
+            name="action"
+            value="Approved"
+            class="btn btn-success">
+            Approve
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-danger"
+          data-bs-toggle="modal"
+          data-bs-target="#rejectModal"
+          data-action="{% url 'requisition_approve' procurement.pk %}">
+          Reject
+      </button>
+
+    {% endif %}
+
+    {% if procurement.status == 'Approved' %}
+        <a href="?format=pdf" class="btn btn-secondary">
+            Download PDF
+        </a>
+    {% endif %}
+
+</form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% include 'procurement/reject_procurement.html' %}
+
+</main>
+
+{% endblock %}

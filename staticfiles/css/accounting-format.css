@@ -1,0 +1,111 @@
+/**
+ * Accounting Format Styles
+ * Styles for currency and amount displays
+ */
+
+/* Currency Input Fields */
+input.currency-input,
+.accounting-amount {
+    font-family: 'Courier New', monospace;
+    text-align: right;
+    font-weight: 500;
+}
+
+/* Read-only currency fields */
+input.currency-input[readonly],
+.currency-display {
+    background-color: #f8f9fa;
+    color: #212529;
+    font-weight: 600;
+}
+
+/* Currency value displays */
+.amount-value,
+.currency-value,
+[data-accounting-format] {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Success/Profit amounts (green) */
+.amount-positive,
+.amount-balance-positive {
+    color: #28a745;
+    font-weight: 600;
+}
+
+/* Negative amounts (red) */
+.amount-negative,
+.amount-balance-negative {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Table amounts */
+table .amount-value {
+    text-align: right;
+    padding-right: 0.5rem;
+}
+
+/* Forms with accounting format */
+.form-accounting {
+    --bs-form-control-bg: #fafbfc;
+    --bs-form-control-border-color: #dee2e6;
+}
+
+.form-accounting .form-control:focus {
+    --bs-form-control-bg: #ffffff;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Display totals with emphasis */
+.accounting-total,
+.grand-total-display {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2c3e50;
+    background-color: #e7f3ff;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    border-left: 4px solid #0056b3;
+}
+
+/* Responsive currency tables */
+@media (max-width: 768px) {
+    .amount-value,
+    .currency-value {
+        font-size: 0.9rem;
+    }
+}
+
+/* Accounting form table styling */
+table.accounting-table {
+    --bs-table-striped-bg: #f9fafb;
+    --bs-table-hover-bg: #f3f4f6;
+}
+
+table.accounting-table th {
+    background-color: #f3f4f6;
+    font-weight: 600;
+    border-bottom: 2px solid #d1d5db;
+}
+
+table.accounting-table td.amount-cell {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    font-weight: 500;
+}
+
+/* Badge for currency codes */
+.currency-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background-color: #e7f3ff;
+    color: #0056b3;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}

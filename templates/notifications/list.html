@@ -1,0 +1,477 @@
+{% extends "hr/base.html" %}
+{% load static %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row mb-4">
+
+        <div class="col-md-6">
+
+            <h3 class="fw-bold">
+                <i class="fa fa-bell text-primary me-2"></i>
+                Notifications
+            </h3>
+
+            <small class="text-muted">
+                View all your notifications.
+            </small>
+
+        </div>
+
+        <div class="col-md-6 text-end">
+
+            <a href="{% url 'notifications:mark_all_read' %}"
+               class="btn btn-success">
+
+                <i class="fa fa-check-double"></i>
+
+                Mark All Read
+
+            </a>
+
+            {% if request.user.is_superuser %}
+
+            <a href="{% url 'notifications:create' %}"
+               class="btn btn-primary">
+
+                <i class="fa fa-paper-plane"></i>
+
+                New Notification
+
+            </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h6>Total</h6>
+
+                <h3>{{ total_notifications }}</h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h6>Unread</h6>
+
+                <h3 class="text-danger">
+
+                    {{ unread_count }}
+
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h6>Read</h6>
+
+                <h3 class="text-success">
+
+                    {{ read_count }}
+
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body">
+
+                <h6>Critical</h6>
+
+                <h3 class="text-dark">
+
+                    {{ critical_count }}
+
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+    <form method="get" class="card shadow-sm mb-4">
+
+    <div class="card-body">
+
+        <div class="row g-2">
+
+            <div class="col-md-6">
+
+                <input
+
+                    type="text"
+
+                    name="keyword"
+
+                    value="{{ request.GET.keyword }}"
+
+                    class="form-control"
+
+                    placeholder="Search..."
+
+                >
+
+            </div>
+
+            <div class="col-md-2">
+
+                <select
+
+                    name="status"
+
+                    class="form-select"
+
+                >
+
+                    <option value="">All</option>
+
+                    <option value="read">Read</option>
+
+                    <option value="unread">Unread</option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-2">
+
+                <button
+
+                    class="btn btn-primary w-100"
+
+                >
+
+                    Search
+
+                </button>
+
+            </div>
+
+            <div class="col-md-2">
+
+                <a
+
+                    href="{% url 'notifications:list' %}"
+
+                    class="btn btn-secondary w-100"
+
+                >
+
+                    Reset
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</form>
+
+    <div class="card shadow-sm">
+
+<div class="table-responsive">
+
+<table class="table table-hover align-middle mb-0">
+
+<thead>
+
+<tr>
+
+<th></th>
+
+{% if request.user.is_superuser %}
+<th>Recipient</th>
+{% endif %}
+
+
+<th>Sender</th>
+<th>Title</th>
+
+<th>Date</th>
+
+<th>Status</th>
+
+<th class="text-end">Actions</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for notification in notifications %}
+
+<tr class="{% if not notification.is_read %}table-warning{% endif %}">
+
+<td>
+
+{% if notification.is_read %}
+
+<i class="fa fa-envelope-open text-success"></i>
+
+{% else %}
+
+<i class="fa fa-envelope text-warning"></i>
+
+{% endif %}
+
+</td>
+
+{% if request.user.is_superuser %}
+
+<td>
+
+{{ notification.recipient.get_full_name|default:notification.recipient.username }}
+
+</td>
+
+{% endif %}
+
+<td>
+
+{{ notification.created_by.get_full_name|default:notification.created_by }}
+
+</td>
+<td>
+
+<strong>
+
+{{ notification.title }}
+
+</strong>
+
+<br>
+
+<small class="text-muted">
+
+{{ notification.message|truncatechars:80 }}
+
+</small>
+
+</td>
+
+<td>
+
+{{ notification.created|date:"d M Y H:i" }}
+
+</td>
+<!--<td>-->
+
+<!--<span class="badge bg-{{ notification.badge_class }}">-->
+
+<!--{{ notification.notification.get_category_display }}-->
+
+<!--</span>-->
+
+<!--</td>-->
+
+
+<td>
+
+{% if notification.is_read %}
+
+<span class="badge bg-success">
+
+Read
+
+</span>
+
+{% else %}
+
+<span class="badge bg-danger">
+
+Unread
+
+</span>
+
+{% endif %}
+
+</td>
+
+<td class="text-end">
+
+<a
+
+href="{% url 'notifications:detail' notification.notification.pk %}"
+
+class="btn btn-sm btn-outline-primary"
+
+>
+
+<i class="fa fa-eye"></i>
+
+</a>
+
+{% if not notification.is_read %}
+
+<a
+
+href="{% url 'notifications:read' notification.notification.pk %}"
+
+class="btn btn-sm btn-outline-success"
+
+>
+
+<i class="fa fa-check"></i>
+
+</a>
+
+{% endif %}
+
+{% if request.user == notification.created_by %}
+
+<a href="{% url 'notifications:update' notification.notification.pk %}" class="btn btn-sm btn-outline-warning">
+
+<i class="fa fa-edit"></i>
+
+</a>
+
+<a
+
+href="{% url 'notifications:delete' notification.notification.pk %}"
+
+class="btn btn-sm btn-outline-danger"
+
+onclick="return confirm('Delete this notification?');"
+
+>
+
+<i class="fa fa-trash"></i>
+
+</a>
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="7">
+
+<div class="text-center py-5">
+
+<i class="fa fa-bell-slash fa-3x text-muted mb-3"></i>
+
+<h5>No Notifications</h5>
+
+<p class="text-muted">
+
+You have no notifications.
+
+</p>
+
+</div>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% if is_paginated %}
+
+<div class="card-footer">
+
+{% include "pagination.html" %}
+
+</div>
+
+{% endif %}
+
+</div>
+</div>
+
+    <style>
+
+.card{
+
+border-radius:16px;
+
+}
+
+.table-warning{
+
+border-left:5px solid orange;
+
+}
+
+.table tbody tr{
+
+transition:.25s;
+
+}
+
+.table tbody tr:hover{
+
+background:#f8fafc;
+
+}
+
+.badge{
+
+font-size:.82rem;
+
+}
+
+.btn{
+
+border-radius:10px;
+
+}
+
+</style>
+
+{% endblock %}

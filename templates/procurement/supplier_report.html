@@ -1,0 +1,731 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+
+{% block title %}Supplier Expenditure Report{% endblock %}
+
+{% block content %}
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        {% include 'message.html' %}
+
+        <!-- Enterprise Header -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+
+            <div class="card-body px-4 py-4">
+
+                <div class="row align-items-center g-4">
+
+                    <!-- Left -->
+                    <div class="col-lg-8">
+
+                        <div class="d-flex align-items-start">
+
+                            <!-- Icon -->
+                            <div class="report-icon me-3">
+
+                                <i class="fa fa-chart-line"></i>
+
+                            </div>
+
+                            <!-- Content -->
+                            <div>
+
+                                <h2 class="fw-bold text-dark mb-1">
+                                    Supplier Expenditure Analytics
+                                </h2>
+
+                                <p class="text-muted mb-3">
+                                    Procurement spending intelligence, supplier performance insights and expenditure reporting.
+                                </p>
+
+                                <!-- Breadcrumb -->
+                                <nav aria-label="breadcrumb">
+
+                                    <ol class="breadcrumb enterprise-breadcrumb mb-0">
+
+                                        <li class="breadcrumb-item">
+
+                                            <a href="{% url 'dashboard' %}">
+
+                                                <i class="fa fa-home me-1"></i>
+                                                Dashboard
+
+                                            </a>
+
+                                        </li>
+
+                                        <li class="breadcrumb-item">
+                                            Procurement
+                                        </li>
+
+                                        <li class="breadcrumb-item active">
+                                            Supplier Reports
+                                        </li>
+
+                                    </ol>
+
+                                </nav>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Right Stats -->
+                    <div class="col-lg-4">
+
+                        <div class="row g-3">
+
+                            <!-- Total -->
+                            <div class="col-12">
+
+                                <div class="analytics-card">
+
+                                    <div class="analytics-icon bg-success-subtle text-success">
+
+                                        <i class="fa fa-coins"></i>
+
+                                    </div>
+
+                                    <div>
+
+                                        <h4 class="fw-bold mb-0">
+
+                                            {{ grand_total|default:0|money:request }}
+
+                                        </h4>
+
+                                        <small class="text-muted">
+                                            Total Procurement Spend
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Main Content -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+            <!-- Toolbar -->
+            <div class="card-header bg-white border-0 px-4 py-4">
+
+                <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3">
+
+                    <!-- Left -->
+                    <div>
+
+                        <h5 class="fw-bold text-dark mb-1">
+
+                            <i class="fa fa-filter text-primary me-2"></i>
+
+                            Supplier Report Filters
+
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Filter procurement expenditure by supplier and export reports.
+                        </p>
+
+                    </div>
+
+                    <!-- Right -->
+                    <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch">
+
+                        <!-- Supplier Filter -->
+                        <form method="get">
+
+                            <div class="enterprise-select">
+
+                                <i class="fa fa-building"></i>
+
+                                <select id="supplier"
+                                        name="supplier"
+                                        onchange="if(this.value){window.location.href=this.value;}">
+
+                                    <option value="{% url 'supplier_report' %}">
+                                        All Suppliers
+                                    </option>
+
+                                    {% for s in suppliers %}
+
+                                    <option value="{% url 'supplier_detail_report' s.id %}"
+                                            {% if supplier and supplier.id == s.id %}selected{% endif %}>
+
+                                        {{ s }}
+
+                                    </option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+                        </form>
+
+                        <!-- Export Buttons -->
+                        {% if supplier %}
+
+                        <div class="d-flex gap-2">
+
+                            <a href="?export=pdf"
+                               class="btn btn-danger enterprise-btn">
+
+                                <i class="fa fa-file-pdf me-2"></i>
+
+                                PDF
+
+                            </a>
+
+                            <a href="?export=excel"
+                               class="btn btn-success enterprise-btn">
+
+                                <i class="fa fa-file-excel me-2"></i>
+
+                                Excel
+
+                            </a>
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Body -->
+            <div class="card-body p-0">
+
+                {% if supplier %}
+
+                <!-- Supplier Summary Header -->
+                <div class="summary-header px-4 py-4 border-bottom">
+
+                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+
+                        <div>
+
+                            <h4 class="fw-bold text-dark mb-1">
+
+                                {{ supplier }}
+
+                            </h4>
+
+                            <p class="text-muted mb-0">
+                                Detailed supplier procurement expenditure report.
+                            </p>
+
+                        </div>
+
+                        <div class="summary-stat">
+
+                            <small class="text-muted d-block">
+                                Total Supplier Spend
+                            </small>
+
+                            <h3 class="fw-bold text-success mb-0">
+
+                                {{ supplier_total|money:request }}
+
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Detail Table -->
+                <div class="table-responsive">
+
+                    <table class="table enterprise-table align-middle mb-0">
+
+                        <thead>
+
+                            <tr>
+
+                                <th width="80" class="ps-4">
+                                    #
+                                </th>
+
+                                <th>
+                                    Purchase Order
+                                </th>
+
+                                <th>
+                                    Date
+                                </th>
+
+                                <th class="text-end pe-4">
+                                    Total Amount ({{ display_currency }})
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for po in po_list %}
+
+                            <tr>
+
+                                <td class="ps-4 text-muted fw-semibold">
+
+                                    {{ forloop.counter }}
+
+                                </td>
+
+                                <td>
+
+                                    <div class="fw-semibold text-dark">
+
+                                        {{ po.number }}
+
+                                    </div>
+
+                                </td>
+
+                                <td>
+
+                                    {{ po.date|date:"M d, Y" }}
+
+                                </td>
+
+                                <td class="text-end pe-4 fw-bold text-success">
+
+                                    {{ po.total|money:request }}
+
+                                </td>
+
+                            </tr>
+
+                            {% empty %}
+
+                            <tr>
+
+                                <td colspan="4" class="text-center py-5">
+
+                                    <div class="empty-state">
+
+                                        <div class="empty-icon mb-3">
+
+                                            <i class="fa fa-folder-open"></i>
+
+                                        </div>
+
+                                        <h5 class="fw-bold text-dark">
+
+                                            No Purchase Orders Found
+
+                                        </h5>
+
+                                        <p class="text-muted">
+                                            No procurement expenditure records available for this supplier.
+                                        </p>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                        <tfoot>
+
+                            <tr class="summary-row">
+
+                                <td colspan="3"
+                                    class="text-end fw-bold">
+
+                                    Total Expenditure
+
+                                </td>
+
+                                <td class="text-end pe-4 fw-bold text-success">
+
+                                    {{ supplier_total|money:request }}
+
+                                </td>
+
+                            </tr>
+
+                        </tfoot>
+
+                    </table>
+
+                </div>
+
+                {% else %}
+
+                <!-- Summary Header -->
+                <div class="summary-header px-4 py-4 border-bottom">
+
+                    <h4 class="fw-bold text-dark mb-1">
+
+                        Supplier Expenditure Summary
+
+                    </h4>
+
+                    <p class="text-muted mb-0">
+                        Overview of procurement expenditure grouped by suppliers.
+                    </p>
+
+                </div>
+
+                <!-- Summary Table -->
+                <div class="table-responsive">
+
+                    <table class="table enterprise-table align-middle mb-0">
+
+                        <thead>
+
+                            <tr>
+
+                                <th width="80" class="ps-4">
+                                    #
+                                </th>
+
+                                <th>
+                                    Supplier
+                                </th>
+
+                                <th class="text-end pe-4">
+                                    Total Spent ({{ display_currency }})
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for item in supplier_data %}
+
+                            <tr>
+
+                                <td class="ps-4 text-muted fw-semibold">
+
+                                    {{ forloop.counter }}
+
+                                </td>
+
+                                <td>
+
+                                    <div class="d-flex align-items-center">
+
+                                        <!-- Avatar -->
+                                        <div class="supplier-avatar me-3">
+                                            {{ item.supplier__full_name|default:item.supplier__title|slice:":1"|upper }}
+
+                                        </div>
+
+                                        <!-- Details -->
+                                        <div>
+
+                                            <div class="fw-semibold text-dark">
+
+                                            <a href="{% url 'supplier_detail_report' item.supplier__id %}">
+                                                {{ item.supplier__title }}
+                                                {{ item.supplier__full_name|default:item.supplier__title }}
+                                            </a>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <td class="text-end pe-4 fw-bold text-success">
+
+                                    {{ item.total|money:request }}
+
+                                </td>
+
+                            </tr>
+
+                            {% empty %}
+
+                            <tr>
+
+                                <td colspan="3" class="text-center py-5">
+
+                                    <div class="empty-state">
+
+                                        <div class="empty-icon mb-3">
+
+                                            <i class="fa fa-database"></i>
+
+                                        </div>
+
+                                        <h5 class="fw-bold text-dark">
+
+                                            No Supplier Data Available
+
+                                        </h5>
+
+                                        <p class="text-muted">
+                                            Procurement expenditure analytics are currently unavailable.
+                                        </p>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                        <tfoot>
+
+                            <tr class="summary-row">
+
+                                <td colspan="2"
+                                    class="text-end fw-bold">
+
+                                    Grand Total
+
+                                </td>
+
+                                <td class="text-end pe-4 fw-bold text-success">
+
+                                    {{ grand_total|money:request }}
+
+                                </td>
+
+                            </tr>
+
+                        </tfoot>
+
+                    </table>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Enterprise Styles -->
+<style>
+
+:root{
+    --primary-color:#0d6efd;
+    --success-color:#198754;
+    --border-color:#e9ecef;
+    --text-muted:#667085;
+    --card-radius:18px;
+}
+
+/* Cards */
+.card{
+    border-radius:var(--card-radius);
+}
+
+/* Header Icon */
+.report-icon{
+    width:64px;
+    height:64px;
+    border-radius:18px;
+    background:rgba(13,110,253,.1);
+    color:var(--primary-color);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+}
+
+/* Breadcrumb */
+.enterprise-breadcrumb{
+    --bs-breadcrumb-divider:'›';
+}
+
+.enterprise-breadcrumb a{
+    text-decoration:none;
+    color:#667085;
+    transition:.2s ease;
+}
+
+.enterprise-breadcrumb a:hover{
+    color:var(--primary-color);
+}
+
+/* Analytics */
+.analytics-card{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:18px;
+    border-radius:16px;
+    border:1px solid var(--border-color);
+    background:#fff;
+}
+
+.analytics-icon{
+    width:52px;
+    height:52px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+/* Select */
+.enterprise-select{
+    position:relative;
+    min-width:320px;
+}
+
+.enterprise-select i{
+    position:absolute;
+    top:50%;
+    left:16px;
+    transform:translateY(-50%);
+    color:#98a2b3;
+    z-index:2;
+}
+
+.enterprise-select select{
+    width:100%;
+    height:48px;
+    border-radius:14px;
+    border:1px solid var(--border-color);
+    padding:0 16px 0 46px;
+    appearance:none;
+    background:#fff;
+    transition:.2s ease;
+}
+
+.enterprise-select select:focus{
+    outline:none;
+    border-color:var(--primary-color);
+    box-shadow:0 0 0 4px rgba(13,110,253,.1);
+}
+
+/* Buttons */
+.enterprise-btn{
+    height:48px;
+    border-radius:14px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+}
+
+/* Summary */
+.summary-header{
+    background:#fafcff;
+}
+
+.summary-stat{
+    text-align:right;
+}
+
+/* Tables */
+.enterprise-table thead th{
+    background:#f8fafc;
+    border-bottom:none;
+    padding-top:16px;
+    padding-bottom:16px;
+    color:#667085;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    font-size:12px;
+}
+
+.enterprise-table tbody tr{
+    transition:.2s ease;
+}
+
+.enterprise-table tbody tr:hover{
+    background:#f8fbff;
+}
+
+.enterprise-table td{
+    padding-top:18px;
+    padding-bottom:18px;
+    border-color:#f1f3f5;
+}
+
+/* Avatar */
+.supplier-avatar{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    background:linear-gradient(135deg,#0d6efd,#3b82f6);
+    color:#fff;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* Summary Row */
+.summary-row{
+    background:#f8fafc;
+}
+
+/* Empty State */
+.empty-state{
+    padding:40px 20px;
+}
+
+.empty-icon{
+    width:80px;
+    height:80px;
+    border-radius:22px;
+    background:#f8f9fa;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:34px;
+    color:#98a2b3;
+}
+
+/* Mobile */
+@media(max-width:768px){
+
+    .enterprise-select{
+        min-width:100%;
+    }
+
+    .summary-stat{
+        text-align:left;
+    }
+
+}
+
+</style>
+
+{% endblock %}

@@ -1,0 +1,1465 @@
+{% extends active_base_template|default:'base.html' %}
+
+{% load static %}
+
+{% block title %}Upload Resource | Knowledge Repository{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3 py-lg-4">
+
+    <!-- =========================================================
+         PAGE HEADER
+    ========================================================== -->
+    <div class="page-header mb-4">
+
+        <div class="d-flex flex-column flex-lg-row
+                    justify-content-between
+                    align-items-lg-center gap-3">
+
+            <div>
+
+                <div class="breadcrumb-modern mb-2">
+                    <a href="{% url 'core:resource_list' %}">
+                        <i class="fa fa-book-open me-1"></i>
+                        Knowledge Repository
+                    </a>
+
+                    <span>/</span>
+
+                    <span>Upload Resource</span>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <div class="page-icon">
+                        <i class="fa fa-cloud-arrow-up"></i>
+                    </div>
+
+                    <div>
+
+                        <h3 class="fw-bold mb-1 text-dark">
+                            Upload Resource
+                        </h3>
+
+                        <p class="text-muted mb-0">
+                            Add presentations, reports and success stories
+                            to the knowledge repository.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <a href="{% url 'core:resource_list' %}"
+               class="btn btn-outline-secondary btn-sm px-3">
+
+                <i class="fa fa-arrow-left me-1"></i>
+                Back to Resources
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         FORM ERRORS
+    ========================================================== -->
+    {% if form.non_field_errors %}
+
+        <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4">
+
+            <div class="d-flex gap-2">
+
+                <i class="fa fa-circle-exclamation mt-1"></i>
+
+                <div>
+
+                    <div class="fw-semibold mb-1">
+                        Unable to upload resource
+                    </div>
+
+                    {% for error in form.non_field_errors %}
+                        <div class="small">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- =========================================================
+         MAIN LAYOUT
+    ========================================================== -->
+    <div class="row g-4 justify-content-center">
+
+
+        <!-- =====================================================
+             MAIN FORM
+        ====================================================== -->
+        <div class="col-12 col-xl-8">
+
+            <div class="resource-form-card">
+
+                <!-- Form Header -->
+                <div class="resource-form-header">
+
+                    <div>
+
+                        <span class="section-kicker">
+                            RESOURCE DETAILS
+                        </span>
+
+                        <h5 class="fw-bold mb-1">
+                            Resource Information
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Provide the information needed to catalogue
+                            and manage this resource.
+                        </p>
+
+                    </div>
+
+                    <div class="secure-badge">
+                        <i class="fa fa-shield-halved me-1"></i>
+                        Secure Upload
+                    </div>
+
+                </div>
+
+
+                <form method="POST"
+                      enctype="multipart/form-data"
+                      id="resourceUploadForm">
+
+                    {% csrf_token %}
+
+
+                    <div class="resource-form-body">
+
+
+                        <!-- =================================================
+                             TITLE
+                        ================================================== -->
+                        <div class="form-section">
+
+                            <label for="{{ form.title.id_for_label }}"
+                                   class="form-label-modern">
+
+                                Resource Title
+
+                                <span class="required-mark">*</span>
+
+                            </label>
+
+                            {{ form.title }}
+
+                            {% if form.title.errors %}
+
+                                <div class="field-error">
+
+                                    <i class="fa fa-circle-exclamation me-1"></i>
+
+                                    {{ form.title.errors|striptags }}
+
+                                </div>
+
+                            {% endif %}
+
+                            <div class="field-help">
+                                Use a clear, descriptive title that users
+                                can easily identify in the repository.
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             RESOURCE TYPE
+                        ================================================== -->
+                        <div class="form-section">
+
+                            <label for="{{ form.resource_type.id_for_label }}"
+                                   class="form-label-modern">
+
+                                Resource Type
+
+                                <span class="required-mark">*</span>
+
+                            </label>
+
+                            {{ form.resource_type }}
+
+                            {% if form.resource_type.errors %}
+
+                                <div class="field-error">
+                                    <i class="fa fa-circle-exclamation me-1"></i>
+                                    {{ form.resource_type.errors|striptags }}
+                                </div>
+
+                            {% endif %}
+
+
+                            <div class="format-guide mt-3">
+
+                                <div class="format-guide-title">
+                                    <i class="fa fa-circle-info me-1"></i>
+                                    Supported formats
+                                </div>
+
+                                <div class="row g-2 mt-1">
+
+                                    <div class="col-12 col-md-4">
+
+                                        <div class="format-item">
+
+                                            <div class="format-icon ppt">
+                                                <i class="fa fa-file-powerpoint"></i>
+                                            </div>
+
+                                            <div>
+                                                <strong>Presentations</strong>
+                                                <small>.ppt, .pptx</small>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-12 col-md-4">
+
+                                        <div class="format-item">
+
+                                            <div class="format-icon pdf">
+                                                <i class="fa fa-file-pdf"></i>
+                                            </div>
+
+                                            <div>
+                                                <strong>Reports</strong>
+                                                <small>.pdf</small>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-12 col-md-4">
+
+                                        <div class="format-item">
+
+                                            <div class="format-icon story">
+                                                <i class="fa fa-star"></i>
+                                            </div>
+
+                                            <div>
+                                                <strong>Success Stories</strong>
+                                                <small>.pdf</small>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             FILE UPLOAD
+                        ================================================== -->
+                        <div class="form-section">
+
+                            <label class="form-label-modern">
+
+                                Resource File
+
+                                <span class="required-mark">*</span>
+
+                            </label>
+
+
+                            <div class="upload-zone"
+                                 id="uploadZone"
+                                 tabindex="0">
+
+                                <div class="upload-icon">
+
+                                    <i class="fa fa-cloud-arrow-up"></i>
+
+                                </div>
+
+                                <div class="upload-title">
+                                    Drop your file here
+                                </div>
+
+                                <div class="upload-subtitle">
+                                    or click anywhere in this area to browse
+                                </div>
+
+                                <div class="upload-note">
+                                    Supported documents only
+                                </div>
+
+
+                                <div class="selected-file d-none"
+                                     id="selectedFile">
+
+                                    <div class="selected-file-icon">
+                                        <i class="fa fa-file"></i>
+                                    </div>
+
+                                    <div class="selected-file-info">
+
+                                        <div class="selected-file-name"
+                                             id="selectedFileName">
+                                        </div>
+
+                                        <small id="selectedFileSize">
+                                        </small>
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="remove-file"
+                                            id="removeFile"
+                                            title="Remove file">
+
+                                        <i class="fa fa-times"></i>
+
+                                    </button>
+
+                                </div>
+
+
+                                <!-- Actual Django input -->
+                                <div class="actual-file-input">
+                                    {{ form.file }}
+                                </div>
+
+                            </div>
+
+
+                            {% if form.file.errors %}
+
+                                <div class="field-error mt-2">
+
+                                    <i class="fa fa-circle-exclamation me-1"></i>
+
+                                    {{ form.file.errors|striptags }}
+
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- =================================================
+                             DESCRIPTION
+                        ================================================== -->
+                        <div class="form-section">
+
+                            <label for="{{ form.description.id_for_label }}"
+                                   class="form-label-modern">
+
+                                Description
+
+                                <span class="optional-label">
+                                    Optional
+                                </span>
+
+                            </label>
+
+                            {{ form.description }}
+
+                            {% if form.description.errors %}
+
+                                <div class="field-error">
+
+                                    <i class="fa fa-circle-exclamation me-1"></i>
+
+                                    {{ form.description.errors|striptags }}
+
+                                </div>
+
+                            {% endif %}
+
+                            <div class="field-help">
+                                Briefly describe the purpose, content or
+                                relevance of this resource.
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- =====================================================
+                         FORM FOOTER
+                    ====================================================== -->
+                    <div class="resource-form-footer">
+
+                        <a href="{% url 'core:resource_list' %}"
+                           class="btn btn-light border px-4">
+
+                            <i class="fa fa-xmark me-1"></i>
+                            Cancel
+
+                        </a>
+
+
+                        <button type="submit"
+                                class="btn btn-primary px-4"
+                                id="uploadButton">
+
+                            <i class="fa fa-cloud-arrow-up me-1"></i>
+
+                            Upload Resource
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             SIDEBAR
+        ====================================================== -->
+        <div class="col-12 col-xl-4">
+
+            <div class="repository-sidebar">
+
+
+                <!-- Information -->
+                <div class="sidebar-card">
+
+                    <div class="sidebar-card-header">
+
+                        <div class="sidebar-icon">
+                            <i class="fa fa-lightbulb"></i>
+                        </div>
+
+                        <div>
+                            <h6 class="fw-bold mb-0">
+                                Upload Guidelines
+                            </h6>
+
+                            <small class="text-muted">
+                                Recommended practices
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="guideline-list">
+
+                        <div class="guideline-item">
+
+                            <span class="guideline-number">
+                                01
+                            </span>
+
+                            <div>
+                                <strong>Use descriptive titles</strong>
+
+                                <p>
+                                    Make resources easy to identify
+                                    through search and browsing.
+                                </p>
+                            </div>
+
+                        </div>
+
+
+                        <div class="guideline-item">
+
+                            <span class="guideline-number">
+                                02
+                            </span>
+
+                            <div>
+                                <strong>Select the correct type</strong>
+
+                                <p>
+                                    Proper categorisation helps users
+                                    find resources quickly.
+                                </p>
+                            </div>
+
+                        </div>
+
+
+                        <div class="guideline-item">
+
+                            <span class="guideline-number">
+                                03
+                            </span>
+
+                            <div>
+                                <strong>Use final documents</strong>
+
+                                <p>
+                                    Upload approved or publication-ready
+                                    versions where possible.
+                                </p>
+                            </div>
+
+                        </div>
+
+
+                        <div class="guideline-item">
+
+                            <span class="guideline-number">
+                                04
+                            </span>
+
+                            <div>
+                                <strong>Add useful descriptions</strong>
+
+                                <p>
+                                    A short description provides context
+                                    before someone opens the file.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Security -->
+                <div class="security-card">
+
+                    <div class="security-icon">
+                        <i class="fa fa-shield-halved"></i>
+                    </div>
+
+                    <div>
+
+                        <div class="fw-semibold">
+                            Repository Security
+                        </div>
+
+                        <p class="small text-muted mb-0 mt-1">
+                            Uploaded resources are stored within the
+                            organisation's knowledge repository.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =============================================================
+     STYLES
+============================================================== -->
+<style>
+
+:root {
+    --resource-primary: #0d6efd;
+    --resource-success: #198754;
+    --resource-border: #e7ebf0;
+    --resource-muted: #6c757d;
+    --resource-bg: #f7f9fc;
+}
+
+
+/* =============================================================
+   PAGE HEADER
+============================================================= */
+
+.page-header {
+    padding: 4px 2px;
+}
+
+.breadcrumb-modern {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    font-size: .78rem;
+    color: #8a94a6;
+}
+
+.breadcrumb-modern a {
+    color: var(--resource-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.breadcrumb-modern span {
+    color: #adb5bd;
+}
+
+.page-icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    background: rgba(13, 110, 253, .10);
+    color: var(--resource-primary);
+    font-size: 19px;
+}
+
+
+/* =============================================================
+   MAIN FORM CARD
+============================================================= */
+
+.resource-form-card {
+    background: #ffffff;
+    border: 1px solid var(--resource-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(31, 41, 55, .06);
+}
+
+.resource-form-header {
+    padding: 22px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border-bottom: 1px solid var(--resource-border);
+    background: #ffffff;
+}
+
+.section-kicker {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--resource-primary);
+    font-size: .66rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+
+.secure-badge {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: #f0fdf4;
+    color: #198754;
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+
+/* =============================================================
+   FORM BODY
+============================================================= */
+
+.resource-form-body {
+    padding: 28px;
+}
+
+.form-section {
+    margin-bottom: 28px;
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.form-label-modern {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+    color: #343a40;
+    font-size: .88rem;
+    font-weight: 700;
+}
+
+.required-mark {
+    color: #dc3545;
+}
+
+.optional-label {
+    margin-left: auto;
+    color: #adb5bd;
+    font-size: .72rem;
+    font-weight: 500;
+}
+
+
+/* =============================================================
+   DJANGO FORM INPUTS
+============================================================= */
+
+.resource-form-card input[type="text"],
+.resource-form-card input[type="file"],
+.resource-form-card select,
+.resource-form-card textarea {
+    width: 100%;
+    border: 1px solid #dfe4ea;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #212529;
+    font-size: .9rem;
+    transition: all .2s ease;
+}
+
+.resource-form-card input[type="text"],
+.resource-form-card select,
+.resource-form-card textarea {
+    padding: 10px 12px;
+}
+
+.resource-form-card textarea {
+    min-height: 125px;
+    resize: vertical;
+}
+
+.resource-form-card input[type="text"]:focus,
+.resource-form-card select:focus,
+.resource-form-card textarea:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .10);
+    outline: none;
+}
+
+.field-help {
+    margin-top: 6px;
+    color: #8a94a6;
+    font-size: .73rem;
+    line-height: 1.5;
+}
+
+.field-error {
+    margin-top: 6px;
+    color: #dc3545;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+
+/* =============================================================
+   FORMAT GUIDE
+============================================================= */
+
+.format-guide {
+    padding: 13px;
+    border: 1px solid #e7ebf0;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.format-guide-title {
+    color: #596579;
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.format-item {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #edf0f4;
+}
+
+.format-icon {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    font-size: 13px;
+}
+
+.format-icon.ppt {
+    background: #fff3e8;
+    color: #d35400;
+}
+
+.format-icon.pdf {
+    background: #fff0f0;
+    color: #dc3545;
+}
+
+.format-icon.story {
+    background: #fff8df;
+    color: #997404;
+}
+
+.format-item strong {
+    display: block;
+    color: #343a40;
+    font-size: .72rem;
+}
+
+.format-item small {
+    display: block;
+    color: #8a94a6;
+    font-size: .65rem;
+    margin-top: 1px;
+}
+
+
+/* =============================================================
+   UPLOAD ZONE
+============================================================= */
+
+.upload-zone {
+    position: relative;
+    min-height: 210px;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    border: 2px dashed #cfd8e3;
+    border-radius: 13px;
+
+    background: #f8fbff;
+
+    cursor: pointer;
+
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        transform .2s ease;
+}
+
+.upload-zone:hover,
+.upload-zone:focus,
+.upload-zone.drag-over {
+    border-color: var(--resource-primary);
+    background: #f2f7ff;
+    outline: none;
+}
+
+.upload-zone.drag-over {
+    transform: scale(1.005);
+}
+
+.upload-icon {
+    width: 54px;
+    height: 54px;
+    margin-bottom: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px;
+
+    background: rgba(13, 110, 253, .10);
+    color: var(--resource-primary);
+
+    font-size: 22px;
+}
+
+.upload-title {
+    color: #343a40;
+    font-size: .95rem;
+    font-weight: 700;
+}
+
+.upload-subtitle {
+    margin-top: 4px;
+    color: #6c757d;
+    font-size: .78rem;
+}
+
+.upload-note {
+    margin-top: 8px;
+    color: #adb5bd;
+    font-size: .68rem;
+}
+
+.actual-file-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.actual-file-input input[type="file"] {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+
+/* =============================================================
+   SELECTED FILE
+============================================================= */
+
+.selected-file {
+    width: 100%;
+    max-width: 520px;
+    margin-top: 15px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 10px 12px;
+
+    text-align: left;
+
+    border: 1px solid #dfe4ea;
+    border-radius: 9px;
+
+    background: #ffffff;
+}
+
+.selected-file-icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #eef4ff;
+    color: var(--resource-primary);
+}
+
+.selected-file-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.selected-file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: #343a40;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.selected-file-info small {
+    color: #8a94a6;
+    font-size: .67rem;
+}
+
+.remove-file {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+
+    border: 0;
+    border-radius: 7px;
+
+    background: #fff0f0;
+    color: #dc3545;
+
+    cursor: pointer;
+}
+
+
+/* =============================================================
+   FORM FOOTER
+============================================================= */
+
+.resource-form-footer {
+    padding: 18px 26px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+
+    border-top: 1px solid var(--resource-border);
+    background: #fafbfc;
+}
+
+
+/* =============================================================
+   SIDEBAR
+============================================================= */
+
+.repository-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sidebar-card {
+    padding: 22px;
+    border: 1px solid var(--resource-border);
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 6px 25px rgba(31, 41, 55, .04);
+}
+
+.sidebar-card-header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding-bottom: 17px;
+    margin-bottom: 3px;
+    border-bottom: 1px solid #eef1f4;
+}
+
+.sidebar-icon {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: #fff8df;
+    color: #997404;
+}
+
+
+/* =============================================================
+   GUIDELINES
+============================================================= */
+
+.guideline-item {
+    display: flex;
+    gap: 11px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.guideline-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.guideline-number {
+    width: 29px;
+    height: 29px;
+    flex: 0 0 29px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #f1f5f9;
+    color: #64748b;
+
+    font-size: .62rem;
+    font-weight: 800;
+}
+
+.guideline-item strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #343a40;
+    font-size: .76rem;
+}
+
+.guideline-item p {
+    margin: 0;
+    color: #8a94a6;
+    font-size: .7rem;
+    line-height: 1.5;
+}
+
+
+/* =============================================================
+   SECURITY CARD
+============================================================= */
+
+.security-card {
+    display: flex;
+    gap: 12px;
+
+    padding: 17px;
+
+    border: 1px solid #d8f3df;
+    border-radius: 13px;
+
+    background: #f3fcf5;
+}
+
+.security-icon {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #dff5e5;
+    color: #198754;
+}
+
+
+/* =============================================================
+   MOBILE
+============================================================= */
+
+@media (max-width: 767.98px) {
+
+    .resource-form-header {
+        padding: 18px;
+        align-items: flex-start;
+    }
+
+    .resource-form-body {
+        padding: 20px;
+    }
+
+    .resource-form-footer {
+        padding: 15px 20px;
+    }
+
+    .format-item {
+        min-height: 52px;
+    }
+
+    .upload-zone {
+        min-height: 190px;
+    }
+
+}
+
+@media (max-width: 575.98px) {
+
+    .resource-form-header {
+        flex-direction: column;
+    }
+
+    .secure-badge {
+        align-self: flex-start;
+    }
+
+    .resource-form-footer {
+        flex-direction: column-reverse;
+    }
+
+    .resource-form-footer .btn {
+        width: 100%;
+    }
+
+    .page-icon {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+    }
+
+}
+
+</style>
+
+
+<!-- =============================================================
+     FILE UPLOAD JAVASCRIPT
+============================================================= -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const uploadZone =
+        document.getElementById("uploadZone");
+
+    const fileInput =
+        uploadZone.querySelector('input[type="file"]');
+
+    const selectedFile =
+        document.getElementById("selectedFile");
+
+    const selectedFileName =
+        document.getElementById("selectedFileName");
+
+    const selectedFileSize =
+        document.getElementById("selectedFileSize");
+
+    const removeFile =
+        document.getElementById("removeFile");
+
+    const uploadForm =
+        document.getElementById("resourceUploadForm");
+
+    const uploadButton =
+        document.getElementById("uploadButton");
+
+
+    /* =========================================================
+       FORMAT FILE SIZE
+    ========================================================== */
+
+    function formatFileSize(bytes) {
+
+        if (!bytes) {
+            return "0 Bytes";
+        }
+
+        const units = [
+            "Bytes",
+            "KB",
+            "MB",
+            "GB"
+        ];
+
+        const index =
+            Math.floor(
+                Math.log(bytes) / Math.log(1024)
+            );
+
+        return (
+            parseFloat(
+                (bytes / Math.pow(1024, index))
+                    .toFixed(2)
+            )
+            + " "
+            + units[index]
+        );
+
+    }
+
+
+    /* =========================================================
+       DISPLAY SELECTED FILE
+    ========================================================== */
+
+    function showSelectedFile(file) {
+
+        if (!file) {
+            return;
+        }
+
+        selectedFileName.textContent =
+            file.name;
+
+        selectedFileSize.textContent =
+            formatFileSize(file.size);
+
+        selectedFile.classList.remove("d-none");
+
+    }
+
+
+    /* =========================================================
+       FILE SELECTED
+    ========================================================== */
+
+    fileInput.addEventListener(
+        "change",
+        function () {
+
+            if (this.files && this.files.length) {
+
+                showSelectedFile(
+                    this.files[0]
+                );
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+       REMOVE FILE
+    ========================================================== */
+
+    removeFile.addEventListener(
+        "click",
+        function (event) {
+
+            event.stopPropagation();
+
+            fileInput.value = "";
+
+            selectedFile.classList.add("d-none");
+
+        }
+    );
+
+
+    /* =========================================================
+       DRAG & DROP
+    ========================================================== */
+
+    [
+        "dragenter",
+        "dragover"
+    ].forEach(function (eventName) {
+
+        uploadZone.addEventListener(
+            eventName,
+            function (event) {
+
+                event.preventDefault();
+
+                event.stopPropagation();
+
+                uploadZone.classList.add(
+                    "drag-over"
+                );
+
+            }
+        );
+
+    });
+
+
+    [
+        "dragleave",
+        "drop"
+    ].forEach(function (eventName) {
+
+        uploadZone.addEventListener(
+            eventName,
+            function (event) {
+
+                event.preventDefault();
+
+                event.stopPropagation();
+
+                uploadZone.classList.remove(
+                    "drag-over"
+                );
+
+            }
+        );
+
+    });
+
+
+    uploadZone.addEventListener(
+        "drop",
+        function (event) {
+
+            const files =
+                event.dataTransfer.files;
+
+            if (!files.length) {
+                return;
+            }
+
+            /*
+             * Assign dropped file to the
+             * Django file input.
+             */
+            try {
+
+                const dataTransfer =
+                    new DataTransfer();
+
+                dataTransfer.items.add(
+                    files[0]
+                );
+
+                fileInput.files =
+                    dataTransfer.files;
+
+                showSelectedFile(
+                    files[0]
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Unable to process dropped file:",
+                    error
+                );
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+       KEYBOARD ACCESSIBILITY
+    ========================================================== */
+
+    uploadZone.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Enter" ||
+                event.key === " "
+            ) {
+
+                event.preventDefault();
+
+                fileInput.click();
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+       SUBMIT FEEDBACK
+    ========================================================== */
+
+    uploadForm.addEventListener(
+        "submit",
+        function () {
+
+            uploadButton.disabled = true;
+
+            uploadButton.innerHTML =
+                '<span class="spinner-border spinner-border-sm me-2" ' +
+                'role="status"></span>' +
+                'Uploading...';
+
+        }
+    );
+
+});
+
+</script>
+
+{% endblock %}
+

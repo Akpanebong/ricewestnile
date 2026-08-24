@@ -1,0 +1,1029 @@
+{% extends active_base_template|default:'base.html' %}
+{% load custom_tags %}
+
+{% block title %}Output Management | Enterprise M&E{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       OUTPUT MANAGEMENT
+       Enterprise M&E Interface
+       ========================================================= */
+
+    .output-page {
+        --om-primary: #198754;
+        --om-primary-dark: #146c43;
+        --om-primary-soft: #eaf7f0;
+        --om-border: #e1e7e3;
+        --om-text: #26332c;
+        --om-muted: #6c757d;
+        --om-bg: #f8faf9;
+    }
+
+    /* =========================================================
+       PAGE HEADER
+       ========================================================= */
+
+    .om-breadcrumb {
+        background: #fff;
+        border: 1px solid var(--om-border);
+        border-radius: 10px;
+        padding: 9px 14px;
+        margin-bottom: 18px;
+    }
+
+    .om-breadcrumb a {
+        color: var(--om-primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .om-breadcrumb a:hover {
+        color: var(--om-primary-dark);
+    }
+
+    .om-page-header {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f3faf6 100%
+        );
+        border: 1px solid var(--om-border);
+        border-radius: 16px;
+        padding: 20px 22px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .035);
+    }
+
+    .om-header-icon {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: var(--om-primary-soft);
+        color: var(--om-primary);
+        font-size: 20px;
+    }
+
+    .om-page-title {
+        color: #1e3027;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .om-page-subtitle {
+        color: var(--om-muted);
+        font-size: .78rem;
+        margin: 0;
+    }
+
+    .om-create-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--om-primary);
+        border: 1px solid var(--om-primary);
+        color: #fff;
+        border-radius: 9px;
+        padding: 9px 15px;
+        font-size: .78rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .18s ease;
+    }
+
+    .om-create-btn:hover {
+        color: #fff;
+        background: var(--om-primary-dark);
+        border-color: var(--om-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       SUMMARY CARDS
+       ========================================================= */
+
+    .om-stat-card {
+        background: #fff;
+        border: 1px solid var(--om-border);
+        border-radius: 13px;
+        padding: 15px 16px;
+        height: 100%;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, .025);
+    }
+
+    .om-stat-icon {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: var(--om-primary-soft);
+        color: var(--om-primary);
+    }
+
+    .om-stat-label {
+        color: #7a847f;
+        font-size: .68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        margin-bottom: 2px;
+    }
+
+    .om-stat-value {
+        color: #27352e;
+        font-size: 1.15rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    /* =========================================================
+       MAIN CARD
+       ========================================================= */
+
+    .om-main-card {
+        background: #fff;
+        border: 1px solid var(--om-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .04);
+    }
+
+    .om-toolbar {
+        padding: 17px 20px;
+        border-bottom: 1px solid var(--om-border);
+        background: #fff;
+    }
+
+    .om-toolbar-title {
+        color: #29372f;
+        font-size: .95rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .om-toolbar-subtitle {
+        color: #858e89;
+        font-size: .7rem;
+        margin-top: 3px;
+    }
+
+    /* =========================================================
+       SEARCH
+       ========================================================= */
+
+    .om-search {
+        position: relative;
+        width: 100%;
+        max-width: 350px;
+    }
+
+    .om-search i {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9aa39e;
+        font-size: .8rem;
+        z-index: 2;
+    }
+
+    .om-search input {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 12px 8px 36px;
+        border: 1px solid #dce2df;
+        border-radius: 9px;
+        font-size: .78rem;
+        background: #fbfcfb;
+    }
+
+    .om-search input:focus {
+        outline: none;
+        background: #fff;
+        border-color: #83c5a1;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    /* =========================================================
+       TABLE
+       ========================================================= */
+
+    .om-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .om-table {
+        margin: 0;
+        min-width: 850px;
+    }
+
+    .om-table thead th {
+        background: #f7f9f8;
+        color: #65716a;
+        border-bottom: 1px solid var(--om-border);
+        border-top: 0;
+        padding: 12px 14px;
+        font-size: .68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .035em;
+        white-space: nowrap;
+    }
+
+    .om-table tbody td {
+        padding: 14px;
+        border-bottom: 1px solid #edf0ee;
+        color: #46524b;
+        font-size: .78rem;
+        vertical-align: middle;
+    }
+
+    .om-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .om-table tbody tr:hover {
+        background: #fafcfb;
+    }
+
+    .om-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .om-number {
+        color: #929b96;
+        font-size: .7rem;
+        font-weight: 600;
+    }
+
+    /* =========================================================
+       OUTPUT CODE
+       ========================================================= */
+
+    .om-code {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        background: var(--om-primary-soft);
+        color: var(--om-primary-dark);
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: .7rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .om-code:hover {
+        background: #dff1e7;
+        color: var(--om-primary-dark);
+    }
+
+    /* =========================================================
+       STRATEGIC OBJECTIVE
+       ========================================================= */
+
+    .om-so {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .om-so-code {
+        color: var(--om-primary);
+        font-family: monospace;
+        font-size: .67rem;
+        font-weight: 700;
+    }
+
+    .om-so-title {
+        color: #4b5750;
+        font-size: .75rem;
+        font-weight: 550;
+    }
+
+    /* =========================================================
+       DESCRIPTION
+       ========================================================= */
+
+    .om-description {
+        color: #737d77;
+        line-height: 1.5;
+        max-width: 430px;
+    }
+
+    /* =========================================================
+       ACTIONS
+       ========================================================= */
+
+    .om-actions {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .om-action {
+        width: 33px;
+        height: 33px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        font-size: .72rem;
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+    .om-action-edit {
+        color: #0d6efd;
+        background: #f0f6ff;
+        border-color: #dceaff;
+    }
+
+    .om-action-edit:hover {
+        color: #fff;
+        background: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .om-action-view {
+        color: var(--om-primary);
+        background: var(--om-primary-soft);
+        border-color: #dcefe4;
+    }
+
+    .om-action-view:hover {
+        color: #fff;
+        background: var(--om-primary);
+        border-color: var(--om-primary);
+    }
+
+    .om-action-delete {
+        color: #dc3545;
+        background: #fff4f4;
+        border-color: #f4dddd;
+    }
+
+    .om-action-delete:hover {
+        color: #fff;
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+
+    /* =========================================================
+       EMPTY STATE
+       ========================================================= */
+
+    .om-empty {
+        padding: 65px 20px;
+        text-align: center;
+    }
+
+    .om-empty-icon {
+        width: 65px;
+        height: 65px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        border-radius: 16px;
+        background: #f2f6f4;
+        color: #9ba59f;
+        font-size: 25px;
+    }
+
+    .om-empty h6 {
+        color: #455149;
+        font-size: .9rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .om-empty p {
+        color: #8a938e;
+        font-size: .74rem;
+        margin: 0;
+    }
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+
+    .om-footer {
+        padding: 13px 20px;
+        border-top: 1px solid var(--om-border);
+        background: #fbfcfb;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 767.98px) {
+
+        .om-page-header {
+            padding: 16px;
+            border-radius: 13px;
+        }
+
+        .om-page-title {
+            font-size: 1.08rem;
+        }
+
+        .om-header-actions {
+            width: 100%;
+            margin-top: 14px;
+        }
+
+        .om-create-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .om-toolbar {
+            padding: 15px;
+        }
+
+        .om-toolbar-search {
+            margin-top: 13px;
+        }
+
+        .om-search {
+            max-width: none;
+        }
+
+        .om-main-card {
+            border-radius: 13px;
+        }
+
+        .om-stat-card {
+            padding: 13px;
+        }
+
+    }
+
+    @media (max-width: 400px) {
+
+        .om-stat-value {
+            font-size: 1rem;
+        }
+
+        .om-stat-icon {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+        }
+
+    }
+</style>
+
+<div class="container-fluid output-page">
+
+
+<!-- =====================================================
+     BREADCRUMB
+====================================================== -->
+
+<div class="om-breadcrumb">
+
+    <ol class="breadcrumb mb-0 small">
+
+        <li class="breadcrumb-item">
+
+            <a href="{% url 'monitoring:dashboard' %}">
+                <i class="fa fa-home me-1"></i>
+                Dashboard
+            </a>
+
+        </li>
+
+        <li class="breadcrumb-item active">
+            Outputs
+        </li>
+
+    </ol>
+
+</div>
+
+<!-- =====================================================
+     PAGE HEADER
+====================================================== -->
+
+<div class="om-page-header">
+
+    <div class="d-flex flex-column flex-md-row
+                align-items-start align-items-md-center
+                justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <div class="om-header-icon me-3">
+
+                <i class="fa fa-sitemap"></i>
+
+            </div>
+
+            <div>
+
+                <h1 class="om-page-title">
+                    Output Management
+                </h1>
+
+                <p class="om-page-subtitle">
+                    Manage strategic outputs within the
+                    organization's Monitoring & Evaluation framework.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="om-header-actions">
+
+<!--            <a href=""-->
+<!--               class="om-create-btn">-->
+
+<!--                <i class="fa fa-plus"></i>-->
+
+<!--                New Output-->
+
+<!--            </a>-->
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     SUMMARY
+====================================================== -->
+
+<div class="row g-3 mb-4">
+
+    <!-- Total -->
+
+    <div class="col-6 col-lg-3">
+
+        <div class="om-stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="om-stat-icon me-3">
+
+                    <i class="fa fa-sitemap"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="om-stat-label">
+                        Total Outputs
+                    </div>
+
+                    <div class="om-stat-value">
+                        {{ output_list|length }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Strategic Objectives -->
+
+    <div class="col-6 col-lg-3">
+
+        <div class="om-stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="om-stat-icon me-3">
+
+                    <i class="fa fa-bullseye"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="om-stat-label">
+                        Framework Level
+                    </div>
+
+                    <div class="om-stat-value">
+                        SO → Output
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Indicators -->
+
+    <div class="col-6 col-lg-3">
+
+        <div class="om-stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="om-stat-icon me-3">
+
+                    <i class="fa fa-line-chart"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="om-stat-label">
+                        Next Level
+                    </div>
+
+                    <div class="om-stat-value">
+                        Indicators
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Status -->
+
+    <div class="col-6 col-lg-3">
+
+        <div class="om-stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="om-stat-icon me-3">
+
+                    <i class="fa fa-check-circle"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="om-stat-label">
+                        Framework
+                    </div>
+
+                    <div class="om-stat-value">
+                        Active
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     MAIN TABLE
+====================================================== -->
+
+<div class="om-main-card">
+
+    <!-- Toolbar -->
+
+    <div class="om-toolbar">
+
+        <div class="row align-items-center">
+
+            <div class="col-md-5">
+
+                <h2 class="om-toolbar-title">
+                    Strategic Outputs
+                </h2>
+
+                <div class="om-toolbar-subtitle">
+                    Review, manage and maintain defined outputs.
+                </div>
+
+            </div>
+
+
+            <div class="col-md-7">
+
+                <div class="om-toolbar-search d-flex
+                            justify-content-md-end">
+
+                    <div class="om-search">
+
+                        <i class="fa fa-search"></i>
+
+                        <input type="text"
+                               id="profileSearch"
+                               class="form-control"
+                               placeholder="Search code, objective or description..."
+                               autocomplete="off">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Table -->
+
+    <div class="om-table-wrapper"
+         id="profileTable">
+
+        <table class="table om-table align-middle">
+
+            <thead>
+
+                <tr>
+
+                    <th style="width:55px;">
+                        #
+                    </th>
+
+                    <th style="width:125px;">
+                        Output Code
+                    </th>
+
+                    <th style="width:230px;">
+                        Strategic Objective
+                    </th>
+
+                    <th>
+                        Output Description
+                    </th>
+
+                    <th class="text-center"
+                        style="width:145px;">
+                        Actions
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for output in output_list %}
+
+                <tr>
+
+                    <!-- Number -->
+
+                    <td>
+
+                        <span class="om-number">
+                            {{ forloop.counter }}
+                        </span>
+
+                    </td>
+
+
+                    <!-- Code -->
+
+                    <td>
+
+                        <a href="#"
+                           class="om-code">
+
+                            {{ output.code }}
+
+                        </a>
+
+                    </td>
+
+
+                    <!-- Strategic Objective -->
+
+                    <td>
+
+                        <div class="om-so">
+
+                            <span class="om-so-code">
+
+                                {% if output.so.code %}
+                                    {{ output.so.code }}
+                                {% else %}
+                                    SO
+                                {% endif %}
+
+                            </span>
+
+                            <span class="om-so-title">
+
+                                {{ output.so.title|default:output.so }}
+
+                            </span>
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- Description -->
+
+                    <td>
+
+                        <div class="om-description">
+
+                            {{ output.description|default:"No description provided."|truncatechars:180 }}
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- Actions -->
+
+                    <td>
+
+                        <div class="om-actions">
+
+                            <!-- View / Indicators -->
+
+                            <a href="{% url 'monitoring:so_detail' output.so.pk output.so.title %}"
+                               class="om-action om-action-view"
+                               title="View Output">
+
+                                <i class="fa fa-eye"></i>
+
+                            </a>
+                            <a href="{% url 'monitoring:create_output' output.pk %}"
+                            class="om-action om-action-view"
+                               title="Create Output">
+                                 <i class="fa fa-plus-circle"></i>
+                            </a>
+
+
+                            <!-- Edit -->
+
+                            <a href="{% url 'monitoring:update_output' output.title output.pk %}"
+                               class="om-action om-action-edit"
+                               title="Edit Output">
+
+                                <i class="fa fa-edit"></i>
+
+                            </a>
+
+
+                            <!-- Delete -->
+
+                            <a href="{% url 'monitoring:trash_output' output.pk output.title %}"
+                               class="om-action om-action-delete"
+                               title="Delete Output"
+                               onclick="return confirm('Are you sure you want to remove this output?');">
+
+                                <i class="fa fa-trash"></i>
+
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="5">
+
+                        <div class="om-empty">
+
+                            <div class="om-empty-icon">
+
+                                <i class="fa fa-folder-open-o"></i>
+
+                            </div>
+
+                            <h6>
+                                No Outputs Found
+                            </h6>
+
+                            <p>
+                                No strategic outputs have been
+                                defined in the M&E framework yet.
+                            </p>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- Footer -->
+
+    <div class="om-footer">
+
+        {% include "pagination.html" %}
+
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- =========================================================
+     SEARCH SCRIPT
+========================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput =
+        document.getElementById("profileSearch");
+
+    const table =
+        document.getElementById("profileTable");
+
+
+    if (!searchInput || !table) {
+        return;
+    }
+
+
+    const rows =
+        table.querySelectorAll("tbody tr");
+
+
+    searchInput.addEventListener(
+        "input",
+        function () {
+
+            const searchTerm =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+
+            rows.forEach(function (row) {
+
+                const text =
+                    row.textContent
+                        .toLowerCase();
+
+
+                if (
+                    row.querySelector(".om-empty")
+                ) {
+                    return;
+                }
+
+
+                row.style.display =
+                    text.includes(searchTerm)
+                        ? ""
+                        : "none";
+
+            });
+
+        }
+    );
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,35 @@
+{
+  "version": "v1786472470",
+  "accuracy": 1.0,
+  "records": 5,
+  "class_distribution": {
+    "LOW": 1,
+    "HIGH": 2,
+    "VERY HIGH": 1,
+    "VERY LOW": 1
+  },
+  "model_path": "C:\\Users\\EmmanuelAkpan\\PycharmProjects\\rice-wn\\enterprise\\risk_apps\\risk\\ml\\artifacts\\model_v1786472470.pkl",
+  "label_path": "C:\\Users\\EmmanuelAkpan\\PycharmProjects\\rice-wn\\enterprise\\risk_apps\\risk\\ml\\artifacts\\label_v1786472470.pkl",
+  "cat_path": "C:\\Users\\EmmanuelAkpan\\PycharmProjects\\rice-wn\\enterprise\\risk_apps\\risk\\ml\\artifacts\\cat_v1786472470.pkl",
+  "report": {
+    "HIGH": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1.0
+    }
+  }
+}

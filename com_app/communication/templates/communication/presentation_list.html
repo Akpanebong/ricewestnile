@@ -1,0 +1,48 @@
+{% extends 'communication/base.html' %}
+{% block content %}
+<div class="container-fluid">
+
+  <div class="d-flex justify-content-between mb-3">
+    <h4><i class="bi bi-collection-play text-success"></i> Presentations</h4>
+    <a class="btn btn-success" href="{% url 'comm:presentations_add' %}">
+      <i class="bi bi-upload"></i> Upload Presentation
+    </a>
+  </div>
+{% include 'message.html' %}
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>File</th><th>Program Area</th><th>By</th><th>Date</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in presentations %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><a href="{{ p.file.url }}">{{ p.file.name|slice:":60" }}</a></td>
+            <td>{{ p.program_area }}</td>
+            <td>{{ p.sent_by }}</td>
+            <td>{{ p.date_sent|date:"Y-m-d H:i" }}</td>
+            <td>
+              <a href="{% url 'comm:presentation_reply' p.pk p.slug %}"
+                 class="btn btn-sm {% if p.reply %}btn-success{% else %}btn-info{% endif %}">
+                {% if p.reply %}Replied{% else %}Review{% endif %}
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center py-3 text-muted">No presentations yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+<br/>
+  {% if is_paginated %}
+    {% include 'pagination.html' %}
+  {% endif %}
+
+</div>
+{% endblock %}

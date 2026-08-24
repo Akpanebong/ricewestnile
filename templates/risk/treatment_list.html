@@ -1,0 +1,27 @@
+{% extends "garcis/base.html" %}
+
+{% block title %}Risk Treatments{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card p-3">
+        <h4>Treatment Plans</h4>
+        <table class="table table-striped">
+            <thead><tr><th>Description</th><th>Owner</th><th>Status</th><th>Due Date</th><th>Progress</th></tr></thead>
+            <tbody>
+                {% for treatment in object_list %}
+                <tr>
+                    <td>{{ treatment.description|truncatechars:70 }}</td>
+                    <td>{{ treatment.owner }}</td>
+                    <td>{{ treatment.status }}</td>
+                    <td>{{ treatment.due_date|default:"-" }}</td>
+                    <td>{{ treatment.progress_percent }}%</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-muted">No treatment plans recorded.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

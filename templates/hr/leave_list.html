@@ -1,0 +1,137 @@
+{% extends "hr/base.html" %}
+{% load group_tags %}
+{% block title %}Leave Requests{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-white p-3 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="fw-bold text-success mb-0">Leave Requests</h4>
+        <small class="text-muted">Manage staff leave workflow</small>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="{% url 'leave_report' %}" class="btn btn-outline-warning">
+            <i class="ti-bar-chart"></i> Report
+        </a>
+        <a href="{% url 'apply_leave' %}" class="btn btn-success">
+            <i class="ti-plus"></i> Apply Leave
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Duration</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        {% if user|has_group:"ED" or user|has_group:"HR" or user|has_group:"Supervisor" %}
+                        <th class="text-center">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for leave in leaves %}
+                    <tr>
+
+                        <!-- EMPLOYEE -->
+                        <td>
+                            <a href="{% url 'leave_detail' leave.pk leave.slug %}" class="fw-semibold text-decoration-none">
+                                {{ leave.employee }}
+                            </a>
+                        </td>
+
+                        <!-- DATE -->
+                        <td>
+                            <small class="text-muted">
+                                {{ leave.start_date }} → {{ leave.end_date }}
+                            </small>
+                        </td>
+
+                        <!-- REASON -->
+                        <td>
+                            <span title="{{ leave.reason }}">
+                                {{ leave.reason|truncatechars:40 }}
+                            </span>
+                        </td>
+
+                        <!-- STATUS -->
+                        <td>
+                            {% if leave.status == 'Approved' %}
+                                <span class="badge bg-success px-3">{{ leave.status }}</span>
+                            {% elif leave.status == 'Pending' %}
+                                <span class="badge bg-warning text-dark px-3">{{ leave.status }}</span>
+                            {% elif leave.status == 'Denied' %}
+                                <span class="badge bg-danger px-3">{{ leave.status }}</span>
+                            {% else %}
+                                <span class="badge bg-info px-3">{{ leave.status }}</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- ACTIONS -->
+                         <td class="text-center">
+                        {% if request.user.employee == leave.supervisor or user|has_group:"Supervisor" %}
+
+                            {% if leave.status == "Pending" %}
+                                <a href="{% url 'approve_supervisor' leave.id 'approved' %}" class="btn btn-sm btn-success">✓</a>
+                                <a href="{% url 'approve_supervisor' leave.id 'denied' %}" class="btn btn-sm btn-danger">✕</a>
+                            {% elif not leave.hr_approved %}
+                                <a href="{% url 'approve_supervisor' leave.id 'reverse' %}" class="btn btn-sm btn-outline-secondary">↺</a>
+                            {% endif %}
+
+                        {% endif %}
+
+
+
+                        {% if user|has_group:"HR" %}
+
+                            {% if leave.supervisor_approved and not leave.hr_approved %}
+                                <a href="{% url 'approve_hr' leave.id 'approved' %}" class="btn btn-sm btn-success">✓</a>
+                                <a href="{% url 'approve_hr' leave.id 'denied' %}" class="btn btn-sm btn-danger">✕</a>
+                            {% elif leave.hr_approved and not leave.ed_approved %}
+                                <a href="{% url 'approve_hr' leave.id 'reverse' %}" class="btn btn-sm btn-outline-secondary">↺</a>
+                            {% endif %}
+
+                        {% endif %}
+
+
+                        {% if user|has_group:"ED" %}
+                            {% if leave.hr_approved and not leave.ed_approved %}
+                                <a href="{% url 'approve_ed' leave.id 'approved' %}" class="btn btn-sm btn-success">✓</a>
+                                <a href="{% url 'approve_ed' leave.id 'denied' %}" class="btn btn-sm btn-danger">✕</a>
+                            {% elif leave.ed_approved %}
+                                <a href="{% url 'approve_ed' leave.id 'reverse' %}" class="btn btn-sm btn-outline-secondary">↺</a>
+                            {% endif %}
+
+                        {% endif %}
+ </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            No leave requests found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+
+            {% include "pagination.html" with page_obj=leaves %}
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

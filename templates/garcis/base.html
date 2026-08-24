@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block header_home_url %}{% url 'garcis:dashboard' %}{% endblock %}
+{% block system_name %}GARCIS Management{% endblock %}
+{% block system_accent %}#7c3aed{% endblock %}
+{% block sidebar_desktop %}
+{% include "garcis/sidebar.html" %}
+{% endblock %}
+{% block sidebar_mobile %}
+{% include "garcis/sidebar.html" %}
+{% endblock %}

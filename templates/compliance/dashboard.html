@@ -1,0 +1,95 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+<div class="quick-links mb-3">
+<a href="{% url 'framework' %}" class="btn btn-dark">Compliance Register</a>
+<a href="{% url 'compliance_calendar' %}" class="btn btn-outline-dark">Calendar</a>
+<a href="{% url 'partner_due_diligence_list' %}" class="btn btn-outline-secondary">Partners</a>
+<a href="{% url 'vendor_due_diligence_list' %}" class="btn btn-outline-secondary">Vendors</a>
+</div>
+
+<div class="row g-4 mb-4">
+<div class="col-md-3"><div class="card shadow-sm p-3 text-center"><h6>Requirements</h6><h3>{{ total_requirements }}</h3></div></div>
+<div class="col-md-3"><div class="card shadow-sm p-3 text-center"><h6>Total Tasks</h6><h3>{{ total_tasks }}</h3></div></div>
+<div class="col-md-3"><div class="card shadow-sm p-3 text-center text-danger"><h6>Overdue</h6><h3>{{ overdue_count }}</h3></div></div>
+<div class="col-md-3"><div class="card shadow-sm p-3 text-center text-success"><h6>Completed</h6><h3>{{ completed_count }}</h3></div></div>
+</div>
+
+<div class="card mb-4 p-3 shadow-sm">
+<h5>Compliance Score</h5>
+<div class="progress"><div class="progress-bar bg-dark" style="width: {{ avg_score }}%">{{ avg_score|floatformat:0 }}%</div></div>
+</div>
+
+<div class="row g-4 mb-4">
+<div class="col-lg-6">
+<div class="card p-3 shadow-sm">
+<h6>Overdue Tasks</h6>
+<ul>
+{% for t in overdue_tasks %}
+<li>{{ t.requirement.title }} - {{ t.due_date }}</li>
+{% empty %}
+<li>No overdue tasks</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+
+<div class="col-lg-6">
+<div class="card p-3 shadow-sm">
+<h6>Upcoming Tasks</h6>
+<ul>
+{% for t in upcoming_tasks %}
+<li>{{ t.requirement.title }} - {{ t.due_date }}</li>
+{% empty %}
+<li>No upcoming tasks</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+</div>
+
+<div class="card p-3 shadow-sm mb-4">
+<h5>AI Compliance Insights</h5>
+<ul>
+{% for g in gaps %}
+<li><strong>{{ g.requirement }}</strong> - {{ g.issue }}<br><small>{{ g.action }}</small></li>
+{% empty %}
+<li>No compliance risks detected</li>
+{% endfor %}
+</ul>
+</div>
+
+<div class="row g-4">
+<div class="col-lg-6">
+<div class="card p-3 shadow-sm">
+<h5>Partner Watchlist</h5>
+<ul>
+{% for partner in partner_watchlist %}
+<li>{{ partner.partner_name }} - {{ partner.get_risk_rating_display }}</li>
+{% empty %}
+<li>No high-risk partners</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+
+<div class="col-lg-6">
+<div class="card p-3 shadow-sm">
+<h5>Vendor Watchlist</h5>
+<ul>
+{% for vendor in vendor_watchlist %}
+<li>{{ vendor.vendor_name }} - {{ vendor.get_risk_rating_display }}</li>
+{% empty %}
+<li>No high-risk vendors</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+</div>
+
+<div class="mt-4 text-end">
+<a href="{% url 'compliance_report_pdf' %}" class="btn btn-dark">Download PDF Report</a>
+</div>
+
+</div>
+{% endblock %}

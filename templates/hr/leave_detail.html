@@ -1,0 +1,155 @@
+{% extends "hr/base.html" %}
+{% load group_tags %}
+
+{% block title %}Leave Detail{% endblock %}
+
+{% block content %}
+<main class="ttr-wrapper d-flex align-items-center justify-content-center py-5">
+
+    <div class="container">
+        <div class="col-lg-10 mx-auto">
+
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header text-center py-4" style="background:#e8f8f0;">
+                    <h2 class="text-success fw-bold mb-0">
+                        <i class="fa fa-calendar-check-o"></i> Leave Details
+                    </h2>
+                </div>
+
+                <div class="card-body px-5 py-4">
+
+                    <!-- Leave Information -->
+                    <section class="mb-4">
+                        <h4 class="text-secondary fw-semibold border-bottom pb-2">
+                            <i class="fa fa-info-circle"></i> Overview
+                        </h4>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6 mb-3"><strong>Employee:</strong> {{ leave.employee }}</div>
+                            <div class="col-md-6 mb-3"><strong>Leave Type:</strong> {{ leave.leave_type }}
+                            {% if leave.special_type %}<span class="badge bg-success">{{leave.special_type}}{% endif %}</span></div>
+                            <div class="col-md-6 mb-3"><strong>Dates:</strong> {{ leave.start_date }} - {{ leave.end_date }} ({{ leave.days_requested }} days)</div>
+                            <div class="col-md-6 mb-3"><strong>Status:</strong>
+                                <span class="badge
+                                    {% if leave.status == 'Approved' %} bg-success
+                                    {% elif leave.status == 'Rejected' %} bg-danger
+                                    {% else %} bg-warning text-dark
+                                    {% endif %}">
+                                    {{ leave.status }}
+                                </span>
+                            </div>
+                            <div class="col-md-12"><strong>Reason:</strong> {{ leave.reason }}</div>
+                        </div>
+                    </section>
+
+                    <!-- Approval Section -->
+                    <section class="mb-4">
+                        <h4 class="text-secondary fw-semibold border-bottom pb-2">
+                            <i class="fa fa-check-circle-o"></i> Approval Workflow
+                        </h4>
+
+                        <ul class="list-group mt-3">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Supervisor
+                                <span>
+                                    {% if leave.supervisor_approved %}
+                                        <span class="text-success fw-bold">✔ {{ leave.supervisor }} ({{ leave.supervisor_approved_at }})</span>
+                                    {% else %}
+                                        <span class="text-muted">Pending</span>
+                                    {% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                HR
+                                <span>
+                                    {% if leave.hr_approved %}
+                                        <span class="text-success fw-bold">✔ {{ leave.hr }} ({{ leave.hr_approved_at }})</span>
+                                    {% else %}
+                                        <span class="text-muted">Pending</span>
+                                    {% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Executive Director
+                                <span>
+                                    {% if leave.ed_approved %}
+                                        <span class="text-success fw-bold">✔ {{ leave.ed }} ({{ leave.ed_approved_at }})</span>
+                                    {% else %}
+                                        <span class="text-muted">Pending</span>
+                                    {% endif %}
+                                </span>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <!-- Approval Buttons -->
+                    <section class="mt-4 text-center">
+
+                        {% if user|has_group:"Supervisor" and not leave.supervisor_approved and not leave.status == 'Denied' %}
+                        <form method="post" action="{% url 'approve_supervisor' leave.pk 'approved' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-success px-4 my-2">
+                                <i class="fa fa-thumbs-up"></i> Approve as Supervisor
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if user|has_group:"HR" and leave.supervisor_approved and not leave.hr_approved %}
+                        <form method="post" action="{% url 'approve_hr' leave.pk 'approved' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-primary px-4 my-2">
+                                <i class="fa fa-check"></i> Approve as HR
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if user|has_group:"ED" and leave.hr_approved and not leave.ed_approved %}
+                        <form method="post" action="{% url 'approve_ed' leave.pk 'approved' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-dark px-4 my-2">
+                                <i class="fa fa-star"></i> Approve as ED
+                            </button>
+                        </form>
+                        {% endif %}
+                    </section>
+
+                    <!-- Delete Section -->
+                    {% if not leave.ed_approved %}
+                    {% if leave.employee == request.user %}
+                    <div class="text-center mt-4">
+                        <a href="{% url 'delete_leave' leave.id %}"
+                           class="btn btn-danger btn-sm px-3">
+                            <i class="fa fa-trash"></i> Delete Request
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+
+                    <!-- Documents Section -->
+                    {% if leave.ed_approved %}
+                    {% if leave.documents.exists %}
+                    <section class="mt-5">
+                        <h4 class="text-secondary fw-semibold border-bottom pb-2">
+                            <i class="fa fa-file-text"></i> Generated Documents
+                        </h4>
+
+                        <ul class="list-group mt-3">
+                            {% for doc in leave.documents.all %}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <a href="{{ doc.file.url }}" class="fw-semibold">{{ doc.file.name }}</a>
+                                <span class="text-muted">{{ doc.created_at }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                    {% endif %}
+                    {% endif %}
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+{% endblock %}

@@ -1,0 +1,328 @@
+{% extends "hr/base.html" %}
+{% load static %}
+
+{% block title %}HR Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+    .hr-dashboard .metric-card {
+        border: 1px solid #e9ecef;
+        border-left: 4px solid #198754;
+        border-radius: 8px;
+        background: #fff;
+        min-height: 118px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
+    }
+    .hr-dashboard .metric-card.warning { border-left-color: #f59f00; }
+    .hr-dashboard .metric-card.info { border-left-color: #0dcaf0; }
+    .hr-dashboard .metric-card.danger { border-left-color: #dc3545; }
+    .hr-dashboard .metric-card.primary { border-left-color: #0d6efd; }
+    .hr-dashboard .metric-label {
+        color: #6c757d;
+        font-size: .76rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+    .hr-dashboard .metric-value {
+        font-size: 1.85rem;
+        line-height: 1.1;
+    }
+    .hr-dashboard .panel {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
+    }
+    .hr-dashboard .panel-title {
+        font-size: .95rem;
+        font-weight: 700;
+    }
+    .hr-dashboard .chart-box {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+    .hr-dashboard .queue-item {
+        border-bottom: 1px solid #f1f3f5;
+    }
+    .hr-dashboard .queue-item:last-child {
+        border-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid hr-dashboard">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1 text-success">HR Dashboard</h4>
+            <small class="text-muted">Workforce, leave, recruitment, and performance overview for {{ current_year }}</small>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'leave_list' %}" class="btn btn-outline-success btn-sm">
+                <i class="fa fa-calendar-check me-1"></i> Leave
+            </a>
+            <a href="{% url 'vacancy:recruitment_request_list' %}" class="btn btn-outline-success btn-sm">
+                <i class="fa fa-briefcase me-1"></i> Recruitment
+            </a>
+            <a href="{% url 'appraisal_list' %}" class="btn btn-outline-success btn-sm">
+                <i class="fa fa-line-chart me-1"></i> Appraisals
+            </a>
+        </div>
+    </div>
+
+    {% include "message.html" %}
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Active Employees</div>
+                        <div class="metric-value fw-bold">{{ total_employees }}</div>
+                    </div>
+                    <i class="fa fa-users text-success fs-3"></i>
+                </div>
+                <a href="{% url 'profile_list' %}?type=employee" class="small text-success fw-semibold">View records</a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card warning p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Pending Leave</div>
+                        <div class="metric-value fw-bold">{{ pending_leaves }}</div>
+                    </div>
+                    <i class="fa fa-calendar-times text-warning fs-3"></i>
+                </div>
+                <a href="{% url 'leave_list' %}" class="small text-success fw-semibold">Review queue</a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card info p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Present Today</div>
+                        <div class="metric-value fw-bold">{{ active_today }}</div>
+                    </div>
+                    <i class="fa fa-user-check text-info fs-3"></i>
+                </div>
+                <a href="{% url 'attendance_list' %}" class="small text-success fw-semibold">Attendance log</a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card primary p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Trainings This Month</div>
+                        <div class="metric-value fw-bold">{{ trainings_this_month }}</div>
+                    </div>
+                    <i class="fa fa-chalkboard-teacher text-primary fs-3"></i>
+                </div>
+                <a href="{% url 'training_list' %}" class="small text-success fw-semibold">Training plan</a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Open Jobs</div>
+                        <div class="metric-value fw-bold">{{ open_jobs }}</div>
+                    </div>
+                    <i class="fa fa-briefcase text-success fs-3"></i>
+                </div>
+                <a href="{% url 'vacancy:job_list' %}" class="small text-success fw-semibold">Published jobs</a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card warning p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Recruitment Requests</div>
+                        <div class="metric-value fw-bold">{{ pending_recruitment_requests }}</div>
+                    </div>
+                    <i class="fa fa-file-signature text-warning fs-3"></i>
+                </div>
+                <a href="{% url 'vacancy:recruitment_request_list' %}" class="small text-success fw-semibold">Requests</a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card danger p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Pending Applicants</div>
+                        <div class="metric-value fw-bold">{{ pending_applicants }}</div>
+                    </div>
+                    <i class="fa fa-user-plus text-danger fs-3"></i>
+                </div>
+                <a href="{% url 'vacancy:applicants_list' %}" class="small text-success fw-semibold">Applicant reviews</a>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card primary p-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="metric-label">Appraisals</div>
+                        <div class="metric-value fw-bold">{{ total_appraisals }}</div>
+                    </div>
+                    <i class="fa fa-bar-chart text-primary fs-3"></i>
+                </div>
+                <span class="small text-muted">HR {{ appraisals_pending_hr }} | CMT {{ appraisals_pending_cmt }} | PIP {{ pips_pending_staff }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-4">
+            <div class="panel h-100">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="panel-title">Pending Leave Requests</div>
+                    <a href="{% url 'leave_list' %}" class="small text-success">View all</a>
+                </div>
+                <div>
+                    {% for leave in pending_leave_list %}
+                        <div class="queue-item p-3 d-flex justify-content-between gap-3 align-items-center">
+                            <div>
+                                <div class="fw-semibold">{{ leave.employee }}</div>
+                                <small class="text-muted">{{ leave.leave_type }} | {{ leave.days_requested }} days</small>
+                            </div>
+                            <a href="{% url 'leave_detail' leave.pk leave.slug %}" class="btn btn-sm btn-outline-success">Review</a>
+                        </div>
+                    {% empty %}
+                        <div class="p-4 text-center text-muted">No pending leave requests.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="panel h-100">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="panel-title">Recruitment Pipeline</div>
+                    <a href="{% url 'vacancy:recruitment_request_list' %}" class="small text-success">Requests</a>
+                </div>
+                <div>
+                    {% for req in recent_recruitment_requests %}
+                        <div class="queue-item p-3">
+                            <div class="d-flex justify-content-between gap-2">
+                                <div class="fw-semibold">{{ req.title }}</div>
+                                <span class="badge bg-light text-dark">{{ req.status }}</span>
+                            </div>
+                            <small class="text-muted">{{ req.department|default:"No department" }} | {{ req.created_at|date:"M d, Y" }}</small>
+                        </div>
+                    {% empty %}
+                        <div class="p-4 text-center text-muted">No recruitment requests.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="panel h-100">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="panel-title">Recent Appraisals</div>
+                    <a href="{% url 'appraisal_list' %}" class="small text-success">View all</a>
+                </div>
+                <div>
+                    {% for appraisal in recent_appraisals %}
+                        <div class="queue-item p-3 d-flex justify-content-between gap-3 align-items-center">
+                            <div>
+                                <div class="fw-semibold">{{ appraisal.employee }}</div>
+                                <small class="text-muted">{{ appraisal.reference }} | {{ appraisal.get_status_display }}</small>
+                            </div>
+                            <a href="{% url 'appraisal_detail' appraisal.pk %}" class="btn btn-sm btn-outline-success">Open</a>
+                        </div>
+                    {% empty %}
+                        <div class="p-4 text-center text-muted">No appraisal records.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-xl-6">
+            <div class="panel">
+                <div class="p-3 border-bottom panel-title">Department Strength</div>
+                <div class="p-3 chart-box"><canvas id="departmentChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="panel">
+                <div class="p-3 border-bottom panel-title">Attendance Trend</div>
+                <div class="p-3 chart-box"><canvas id="attendanceChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="panel">
+                <div class="p-3 border-bottom panel-title">Leave Status</div>
+                <div class="p-3 chart-box"><canvas id="leaveChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="panel">
+                <div class="p-3 border-bottom panel-title">Recruitment Status</div>
+                <div class="p-3 chart-box"><canvas id="recruitmentChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="panel">
+                <div class="p-3 border-bottom panel-title">Appraisal Status</div>
+                <div class="p-3 chart-box"><canvas id="appraisalChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ department_labels|json_script:"department-labels" }}
+{{ department_data|json_script:"department-data" }}
+{{ leave_labels|json_script:"leave-labels" }}
+{{ leave_data|json_script:"leave-data" }}
+{{ attendance_labels|json_script:"attendance-labels" }}
+{{ attendance_data|json_script:"attendance-data" }}
+{{ appraisal_labels|json_script:"appraisal-labels" }}
+{{ appraisal_data|json_script:"appraisal-data" }}
+{{ recruitment_labels|json_script:"recruitment-labels" }}
+{{ recruitment_data|json_script:"recruitment-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const readJson = (id) => JSON.parse(document.getElementById(id).textContent);
+    const baseOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } };
+    const colors = ["#198754", "#0d6efd", "#f59f00", "#dc3545", "#0dcaf0", "#6f42c1", "#6c757d"];
+
+    new Chart(document.getElementById("departmentChart"), {
+        type: "bar",
+        data: {
+            labels: readJson("department-labels"),
+            datasets: [{ label: "Employees", data: readJson("department-data"), backgroundColor: "#198754" }]
+        },
+        options: baseOptions
+    });
+
+    new Chart(document.getElementById("attendanceChart"), {
+        type: "line",
+        data: {
+            labels: readJson("attendance-labels"),
+            datasets: [{ label: "Present", data: readJson("attendance-data"), borderColor: "#0d6efd", backgroundColor: "rgba(13,110,253,.12)", fill: true, tension: .35 }]
+        },
+        options: baseOptions
+    });
+
+    const doughnutConfig = (canvasId, labelId, dataId) => new Chart(document.getElementById(canvasId), {
+        type: "doughnut",
+        data: {
+            labels: readJson(labelId),
+            datasets: [{ data: readJson(dataId), backgroundColor: colors }]
+        },
+        options: baseOptions
+    });
+
+    doughnutConfig("leaveChart", "leave-labels", "leave-data");
+    doughnutConfig("recruitmentChart", "recruitment-labels", "recruitment-data");
+    doughnutConfig("appraisalChart", "appraisal-labels", "appraisal-data");
+</script>
+{% endblock %}

@@ -1,0 +1,648 @@
+{% extends 'hr/base.html' %}
+{% block title %}Profile Registration{% endblock %}
+
+{% block content %}
+
+<main class="ttr-wrapper profile-page">
+    <div class="container-fluid">
+
+        <!-- ========================================= -->
+        <!-- PAGE HEADER / BREADCRUMB -->
+        <!-- ========================================= -->
+        <div class="page-header-card mb-4">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb custom-breadcrumb mb-2">
+
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'dashboard' %}">
+                                    <i class="fa fa-home me-1"></i>
+                                    Dashboard
+                                </a>
+                            </li>
+
+                            <li class="breadcrumb-item">
+                                <a href="#">
+                                    Profile Management
+                                </a>
+                            </li>
+
+                            <li class="breadcrumb-item active" aria-current="page">
+                                {% if is_update %}
+                                    Update Profile
+                                {% else %}
+                                    Register Profile
+                                {% endif %}
+                            </li>
+
+                        </ol>
+                    </nav>
+
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+
+                        <div class="page-icon">
+                            <i class="fa fa-user-circle"></i>
+                        </div>
+
+                        <div>
+                            <h2 class="page-title mb-1">
+                                {% if is_update %}
+                                    Update Profile
+                                {% else %}
+                                    Profile Registration
+                                {% endif %}
+                            </h2>
+
+                            <p class="page-subtitle mb-0">
+                                {% if is_update %}
+                                    Modify and maintain profile information securely.
+                                {% else %}
+                                    Complete profile onboarding and registration details.
+                                {% endif %}
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div>
+                    {% if is_update %}
+                        <span class="status-badge warning">
+                            <i class="fa fa-edit"></i>
+                            Editing Mode
+                        </span>
+                    {% else %}
+                        <span class="status-badge success">
+                            <i class="fa fa-check-circle"></i>
+                            New Registration
+                        </span>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="row g-4">
+
+            <!-- ========================================= -->
+            <!-- MAIN FORM -->
+            <!-- ========================================= -->
+            <div class="col-xl-8 col-lg-8 col-md-12">
+
+                <div class="card custom-card border-0 shadow-sm">
+
+                    <!-- Card Header -->
+                    <div class="card-header bg-white border-bottom py-3 px-4">
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                            <div>
+                                <h4 class="card-title mb-1">
+                                    {{ title }}
+                                </h4>
+
+                                <p class="text-muted small mb-0">
+                                    Fields marked with
+                                    <span class="text-danger">*</span>
+                                    are required.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="card-body p-4">
+
+                        <!-- Form Errors -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm">
+
+                                <div class="d-flex">
+
+                                    <div class="me-3">
+                                        <i class="fa fa-exclamation-triangle fa-lg"></i>
+                                    </div>
+
+                                    <div class="flex-grow-1">
+
+                                        <strong class="d-block mb-2">
+                                            Please correct the following errors:
+                                        </strong>
+
+                                        <ul class="mb-0 ps-3">
+                                            {% for error in form.non_field_errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </ul>
+
+                                    </div>
+
+                                </div>
+
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert">
+                                </button>
+
+                            </div>
+                        {% endif %}
+
+                        <!-- FORM -->
+                        <form method="POST"
+                              enctype="multipart/form-data"
+                              novalidate>
+
+                            {% csrf_token %}
+
+                            <div class="row">
+
+                                {% for field in form %}
+
+                                    <div class="
+                                        {% if field.name == 'address' or field.field.widget.input_type == 'textarea' %}
+                                            col-md-12
+                                        {% else %}
+                                            col-md-6
+                                        {% endif %}
+                                        mb-4
+                                    ">
+
+                                        <div class="form-group">
+
+                                            <!-- Label -->
+                                            <label for="{{ field.id_for_label }}"
+                                                   class="form-label fw-semibold mb-2">
+
+                                                {{ field.label }}
+
+                                                {% if field.field.required %}
+                                                    <span class="text-danger">*</span>
+                                                {% endif %}
+
+                                            </label>
+
+                                            <!-- Field -->
+                                            <div class="form-input-wrapper">
+                                                {{ field }}
+                                            </div>
+
+                                            <!-- Help Text -->
+                                            {% if field.help_text %}
+                                                <small class="text-muted d-block mt-2">
+                                                    <i class="fa fa-info-circle me-1"></i>
+                                                    {{ field.help_text|safe }}
+                                                </small>
+                                            {% endif %}
+
+                                            <!-- Errors -->
+                                            {% if field.errors %}
+                                                <div class="invalid-feedback d-block mt-2">
+
+                                                    {% for error in field.errors %}
+                                                        <div class="mb-1">
+                                                            <i class="fa fa-times-circle me-1"></i>
+                                                            {{ error }}
+                                                        </div>
+                                                    {% endfor %}
+
+                                                </div>
+                                            {% endif %}
+
+                                        </div>
+
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                            <!-- ACTIONS -->
+                            <div class="form-footer border-top pt-4 mt-2">
+
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+                                    <a href="javascript:history.back()"
+                                       class="btn btn-light btn-lg px-4">
+
+                                        <i class="fa fa-arrow-left me-2"></i>
+                                        Cancel
+
+                                    </a>
+
+                                    <button type="submit"
+                                            class="btn btn-primary btn-lg px-5">
+
+                                        <i class="fa fa-save me-2"></i>
+
+                                        {% if is_update %}
+                                            Update Profile
+                                        {% else %}
+                                            Save Profile
+                                        {% endif %}
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ========================================= -->
+            <!-- SIDEBAR -->
+            <!-- ========================================= -->
+            <div class="col-xl-4 col-lg-4 col-md-12">
+
+                <div class="card custom-card border-0 shadow-sm sticky-top"
+                     style="top: 90px;">
+
+                    <!-- Header -->
+                    <div class="card-header bg-white border-bottom py-3 px-4">
+
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="fa fa-lightbulb text-warning me-2"></i>
+                            Registration Guidelines
+                        </h5>
+
+                    </div>
+
+                    <!-- Body -->
+                    <div class="card-body p-4">
+
+                        <!-- Info -->
+                        <div class="info-box info-primary mb-3">
+
+                            <div class="info-icon">
+                                <i class="fa fa-info-circle"></i>
+                            </div>
+
+                            <div>
+                                Ensure all profile information is accurate,
+                                valid, and verified before submission.
+                            </div>
+
+                        </div>
+
+                        {% if not is_update %}
+                            <div class="info-box info-success mb-3">
+
+                                <div class="info-icon">
+                                    <i class="fa fa-envelope"></i>
+                                </div>
+
+                                <div>
+                                    Login credentials will be automatically
+                                    generated and sent to the registered email.
+                                </div>
+
+                            </div>
+                        {% endif %}
+
+                        <!-- Signature -->
+                        {% if profile.signature %}
+                            <div class="signature-preview mt-4">
+
+                                <h6 class="fw-semibold mb-3">
+                                    Authorized Signature
+                                </h6>
+
+                                <div class="border rounded-3 p-3 bg-light text-center">
+
+                                    <img src="{{ profile.signature.url }}"
+                                         class="img-fluid"
+                                         style="max-height: 140px;"
+                                         alt="Signature Preview">
+
+                                </div>
+
+                            </div>
+                        {% endif %}
+
+                        <!-- Summary -->
+                        {% if is_update %}
+                            <div class="profile-summary mt-4 pt-4 border-top">
+
+                                <h6 class="fw-semibold mb-3">
+                                    Profile Summary
+                                </h6>
+
+                                <div class="summary-item">
+
+                                    <span>Status</span>
+
+                                    <span class="badge bg-success">
+                                        Active
+                                    </span>
+
+                                </div>
+
+                                <div class="summary-item">
+
+                                    <span>Last Updated</span>
+
+                                    <span>
+                                        {{ profile.updated_at|default:"Recently" }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</main>
+
+<!-- ========================================= -->
+<!-- PROFESSIONAL UI STYLES -->
+<!-- ========================================= -->
+<style>
+
+    /* ===================================== */
+    /* PAGE HEADER */
+    /* ===================================== */
+
+    .page-header-card{
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 28px 30px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+        border: 1px solid #eef1f5;
+    }
+
+    .page-icon{
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #0d6efd, #3d8bfd);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .page-title{
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .page-subtitle{
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+
+    /* ===================================== */
+    /* BREADCRUMB */
+    /* ===================================== */
+
+    .custom-breadcrumb{
+        margin-bottom: 0;
+    }
+
+    .custom-breadcrumb .breadcrumb-item a{
+        color: #6b7280;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .custom-breadcrumb .breadcrumb-item a:hover{
+        color: #0d6efd;
+    }
+
+    .custom-breadcrumb .breadcrumb-item.active{
+        color: #0d6efd;
+        font-weight: 600;
+    }
+
+    /* ===================================== */
+    /* BADGES */
+    /* ===================================== */
+
+    .status-badge{
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .status-badge.success{
+        background: rgba(25,135,84,0.12);
+        color: #198754;
+    }
+
+    .status-badge.warning{
+        background: rgba(255,193,7,0.15);
+        color: #9a6700;
+    }
+
+    /* ===================================== */
+    /* CARD */
+    /* ===================================== */
+
+    .custom-card{
+        border-radius: 18px;
+        overflow: hidden;
+    }
+
+    .card-title{
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    /* ===================================== */
+    /* FORM */
+    /* ===================================== */
+
+    .form-label{
+        color: #374151;
+    }
+
+    .form-control,
+    .form-select{
+        border-radius: 12px;
+        min-height: 48px;
+        border: 1px solid #dbe1e8;
+        box-shadow: none;
+        transition: all 0.2s ease;
+    }
+
+    textarea.form-control{
+        min-height: 120px;
+    }
+
+    .form-control:focus,
+    .form-select:focus{
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13,110,253,0.08);
+    }
+
+    /* ===================================== */
+    /* INFO BOXES */
+    /* ===================================== */
+
+    .info-box{
+        display: flex;
+        gap: 14px;
+        padding: 16px;
+        border-radius: 14px;
+        font-size: 0.92rem;
+        line-height: 1.6;
+    }
+
+    .info-primary{
+        background: rgba(13,110,253,0.08);
+        color: #084298;
+    }
+
+    .info-success{
+        background: rgba(25,135,84,0.10);
+        color: #146c43;
+    }
+
+    .info-icon{
+        font-size: 18px;
+        margin-top: 2px;
+    }
+
+    /* ===================================== */
+    /* PROFILE SUMMARY */
+    /* ===================================== */
+
+    .summary-item{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px dashed #e5e7eb;
+        font-size: 0.92rem;
+    }
+
+    .summary-item:last-child{
+        border-bottom: none;
+    }
+
+    /* ===================================== */
+    /* RESPONSIVE */
+    /* ===================================== */
+
+    @media(max-width: 768px){
+
+        .page-header-card{
+            padding: 22px;
+        }
+
+        .page-title{
+            font-size: 1.35rem;
+        }
+
+        .btn-lg{
+            width: 100%;
+        }
+
+        .form-footer .d-flex{
+            flex-direction: column-reverse;
+        }
+    }
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const department = document.getElementById('id_department');
+    const unit = document.getElementById('id_unit');
+    const project = document.getElementById('id_project');
+
+    function replaceOptions(select, items, emptyText) {
+        if (!select) return;
+        const current = select.value;
+        select.innerHTML = `<option value="">${emptyText}</option>`;
+        items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.name;
+            if (String(item.id) === current) option.selected = true;
+            select.appendChild(option);
+        });
+    }
+
+    async function loadUnits() {
+        if (!department || !department.value) {
+            replaceOptions(unit, [], '-- Choose Unit --');
+            replaceOptions(project, [], '-- No Project --');
+            return;
+        }
+        const response = await fetch(`{% url 'units_for_department' %}?department=${department.value}`);
+        const data = await response.json();
+        replaceOptions(unit, data.units, '-- Choose Unit --');
+        await loadProjects();
+    }
+
+    async function loadProjects() {
+        if (!unit || !unit.value) {
+            replaceOptions(project, [], '-- No Project --');
+            return;
+        }
+        const response = await fetch(`{% url 'projects_for_unit' %}?unit=${unit.value}`);
+        const data = await response.json();
+        replaceOptions(project, data.projects, '-- No Project --');
+    }
+
+    if (department) department.addEventListener('change', loadUnits);
+    if (unit) unit.addEventListener('change', loadProjects);
+});
+</script>
+
+<!--toggle probation dates-->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const statusEl = document.getElementById("id_status");
+    const probationStartsEl = document.getElementById("id_probation_starts");
+    const probationEndsEl = document.getElementById("id_probation_ends");
+
+    const startsContainer = probationStartsEl ? probationStartsEl.closest(".col-md-6") : null;
+    const endsContainer = probationEndsEl ? probationEndsEl.closest(".col-md-6") : null;
+
+    function toggleProbationFields() {
+        const status = statusEl ? statusEl.value : null;
+        const show = status === "Probation";
+
+        if (startsContainer) startsContainer.style.display = show ? "" : "none";
+        if (endsContainer) endsContainer.style.display = show ? "" : "none";
+
+        if (!show) {
+            if (probationStartsEl) probationStartsEl.value = "";
+            if (probationEndsEl) probationEndsEl.value = "";
+        }
+    }
+
+    if (statusEl) statusEl.addEventListener("change", toggleProbationFields);
+    toggleProbationFields();
+});
+</script>
+{% endblock %}

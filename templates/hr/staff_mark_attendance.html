@@ -1,0 +1,148 @@
+{% extends "hr/base.html" %}
+{% block title %}Mark Attendance{% endblock %}
+
+{% block breadcrumb %}
+ <div class="bg-white p-3 mb-4 rounded shadow-sm d-flex flex-column flex-md-row
+     align-items-center justify-content-between">
+
+    <div>
+        <h4 class="fw-bold mb-0 text-success">Mark Attendance</h4>
+        <small class="text-muted">Staff Mark Attendance</small>
+    </div>
+
+    <nav aria-label="breadcrumb" class="mt-3 mt-md-0">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">
+                <a href="{% url 'dashboard' %}" class="text-decoration-none text-success">
+                    <i class="fa fa-home"></i> Home
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                Mark Attendance
+            </li>
+        </ol>
+    </nav>
+
+</div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+  {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8 col-sm-12">
+      <div class="widget-box">
+        <div class="wc-title bg-success text-white p-3">
+          <h4>Submit Your Attendance</h4>
+        </div>
+        <div class="widget-inner p-4">
+          <form method="post" id="attendance-form">
+            {% csrf_token %}
+            <div class="form-group">
+              <label>Status</label>
+              {{ form.status }}
+            </div>
+
+            <!-- Hidden fields -->
+            <input type="hidden" id="id_latitude" name="latitude">
+            <input type="hidden" id="id_longitude" name="longitude">
+            <input type="hidden" id="id_address" name="address">
+            <input type="hidden" id="id_device_hash" name="device_hash">
+
+            <div id="location-info" class="mb-3 text-muted small"></div>
+
+            <!-- Submit button disabled until ready -->
+            <button type="submit" id="submit-btn" class="btn btn-success w-100" disabled>
+              <i class="ti-check"></i> Mark Attendance
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://openfpcdn.io/fingerprintjs/v3/umd.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    let visitorId = "";
+    let locationReady = false;
+    const submitBtn = document.getElementById("submit-btn");
+
+    // start disabled
+    submitBtn.disabled = true;
+
+    // --- FingerprintJS: get device hash ---
+    try {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        visitorId = result.visitorId;
+        console.log("Generated device hash:", visitorId);
+        document.getElementById("id_device_hash").value = visitorId;
+        checkReady();
+    } catch (err) {
+        console.error("FingerprintJS failed:", err);
+    }
+
+    // --- Geolocation ---
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                let lat = parseFloat(position.coords.latitude).toFixed(6);
+                let lon = parseFloat(position.coords.longitude).toFixed(6);
+                document.getElementById("id_latitude").value = lat;
+                document.getElementById("id_longitude").value = lon;
+
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                  .then(res => res.json())
+                  .then(data => {
+                      if (data.display_name) {
+                          document.getElementById("id_address").value = data.display_name;
+                          document.getElementById("location-info").innerText = "📍 " + data.display_name;
+                          locationReady = true;
+                          checkReady();
+                      }
+                  }).catch(err => console.log("Geocoding failed", err));
+            },
+            function(error) {
+                alert("⚠️ Please allow location access to mark attendance.");
+                console.log(error);
+            }
+        );
+    } else {
+        alert("⚠️ Geolocation not supported by your browser.");
+    }
+
+    // --- Enable button only when both are ready ---
+    function checkReady() {
+        if (visitorId && locationReady) {
+            submitBtn.disabled = false;
+        }
+    }
+
+    // --- Before submit, confirm values ---
+    document.getElementById("attendance-form").addEventListener("submit", function(e) {
+        if (!visitorId || !locationReady) {
+            e.preventDefault();
+            alert("⚠️ Please wait until your device ID and location are ready.");
+        } else {
+            // Debug alert to confirm before send
+            alert("Submitting with Device Hash: " + visitorId);
+        }
+    });
+});
+</script>
+{% endblock %}

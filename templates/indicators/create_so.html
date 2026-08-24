@@ -1,0 +1,1111 @@
+{% extends active_base_template|default:'base.html' %}
+
+{% block title %}
+{% if is_update %}Update{% else %}Create{% endif %} Strategic Objective
+{% endblock %}
+
+{% block content %}
+
+{% include 'message.html' %}
+
+<style>
+    /* =========================================================
+       STRATEGIC OBJECTIVE FORM
+       Enterprise / Responsive Design
+       ========================================================= */
+
+    .so-page {
+        --so-primary: #198754;
+        --so-primary-dark: #146c43;
+        --so-primary-soft: #eaf7f0;
+        --so-border: #e3e8e5;
+        --so-text: #1f2937;
+        --so-muted: #6b7280;
+        --so-bg: #f7f9f8;
+    }
+
+    /* Breadcrumb */
+    .so-breadcrumb {
+        background: #fff;
+        border: 1px solid var(--so-border);
+        border-radius: 10px;
+        padding: 11px 15px;
+        margin-bottom: 18px;
+    }
+
+    .so-breadcrumb a {
+        color: var(--so-primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .so-breadcrumb a:hover {
+        color: var(--so-primary-dark);
+    }
+
+    /* Page header */
+    .so-header {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f5faf7 100%
+        );
+        border: 1px solid var(--so-border);
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, .035);
+    }
+
+    .so-header-icon {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--so-primary-soft);
+        color: var(--so-primary);
+        font-size: 21px;
+    }
+
+    .so-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #172b21;
+        margin: 0 0 3px;
+    }
+
+    .so-subtitle {
+        color: var(--so-muted);
+        font-size: .86rem;
+        margin: 0;
+    }
+
+    .so-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--so-primary-soft);
+        color: var(--so-primary-dark);
+        padding: 7px 11px;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 600;
+    }
+
+    .so-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--so-primary);
+    }
+
+    /* Main cards */
+    .so-card {
+        background: #fff;
+        border: 1px solid var(--so-border);
+        border-radius: 16px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .04);
+        overflow: hidden;
+    }
+
+    .so-card-header {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--so-border);
+        background: #fff;
+    }
+
+    .so-card-header h5 {
+        font-size: .98rem;
+        font-weight: 700;
+        margin: 0 0 3px;
+        color: #25352d;
+    }
+
+    .so-card-header p {
+        font-size: .78rem;
+        color: var(--so-muted);
+        margin: 0;
+    }
+
+    .so-card-body {
+        padding: 24px;
+    }
+
+    /* Form fields */
+    .so-field {
+        margin-bottom: 22px;
+    }
+
+    .so-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: .82rem;
+        font-weight: 650;
+        color: #374151;
+        margin-bottom: 7px;
+    }
+
+    .so-required {
+        color: #dc3545;
+        font-weight: 700;
+    }
+
+    .so-field input,
+    .so-field textarea,
+    .so-field select {
+        width: 100%;
+        border: 1px solid #d9e0dc;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: .86rem;
+        color: var(--so-text);
+        background: #fff;
+        transition: border-color .18s ease,
+                    box-shadow .18s ease;
+    }
+
+    .so-field input {
+        min-height: 44px;
+    }
+
+    .so-field textarea {
+        min-height: 145px;
+        resize: vertical;
+    }
+
+    .so-field input:focus,
+    .so-field textarea:focus,
+    .so-field select:focus {
+        outline: none;
+        border-color: #83c5a1;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    .so-field input::placeholder,
+    .so-field textarea::placeholder {
+        color: #adb5bd;
+    }
+
+    /* Field help */
+    .so-help {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        margin-top: 7px;
+        color: #7b8580;
+        font-size: .74rem;
+        line-height: 1.45;
+    }
+
+    .so-help i {
+        color: #91a099;
+        margin-top: 2px;
+    }
+
+    /* Error */
+    .so-error {
+        margin-top: 6px;
+        color: #dc3545;
+        font-size: .75rem;
+        font-weight: 500;
+    }
+
+    .so-error ul {
+        padding-left: 17px;
+        margin: 0;
+    }
+
+    /* Required legend */
+    .so-required-note {
+        font-size: .72rem;
+        color: var(--so-muted);
+    }
+
+    /* Description counter */
+    .so-description-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+    }
+
+    .so-counter {
+        color: #8a938e;
+        font-size: .72rem;
+    }
+
+    /* Section divider */
+    .so-section {
+        padding-top: 4px;
+        margin-bottom: 20px;
+    }
+
+    .so-section-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: .82rem;
+        font-weight: 700;
+        color: #34443c;
+        margin-bottom: 15px;
+    }
+
+    .so-section-title span {
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--so-primary-soft);
+        color: var(--so-primary);
+        border-radius: 7px;
+        font-size: .72rem;
+    }
+
+    /* Action bar */
+    .so-actions {
+        border-top: 1px solid var(--so-border);
+        background: #fafcfb;
+        padding: 15px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .so-btn {
+        border-radius: 9px;
+        padding: 9px 17px;
+        font-size: .82rem;
+        font-weight: 600;
+        transition: all .18s ease;
+    }
+
+    .so-btn-secondary {
+        color: #59645e;
+        border: 1px solid #d7ddd9;
+        background: #fff;
+        text-decoration: none;
+    }
+
+    .so-btn-secondary:hover {
+        background: #f3f5f4;
+        color: #34423a;
+    }
+
+    .so-btn-primary {
+        color: #fff;
+        background: var(--so-primary);
+        border: 1px solid var(--so-primary);
+    }
+
+    .so-btn-primary:hover {
+        color: #fff;
+        background: var(--so-primary-dark);
+        border-color: var(--so-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    /* Sidebar */
+    .so-info-card {
+        background: #fff;
+        border: 1px solid var(--so-border);
+        border-radius: 16px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .035);
+        overflow: hidden;
+    }
+
+    .so-info-header {
+        padding: 17px 19px;
+        border-bottom: 1px solid var(--so-border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .so-info-header-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff5db;
+        color: #b7791f;
+        font-size: 14px;
+    }
+
+    .so-info-header h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: .86rem;
+    }
+
+    .so-info-body {
+        padding: 18px 19px;
+    }
+
+    .so-tip {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .so-tip:last-child {
+        margin-bottom: 0;
+    }
+
+    .so-tip-icon {
+        width: 25px;
+        height: 25px;
+        min-width: 25px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--so-primary-soft);
+        color: var(--so-primary);
+        font-size: 10px;
+    }
+
+    .so-tip p {
+        margin: 0;
+        color: #66716b;
+        font-size: .76rem;
+        line-height: 1.5;
+    }
+
+    /* Framework note */
+    .so-framework {
+        margin-top: 16px;
+        background: #f7faf8;
+        border: 1px solid #e4ebe7;
+        border-radius: 11px;
+        padding: 14px;
+    }
+
+    .so-framework-title {
+        color: #34443b;
+        font-size: .75rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .so-framework p {
+        color: #76817b;
+        font-size: .73rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* Non-field errors */
+    .so-alert {
+        border-radius: 10px;
+        font-size: .8rem;
+        margin-bottom: 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 991.98px) {
+        .so-sidebar {
+            margin-top: 20px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+
+        .so-breadcrumb {
+            margin-bottom: 14px;
+            padding: 9px 12px;
+        }
+
+        .so-header {
+            padding: 17px;
+            border-radius: 13px;
+        }
+
+        .so-header-icon {
+            width: 43px;
+            height: 43px;
+            min-width: 43px;
+            border-radius: 10px;
+        }
+
+        .so-title {
+            font-size: 1.08rem;
+        }
+
+        .so-subtitle {
+            font-size: .76rem;
+        }
+
+        .so-status {
+            margin-top: 13px;
+        }
+
+        .so-card,
+        .so-info-card {
+            border-radius: 13px;
+        }
+
+        .so-card-header {
+            padding: 15px 16px;
+        }
+
+        .so-card-body {
+            padding: 18px 16px;
+        }
+
+        .so-actions {
+            padding: 13px 16px;
+        }
+
+        .so-btn {
+            flex: 1;
+            text-align: center;
+        }
+
+        .so-field {
+            margin-bottom: 18px;
+        }
+    }
+
+    @media (max-width: 400px) {
+
+        .so-actions {
+            flex-direction: column-reverse;
+        }
+
+        .so-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="container-fluid so-page">
+
+
+<!-- =====================================================
+     BREADCRUMB
+====================================================== -->
+<div class="so-breadcrumb">
+
+    <ul class="list-inline mb-0 small">
+
+        <li class="list-inline-item">
+            <a href="{% url 'monitoring:dashboard' %}">
+                <i class="fa fa-home me-1"></i>
+                Home
+            </a>
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item">
+            <a href="{% url 'monitoring:so_list' %}">
+                Strategic Objectives
+            </a>
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item text-muted">
+            {% if is_update %}Update{% else %}Create{% endif %}
+        </li>
+
+    </ul>
+
+</div>
+
+
+<!-- =====================================================
+     PAGE HEADER
+====================================================== -->
+<div class="so-header">
+
+    <div class="d-flex flex-column
+                flex-md-row
+                align-items-start
+                align-items-md-center
+                justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <div class="so-header-icon me-3">
+                <i class="fa fa-bullseye"></i>
+            </div>
+
+            <div>
+
+                <h1 class="so-title">
+                    {% if is_update %}
+                        Update Strategic Objective
+                    {% else %}
+                        Create Strategic Objective
+                    {% endif %}
+                </h1>
+
+                <p class="so-subtitle">
+                    {% if is_update %}
+                        Review and update the strategic objective
+                        information below.
+                    {% else %}
+                        Define a clear strategic objective for the
+                        organizational M&E framework.
+                    {% endif %}
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="so-status">
+
+            <span class="so-status-dot"></span>
+
+            M&E Framework
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     FORM + INFORMATION SIDEBAR
+====================================================== -->
+<div class="row g-4">
+
+    <!-- =================================================
+         MAIN FORM
+    ================================================== -->
+    <div class="col-lg-8 col-xl-8">
+
+        <div class="so-card">
+
+            <!-- Card Header -->
+            <div class="so-card-header">
+
+                <div class="d-flex justify-content-between
+                            align-items-start">
+
+                    <div>
+
+                        <h5>
+                            Objective Information
+                        </h5>
+
+                        <p>
+                            Complete all required fields marked with
+                            <span class="text-danger">*</span>.
+                        </p>
+
+                    </div>
+
+                    <div class="so-required-note d-none d-md-block">
+                        <span class="text-danger">*</span>
+                        Required
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Form -->
+            <form method="post" novalidate>
+
+                {% csrf_token %}
+
+                <div class="so-card-body">
+
+                    <!-- Non-field errors -->
+                    {% if form.non_field_errors %}
+
+                        <div class="alert alert-danger so-alert">
+
+                            <div class="d-flex gap-2">
+
+                                <i class="fa fa-exclamation-circle mt-1"></i>
+
+                                <div>
+                                    {{ form.non_field_errors }}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- =================================================
+                         SECTION 1
+                    ================================================== -->
+                    <div class="so-section">
+
+                        <div class="so-section-title">
+
+                            <span>
+                                <i class="fa fa-info"></i>
+                            </span>
+
+                            Basic Information
+
+                        </div>
+
+
+                        <div class="row g-3">
+
+                            <!-- Code -->
+                            <div class="col-md-4">
+
+                                <div class="so-field">
+
+                                    <label for="{{ form.code.id_for_label }}"
+                                           class="so-label">
+
+                                        Strategic Code
+
+                                        {% if form.code.field.required %}
+                                            <span class="so-required">*</span>
+                                        {% endif %}
+
+                                    </label>
+
+                                    {{ form.code }}
+
+                                    {% if form.code.errors %}
+
+                                        <div class="so-error">
+                                            {{ form.code.errors }}
+                                        </div>
+
+                                    {% endif %}
+
+                                    <div class="so-help">
+
+                                        <i class="fa fa-info-circle"></i>
+
+                                        <span>
+                                            Use a unique reference such as
+                                            SO-2026-01.
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Title -->
+                            <div class="col-md-8">
+
+                                <div class="so-field">
+
+                                    <label for="{{ form.title.id_for_label }}"
+                                           class="so-label">
+
+                                        Objective Title
+
+                                        {% if form.title.field.required %}
+                                            <span class="so-required">*</span>
+                                        {% endif %}
+
+                                    </label>
+
+                                    {{ form.title }}
+
+                                    {% if form.title.errors %}
+
+                                        <div class="so-error">
+                                            {{ form.title.errors }}
+                                        </div>
+
+                                    {% endif %}
+
+                                    <div class="so-help">
+
+                                        <i class="fa fa-info-circle"></i>
+
+                                        <span>
+                                            State the desired strategic
+                                            result clearly and concisely.
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SECTION 2
+                    ================================================== -->
+                    <div class="so-section">
+
+                        <div class="so-section-title">
+
+                            <span>
+                                <i class="fa fa-align-left"></i>
+                            </span>
+
+                            Strategic Description
+
+                        </div>
+
+
+                        <div class="so-field mb-0">
+
+                            <label for="{{ form.description.id_for_label }}"
+                                   class="so-label">
+
+                                Description
+
+                                {% if form.description.field.required %}
+                                    <span class="so-required">*</span>
+                                {% endif %}
+
+                            </label>
+
+                            {{ form.description }}
+
+                            {% if form.description.errors %}
+
+                                <div class="so-error">
+                                    {{ form.description.errors }}
+                                </div>
+
+                            {% endif %}
+
+                            <div class="so-description-meta">
+
+                                <div class="so-help mt-0">
+
+                                    <i class="fa fa-lightbulb-o"></i>
+
+                                    <span>
+                                        Explain the context, intended
+                                        outcome, scope and strategic
+                                        significance.
+                                    </span>
+
+                                </div>
+
+                                <span class="so-counter"
+                                      id="descriptionCounter">
+                                    0 characters
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =====================================================
+                     ACTION BAR
+                ====================================================== -->
+                <div class="so-actions">
+
+                    <a href="{% url 'monitoring:so_list' %}"
+                       class="so-btn so-btn-secondary">
+
+                        <i class="fa fa-arrow-left me-1"></i>
+
+                        Cancel
+
+                    </a>
+
+
+                    <button type="submit"
+                            class="so-btn so-btn-primary">
+
+                        {% if is_update %}
+
+                            <i class="fa fa-save me-1"></i>
+                            Update Objective
+
+                        {% else %}
+
+                            <i class="fa fa-plus me-1"></i>
+                            Create Objective
+
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         INFORMATION SIDEBAR
+    ================================================== -->
+    <div class="col-lg-4 col-xl-4 so-sidebar">
+
+        <div class="so-info-card">
+
+            <div class="so-info-header">
+
+                <div class="so-info-header-icon">
+                    <i class="fa fa-lightbulb-o"></i>
+                </div>
+
+                <h6>
+                    Strategic Objective Guidelines
+                </h6>
+
+            </div>
+
+
+            <div class="so-info-body">
+
+                <!-- Tip 1 -->
+                <div class="so-tip">
+
+                    <div class="so-tip-icon">
+                        <i class="fa fa-bullseye"></i>
+                    </div>
+
+                    <p>
+                        Keep the objective
+                        <strong>outcome-focused</strong>
+                        rather than describing routine activities.
+                    </p>
+
+                </div>
+
+
+                <!-- Tip 2 -->
+                <div class="so-tip">
+
+                    <div class="so-tip-icon">
+                        <i class="fa fa-line-chart"></i>
+                    </div>
+
+                    <p>
+                        Use language that can eventually be
+                        <strong>measured through indicators</strong>.
+                    </p>
+
+                </div>
+
+
+                <!-- Tip 3 -->
+                <div class="so-tip">
+
+                    <div class="so-tip-icon">
+                        <i class="fa fa-sitemap"></i>
+                    </div>
+
+                    <p>
+                        Ensure the objective is aligned with the
+                        organization's broader
+                        <strong>strategic priorities</strong>.
+                    </p>
+
+                </div>
+
+
+                <!-- Tip 4 -->
+                <div class="so-tip">
+
+                    <div class="so-tip-icon">
+                        <i class="fa fa-check"></i>
+                    </div>
+
+                    <p>
+                        Avoid operational wording. Focus on the
+                        <strong>change or result</strong>
+                        the organization wants to achieve.
+                    </p>
+
+                </div>
+
+
+                <!-- Framework note -->
+                <div class="so-framework">
+
+                    <div class="so-framework-title">
+
+                        <i class="fa fa-sitemap me-1"></i>
+                        M&E Framework
+
+                    </div>
+
+                    <p>
+                        Strategic objectives form the foundation of
+                        the results framework. They can subsequently
+                        be linked to outputs, activities, indicators
+                        and targets.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Security / data note -->
+        <div class="mt-3 px-2">
+
+            <div class="d-flex gap-2 text-muted">
+
+                <i class="fa fa-shield mt-1"></i>
+
+                <small>
+                    Your information is saved securely within the
+                    organization's M&E system.
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- =========================================================
+     FORM ENHANCEMENTS
+========================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* ---------------------------------------------------------
+       Description character counter
+    --------------------------------------------------------- */
+
+    const description =
+        document.getElementById(
+            "{{ form.description.id_for_label }}"
+        );
+
+    const counter =
+        document.getElementById(
+            "descriptionCounter"
+        );
+
+    function updateCounter() {
+
+        if (!description || !counter) return;
+
+        const length = description.value.length;
+
+        counter.textContent =
+            length + (length === 1
+                ? " character"
+                : " characters");
+    }
+
+    if (description) {
+
+        updateCounter();
+
+        description.addEventListener(
+            "input",
+            updateCounter
+        );
+
+    }
+
+
+    /* ---------------------------------------------------------
+       Add Bootstrap-compatible classes where Django forms
+       do not already define them.
+    --------------------------------------------------------- */
+
+    const fields = document.querySelectorAll(
+        ".so-field input, .so-field textarea, .so-field select"
+    );
+
+    fields.forEach(function (field) {
+
+        if (!field.classList.contains("form-control") &&
+            !field.classList.contains("form-select")) {
+
+            if (field.tagName === "SELECT") {
+                field.classList.add("form-select");
+            } else {
+                field.classList.add("form-control");
+            }
+
+        }
+
+    });
+
+
+    /* ---------------------------------------------------------
+       Prevent accidental double submission
+    --------------------------------------------------------- */
+
+    const form = document.querySelector(
+        ".so-card form"
+    );
+
+    if (form) {
+
+        form.addEventListener(
+            "submit",
+            function () {
+
+                const button =
+                    form.querySelector(
+                        "button[type='submit']"
+                    );
+
+                if (!button) return;
+
+                button.disabled = true;
+
+                {% if is_update %}
+
+                button.innerHTML =
+                    '<i class="fa fa-spinner fa-spin me-1"></i> Updating...';
+
+                {% else %}
+
+                button.innerHTML =
+                    '<i class="fa fa-spinner fa-spin me-1"></i> Creating...';
+
+                {% endif %}
+
+            }
+        );
+
+    }
+
+});
+</script>
+
+{% endblock %}

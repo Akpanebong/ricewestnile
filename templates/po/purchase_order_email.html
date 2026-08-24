@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: #f9fafb;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .header {
+      background-color: #166534;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .content {
+      padding: 25px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 13px;
+      color: #555;
+      padding: 15px;
+      background-color: #f3f4f6;
+    }
+    .button {
+      background-color: #166534;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 6px;
+      display: inline-block;
+      margin-top: 15px;
+    }
+    .details {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 15px;
+    }
+    .details th, .details td {
+      border: 1px solid #e5e7eb;
+      padding: 8px;
+      text-align: left;
+    }
+    .details th {
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Purchase Order: {{ po.po_number }}</h2>
+    </div>
+    <div class="content">
+      <p>Dear {{ po.supplier.full_name }},</p>
+      <p>
+        We are pleased to inform you that your quotation for <strong>RFQ {{ po.rfq.id }}</strong> has been approved.
+      </p>
+      <p>The purchase order has been generated and attached to this email.</p>
+
+      <table class="details">
+        <tr><th>Purchase Order No.</th><td>{{ po.po_number }}</td></tr>
+        <tr><th>Amount</th><td>{{ po.final_amount }}</td></tr>
+        <tr><th>Issue Date</th><td>{{ po.issue_date }}</td></tr>
+        <tr><th>Due Date</th><td>{{ po.due_date|default:"N/A" }}</td></tr>
+      </table>
+
+      <p>Please review the attached purchase order and confirm receipt at your earliest convenience.</p>
+
+      <a href="{{ po.pdf.url }}" class="button">View Purchase Order</a>
+    </div>
+    <div class="footer">
+      <p>Best regards,<br>
+      <strong>Procurement Department</strong><br>
+      {{ po.procurement_plan.school_name|default:"RICE West Nile" }}</p>
+    </div>
+  </div>
+</body>
+</html>

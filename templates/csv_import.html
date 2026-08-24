@@ -1,0 +1,67 @@
+{% extends active_base_template|default:'base.html' %}
+{% block title %}Import MEAL Data{% endblock %}
+{% block content %}
+<div class="page-shell">
+  <section class="page-hero p-4 mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+      <div>
+        <div class="page-kicker">Data Operations</div>
+        <h1 class="page-title h3 mb-1">Import MEAL Data</h1>
+        <p class="page-subtitle mb-0">Upload validated CSV entries into the monitoring database with a clean audit-ready workflow.</p>
+      </div>
+      <a href="{% url 'monitoring:download_csv_template' %}" class="btn btn-success align-self-lg-start">
+        <i class="fa fa-download me-1"></i> Download Template
+      </a>
+    </div>
+  </section>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="smart-card">
+        <div class="smart-card-header">
+          <h5 class="mb-0"><i class="fa fa-file-csv text-success me-2"></i>CSV Upload</h5>
+        </div>
+        <div class="smart-card-body">
+          <form method="post" enctype="multipart/form-data" class="row g-3">
+            {% csrf_token %}
+            <div class="col-12">
+              <label class="form-label" for="csv_file">CSV File</label>
+              <input class="form-control form-control-lg" id="csv_file" type="file" name="csv_file" accept=".csv" required>
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2">
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="fa fa-cloud-arrow-up me-1"></i> Upload Data
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="smart-card h-100">
+        <div class="smart-card-header">
+          <h5 class="mb-0"><i class="fa fa-list-check text-primary me-2"></i>Required Columns</h5>
+        </div>
+        <div class="smart-card-body">
+          <p class="text-muted mb-3">Use the template to keep headers, order, and optional fields consistent.</p>
+          <div class="small lh-lg">
+            <span class="badge text-bg-light border me-1 mb-1">indicator_code</span>
+            <span class="badge text-bg-light border me-1 mb-1">project_code</span>
+            <span class="badge text-bg-light border me-1 mb-1">district</span>
+            <span class="badge text-bg-light border me-1 mb-1">sub_county</span>
+            <span class="badge text-bg-light border me-1 mb-1">settlement</span>
+            <span class="badge text-bg-light border me-1 mb-1">year</span>
+            <span class="badge text-bg-light border me-1 mb-1">month</span>
+            <span class="badge text-bg-light border me-1 mb-1">sex</span>
+            <span class="badge text-bg-light border me-1 mb-1">status</span>
+            <span class="badge text-bg-light border me-1 mb-1">pwd</span>
+            <span class="badge text-bg-light border me-1 mb-1">enterprise_type</span>
+            <span class="badge text-bg-light border me-1 mb-1">value</span>
+            <span class="badge text-bg-light border me-1 mb-1">notes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

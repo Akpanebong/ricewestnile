@@ -1,0 +1,36 @@
+{% extends 'asset/base.html' %}
+{% block content %}
+
+<form class="row g-2 mb-3">
+  <div class="col-md-4">
+    <input type="date" name="start" class="form-control">
+  </div>
+  <div class="col-md-4">
+    <input type="date" name="end" class="form-control">
+  </div>
+  <div class="col-md-4">
+    <button class="btn btn-success">Filter</button>
+    <button name="export" value="1" class="btn btn-outline-success">
+        Export Excel
+    </button>
+  </div>
+</form>
+
+<table class="table table-bordered table-striped">
+<tr>
+    <th>Asset No</th>
+    <th>Category</th>
+    <th>Value</th>
+    <th>NBV</th>
+</tr>
+{% for a in assets %}
+<tr>
+    <td><a href="{% url 'asset:asset_detail' a.id a.slug %}">{{ a.asset_no }}</a></td>
+    <td>{{ a.category }}</td>
+    <td>{{ a.purchase_value }}</td>
+    <td>{{ a.net_book_value }}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}

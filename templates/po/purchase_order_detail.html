@@ -1,0 +1,173 @@
+{% extends "procurement/base.html" %}
+{% load custom_tags %}
+{% load humanize %}
+
+{% block title %}Purchase Order Detail{% endblock %}
+
+{% block content %}
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+    <!-- HEADER -->
+    <div class="card-header bg-dark text-white py-4 px-4 border-0">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+            <div>
+
+                <h3 class="fw-bold mb-1 text-white">
+                    <i class="fa fa-file-contract me-2"></i>
+                    Purchase Order
+                </h3>
+
+                <div class="small opacity-75">
+                    Enterprise Procurement Document
+                </div>
+
+            </div>
+
+            <div>
+
+                {% if po.sent %}
+
+                    <span class="badge rounded-pill bg-success px-3 py-2">
+                        <i class="fa fa-check-circle me-1"></i>
+                        Sent to Supplier
+                    </span>
+
+                {% else %}
+
+                    <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+                        <i class="fa fa-clock me-1"></i>
+                        Pending Dispatch
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- BODY -->
+    <div class="card-body p-4">
+
+        <!-- TOP SUMMARY -->
+        <div class="row g-4 mb-4">
+
+            <!-- PO NUMBER -->
+            <div class="col-md-4">
+
+                <div class="border rounded-4 p-3 h-100 bg-light">
+
+                    <div class="text-muted small text-uppercase mb-2">
+                        Purchase Order No
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-0">
+                        {{ po.po_number }}
+                    </h5>
+
+                </div>
+
+            </div>
+
+            <!-- SUPPLIER -->
+            <div class="col-md-4">
+
+                <div class="border rounded-4 p-3 h-100 bg-light">
+
+                    <div class="text-muted small text-uppercase mb-2">
+                        Awarded Supplier
+                    </div>
+
+                    <h5 class="fw-bold mb-0">
+                        {{ po.supplier }}
+                    </h5>
+
+                </div>
+
+            </div>
+
+            <!-- AMOUNT -->
+            <div class="col-md-4">
+
+                <div class="border rounded-4 p-3 h-100 bg-light">
+
+                    <div class="text-muted small text-uppercase mb-2">
+                        Approved Amount
+                    </div>
+
+                    <h5 class="fw-bold text-success mb-0">
+                        {{ po.final_amount|money:request }}
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+
+            <!-- DOWNLOAD PDF -->
+            <a href="{{ po.pdf.url }}"
+               target="_blank"
+               class="btn btn-primary rounded-pill px-4">
+
+                <i class="fa fa-download me-2"></i>
+                Download PO PDF
+
+            </a>
+
+            <!-- VIEW STATUS -->
+            {% if po.sent %}
+
+                <button class="btn btn-success rounded-pill px-4" disabled>
+
+                    <i class="fa fa-check-circle me-2"></i>
+                    Successfully Sent
+
+                </button>
+
+            {% else %}
+
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">
+
+                    <i class="fa fa-exclamation-circle me-1"></i>
+                    Awaiting Supplier Dispatch
+
+                </span>
+
+            {% endif %}
+
+            {% if po.sent %}
+                <a href="{% url 'finance:create_cash_req_from_procurement' po.requisition.pk %}"
+                   class="btn btn-outline-success rounded-pill px-4">
+                    <i class="fa fa-money-bill-wave me-2"></i>
+                    Request Finance Payment
+                </a>
+            {% endif %}
+
+            <!-- CANCEL BUTTON -->
+            {% if not po.sent %}
+
+                <a href="{% url 'po_cancel' po.slug %}"
+                   class="btn btn-outline-danger rounded-pill px-4">
+
+                    <i class="fa fa-times-circle me-2"></i>
+                    Cancel Purchase Order
+
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

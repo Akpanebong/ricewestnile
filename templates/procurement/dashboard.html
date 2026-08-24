@@ -1,0 +1,472 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+{% block title %}Dashboard - RICE West Nile Procurement{% endblock %}
+
+{% block extra_head %}
+<style>
+.procure-dashboard {
+  max-width: 1680px;
+  margin: 0 auto 2rem;
+}
+.dash-hero {
+  background: linear-gradient(135deg, #10261f 0%, #0a6b3a 58%, #f2b705 100%);
+  color: #fff;
+  border-radius: 8px;
+  padding: 1.4rem;
+  box-shadow: 0 18px 45px rgba(16, 38, 31, .18);
+}
+.dash-hero h1 {
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 0;
+}
+.dash-hero .hero-stat {
+  border-left: 1px solid rgba(255,255,255,.35);
+  padding-left: 1rem;
+}
+.elite-card {
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, .07);
+}
+.metric-card {
+  min-height: 148px;
+}
+.metric-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.metric-value {
+  font-size: 1.9rem;
+  line-height: 1;
+  font-weight: 800;
+  color: #17202a;
+}
+.metric-label,
+.section-eyebrow {
+  color: #667085;
+  font-size: .76rem;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.money-line {
+  color: #344054;
+  font-size: .9rem;
+  font-weight: 650;
+}
+.queue-row,
+.coverage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  padding: .72rem 0;
+  border-bottom: 1px solid #edf0f4;
+}
+.queue-row:last-child,
+.coverage-row:last-child {
+  border-bottom: 0;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  border-radius: 999px;
+  padding: .28rem .62rem;
+  font-size: .75rem;
+  font-weight: 700;
+  background: #f2f4f7;
+  color: #344054;
+}
+.mini-table th {
+  font-size: .72rem;
+  color: #667085;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+.mini-table td {
+  vertical-align: middle;
+}
+.chart-shell {
+  height: 270px;
+}
+.progress {
+  height: .55rem;
+  border-radius: 999px;
+}
+@media (max-width: 767px) {
+  .dash-hero .hero-stat {
+    border-left: 0;
+    padding-left: 0;
+    margin-top: 1rem;
+  }
+  .chart-shell {
+    height: 230px;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="procure-dashboard">
+  <div class="dash-hero mb-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-lg-7">
+        <div class="section-eyebrow text-white-50 mb-2">RICE West Nile</div>
+        <h1>Procurement Command Dashboard</h1>
+        <div class="mt-2 text-white-50">Plans, requisitions, RFQs, suppliers, purchase orders, budgets, finance requests, and control logs in one operating view.</div>
+      </div>
+      <div class="col-lg-5">
+        <div class="row g-3">
+          <div class="col-6 hero-stat">
+            <div class="text-white-50 small">Open Work</div>
+            <div class="fs-3 fw-bold">{{ pending_work.0.count|default:0|intcomma }}</div>
+          </div>
+          <div class="col-6 hero-stat">
+            <div class="text-white-50 small">Active Suppliers</div>
+            <div class="fs-3 fw-bold">{{ supplier_count|default:0|intcomma }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    {% for kpi in kpis %}
+    <div class="col-12 col-md-6 col-xl-4">
+      <a href="{{ kpi.url }}" class="text-decoration-none">
+        <div class="elite-card metric-card p-3 h-100">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="metric-label">{{ kpi.label }}</div>
+              <div class="metric-value mt-2">{{ kpi.value|default:0|intcomma }}</div>
+            </div>
+            <span class="metric-icon bg-{{ kpi.tone }} bg-opacity-10 text-{{ kpi.tone }}">
+              <i class="fa {{ kpi.icon }}"></i>
+            </span>
+          </div>
+          <div class="money-line mt-3">{{ kpi.amount|default:0|money:request }}</div>
+<!--          <div class="text-muted small mt-1">Total value represented in this module</div>-->
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-xl-8">
+      <div class="elite-card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <div class="section-eyebrow">Workflow Intelligence</div>
+            <h5 class="mb-0 fw-bold">Status Distribution</h5>
+          </div>
+          <a href="{% url 'requisition_list' %}" class="btn btn-sm btn-outline-success">Open Plans</a>
+        </div>
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="chart-shell">
+              <canvas id="procurementChart"></canvas>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="chart-shell">
+              <canvas id="rfqChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-4">
+      <div class="elite-card p-3 h-100">
+        <div class="section-eyebrow">Action Queue</div>
+        <h5 class="fw-bold mb-3">Pending Work</h5>
+        {% for item in pending_work %}
+        <a href="{{ item.url }}" class="queue-row text-decoration-none text-body">
+          <span class="d-flex align-items-center gap-2">
+            <span class="metric-icon bg-{{ item.tone }} bg-opacity-10 text-{{ item.tone }}">
+              <i class="fa {{ item.icon }}"></i>
+            </span>
+            <span>{{ item.label }}</span>
+          </span>
+          <span class="badge bg-{{ item.tone }}">{{ item.count|intcomma }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-xl-4">
+      <div class="elite-card p-3 h-100">
+        <div class="section-eyebrow">Status Ledger</div>
+        <h5 class="fw-bold mb-3">Approvals by Module</h5>
+        {% for section in status_sections %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong>{{ section.title }}</strong>
+            <span class="text-muted small">{{ section.rows|length }} statuses</span>
+          </div>
+          {% for row in section.rows %}
+          <div class="d-flex justify-content-between small py-1">
+            <span class="status-pill">{{ row.status|default:"Unspecified" }}</span>
+            <strong>{{ row.count|intcomma }}</strong>
+          </div>
+          {% empty %}
+          <div class="text-muted small">No records yet.</div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-xl-4">
+      <div class="elite-card p-3 h-100">
+        <div class="section-eyebrow">Budget Control</div>
+        <h5 class="fw-bold mb-3">Project Budget Utilization</h5>
+        {% for budget in budget_utilization %}
+        {% widthratio budget.amount_used budget.budget_amount 100 as used_percent %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between gap-2">
+            <strong class="text-truncate">{{ budget.project }}</strong>
+            <span class="small text-muted">{{ budget.fiscal_year }}</span>
+          </div>
+          <div class="small text-muted">{{ budget.get_period_display }} - {{ budget.amount_used|money:request }} used of {{ budget.budget_amount|money:request }}</div>
+          <div class="progress mt-2">
+            <div class="progress-bar bg-success" style="width: {{ used_percent|default:0 }}%"></div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-muted">No project budgets have been configured.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-xl-4">
+      <div class="elite-card p-3 h-100">
+        <div class="section-eyebrow">Supplier Performance</div>
+        <h5 class="fw-bold mb-3">Top Supplier Spend</h5>
+        {% for supplier in top_suppliers %}
+        <div class="coverage-row">
+          <div class="text-truncate">
+            <strong>{{ supplier.organisation_name|default:supplier.full_name|default:supplier.title }}</strong>
+            <div class="small text-muted">{{ supplier.email|default:"No email recorded" }}</div>
+          </div>
+          <span class="fw-bold text-nowrap">{{ supplier.total_spent|money:request }}</span>
+        </div>
+        {% empty %}
+        <div class="text-muted">No sent purchase orders have supplier spend yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-xl-7">
+      <div class="elite-card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <div class="section-eyebrow">Recent Activity</div>
+            <h5 class="fw-bold mb-0">Operational Timeline</h5>
+          </div>
+          <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-outline-secondary">Notifications</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table mini-table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Reference</th>
+                <th>Source</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in recent_activities %}
+              <tr>
+                <td>{{ a.type }}</td>
+                <td class="fw-semibold">{{ a.ref }}</td>
+                <td>{{ a.source }}</td>
+                <td>{{ a.date|date:"M d, Y" }}</td>
+                <td>
+                  {% if a.status == "Approved" or a.status == "approved" or a.status == "Sent" %}
+                    <span class="badge bg-success">{{ a.status }}</span>
+                  {% elif a.status == "Rejected" or a.status == "rejected" %}
+                    <span class="badge bg-danger">{{ a.status }}</span>
+                  {% elif a.status == "Pending" or a.status == "draft" or a.status == "submitted" %}
+                    <span class="badge bg-warning text-dark">{{ a.status }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ a.status }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-4">No recent activity recorded.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-5">
+      <div class="elite-card p-3 h-100">
+        <div class="section-eyebrow">Purchase Orders</div>
+        <h5 class="fw-bold mb-3">Latest LPO Movement</h5>
+        {% for order in recent_purchase_orders %}
+        <div class="coverage-row">
+          <div>
+            <strong>{{ order.po_number|default:order.pk }}</strong>
+            <div class="small text-muted">{{ order.supplier }} - {{ order.issue_date|date:"M d, Y" }}</div>
+          </div>
+          <div class="text-end">
+            <div class="fw-bold">{{ order.final_amount|default:0|money:request }}</div>
+            {% if order.sent %}
+            <span class="badge bg-success">Sent</span>
+            {% else %}
+            <span class="badge bg-secondary">Draft</span>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-muted">No purchase orders created yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-lg-6">
+      <div class="elite-card p-3 h-100">
+        <div class="section-eyebrow">Department Portfolio</div>
+        <h5 class="fw-bold mb-3">Procurement by Department</h5>
+        {% for dept in department_mix %}
+        <div class="coverage-row">
+          <div>
+            <strong>{{ dept.name }}</strong>
+            <div class="small text-muted">{{ dept.count|intcomma }} plan{{ dept.count|pluralize }}</div>
+          </div>
+          <span class="fw-bold">{{ dept.total|money:request }}</span>
+        </div>
+        {% empty %}
+        <div class="text-muted">Link procurement plans to projects and departments to populate this view.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="elite-card p-3 h-100">
+        <div class="section-eyebrow">Finance Linkage</div>
+        <h5 class="fw-bold mb-3">Funding and Accountability</h5>
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="p-3 bg-light rounded-2">
+              <div class="metric-label">Cash Requested</div>
+              <div class="fw-bold mt-2">{{ finance_summary.cash_requisition_total|money:request }}</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 bg-light rounded-2">
+              <div class="metric-label">Admin Expenses</div>
+              <div class="fw-bold mt-2">{{ finance_summary.admin_expense_total|money:request }}</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 bg-light rounded-2">
+              <div class="metric-label">Accounting Forms</div>
+              <div class="fw-bold mt-2">{{ finance_summary.accounting_count|intcomma }}</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 bg-light rounded-2">
+              <div class="metric-label">Approved Cash Reqs</div>
+              <div class="fw-bold mt-2">{{ finance_summary.approved_cash_requisitions|intcomma }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <a href="{% url 'finance:dashboard' %}" class="btn btn-sm btn-outline-primary">Open Finance Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="elite-card p-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <div class="section-eyebrow">Model Coverage</div>
+        <h5 class="fw-bold mb-0">System Data Footprint</h5>
+      </div>
+      <span class="text-muted small">Procurement, finance, accounts, controls, and core rates</span>
+    </div>
+    <div class="row g-3">
+      {% for section in model_coverage %}
+      <div class="col-lg-4">
+        <div class="border rounded-2 p-3 h-100">
+          <h6 class="fw-bold">{{ section.group }}</h6>
+          {% for model in section.items %}
+          <a href="{{ model.url }}" class="coverage-row text-decoration-none text-body">
+            <span>{{ model.name }}</span>
+            <strong>{{ model.count|default:0|intcomma }}</strong>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{{ chart_labels|json_script:"procurement-status-labels" }}
+{{ chart_values|json_script:"procurement-status-values" }}
+{{ rfq_chart_labels|json_script:"rfq-status-labels" }}
+{{ rfq_chart_values|json_script:"rfq-status-values" }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const palette = ['#0a6b3a', '#f2b705', '#0d6efd', '#dc3545', '#6f42c1', '#20c997'];
+  const procurementLabels = JSON.parse(document.getElementById('procurement-status-labels').textContent);
+  const procurementValues = JSON.parse(document.getElementById('procurement-status-values').textContent);
+  const rfqLabels = JSON.parse(document.getElementById('rfq-status-labels').textContent);
+  const rfqValues = JSON.parse(document.getElementById('rfq-status-values').textContent);
+
+  const buildChart = function (id, type, labels, values, title) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: type,
+      data: {
+        labels: labels.length ? labels : ['No data'],
+        datasets: [{
+          label: title,
+          data: values.length ? values : [0],
+          backgroundColor: palette,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: { display: true, text: title }
+        },
+        scales: type === 'bar' ? { y: { beginAtZero: true, ticks: { precision: 0 } } } : {}
+      }
+    });
+  };
+
+  buildChart('procurementChart', 'doughnut', procurementLabels, procurementValues, 'Procurement Plan Status');
+  buildChart('rfqChart', 'bar', rfqLabels, rfqValues, 'RFQ Status');
+});
+</script>
+{% endblock %}

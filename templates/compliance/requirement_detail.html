@@ -1,0 +1,273 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+<!-- ================= HEADER ================= -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center">
+
+        <div>
+            <h3 class="mb-1">{{ req.title }}</h3>
+            <p class="text-muted mb-0">
+                Framework: {{ req.framework.name }}
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{% url 'task_create' req.id %}" class="btn btn-success btn-sm">
+                + Task
+            </a>
+
+            <a href="{% url 'assessment_create' req.id %}" class="btn btn-outline-success btn-sm">
+                + Assessment
+            </a>
+
+            <a href="{% url 'requirement_delete' req.id %}" class="btn btn-outline-danger btn-sm">
+                <i class="fa fa-trash"></i>
+            </a>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ================= KPI CARDS ================= -->
+<div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Total Tasks</h6>
+                <h4>{{ tasks|length }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Completed</h6>
+                <h4>
+                    {{ completed_tasks}}
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Documents</h6>
+                <h4>{{ documents|length }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Assessments</h6>
+                <h4>{{ assessments|length }}</h4>
+            </div>
+        </div>
+    </div>
+
+    {% if latest_assessment %}
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center">
+
+        <div>
+            <h6 class="text-muted">Latest Assessment</h6>
+            <h4>{{ latest_assessment.score }}%</h4>
+        </div>
+
+        <div>
+            {% with rating=latest_assessment.get_rating_display %}
+                <span class="badge bg-{{ rating.1 }} fs-6">
+                    {{ rating.0 }}
+                </span>
+            {% endwith %}
+        </div>
+
+    </div>
+</div>
+{% endif %}
+
+</div>
+
+
+<!-- ================= MAIN GRID ================= -->
+<div class="row g-4">
+
+<!-- ===== LEFT SIDE ===== -->
+<div class="col-lg-8">
+
+    <!-- DESCRIPTION -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <strong>Description</strong>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">{{ req.description }}</p>
+        </div>
+    </div>
+
+
+    <!-- TASKS -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between">
+            <strong>Tasks</strong>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Responsible</th>
+                        <th>Status</th>
+                        <th>Due</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for t in tasks %}
+                    <tr>
+                        <td>{{ t.responsible }}</td>
+
+                        <td>
+                            {% if t.status == "overdue" %}
+                                <span class="badge bg-danger">Overdue</span>
+                            {% elif t.status == "in_progress" %}
+                                <span class="badge bg-info">In Progress</span>
+                             {% elif t.status == "pending" %}
+                                <span class="badge bg-primary">Pending</span>
+                            {% elif t.status == "warning" %}
+                                <span class="badge bg-warning text-dark">Upcoming</span>
+                            {% elif t.status == "completed" %}
+                                <span class="badge bg-success text-dark">Completed</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{t.status}}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ t.due_date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">
+                            No tasks available
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+
+    <!-- ASSESSMENTS -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Assessments</strong>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Score</th>
+                        <th>Gap</th>
+                        <th>Recommendation</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for a in assessments %}
+                    <tr>
+                        <td><strong>{{ a.score }}</strong></td>
+                        <td>{{ a.gap }}</td>
+                        <td>{{ a.recommendation }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">
+                            No assessments available
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ===== RIGHT SIDE ===== -->
+<div class="col-lg-4">
+
+    <!-- METADATA -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <strong>Metadata</strong>
+        </div>
+
+        <div class="card-body">
+            <p><strong>Code:</strong><br>{{ req.code }}</p>
+            <p><strong>Level:</strong><br>{{ req.get_level_display }}</p>
+            <p><strong>Owner:</strong><br>{{ req.owner|default:"—" }}</p>
+            <p><strong>Frequency:</strong><br>{{ req.frequency }}</p>
+        </div>
+    </div>
+
+
+    <!-- DOCUMENTS -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Documents</strong>
+        </div>
+
+        <div class="list-group list-group-flush">
+
+            {% for d in documents %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+
+                <a href="{{ d.file.url }}" target="_blank">
+                    View File
+                </a>
+                {% if not d.is_verified %}
+                <a style="text-decoration:none" href="{% url 'verify_document' d.id %}" class="badge bg-success">
+                    Verify
+                </a>
+                {% else %}
+                <a href="{% url 'compliance_doc_delete' d.id %}" class="badge bg-danger">
+                    <i class="fa fa-trash"></i>
+                </a>
+                {% endif %}
+
+                {% if d.is_verified %}
+                    <span class="badge bg-success">Verified</span>
+                {% else %}
+                    <span class="badge bg-danger">Unverified</span>
+                {% endif %}
+
+            </div>
+            {% empty %}
+            <div class="p-3 text-muted text-center">
+                No documents uploaded
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

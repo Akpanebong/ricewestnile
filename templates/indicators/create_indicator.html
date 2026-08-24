@@ -1,0 +1,1474 @@
+{% extends active_base_template|default:'base.html' %}
+
+{% block title %}
+{% if is_update %}Update{% else %}Create{% endif %} Indicator |
+{{ output.code }} - {{ output.title }}
+{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       INDICATOR FORM
+       Enterprise M&E Interface
+       ========================================================= */
+
+    .indicator-form-page {
+        --if-primary: #198754;
+        --if-primary-dark: #146c43;
+        --if-primary-soft: #eaf7f0;
+        --if-border: #e1e7e3;
+        --if-text: #1f2937;
+        --if-muted: #6b7280;
+    }
+
+    /* =========================================================
+       BREADCRUMB
+       ========================================================= */
+
+    .if-breadcrumb {
+        background: #fff;
+        border: 1px solid var(--if-border);
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-bottom: 18px;
+    }
+
+    .if-breadcrumb a {
+        color: var(--if-primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .if-breadcrumb a:hover {
+        color: var(--if-primary-dark);
+    }
+
+    /* =========================================================
+       PAGE HEADER
+       ========================================================= */
+
+    .if-header {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f4faf7 100%
+        );
+        border: 1px solid var(--if-border);
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, .035);
+    }
+
+    .if-header-icon {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--if-primary-soft);
+        color: var(--if-primary);
+        font-size: 21px;
+    }
+
+    .if-title {
+        color: #172b21;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .if-subtitle {
+        color: var(--if-muted);
+        font-size: .8rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .if-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 11px;
+        background: var(--if-primary-soft);
+        color: var(--if-primary-dark);
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 650;
+    }
+
+    .if-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--if-primary);
+    }
+
+    /* =========================================================
+       OUTPUT CONTEXT
+       ========================================================= */
+
+    .if-context {
+        background: #fff;
+        border: 1px solid var(--if-border);
+        border-left: 4px solid var(--if-primary);
+        border-radius: 12px;
+        padding: 15px 17px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, .025);
+    }
+
+    .if-context-label {
+        color: #8a958f;
+        font-size: .67rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: 5px;
+    }
+
+    .if-context-code {
+        display: inline-flex;
+        padding: 4px 8px;
+        background: var(--if-primary-soft);
+        color: var(--if-primary-dark);
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: .69rem;
+        font-weight: 700;
+        margin-right: 7px;
+    }
+
+    .if-context-title {
+        color: #27362f;
+        font-size: .84rem;
+        font-weight: 650;
+    }
+
+    .if-context-meta {
+        color: #7b857f;
+        font-size: .72rem;
+        margin-top: 5px;
+    }
+
+    /* =========================================================
+       CARDS
+       ========================================================= */
+
+    .if-card {
+        background: #fff;
+        border: 1px solid var(--if-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .04);
+    }
+
+    .if-card-header {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--if-border);
+    }
+
+    .if-card-header h5 {
+        color: #28372f;
+        font-size: .98rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .if-card-header p {
+        color: var(--if-muted);
+        font-size: .75rem;
+        margin: 0;
+    }
+
+    .if-card-body {
+        padding: 24px;
+    }
+
+    /* =========================================================
+       FORM SECTIONS
+       ========================================================= */
+
+    .if-section {
+        margin-bottom: 25px;
+    }
+
+    .if-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .if-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: #34443c;
+        font-size: .82rem;
+        font-weight: 700;
+        margin-bottom: 17px;
+    }
+
+    .if-section-icon {
+        width: 27px;
+        height: 27px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 7px;
+        background: var(--if-primary-soft);
+        color: var(--if-primary);
+        font-size: .7rem;
+    }
+
+    /* =========================================================
+       FORM FIELDS
+       ========================================================= */
+
+    .if-field {
+        margin-bottom: 19px;
+    }
+
+    .if-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #374151;
+        font-size: .81rem;
+        font-weight: 650;
+        margin-bottom: 7px;
+    }
+
+    .if-required {
+        color: #dc3545;
+        font-weight: 700;
+    }
+
+    .if-field input,
+    .if-field textarea,
+    .if-field select {
+        width: 100%;
+        border: 1px solid #d9e0dc;
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: var(--if-text);
+        background: #fff;
+        font-size: .84rem;
+        transition: all .18s ease;
+    }
+
+    .if-field input {
+        min-height: 44px;
+    }
+
+    .if-field textarea {
+        min-height: 145px;
+        resize: vertical;
+    }
+
+    .if-field input:focus,
+    .if-field textarea:focus,
+    .if-field select:focus {
+        outline: none;
+        border-color: #83c5a1;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    .if-field input::placeholder,
+    .if-field textarea::placeholder {
+        color: #adb5bd;
+    }
+
+    .if-help {
+        display: flex;
+        gap: 6px;
+        color: #7b857f;
+        font-size: .71rem;
+        line-height: 1.45;
+        margin-top: 7px;
+    }
+
+    .if-help i {
+        color: #96a19b;
+        margin-top: 2px;
+    }
+
+    .if-error {
+        color: #dc3545;
+        font-size: .73rem;
+        font-weight: 500;
+        margin-top: 6px;
+    }
+
+    .if-error ul {
+        padding-left: 17px;
+        margin: 0;
+    }
+
+    /* =========================================================
+       DESCRIPTION COUNTER
+       ========================================================= */
+
+    .if-description-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .if-counter {
+        color: #909a95;
+        font-size: .69rem;
+        white-space: nowrap;
+        margin-top: 8px;
+    }
+
+    /* =========================================================
+       ACTION BAR
+       ========================================================= */
+
+    .if-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 15px 22px;
+        background: #fafcfb;
+        border-top: 1px solid var(--if-border);
+    }
+
+    .if-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        min-height: 40px;
+        border-radius: 9px;
+        padding: 8px 17px;
+        font-size: .8rem;
+        font-weight: 600;
+        transition: all .18s ease;
+    }
+
+    .if-btn-cancel {
+        color: #5c6660;
+        background: #fff;
+        border: 1px solid #d7ddd9;
+        text-decoration: none;
+    }
+
+    .if-btn-cancel:hover {
+        color: #34423a;
+        background: #f3f5f4;
+    }
+
+    .if-btn-submit {
+        color: #fff;
+        background: var(--if-primary);
+        border: 1px solid var(--if-primary);
+    }
+
+    .if-btn-submit:hover {
+        color: #fff;
+        background: var(--if-primary-dark);
+        border-color: var(--if-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       SIDEBAR
+       ========================================================= */
+
+    .if-sidebar {
+        background: #fff;
+        border: 1px solid var(--if-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .035);
+    }
+
+    .if-sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 17px 19px;
+        border-bottom: 1px solid var(--if-border);
+    }
+
+    .if-sidebar-icon {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--if-primary-soft);
+        color: var(--if-primary);
+        border-radius: 9px;
+        font-size: 14px;
+    }
+
+    .if-sidebar-header h6 {
+        color: #28372f;
+        font-size: .85rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .if-sidebar-body {
+        padding: 18px 19px;
+    }
+
+    /* =========================================================
+       DEFINITION GUIDANCE
+       ========================================================= */
+
+    .if-definition-box {
+        background: #f7faf8;
+        border: 1px solid #e3ebe6;
+        border-radius: 10px;
+        padding: 13px;
+        margin-bottom: 18px;
+    }
+
+    .if-definition-title {
+        color: #34443c;
+        font-size: .74rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .if-definition-text {
+        color: #737e78;
+        font-size: .71rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* =========================================================
+       TIPS
+       ========================================================= */
+
+    .if-tip {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .if-tip:last-child {
+        margin-bottom: 0;
+    }
+
+    .if-tip-icon {
+        width: 25px;
+        height: 25px;
+        min-width: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--if-primary-soft);
+        color: var(--if-primary);
+        border-radius: 7px;
+        font-size: 10px;
+    }
+
+    .if-tip p {
+        color: #6d7772;
+        font-size: .73rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* =========================================================
+       HIERARCHY BOX
+       ========================================================= */
+
+    .if-hierarchy {
+        margin-top: 18px;
+        padding: 13px;
+        background: #fff;
+        border: 1px solid #e4e9e6;
+        border-radius: 10px;
+    }
+
+    .if-hierarchy-title {
+        color: #34443c;
+        font-size: .72rem;
+        font-weight: 700;
+        margin-bottom: 9px;
+    }
+
+    .if-hierarchy-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #68736d;
+        font-size: .69rem;
+        padding: 5px 0;
+    }
+
+    .if-hierarchy-item i {
+        color: var(--if-primary);
+        width: 15px;
+        text-align: center;
+    }
+
+    .if-hierarchy-item.active {
+        color: var(--if-primary-dark);
+        font-weight: 700;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 991.98px) {
+
+        .if-sidebar-wrapper {
+            margin-top: 20px;
+        }
+
+    }
+
+    @media (max-width: 767.98px) {
+
+        .if-breadcrumb {
+            padding: 9px 12px;
+            margin-bottom: 14px;
+        }
+
+        .if-header {
+            padding: 17px;
+            border-radius: 13px;
+        }
+
+        .if-header-icon {
+            width: 44px;
+            min-width: 44px;
+            height: 44px;
+            border-radius: 10px;
+        }
+
+        .if-title {
+            font-size: 1.08rem;
+        }
+
+        .if-subtitle {
+            font-size: .75rem;
+        }
+
+        .if-status {
+            margin-top: 13px;
+        }
+
+        .if-context {
+            padding: 13px;
+        }
+
+        .if-card,
+        .if-sidebar {
+            border-radius: 13px;
+        }
+
+        .if-card-header {
+            padding: 15px 16px;
+        }
+
+        .if-card-body {
+            padding: 18px 16px;
+        }
+
+        .if-actions {
+            padding: 13px 16px;
+        }
+
+        .if-btn {
+            flex: 1;
+            text-align: center;
+        }
+
+    }
+
+    @media (max-width: 400px) {
+
+        .if-actions {
+            flex-direction: column-reverse;
+        }
+
+        .if-btn {
+            width: 100%;
+        }
+
+        .if-description-meta {
+            flex-direction: column;
+        }
+
+        .if-counter {
+            margin-top: 0;
+        }
+
+    }
+</style>
+
+<div class="container-fluid indicator-form-page">
+
+
+<!-- =====================================================
+     BREADCRUMB
+====================================================== -->
+
+<div class="if-breadcrumb">
+
+    <ul class="list-inline mb-0 small">
+
+        <li class="list-inline-item">
+
+            <a href="{% url 'monitoring:dashboard' %}">
+                <i class="fa fa-home me-1"></i>
+                Dashboard
+            </a>
+
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item">
+
+            <a href="{% url 'monitoring:so_detail' output.so.pk output.so.title %}">
+                {{ output.so.code }}
+            </a>
+
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item">
+
+            <a href="{% url 'monitoring:so_detail' output.so.pk output.so.title %}">
+                {{ output.code }}
+            </a>
+
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item text-muted">
+            {% if is_update %}
+                Update Indicator
+            {% else %}
+                New Indicator
+            {% endif %}
+        </li>
+
+    </ul>
+
+</div>
+
+
+<!-- =====================================================
+     PAGE HEADER
+====================================================== -->
+
+<div class="if-header">
+
+    <div class="d-flex flex-column
+                flex-md-row
+                align-items-start
+                align-items-md-center
+                justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <div class="if-header-icon me-3">
+
+                <i class="fa fa-line-chart"></i>
+
+            </div>
+
+            <div>
+
+                <h1 class="if-title">
+
+                    {% if is_update %}
+                        Update Performance Indicator
+                    {% else %}
+                        Create Performance Indicator
+                    {% endif %}
+
+                </h1>
+
+                <p class="if-subtitle">
+
+                    {% if is_update %}
+
+                        Maintain a clear, measurable indicator
+                        for monitoring this strategic output.
+
+                    {% else %}
+
+                        Define a measurable indicator that will
+                        demonstrate progress against this output.
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="if-status">
+
+            <span class="if-status-dot"></span>
+
+            M&E Framework
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     OUTPUT CONTEXT
+====================================================== -->
+
+<div class="if-context">
+
+    <div class="row align-items-center">
+
+        <div class="col">
+
+            <div class="if-context-label">
+                Parent Output
+            </div>
+
+            <div>
+
+                <span class="if-context-code">
+                    {{ output.code }}
+                </span>
+
+                <span class="if-context-title">
+                    {{ output.title }}
+                </span>
+
+            </div>
+
+            <div class="if-context-meta">
+
+                <i class="fa fa-bullseye me-1"></i>
+
+                Strategic Objective:
+                <strong>
+                    {{ output.so.code }}
+                </strong>
+                —
+                {{ output.so.title }}
+
+            </div>
+
+        </div>
+
+
+        <div class="col-auto d-none d-md-block">
+
+            <i class="fa fa-sitemap text-success fs-5"></i>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     MAIN CONTENT
+====================================================== -->
+
+<div class="row g-4">
+
+    <!-- =================================================
+         FORM
+    ================================================== -->
+
+    <div class="col-lg-8">
+
+        <div class="if-card">
+
+            <!-- Header -->
+
+            <div class="if-card-header">
+
+                <h5>
+                    Indicator Definition
+                </h5>
+
+                <p>
+                    Provide the information required to
+                    consistently measure this output.
+                </p>
+
+            </div>
+
+
+            <!-- Body -->
+
+            <form method="post"
+                  enctype="multipart/form-data"
+                  novalidate>
+
+                {% csrf_token %}
+
+                <div class="if-card-body">
+
+                    <!-- =====================================
+                         NON-FIELD ERRORS
+                    ====================================== -->
+
+                    {% if form.non_field_errors %}
+
+                        <div class="alert alert-danger">
+
+                            <div class="d-flex gap-2">
+
+                                <i class="fa fa-exclamation-circle mt-1"></i>
+
+                                <div>
+                                    {{ form.non_field_errors }}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- =====================================
+                         IDENTIFICATION
+                    ====================================== -->
+
+                    <div class="if-section">
+
+                        <div class="if-section-heading">
+
+                            <span class="if-section-icon">
+                                <i class="fa fa-tag"></i>
+                            </span>
+
+                            Indicator Identification
+
+                        </div>
+
+
+                        <div class="row g-3">
+
+                            <!-- Code -->
+
+                            <div class="col-md-5">
+
+                                <div class="if-field">
+
+                                    <label
+                                        for="{{ form.code.id_for_label }}"
+                                        class="if-label">
+
+                                        Indicator Code
+
+                                        {% if form.code.field.required %}
+                                            <span class="if-required">*</span>
+                                        {% endif %}
+
+                                    </label>
+
+                                    {{ form.code }}
+
+                                    {% if form.code.errors %}
+
+                                        <div class="if-error">
+                                            {{ form.code.errors }}
+                                        </div>
+
+                                    {% endif %}
+
+                                    <div class="if-help">
+
+                                        <i class="fa fa-info-circle"></i>
+
+                                        <span>
+                                            Use a unique code such as
+                                            1.1.1 or IND-01.
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Unit -->
+
+                            <div class="col-md-7">
+
+                                <div class="if-field">
+
+                                    <label
+                                        for="{{ form.unit_of_measure.id_for_label }}"
+                                        class="if-label">
+
+                                        Unit of Measure
+
+                                        {% if form.unit_of_measure.field.required %}
+                                            <span class="if-required">*</span>
+                                        {% endif %}
+
+                                    </label>
+
+                                    {{ form.unit_of_measure }}
+
+                                    {% if form.unit_of_measure.errors %}
+
+                                        <div class="if-error">
+                                            {{ form.unit_of_measure.errors }}
+                                        </div>
+
+                                    {% endif %}
+
+                                    <div class="if-help">
+
+                                        <i class="fa fa-balance-scale"></i>
+
+                                        <span>
+                                            Specify how the indicator
+                                            will be quantified, e.g.
+                                            percentage, number, households.
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         INDICATOR NAME
+                    ====================================== -->
+
+                    <div class="if-section">
+
+                        <div class="if-section-heading">
+
+                            <span class="if-section-icon">
+                                <i class="fa fa-pencil"></i>
+                            </span>
+
+                            Indicator Statement
+
+                        </div>
+
+
+                        <div class="if-field">
+
+                            <label
+                                for="{{ form.name.id_for_label }}"
+                                class="if-label">
+
+                                Indicator Name
+
+                                {% if form.name.field.required %}
+                                    <span class="if-required">*</span>
+                                {% endif %}
+
+                            </label>
+
+                            {{ form.name }}
+
+                            {% if form.name.errors %}
+
+                                <div class="if-error">
+                                    {{ form.name.errors }}
+                                </div>
+
+                            {% endif %}
+
+                            <div class="if-help">
+
+                                <i class="fa fa-lightbulb-o"></i>
+
+                                <span>
+                                    Write the indicator as a clear,
+                                    measurable statement. Avoid vague
+                                    terms such as "improved" or "better"
+                                    without a measurable dimension.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         DESCRIPTION
+                    ====================================== -->
+
+                    <div class="if-section">
+
+                        <div class="if-section-heading">
+
+                            <span class="if-section-icon">
+                                <i class="fa fa-align-left"></i>
+                            </span>
+
+                            Definition & Description
+
+                        </div>
+
+
+                        <div class="if-field mb-0">
+
+                            <label
+                                for="{{ form.description.id_for_label }}"
+                                class="if-label">
+
+                                Indicator Description
+
+                                {% if form.description.field.required %}
+                                    <span class="if-required">*</span>
+                                {% endif %}
+
+                            </label>
+
+                            {{ form.description }}
+
+                            {% if form.description.errors %}
+
+                                <div class="if-error">
+                                    {{ form.description.errors }}
+                                </div>
+
+                            {% endif %}
+
+                            <div class="if-description-meta">
+
+                                <div class="if-help">
+
+                                    <i class="fa fa-info-circle"></i>
+
+                                    <span>
+                                        Explain what the indicator
+                                        measures, its scope, and how
+                                        it should be interpreted.
+                                    </span>
+
+                                </div>
+
+                                <span id="descriptionCounter"
+                                      class="if-counter">
+
+                                    0 characters
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================================
+                     ACTIONS
+                ========================================== -->
+
+                <div class="if-actions">
+
+                    <a href="javascript:history.back()"
+                       class="if-btn if-btn-cancel">
+
+                        <i class="fa fa-arrow-left"></i>
+
+                        Cancel
+
+                    </a>
+
+
+                    <button type="submit"
+                            class="if-btn if-btn-submit">
+
+                        {% if is_update %}
+
+                            <i class="fa fa-save"></i>
+                            Update Indicator
+
+                        {% else %}
+
+                            <i class="fa fa-plus"></i>
+                            Create Indicator
+
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SIDEBAR
+    ================================================== -->
+
+    <div class="col-lg-4 if-sidebar-wrapper">
+
+        <div class="if-sidebar">
+
+            <div class="if-sidebar-header">
+
+                <div class="if-sidebar-icon">
+                    <i class="fa fa-lightbulb-o"></i>
+                </div>
+
+                <h6>
+                    Indicator Guidance
+                </h6>
+
+            </div>
+
+
+            <div class="if-sidebar-body">
+
+                <!-- Definition -->
+
+                <div class="if-definition-box">
+
+                    <div class="if-definition-title">
+
+                        <i class="fa fa-book me-1"></i>
+
+                        What makes a good indicator?
+
+                    </div>
+
+                    <p class="if-definition-text">
+
+                        A good indicator provides reliable evidence
+                        that can be used to measure change, progress,
+                        performance, or achievement of an expected
+                        result.
+
+                    </p>
+
+                </div>
+
+
+                <!-- Tips -->
+
+                <div class="if-tip">
+
+                    <div class="if-tip-icon">
+                        <i class="fa fa-check"></i>
+                    </div>
+
+                    <p>
+                        Use standardized and consistent terminology
+                        across the M&E framework.
+                    </p>
+
+                </div>
+
+
+                <div class="if-tip">
+
+                    <div class="if-tip-icon">
+                        <i class="fa fa-balance-scale"></i>
+                    </div>
+
+                    <p>
+                        Select a unit of measure that can be
+                        consistently collected and reported.
+                    </p>
+
+                </div>
+
+
+                <div class="if-tip">
+
+                    <div class="if-tip-icon">
+                        <i class="fa fa-crosshairs"></i>
+                    </div>
+
+                    <p>
+                        Make the indicator specific enough to
+                        distinguish success from failure.
+                    </p>
+
+                </div>
+
+
+                <div class="if-tip">
+
+                    <div class="if-tip-icon">
+                        <i class="fa fa-database"></i>
+                    </div>
+
+                    <p>
+                        Ensure the required data can realistically
+                        be collected and verified.
+                    </p>
+
+                </div>
+
+
+                <div class="if-tip">
+
+                    <div class="if-tip-icon">
+                        <i class="fa fa-link"></i>
+                    </div>
+
+                    <p>
+                        Maintain a direct relationship with the
+                        parent output.
+                    </p>
+
+                </div>
+
+
+                <!-- Hierarchy -->
+
+                <div class="if-hierarchy">
+
+                    <div class="if-hierarchy-title">
+
+                        <i class="fa fa-sitemap me-1"></i>
+
+                        Results Framework
+
+                    </div>
+
+
+                    <div class="if-hierarchy-item">
+
+                        <i class="fa fa-bullseye"></i>
+
+                        Strategic Objective
+
+                    </div>
+
+
+                    <div class="if-hierarchy-item">
+
+                        <i class="fa fa-sitemap"></i>
+
+                        Strategic Output
+
+                    </div>
+
+
+                    <div class="if-hierarchy-item active">
+
+                        <i class="fa fa-line-chart"></i>
+
+                        Performance Indicator
+
+                    </div>
+
+
+                    <div class="if-hierarchy-item">
+
+                        <i class="fa fa-database"></i>
+
+                        Indicator Data
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Security Note -->
+
+        <div class="d-flex gap-2 text-muted mt-3 px-2">
+
+            <i class="fa fa-shield mt-1"></i>
+
+            <small>
+                Indicator definitions form part of the
+                organization's official M&E results framework.
+            </small>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* =========================================================
+       DESCRIPTION CHARACTER COUNTER
+    ========================================================= */
+
+    const description =
+        document.getElementById(
+            "{{ form.description.id_for_label }}"
+        );
+
+    const counter =
+        document.getElementById(
+            "descriptionCounter"
+        );
+
+
+    function updateCounter() {
+
+        if (!description || !counter) {
+            return;
+        }
+
+        const length =
+            description.value.length;
+
+
+        counter.textContent =
+            length +
+            (length === 1
+                ? " character"
+                : " characters");
+
+    }
+
+
+    if (description) {
+
+        updateCounter();
+
+        description.addEventListener(
+            "input",
+            updateCounter
+        );
+
+    }
+
+
+    /* =========================================================
+       STANDARDIZE FORM CONTROL CLASSES
+    ========================================================= */
+
+    const fields =
+        document.querySelectorAll(
+            ".if-field input, .if-field textarea, .if-field select"
+        );
+
+
+    fields.forEach(function (field) {
+
+        if (
+            !field.classList.contains("form-control") &&
+            !field.classList.contains("form-select")
+        ) {
+
+            if (field.tagName === "SELECT") {
+
+                field.classList.add(
+                    "form-select"
+                );
+
+            } else {
+
+                field.classList.add(
+                    "form-control"
+                );
+
+            }
+
+        }
+
+    });
+
+
+    /* =========================================================
+       DOUBLE-SUBMISSION PROTECTION
+    ========================================================= */
+
+    const form =
+        document.querySelector(
+            ".if-card form"
+        );
+
+
+    if (form) {
+
+        form.addEventListener(
+            "submit",
+            function () {
+
+                const button =
+                    form.querySelector(
+                        "button[type='submit']"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                button.disabled = true;
+
+
+                {% if is_update %}
+
+                    button.innerHTML =
+                        '<i class="fa fa-spinner fa-spin"></i> Updating...';
+
+                {% else %}
+
+                    button.innerHTML =
+                        '<i class="fa fa-spinner fa-spin"></i> Creating...';
+
+                {% endif %}
+
+            }
+        );
+
+    }
+
+});
+</script>
+
+{% endblock %}

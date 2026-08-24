@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #000;
+    padding: 6px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.badge-high {
+    color: red;
+    font-weight: bold;
+}
+
+.badge-substantial {
+    color: orange;
+    font-weight: bold;
+}
+
+.badge-moderate {
+    color: blue;
+}
+
+.badge-low {
+    color: green;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>Risk Register Report</h2>
+
+<table>
+<tr>
+    <th>#</th>
+    <th>Risk Event</th>
+    <th>Likelihood</th>
+    <th>Impact</th>
+    <th>Risk Score</th>
+    <th>Risk Level</th>
+    <th>Owner</th>
+    <th>Unit</th>
+    <th>Feature Flags</th>
+</tr>
+
+{% for r in risks %}
+<tr>
+    <td>{{ forloop.counter }}</td>
+    <td>{{ r.event }}</td>
+    <td>{{ r.likelihood }}</td>
+    <td>{{ r.impact }}</td>
+    <td>{{ r.risk_score }}</td>
+
+    <td>
+        {% if r.risk_level == "HIGH" %}
+            <span class="badge-high">{{ r.risk_level }}</span>
+        {% elif r.risk_level == "SUBSTANTIAL" %}
+            <span class="badge-substantial">{{ r.risk_level }}</span>
+        {% elif r.risk_level == "MODERATE" %}
+            <span class="badge-moderate">{{ r.risk_level }}</span>
+        {% else %}
+            <span class="badge-low">{{ r.risk_level }}</span>
+        {% endif %}
+    </td>
+
+    <td>{{ r.risk_owner }}</td>
+    <td>{{ r.business_unit|default:"-" }}</td>
+    <td>
+        {% if r.is_fraud_related %}Fraud {% endif %}
+        {% if r.esg_area %}ESG: {{ r.esg_area }} {% endif %}
+        {% if r.continuity_dependency %}BCP{% endif %}
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>

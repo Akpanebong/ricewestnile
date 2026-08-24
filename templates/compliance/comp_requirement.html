@@ -1,0 +1,33 @@
+<!-- register.html -->
+
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+<h4>Compliance Requirement Register</h4>
+<table class="table table-bordered">
+<tr>
+<th>Framework</th>
+<th>Requirement</th>
+<th>Level</th>
+<th>Actions</th>
+</tr>
+
+{% for r in requirements %}
+<tr>
+<td>{{ r.framework.name }}</td>
+<td>{{ r.title }}</td>
+<td>{{ r.level }}</td>
+<td>
+<a href="{% url 'compliance_detail' r.id %}" class="btn btn-sm btn-dark">View</a>
+    <a class="btn btn-sm btn-danger" href="{% url 'requirement_delete' r.id %}"> <i class="fa fa-trash"></i> </a>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

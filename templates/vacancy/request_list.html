@@ -1,0 +1,167 @@
+{% extends "hr/base.html" %}
+{% load group_tags %}
+{% block title %}Recruitment Requests{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    {% with page_title="Recruitment Requests" page_subtitle="Job requisitions awaiting review and approval" breadcrumb="Recruitment Requests" %} {% include "breadcrumb.html" %} {% endwith %}
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0 fw-bold">
+                <i class="fa fa-briefcase text-success"></i> Recruitment Requests
+            </h3>
+            <small class="text-muted">
+                View, review, and approve job requisitions
+            </small>
+        </div>
+
+        {% if request.user.is_superuser %}
+            <a href="{% url 'vacancy:recruitment_request_create' %}"
+               class="btn btn-success btn-sm px-3">
+                <i class="fa fa-plus"></i> New Recruitment Request
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Recruitment Cards -->
+    <div class="row g-4">
+
+        {% for req in req_list %}
+        <div class="col-xl-4 col-lg-4 col-md-6">
+            <div class="card req-card h-100 border-0 shadow-sm">
+
+                <!-- Status Badge -->
+                <div class="req-status">
+                    <span class="badge
+                        {% if req.status == 'EDApproved' %} bg-success
+                        {% elif req.status == 'Pending' %} bg-warning
+                        {% elif req.status == 'Rejected' %} bg-danger
+                        {% elif req.status == 'HRReviewed' %} bg-primary
+                        {% elif req.status == 'Published' %} bg-info
+                        {% else %} bg-secondary {% endif %}">
+                        {{ req.status }}
+                    </span>
+                </div>
+
+                <div class="card-body d-flex flex-column">
+
+                    <!-- Title -->
+                    <h5 class="fw-bold mb-1 text-dark">
+                        {{ req.title }}
+                    </h5>
+
+                    <!-- Department -->
+                    <p class="text-muted mb-2 small">
+                        <i class="fa fa-building"></i> {{ req.department }}
+                    </p>
+
+                    <!-- Justification -->
+                    <p class="text-muted small flex-grow-1">
+                        {{ req.justification|truncatewords:28 }}
+                    </p>
+
+                    {% if req.attach_file %}
+                        <div class="mb-2">
+                            <a class="btn btn-sm btn-outline-primary" href="{{ req.attach_file.url }}" download>
+                                <i class="fa fa-paperclip me-1"></i> Attachment
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <hr class="my-3">
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <!-- View -->
+                        <a href="{% url 'vacancy:ed_approve' req.pk req.slug %}"
+                           class="btn btn-outline-success btn-sm">
+                            <i class="fa fa-eye"></i> View
+                        </a>
+
+                        <!-- HR Actions -->
+                        {% if user|has_group:"HR" %}
+                        {% if req.hr_reviewed %}
+                            <!-- Disabled button after HR approval -->
+                            <button class="btn btn-outline-secondary btn-sm" disabled
+                                    title="Already approved by HR">
+                                <i class="fa fa-check"></i> Reviewed
+                            </button>
+                        {% else %}
+                            <a href="{% url 'vacancy:hr_review' req.pk req.slug %}"
+                               onclick="return confirm('Proceed to review {{ req.title }}?')"
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fa fa-check"></i>
+                                    Review
+                            </a>
+                            {% endif %}
+
+
+                        <!-- ED Actions -->
+                        {% elif user|has_group:"ED" %}
+                        {% if req.hr_reviewed %}
+                            <a href="{% url 'vacancy:ed_approve' req.pk req.slug %}"
+                               class="btn btn-outline-dark btn-sm">
+                                <i class="fa fa-stamp"></i> Decision
+                            </a>
+                        {% endif %}
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% empty %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fa fa-folder-open fa-2x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Recruitment Requests Available</h5>
+                    <p class="small text-muted mb-0">
+                        All job requisitions have been processed or none have been submitted.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4">
+        {% include "pagination.html" with page_obj=req_list %}
+    </div>
+
+</div>
+
+<!-- Styles -->
+<style>
+.req-card {
+    border-radius: 12px;
+    transition: all 0.25s ease-in-out;
+}
+
+.req-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+}
+
+.req-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+.req-status .badge {
+    font-size: 0.7rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+</style>
+
+{% endblock %}

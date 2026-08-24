@@ -1,0 +1,938 @@
+{% extends "mne/base.html" %}
+
+{% block title %}Recent Data Entry | M&E{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       RECENT DATA ENTRY
+       Enterprise M&E Submission Register
+       ========================================================= */
+
+    .data-entry-page {
+        --de-primary: #198754;
+        --de-primary-dark: #146c43;
+        --de-primary-soft: #eaf7f0;
+        --de-border: #e1e7e3;
+        --de-text: #26332c;
+        --de-muted: #6c757d;
+    }
+
+    /* =========================================================
+       PAGE HERO
+       ========================================================= */
+
+    .de-hero {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f1faf5 100%
+        );
+        border: 1px solid var(--de-border);
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .035);
+    }
+
+    .de-hero::after {
+        content: "";
+        position: absolute;
+        width: 170px;
+        height: 170px;
+        right: -60px;
+        top: -70px;
+        border-radius: 50%;
+        background: rgba(25, 135, 84, .045);
+        pointer-events: none;
+    }
+
+    .de-kicker {
+        color: #77827c;
+        font-size: .7rem;
+        font-weight: 600;
+        margin-bottom: 7px;
+    }
+
+    .de-kicker a {
+        color: var(--de-primary);
+        text-decoration: none;
+    }
+
+    .de-kicker a:hover {
+        color: var(--de-primary-dark);
+    }
+
+    .de-title {
+        color: #1e3027;
+        font-size: 1.35rem;
+        font-weight: 750;
+        margin-bottom: 5px;
+    }
+
+    .de-subtitle {
+        color: #737e78;
+        font-size: .76rem;
+        line-height: 1.55;
+    }
+
+    .de-hero-icon {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: var(--de-primary-soft);
+        color: var(--de-primary);
+        font-size: 20px;
+    }
+
+    /* =========================================================
+       KPI CARDS
+       ========================================================= */
+
+    .de-stat {
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--de-border);
+        border-radius: 13px;
+        padding: 15px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, .025);
+    }
+
+    .de-stat-icon {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: var(--de-primary-soft);
+        color: var(--de-primary);
+        font-size: .8rem;
+    }
+
+    .de-stat-label {
+        color: #7d8782;
+        font-size: .64rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .035em;
+        margin-bottom: 2px;
+    }
+
+    .de-stat-value {
+        color: #29372f;
+        font-size: 1.05rem;
+        font-weight: 750;
+    }
+
+    /* =========================================================
+       MAIN CARD
+       ========================================================= */
+
+    .de-card {
+        background: #fff;
+        border: 1px solid var(--de-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 22px rgba(0, 0, 0, .04);
+    }
+
+    .de-card-header {
+        padding: 17px 20px;
+        border-bottom: 1px solid var(--de-border);
+    }
+
+    .de-card-title {
+        color: #2d3a33;
+        font-size: .95rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .de-card-subtitle {
+        color: #89918d;
+        font-size: .69rem;
+        margin-top: 3px;
+    }
+
+    /* =========================================================
+       SEARCH
+       ========================================================= */
+
+    .de-search {
+        position: relative;
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .de-search i {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9aa39e;
+        font-size: .78rem;
+        z-index: 2;
+    }
+
+    .de-search input {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 12px 8px 36px;
+        border: 1px solid #dce2df;
+        border-radius: 9px;
+        background: #fbfcfb;
+        font-size: .76rem;
+    }
+
+    .de-search input:focus {
+        outline: none;
+        background: #fff;
+        border-color: #83c5a1;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    /* =========================================================
+       TABLE
+       ========================================================= */
+
+    .de-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .de-table {
+        min-width: 1080px;
+        margin: 0;
+    }
+
+    .de-table thead th {
+        background: #f7f9f8;
+        color: #68736d;
+        border-bottom: 1px solid var(--de-border);
+        padding: 12px 13px;
+        font-size: .64rem;
+        font-weight: 750;
+        text-transform: uppercase;
+        letter-spacing: .035em;
+        white-space: nowrap;
+    }
+
+    .de-table tbody td {
+        padding: 13px;
+        border-bottom: 1px solid #edf0ee;
+        color: #4a564f;
+        font-size: .75rem;
+        vertical-align: middle;
+    }
+
+    .de-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .de-table tbody tr:hover {
+        background: #fafcfb;
+    }
+
+    .de-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    /* =========================================================
+       INDICATOR
+       ========================================================= */
+
+    .de-indicator-code {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 7px;
+        border-radius: 5px;
+        background: var(--de-primary-soft);
+        color: var(--de-primary-dark);
+        font-size: .65rem;
+        font-weight: 750;
+        margin-bottom: 3px;
+    }
+
+    .de-indicator-name {
+        display: block;
+        max-width: 270px;
+        color: #48544d;
+        font-size: .72rem;
+        line-height: 1.45;
+    }
+
+    /* =========================================================
+       STATUS
+       ========================================================= */
+
+    .de-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 9px;
+        border-radius: 7px;
+        background: #f7f8f8;
+        border: 1px solid #e2e6e4;
+        color: #606b65;
+        font-size: .65rem;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .de-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #7d8782;
+    }
+
+    /* =========================================================
+       NUMERIC CELLS
+       ========================================================= */
+
+    .de-number {
+        color: #36423b;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .de-number-zero {
+        color: #a0a8a4;
+        font-weight: 500;
+    }
+
+    /* =========================================================
+       LOCATION / PROJECT
+       ========================================================= */
+
+    .de-context {
+        color: #536058;
+        font-size: .72rem;
+    }
+
+    .de-context i {
+        width: 15px;
+        color: #89958e;
+    }
+
+    /* =========================================================
+       ACTION
+       ========================================================= */
+
+    .de-action {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        color: #0d6efd;
+        background: #f0f6ff;
+        border: 1px solid #dceaff;
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+    .de-action:hover {
+        color: #fff;
+        background: #0d6efd;
+        border-color: #0d6efd;
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       EMPTY STATE
+       ========================================================= */
+
+    .de-empty {
+        padding: 65px 20px !important;
+        text-align: center;
+    }
+
+    .de-empty-icon {
+        width: 62px;
+        height: 62px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 14px;
+        border-radius: 15px;
+        background: #f2f6f4;
+        color: #9aa49e;
+        font-size: 24px;
+    }
+
+    .de-empty-title {
+        color: #48544d;
+        font-size: .88rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .de-empty-text {
+        color: #8b948f;
+        font-size: .72rem;
+        margin: 0;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 767.98px) {
+
+        .de-hero {
+            padding: 17px;
+            border-radius: 13px;
+        }
+
+        .de-title {
+            font-size: 1.1rem;
+        }
+
+        .de-card-header {
+            padding: 15px;
+        }
+
+        .de-search {
+            max-width: none;
+            margin-top: 10px;
+        }
+
+        .de-card {
+            border-radius: 13px;
+        }
+
+        .de-stat {
+            padding: 13px;
+        }
+
+    }
+</style>
+
+<div class="container-fluid data-entry-page">
+
+
+<!-- =====================================================
+     PAGE HERO
+====================================================== -->
+
+<section class="de-hero">
+
+    <div class="d-flex align-items-start gap-3">
+
+        <div class="de-hero-icon d-none d-sm-flex">
+
+            <i class="fa fa-database"></i>
+
+        </div>
+
+        <div>
+
+            <div class="de-kicker">
+
+                <a href="{% url 'monitoring:dashboard' %}">
+                    <i class="fa fa-home me-1"></i>
+                    Dashboard
+                </a>
+
+                <span class="mx-1">/</span>
+
+                Data Entry
+
+            </div>
+
+            <h1 class="de-title">
+                Recent Data Entries
+            </h1>
+
+            <p class="de-subtitle mb-0">
+                Review the latest indicator submissions with
+                participant, PWD, project and geographic context.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- =====================================================
+     SUMMARY
+====================================================== -->
+
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-lg-3">
+
+        <div class="de-stat">
+
+            <div class="d-flex align-items-center">
+
+                <div class="de-stat-icon me-3">
+                    <i class="fa fa-database"></i>
+                </div>
+
+                <div>
+
+                    <div class="de-stat-label">
+                        Recent Entries
+                    </div>
+
+                    <div class="de-stat-value">
+                        {{ recent_entries|length }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+        <div class="de-stat">
+
+            <div class="d-flex align-items-center">
+
+                <div class="de-stat-icon me-3">
+                    <i class="fa fa-line-chart"></i>
+                </div>
+
+                <div>
+
+                    <div class="de-stat-label">
+                        Data Type
+                    </div>
+
+                    <div class="de-stat-value">
+                        Indicators
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+        <div class="de-stat">
+
+            <div class="d-flex align-items-center">
+
+                <div class="de-stat-icon me-3">
+                    <i class="fa fa-users"></i>
+                </div>
+
+                <div>
+
+                    <div class="de-stat-label">
+                        Disaggregation
+                    </div>
+
+                    <div class="de-stat-value">
+                        Sex & PWD
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+        <div class="de-stat">
+
+            <div class="d-flex align-items-center">
+
+                <div class="de-stat-icon me-3">
+                    <i class="fa fa-map-marker"></i>
+                </div>
+
+                <div>
+
+                    <div class="de-stat-label">
+                        Context
+                    </div>
+
+                    <div class="de-stat-value">
+                        Project & Location
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     SUBMISSION REGISTER
+====================================================== -->
+
+<div class="de-card">
+
+    <!-- Header -->
+
+    <div class="de-card-header">
+
+        <div class="row align-items-center">
+
+            <div class="col-md-5">
+
+                <h2 class="de-card-title">
+
+                    <i class="fa fa-list-alt text-success me-2"></i>
+
+                    Submission Register
+
+                </h2>
+
+                <div class="de-card-subtitle">
+
+                    Latest records captured in the monitoring system.
+
+                </div>
+
+            </div>
+
+
+            <div class="col-md-7">
+
+                <div class="d-flex justify-content-md-end">
+
+                    <div class="de-search">
+
+                        <i class="fa fa-search"></i>
+
+                        <input type="text"
+                               id="profileSearch"
+                               class="form-control"
+                               placeholder="Search indicator, location, project..."
+                               autocomplete="off">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Table -->
+
+    <div class="de-table-wrapper">
+
+        <table id="profileTable"
+               class="table de-table table-hover align-middle mb-0">
+
+            <thead>
+
+                <tr>
+
+                    <th style="width:55px;">
+                        #
+                    </th>
+
+                    <th>
+                        Indicator
+                    </th>
+
+                    <th>
+                        Year
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th class="text-end">
+                        Male
+                    </th>
+
+                    <th class="text-end">
+                        Female
+                    </th>
+
+                    <th class="text-end">
+                        PWD
+                    </th>
+
+                    <th>
+                        Location
+                    </th>
+
+                    <th>
+                        Project
+                    </th>
+
+                    <th class="text-end"
+                        style="width:70px;">
+                        Action
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for e in recent_entries %}
+
+                <tr>
+
+                    <!-- Number -->
+
+                    <td>
+
+                        <span class="text-muted small fw-semibold">
+                            {{ forloop.counter }}
+                        </span>
+
+                    </td>
+
+
+                    <!-- Indicator -->
+
+                    <td>
+
+                        <span class="de-indicator-code">
+
+                            {{ e.indicator.code }}
+
+                        </span>
+
+                        <span class="de-indicator-name">
+
+                            {{ e.indicator.name|truncatechars:64 }}
+
+                        </span>
+
+                    </td>
+
+
+                    <!-- Year -->
+
+                    <td>
+
+                        <span class="fw-semibold text-dark">
+
+                            {{ e.year }}
+
+                        </span>
+
+                    </td>
+
+
+                    <!-- Status -->
+
+                    <td>
+
+                        <span class="de-status">
+
+                            <span class="de-status-dot"></span>
+
+                            {{ e.status }}
+
+                        </span>
+
+                    </td>
+
+
+                    <!-- Male -->
+
+                    <td class="text-end">
+
+                        {% if e.no_male %}
+                            <span class="de-number">
+                                {{ e.no_male }}
+                            </span>
+                        {% else %}
+                            <span class="de-number-zero">
+                                0
+                            </span>
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- Female -->
+
+                    <td class="text-end">
+
+                        {% if e.no_female %}
+                            <span class="de-number">
+                                {{ e.no_female }}
+                            </span>
+                        {% else %}
+                            <span class="de-number-zero">
+                                0
+                            </span>
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- PWD -->
+
+                    <td class="text-end">
+
+                        {% if e.pwd %}
+                            <span class="de-number">
+                                {{ e.pwd }}
+                            </span>
+                        {% else %}
+                            <span class="de-number-zero">
+                                0
+                            </span>
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- Location -->
+
+                    <td>
+
+                        <div class="de-context">
+
+                            <i class="fa fa-map-marker"></i>
+
+                            {{ e.location|default:"-" }}
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- Project -->
+
+                    <td>
+
+                        <div class="de-context">
+
+                            <i class="fa fa-folder-open"></i>
+
+                            {{ e.project|default:"-" }}
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- Action -->
+
+                    <td class="text-end">
+
+                        <a href="{% url 'monitoring:update_data_entry' e.pk %}"
+                           class="de-action"
+                           title="Update entry"
+                           aria-label="Update entry"
+                           data-bs-toggle="tooltip">
+
+                            <i class="fa fa-pen-to-square"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="10"
+                        class="de-empty">
+
+                        <div class="de-empty-icon">
+
+                            <i class="fa fa-database"></i>
+
+                        </div>
+
+                        <div class="de-empty-title">
+
+                            No Data Entries Found
+
+                        </div>
+
+                        <p class="de-empty-text">
+
+                            Indicator submissions will appear here
+                            once data has been captured.
+
+                        </p>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+```
+{% include "autosearchtable.html" %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        if (typeof bootstrap !== "undefined") {
+
+            document
+                .querySelectorAll('[data-bs-toggle="tooltip"]')
+                .forEach(function (element) {
+
+                    new bootstrap.Tooltip(element);
+
+                });
+
+        }
+
+    });
+</script>
+
+
+{% endblock %}

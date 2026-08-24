@@ -1,0 +1,442 @@
+{% with current_url=request.resolver_match.url_name %}
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<a href="{% url 'procurement' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'procurement' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-house"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Dashboard
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     PROCUREMENT
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>PROCUREMENT</span>
+</div>
+
+
+<!-- =====================================================
+     SUPPLIERS
+===================================================== -->
+
+<a href="{% url 'supplier_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'supplier_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-truck-field"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Suppliers
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     PROCUREMENT INITIATION
+===================================================== -->
+
+<div class="sidebar-module
+    {% if current_url == 'requisition_list' or current_url == 'req_list' or current_url == 'rfq_list' %}
+        module-open
+    {% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#procurementInitiationMenu"
+            aria-expanded="{% if current_url == 'requisition_list' or current_url == 'req_list' or current_url == 'rfq_list' %}true{% else %}false{% endif %}"
+            aria-controls="procurementInitiationMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-file-circle-plus"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Procurement Initiation
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div id="procurementInitiationMenu"
+         class="collapse sidebar-submenu
+         {% if current_url == 'requisition_list' or current_url == 'req_list' or current_url == 'rfq_list' %}
+             show
+         {% endif %}">
+
+        <a href="{% url 'requisition_list' %}"
+           class="{% if current_url == 'requisition_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-file-lines"></i>
+
+            <span>Procurement</span>
+
+        </a>
+
+
+        <a href="{% url 'req_list' %}"
+           class="{% if current_url == 'req_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-file-signature"></i>
+
+            <span>Requisition</span>
+
+        </a>
+
+
+        <a href="{% url 'rfq_list' %}"
+           class="{% if current_url == 'rfq_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-cart-shopping"></i>
+
+            <span>RFQ</span>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     PRODUCT MANAGEMENT
+===================================================== -->
+
+<div class="sidebar-module
+    {% if current_url == 'product_list' or current_url == 'create_product' %}
+        module-open
+    {% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#productManagementMenu"
+            aria-expanded="{% if current_url == 'product_list' or current_url == 'create_product' %}true{% else %}false{% endif %}"
+            aria-controls="productManagementMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-boxes-stacked"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Product Management
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div id="productManagementMenu"
+         class="collapse sidebar-submenu
+         {% if current_url == 'product_list' or current_url == 'create_product' %}
+             show
+         {% endif %}">
+
+        <a href="{% url 'product_list' %}"
+           class="{% if current_url == 'product_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-list"></i>
+
+            <span>Products</span>
+
+        </a>
+
+
+        <a href="{% url 'create_product' %}"
+           class="{% if current_url == 'create_product' %}active{% endif %}">
+
+            <i class="fa-solid fa-plus"></i>
+
+            <span>Add Product</span>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     PROJECT MANAGEMENT
+===================================================== -->
+
+<div class="sidebar-module
+    {% if current_url == 'project_list' or current_url == 'project_create' %}
+        module-open
+    {% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#projectManagementMenu"
+            aria-expanded="{% if current_url == 'project_list' or current_url == 'project_create' %}true{% else %}false{% endif %}"
+            aria-controls="projectManagementMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-diagram-project"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Project Management
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div id="projectManagementMenu"
+         class="collapse sidebar-submenu
+         {% if current_url == 'project_list' or current_url == 'project_create' %}
+             show
+         {% endif %}">
+
+        <a href="{% url 'procurement_core:project_list' %}"
+           class="{% if current_url == 'project_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-folder-open"></i>
+
+            <span>Projects</span>
+
+        </a>
+
+
+        <a href="{% url 'procurement_core:project_create' %}"
+           class="{% if current_url == 'project_create' %}active{% endif %}">
+
+            <i class="fa-solid fa-plus"></i>
+
+            <span>Add Project</span>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     REPORTING
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>REPORTING</span>
+</div>
+
+
+<!-- =====================================================
+     REPORTS
+===================================================== -->
+
+<div class="sidebar-module
+    {% if current_url == 'supplier_report' or current_url == 'spent_report' %}
+        module-open
+    {% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#reportsMenu"
+            aria-expanded="{% if current_url == 'supplier_report' or current_url == 'spent_report' %}true{% else %}false{% endif %}"
+            aria-controls="reportsMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-chart-column"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Reports
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div id="reportsMenu"
+         class="collapse sidebar-submenu
+         {% if current_url == 'supplier_report' or current_url == 'spent_report' %}
+             show
+         {% endif %}">
+
+        <a href="{% url 'supplier_report' %}"
+           class="{% if current_url == 'supplier_report' %}active{% endif %}">
+
+            <i class="fa-solid fa-users"></i>
+
+            <span>Supplier Report</span>
+
+        </a>
+
+
+        <a href="{% url 'spent_report' %}"
+           class="{% if current_url == 'spent_report' %}active{% endif %}">
+
+            <i class="fa-solid fa-chart-line"></i>
+
+            <span>Spend Report</span>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     FINANCE
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>FINANCE</span>
+</div>
+
+
+<!-- =====================================================
+     ACCOUNT / CURRENCY
+===================================================== -->
+
+<a href="{% url 'core:currency_settings' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'currency_settings' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-wallet"></i>
+    </span>
+
+    <span class="sidebar-nav-text d-flex align-items-center gap-2">
+
+        <span>Account</span>
+
+        {% if display_currency %}
+        <span class="badge bg-success">
+            {{ display_currency }}
+        </span>
+        {% endif %}
+
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     FINANCE MODULE
+===================================================== -->
+
+<div class="sidebar-module
+    {% if current_url == 'create_cash_req' or current_url == 'finance_dashboard' %}
+        module-open
+    {% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#financeMenu"
+            aria-expanded="{% if current_url == 'create_cash_req' or current_url == 'finance_dashboard' %}true{% else %}false{% endif %}"
+            aria-controls="financeMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Finance
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div id="financeMenu"
+         class="collapse sidebar-submenu
+         {% if current_url == 'create_cash_req' or current_url == 'finance_dashboard' %}
+             show
+         {% endif %}">
+
+        <a href="{% url 'finance:create_cash_req' %}"
+           class="{% if current_url == 'create_cash_req' %}active{% endif %}">
+
+            <i class="fa-solid fa-money-bill-wave"></i>
+
+            <span>Fund Requisition</span>
+
+        </a>
+
+
+        <a href="{% url 'finance:dashboard' %}"
+           class="{% if current_url == 'finance_dashboard' %}active{% endif %}">
+
+            <i class="fa-solid fa-gauge-high"></i>
+
+            <span>Finance Dashboard</span>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     SUPPORT
+===================================================== -->
+
+<div class="sidebar-section sidebar-support-title">
+    <span>SUPPORT</span>
+</div>
+
+
+<a href="#"
+   class="sidebar-dashboard">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-life-ring"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Help & Support
+    </span>
+
+</a>
+
+{% endwith %}

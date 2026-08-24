@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- HEADER -->
+    <div class="bg-white p-3 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h5 class="fw-bold text-primary mb-0">
+                <i class="fa fa-user-tie me-2"></i> Supervisor Review
+            </h5>
+            <small class="text-muted">Appraisal Year: {{ appraisal.year }}</small>
+        </div>
+
+        <span class="badge bg-warning text-dark">
+            <i class="fa fa-hourglass-half me-1"></i> Pending Supervisor Review
+        </span>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT COLUMN -->
+        <div class="col-lg-6">
+
+            <!-- EMPLOYEE INFO -->
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+
+                    <h6 class="fw-bold text-success mb-3">
+                        <i class="fa fa-user me-2"></i> Employee Information
+                    </h6>
+
+                    <p><strong>Name:</strong> {{ appraisal.employee }}</p>
+                    <p><strong>Supervisor:</strong> {{ appraisal.supervisor }}</p>
+                    <p><strong>Department:</strong> {{ appraisal.employee.user.department }}</p>
+                    <p><strong>Duty Station:</strong> {{ appraisal.duty_station|default:"-" }}</p>
+
+                </div>
+            </div>
+
+            <!-- STAFF SUBMISSION -->
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-body">
+
+                    <h6 class="fw-bold text-dark mb-3">
+                        <i class="fa fa-file-alt me-2"></i> Staff Self Assessment
+                    </h6>
+
+                    <p><strong>Significant Event:</strong></p>
+                    <div class="bg-light p-2 rounded mb-3">
+                        {{ appraisal.significant_event|default:"-"|linebreaks }}
+                    </div>
+
+                    <p><strong>Staff Opinion:</strong></p>
+                    <div class="bg-light p-2 rounded mb-3">
+                        {{ appraisal.staff_opinion|default:"-"|linebreaks }}
+                    </div>
+
+                    {% if appraisal.filled_appraisal %}
+                                <a href="{{ appraisal.filled_appraisal.url }}" class="btn btn-outline-success">
+                                    <i class="fa fa-file-excel"></i> Download Filled Appraisal
+                                </a>
+
+                            {% endif %}
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="col-lg-6">
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- SCORES -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+
+                        <h6 class="fw-bold text-primary mb-3">
+                            <i class="fa fa-chart-bar me-2"></i> Performance Scores
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Job Score</label>
+                                <input type="number" name="job_description_score" class="form-control">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label>Service Score</label>
+                                <input type="number" name="service_score" class="form-control">
+                            </div>
+
+
+                        <div class="mb-3 col-md-6">
+                            <label>Job Interpretation</label>
+                            <input type="text" name="job_description_interpretation" class="form-control">
+                        </div>
+
+                        <div class="mb-3 col-md-6">
+                            <label>Service Interpretation</label>
+                            <input type="text" name="service_interpretation" class="form-control">
+                        </div>
+</div>
+                    </div>
+                </div>
+
+                <!-- PERFORMANCE DETAILS -->
+<!--                <div class="card shadow-sm border-0 mb-4">-->
+<!--                    <div class="card-body">-->
+
+<!--                        <h6 class="fw-bold text-success mb-3">-->
+<!--                            <i class="fa fa-balance-scale me-2"></i> Performance Analysis-->
+<!--                        </h6>-->
+
+<!--                        <div class="mb-3">-->
+<!--                            <label>Strengths</label>-->
+<!--                            <textarea name="strengths" class="form-control" rows="1"></textarea>-->
+<!--                        </div>-->
+
+<!--                        <div class="mb-3">-->
+<!--                            <label>Weaknesses</label>-->
+<!--                            <textarea name="weaknesses" class="form-control" rows="1"></textarea>-->
+<!--                        </div>-->
+
+<!--                        <div class="mb-3">-->
+<!--                            <label>Capacity Gaps</label>-->
+<!--                            <textarea name="capacity_gaps" class="form-control" rows="1"></textarea>-->
+<!--                        </div>-->
+
+<!--                    </div>-->
+<!--                </div>-->
+
+                <!-- COMMENT -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="fa fa-comment me-2"></i> Supervisor Comment
+                        </h6>
+
+                        <textarea name="comment" class="form-control" rows="2" required
+                            placeholder="Provide evaluation, recommendations, and final remarks..."></textarea>
+
+                    </div>
+
+                    <div class="card-body">
+                            <label class="form-label fw-semibold">
+                                Upload Completed Appraisal (Excel)
+                            </label>
+                            <input type="file" name="filled_appraisal" class="form-control" required>
+                        </div>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'appraisal_detail' appraisal.id %}" class="btn btn-outline-secondary">
+                        <i class="fa fa-arrow-left me-1"></i> Back
+                    </a>
+
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fa fa-paper-plane me-1"></i> Submit to HR
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

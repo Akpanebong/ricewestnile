@@ -1,0 +1,227 @@
+{% extends "hr/base.html" %}
+{% block title %}Discussion Forum{% endblock %}
+
+{% block content %}
+<main class="ttr-wrapper">
+
+    <!-- ===============================
+        PAGE HEADER
+    ================================ -->
+    <div class="bg-white p-4 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h4 class="fw-bold text-success mb-1">
+                <i class="fa fa-comments me-2"></i>
+                Discussion Forum
+            </h4>
+            <small class="text-muted">
+                Collaborate, ask questions, and share insights across teams.
+            </small>
+        </div>
+
+        <a href="{% url 'new_thread' %}"
+           class="btn btn-success">
+            <i class="ti-plus me-1"></i>
+            Create New Thread
+        </a>
+    </div>
+
+
+    <!-- ===============================
+        THREAD LIST CARD
+    ================================ -->
+<div class="forum-wrapper">
+
+    {% if threads %}
+
+        {% for thread in threads %}
+
+        <div class="thread-card mb-3">
+
+            <div class="d-flex align-items-start">
+
+                <!-- Avatar -->
+
+                <div class="thread-avatar me-3">
+
+                    {{ thread.author.first_name|first|default:thread.author.username|first|upper }}
+
+                </div>
+
+                <!-- Main Content -->
+
+                <div class="flex-grow-1">
+
+                    <div class="d-flex justify-content-between flex-wrap">
+
+                        <div class="pe-3">
+
+                            <a href="{% url 'forum_detail' thread.id %}"
+                               class="thread-title fs-5">
+
+                                {{ thread.title }}
+
+                            </a>
+
+                            <div class="thread-meta mt-2">
+
+                                <i class="fa fa-user me-1"></i>
+
+                                {{ thread.author }}
+
+                                <span class="mx-2">•</span>
+
+                                {{ thread.created_at|timesince }} ago
+
+                                <span class="mx-2">•</span>
+
+                                {{ thread.created_at|date:"M d, Y" }}
+
+                            </div>
+
+                        </div>
+
+                        <div class="thread-action text-end mt-3 mt-md-0">
+
+                            <span class="thread-badge d-inline-block mb-2">
+
+                                <i class="fa fa-comments me-1"></i>
+
+                                {{ thread.posts.count }}
+
+                            </span>
+
+                            <br>
+
+                            <a href="{% url 'forum_detail' thread.id %}"
+                               class="btn btn-success btn-sm">
+
+                                Open
+
+                            </a>
+
+                            {% if request.user == thread.author or request.user.is_superuser %}
+
+                            <a href="{% url 'delete_thread' thread.id %}"
+                               class="btn btn-outline-danger btn-sm mt-2">
+
+                                <i class="fa fa-trash"></i>
+
+                            </a>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body text-center py-5">
+
+            <i class="fa fa-comments fa-4x text-success opacity-25 mb-3"></i>
+
+            <h5>No discussions available</h5>
+
+            <p class="text-muted">
+                Be the first to start a conversation with your team.
+            </p>
+
+            <a href="{% url 'new_thread' %}"
+               class="btn btn-success">
+
+                <i class="fa fa-plus me-2"></i>
+
+                Create Discussion
+
+            </a>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+    <!-- ===============================
+        PAGINATION
+    ================================ -->
+    <div class="mt-4">
+        {% include "pagination.html" with page_obj=threads %}
+    </div>
+
+</main>
+<style>
+
+.forum-wrapper{
+    max-width:900px;
+    margin:0 auto;
+}
+
+.thread-card{
+    background:#fff;
+    border:1px solid #e9ecef;
+    border-radius:12px;
+    padding:18px 20px;
+    transition:.25s ease;
+}
+
+.thread-card:hover{
+    border-color:#198754;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    transform:translateY(-2px);
+}
+
+.thread-avatar{
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#198754,#20c997);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    font-weight:700;
+    flex-shrink:0;
+}
+
+.thread-title{
+    color:#212529;
+    font-weight:600;
+    text-decoration:none;
+}
+
+.thread-title:hover{
+    color:#198754;
+}
+
+.thread-meta{
+    font-size:.82rem;
+    color:#6c757d;
+}
+
+.thread-badge{
+    background:#f1f3f5;
+    color:#495057;
+    border-radius:30px;
+    padding:4px 12px;
+    font-size:.75rem;
+    font-weight:600;
+}
+
+.thread-action{
+    min-width:90px;
+}
+
+</style>
+{% endblock %}

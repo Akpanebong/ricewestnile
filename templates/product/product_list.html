@@ -1,0 +1,575 @@
+{% extends "procurement/base.html" %}
+{% load custom_tags %}
+{% block title %}Product Management{% endblock %}
+
+{% block content %}
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        <!-- Enterprise Header -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+
+            <div class="card-body px-4 py-4">
+
+                <div class="row align-items-center justify-content-between g-3">
+
+    <!-- Left Side -->
+    <div class="col-lg-8">
+
+        <div class="d-flex align-items-center flex-wrap gap-3">
+
+            <!-- Icon -->
+            <div class="product-icon">
+
+                <i class="fa fa-cubes"></i>
+
+            </div>
+
+            <!-- Title -->
+            <div>
+
+                <h2 class="fw-bold text-dark mb-1">
+                    Product Management
+                </h2>
+
+                <!-- Breadcrumb Inline -->
+                <nav aria-label="breadcrumb">
+
+                    <ol class="breadcrumb enterprise-breadcrumb mb-0">
+
+                        <li class="breadcrumb-item">
+
+                            <a href="{% url 'dashboard' %}">
+
+                                <i class="fa fa-home me-1"></i>
+
+                                Dashboard
+
+                            </a>
+
+                        </li>
+
+                        <li class="breadcrumb-item">
+                            Procurement
+                        </li>
+
+                        <li class="breadcrumb-item active">
+                            Products
+                        </li>
+
+                    </ol>
+
+                </nav>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Right Side -->
+    <div class="col-lg-auto">
+
+        <div class="analytics-card compact-card">
+
+            <div class="analytics-icon bg-primary-subtle text-primary">
+
+                <i class="fa fa-box"></i>
+
+            </div>
+
+            <div class="text-nowrap">
+
+                <small class="text-muted d-block">
+                    Total Products
+                </small>
+
+                <h4 class="fw-bold mb-0">
+
+                    {{ products|length }}
+
+                </h4>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+        </div>
+
+        <!-- Main Card -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+            <!-- Toolbar -->
+            <div class="card-header bg-white border-0 px-4 py-4">
+
+                <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3">
+
+                    <!-- Left -->
+                    <div>
+
+                        <h5 class="fw-bold text-dark mb-1">
+
+                            <i class="fa fa-list text-primary me-2"></i>
+
+                            Product Directory
+
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Manage procurement products, estimated pricing and ABPC classification.
+                        </p>
+
+                    </div>
+
+                    <!-- Right -->
+                    <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch">
+
+                        <!-- Search -->
+                        <div class="enterprise-search">
+
+                            <i class="fa fa-search"></i>
+
+                            <input type="text"
+                                   id="productSearch"
+                                   placeholder="Search products...">
+
+                        </div>
+
+                        <!-- Add Button -->
+                        <a href="{% url 'create_product' %}"
+                           class="btn btn-primary enterprise-btn px-4">
+
+                            <i class="fa fa-plus-circle me-2"></i>
+
+                            New Product
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+
+                <table class="table enterprise-table align-middle mb-0">
+
+                    <thead>
+
+                        <tr>
+
+                            <th width="80" class="ps-4">
+                                #
+                            </th>
+
+                            <th>
+                                Product
+                            </th>
+
+                            <th>
+                                Category
+                            </th>
+
+                            <th>
+                                ABPC
+                            </th>
+
+                            <th class="text-end">
+                                Unit Cost ({{ display_currency }})
+                            </th>
+
+                            <th class="text-end pe-4">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="productTable">
+
+                        {% for pro in products %}
+
+                        <tr>
+
+                            <!-- Number -->
+                            <td class="ps-4 text-muted fw-semibold">
+
+                                {{ forloop.counter }}
+
+                            </td>
+
+                            <!-- Product -->
+                            <td>
+
+                                <div class="d-flex align-items-center">
+
+                                    <div>
+
+                                        <div class="fw-semibold text-dark">
+
+                                            {{ pro.name }}
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                            <!-- Category -->
+                            <td>
+
+                                <span class="category-badge">
+
+                                    {{ pro.category|default:"Uncategorized" }}
+
+                                </span>
+
+                            </td>
+
+                            <!-- ABPC -->
+                            <td>
+
+                                {% if pro.abpc %}
+
+                                <span class="enterprise-badge success">
+
+                                    <i class="fa fa-check-circle me-1"></i>
+
+                                    Yes
+
+                                </span>
+
+                                {% else %}
+
+                                <span class="enterprise-badge secondary">
+
+                                    <i class="fa fa-times-circle me-1"></i>
+
+                                    No
+
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- Cost -->
+                            <td class="text-end fw-bold text-success">
+
+                                {{ pro.est_unit_cost|money:request }}
+
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-end pe-4">
+
+                                <div class="dropdown">
+
+                                    <button class="btn btn-light border btn-sm action-btn"
+                                            data-bs-toggle="dropdown">
+
+                                        <i class="fa fa-ellipsis-h"></i>
+
+                                    </button>
+
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3">
+
+                                        <li>
+
+                                            <a class="dropdown-item"
+                                               href="{% url 'edit_pro' pro.name pro.pk %}">
+
+                                                <i class="fa fa-edit text-primary me-2"></i>
+
+                                                Edit Product
+
+                                            </a>
+
+                                        </li>
+
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+
+                                        <li>
+
+                                            <a class="dropdown-item text-danger"
+                                               href="{% url 'trash_pro' pro.pk pro.name %}">
+
+                                                <i class="fa fa-trash me-2"></i>
+
+                                                Delete Product
+
+                                            </a>
+
+                                        </li>
+
+                                    </ul>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td colspan="6" class="text-center py-5">
+
+                                <div class="empty-state">
+
+                                    <div class="empty-icon mb-4">
+
+                                        <i class="fa fa-box-open"></i>
+
+                                    </div>
+
+                                    <h5 class="fw-bold text-dark">
+
+                                        No Products Found
+
+                                    </h5>
+
+                                    <p class="text-muted mb-4">
+
+                                        No products currently exist in the procurement catalog.
+
+                                    </p>
+
+                                    <a href="{% url 'create_product' %}"
+                                       class="btn btn-primary px-4">
+
+                                        <i class="fa fa-plus-circle me-2"></i>
+
+                                        Add First Product
+
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- Footer -->
+            {% if is_paginated %}
+
+            <div class="card-footer bg-white border-0 py-3 px-4">
+
+                {% include 'pagination.html' %}
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Enterprise Styles -->
+<style>
+
+:root{
+    --primary-color:#0d6efd;
+    --success-color:#198754;
+    --border-color:#e9ecef;
+    --text-muted:#667085;
+    --card-radius:18px;
+}
+
+/* Card */
+.card{
+    border-radius:var(--card-radius);
+}
+
+/* Icon */
+.product-icon{
+    width:64px;
+    height:64px;
+    border-radius:18px;
+    background:rgba(13,110,253,.1);
+    color:var(--primary-color);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+}
+
+/* Search */
+.enterprise-search{
+    position:relative;
+    min-width:300px;
+}
+
+.enterprise-search i{
+    position:absolute;
+    top:50%;
+    left:16px;
+    transform:translateY(-50%);
+    color:#98a2b3;
+}
+
+.enterprise-search input{
+    width:100%;
+    height:48px;
+    border-radius:14px;
+    border:1px solid var(--border-color);
+    padding-left:46px;
+    padding-right:16px;
+}
+
+.enterprise-search input:focus{
+    outline:none;
+    border-color:var(--primary-color);
+    box-shadow:0 0 0 4px rgba(13,110,253,.1);
+}
+
+/* Table */
+.enterprise-table thead th{
+    background:#f8fafc;
+    border-bottom:none;
+    text-transform:uppercase;
+    font-size:12px;
+    letter-spacing:.4px;
+    color:#667085;
+    padding-top:16px;
+    padding-bottom:16px;
+}
+
+.enterprise-table tbody tr:hover{
+    background:#f8fbff;
+}
+
+.enterprise-table td{
+    padding-top:18px;
+    padding-bottom:18px;
+    border-color:#f1f3f5;
+}
+
+/* Avatar */
+.product-avatar{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    background:linear-gradient(135deg,#0d6efd,#3b82f6);
+    color:#fff;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* Badges */
+.enterprise-badge{
+    display:inline-flex;
+    align-items:center;
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+}
+
+.enterprise-badge.success{
+    background:rgba(25,135,84,.1);
+    color:var(--success-color);
+}
+
+.enterprise-badge.secondary{
+    background:#f1f3f5;
+    color:#667085;
+}
+
+.category-badge{
+    background:#f8fafc;
+    border:1px solid #e4e7ec;
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:500;
+}
+
+/* Action */
+.action-btn{
+    border-radius:10px;
+    width:38px;
+    height:38px;
+}
+
+/* Empty */
+.empty-state{
+    padding:40px 20px;
+}
+
+.empty-icon{
+    width:90px;
+    height:90px;
+    border-radius:22px;
+    background:#f8f9fa;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:36px;
+    color:#98a2b3;
+}
+
+/* Mobile */
+@media(max-width:768px){
+
+    .enterprise-search{
+        min-width:100%;
+    }
+
+}
+
+</style>
+
+<!-- Smart Search -->
+<script>
+
+const searchInput = document.getElementById('productSearch');
+
+searchInput.addEventListener('keyup', function(){
+
+    const value = this.value.toLowerCase();
+
+    const rows = document.querySelectorAll('#productTable tr');
+
+    rows.forEach((row)=>{
+
+        const text = row.innerText.toLowerCase();
+
+        row.style.display = text.includes(value)
+            ? ''
+            : 'none';
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

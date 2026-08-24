@@ -1,0 +1,119 @@
+{% extends "hr/base.html" %}
+{% load group_tags %}
+{% block title %}Orientation Plan{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold mb-1 text-dark"><i class="fa fa-compass text-success me-2"></i>Orientation Plan</h3>
+      <small class="text-muted">{{ plan.staff.get_full_name|default:plan.staff.username }} • {{ plan.staff.unit.name|default:"—" }}</small>
+    </div>
+    {% if request.user|has_group:"HR" or request.user.is_superuser %}
+      <div class="d-flex gap-2 mt-3 mt-md-0">
+        <a class="btn btn-outline-success" href="{% url 'department_list' %}">
+          <i class="fa fa-building me-1"></i>Departments
+        </a>
+        <a class="btn btn-outline-secondary" href="{% url 'orientation_hr_list' %}">
+          <i class="fa fa-list me-1"></i>All Plans
+        </a>
+      </div>
+    {% endif %}
+    <nav aria-label="breadcrumb" class="mt-3 mt-md-0">
+      <ol class="breadcrumb mb-0 bg-transparent p-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-success"><i class="fa fa-home"></i> Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'orientation_hr_list' %}" class="text-decoration-none text-success">Orientation</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Plan</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="fw-semibold">Overall Progress</div>
+            <span class="badge {% if plan.status == 'completed' %}bg-success{% elif plan.status == 'canceled' %}bg-secondary{% else %}bg-primary{% endif %}">{{ plan.get_status_display }}</span>
+          </div>
+          <div class="progress mt-3" style="height:12px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ plan.completion_percent }}%;" aria-valuenow="{{ plan.completion_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <div class="small text-muted mt-2">{{ plan.completion_percent }}% complete</div>
+          <hr class="my-3">
+          <div class="small text-muted">Created</div>
+          <div class="fw-semibold">{{ plan.created_at|date:"M d, Y H:i" }}</div>
+          <div class="small text-muted mt-2">Created by</div>
+          <div class="fw-semibold">{{ plan.created_by.get_full_name|default:"—" }}</div>
+          {% if plan.notes %}
+            <hr class="my-3">
+            <div class="small text-muted">HR Notes</div>
+            <div>{{ plan.notes }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-semibold"><i class="fa fa-calendar-check me-1"></i>Department Sessions</h6>
+          <a href="{% url 'orientation_hr_list' %}" class="btn btn-sm btn-outline-secondary"><i class="fa fa-arrow-left me-1"></i>Back</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="ps-4">Unit</th>
+                  <th>Head</th>
+                  <th>Schedule</th>
+                  <th>Status</th>
+                  <th class="pe-4">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for s in plan.sessions.all %}
+                <tr>
+                  <td class="ps-4 fw-semibold">
+                    {% if request.user == s.unit.head %}
+                          <a href="{% url 'orientation_head_session_schedule' s.id %}">
+                    {{ s.unit.name }}
+                            </a>
+
+                    {% else %}
+                    {{ s.unit.name }}
+                    {% endif %}
+                  </td>
+                  <td>{{ s.unit.head.get_full_name|default:"—" }}</td>
+                  <td>
+                    {% if s.scheduled_start %}
+                      <div class="fw-semibold">{{ s.scheduled_start|date:"M d, Y H:i" }}</div>
+                      <div class="text-muted small">to {{ s.scheduled_end|date:"H:i" }}</div>
+                    {% else %}
+                      <span class="text-muted">Not scheduled</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge {% if s.status == 'completed' %}bg-success{% elif s.status == 'scheduled' %}bg-info text-dark{% elif s.status == 'awaiting_schedule' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                      {{ s.get_status_display }}
+                    </span>
+                  </td>
+                  <td class="pe-4">
+                    {% if s.completion_notes %}
+                      <span class="text-muted small">{{ s.completion_notes }}</span>
+                    {% else %}
+                      <span class="text-muted small">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

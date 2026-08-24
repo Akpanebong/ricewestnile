@@ -1,0 +1,278 @@
+{% load custom_tags %}
+{% load humanize %}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="utf-8">
+
+<style>
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #222;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: auto;
+    }
+
+    /* HEADER */
+    .header {
+        border-bottom: 1px solid #ccc;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+    }
+
+    .header table {
+        width: 100%;
+    }
+
+    .small-text {
+        font-size: 12px;
+        color: #444;
+    }
+
+    /* TITLE ROW */
+    .title-row {
+        display: flex;
+        align-items: center;
+        margin: 10px 0 15px;
+    }
+
+    .title-left,
+    .title-center,
+    .title-right {
+        flex: 1;
+    }
+
+    .title-center {
+        text-align: center;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.4px;
+    }
+
+    .title-right {
+        text-align: right;
+    }
+
+    .date-box {
+        border: 1px solid black;
+        padding: 4px 10px;
+        font-size: 12px;
+        display: inline-block;
+    }
+
+    /* TABLE */
+    .main-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+    }
+
+    .main-table td,
+    .main-table th {
+        border: 1px solid #ccc;
+        padding: 6px 8px;
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+    .main-table th {
+        background: #f5f5f5;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    /* SECTION */
+    .section-title {
+        font-weight: 600;
+        font-size: 14px;
+        margin-top: 12px;
+        margin-bottom: 5px;
+        border-left: 3px solid #888;
+        padding-left: 8px;
+    }
+
+    .content-box {
+        border: 1px solid #ddd;
+        padding: 10px;
+        min-height: 45px;
+        background: #fafafa;
+    }
+
+    /* FOOTER */
+    .footer {
+        margin-top: 20px;
+        font-size: 11px;
+        color: #555;
+    }
+
+    .footer table {
+        width: 100%;
+    }
+
+    img.signature {
+        height: 20px;
+    }
+
+    img.logo {
+        height: 50px;
+    }
+</style>
+
+</head>
+
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+    <table>
+        <tr>
+            <td width="25%" align="right">
+                <img src="{{ logo_url }}" class="logo" style="height:80px; width:200px">
+            </td>
+            <td width="5%"></td>
+            <td width="70%" class="small-text">
+                P.O. Box 481 Arua - Uganda<br>
+                <b>T:</b> +256 393 238 163 |
+                <b>M:</b> +256 773 472234 | +256 702 857349<br>
+                <b>E:</b> info@ricewestnile.org<br>
+                www.ricewestnile.org
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- TITLE + DATE -->
+<div class="title-row">
+    <div class="title-left"></div>
+ <div class="title-right">
+        <span class="date-box" >V May 21</span>
+    </div>
+    <div class="title-center">
+        ADMINISTRATION EXPENSES CONCEPT NOTE
+    </div>
+</div>
+
+<!-- MAIN TABLE -->
+<table class="main-table">
+    <tr>
+        <th style="width:20%; color:white; border:none">#</th>
+        <th>Written by</th>
+        <th>Reviewed by</th>
+        <th>Approved by</th>
+    </tr>
+
+    <tr>
+        <td>Name of Staff</td>
+        <td>{{ obj.created_by }}</td>
+        <td>{{ obj.reviewed_by }}</td>
+        <td>{{ obj.approved_by }}</td>
+    </tr>
+
+    <tr>
+        <td>Designation</td>
+        <td>{{ obj.created_by.designation|default:'-' }}</td>
+        <td>{{ obj.reviewed_by.designation|default:'-' }}</td>
+        <td>{{ obj.approved_by.designation|default:'-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Signature</td>
+        <td>
+            {% if obj.created_by.signature %}
+                <img src="{{ obj.created_by.signature.path }}" class="signature">
+            {% endif %}
+        </td>
+        <td>
+            {% if obj.reviewed_by.signature %}
+                <img src="{{ obj.reviewed_by.signature.path }}" class="signature">
+            {% endif %}
+        </td>
+        <td>
+            {% if obj.approved_by.signature %}
+                <img src="{{ obj.approved_by.signature.path }}" class="signature">
+            {% endif %}
+        </td>
+    </tr>
+
+    <tr>
+        <td>Date of submission</td>
+        <td colspan="3">{{ obj.date_of_submission|default:'-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Purpose</td>
+        <td colspan="3">{{ obj.purpose|default:'-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Department</td>
+        <td colspan="3">{{ obj.department|default:'-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Project</td>
+        <td colspan="3">{{ obj.project }}</td>
+    </tr>
+
+    <tr>
+        <td>Time frame</td>
+        <td colspan="3">
+            From: {{ obj.timeframe_from }}
+            <hr style="border:none; border-top:1px solid #ccc; margin:2px 0;">
+            To: {{ obj.timeframe_to }}
+        </td>
+    </tr>
+
+    <tr>
+        <td>Location details</td>
+        <td colspan="3">{{ obj.location }}</td>
+    </tr>
+</table>
+
+<!-- OBJECTIVES -->
+<div class="section-title">Objectives</div>
+<div class="content-box">{{ obj.objectives }}</div>
+
+<!-- EXPECTED OUTPUT -->
+<div class="section-title">Expected outputs</div>
+<div class="content-box">{{ obj.expected_outputs }}</div>
+
+<!-- BUDGET -->
+<div class="section-title">Proposed budget</div>
+<div class="content-box">
+    {{ obj.proposed_budget|num_to_words:request }}
+    ({{ obj.proposed_budget|money:request }})
+</div>
+
+<!-- SERVICE PROVIDERS -->
+<div class="section-title">Service providers</div>
+<div class="content-box">{{ obj.service_providers }}</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    <table>
+        <tr>
+            <td>
+                <strong>Head Office - Arua</strong><br>
+                Plot 16 Block Awudele, Odaa Road,<br>
+                Arua Municipality, Arua City.
+            </td>
+            <td style="text-align:right;">
+                <strong>Moyo Office</strong><br>
+                Adu Village, Vuraa Parish,<br>
+                Moyo Sub-County, Moyo District.
+            </td>
+        </tr>
+    </table>
+</div>
+</div>
+</body>
+</html>

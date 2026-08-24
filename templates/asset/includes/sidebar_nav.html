@@ -1,0 +1,102 @@
+{% with current_url=request.resolver_match.url_name %}
+
+<!-- ===================== DASHBOARD ===================== -->
+<a href="{% url 'asset:dashboard' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'dashboard' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-house"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Dashboard
+    </span>
+
+</a>
+
+
+<!-- ===================== ASSET MANAGEMENT ===================== -->
+<div class="sidebar-section">
+    <span>ASSET MANAGEMENT</span>
+</div>
+
+
+<div class="sidebar-module
+    {% if current_url == 'asset_list' or current_url == 'asset_create' %}
+        module-open
+    {% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#assetManagementMenu"
+            aria-expanded="{% if current_url == 'asset_list' or current_url == 'asset_create' %}true{% else %}false{% endif %}"
+            aria-controls="assetManagementMenu">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-boxes-stacked"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Asset Management
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+        {% if current_url == 'asset_list' or current_url == 'asset_create' %}
+            show
+        {% endif %}"
+        id="assetManagementMenu">
+
+        <!-- Assets -->
+        <a href="{% url 'asset:asset_list' %}"
+           class="{% if current_url == 'asset_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span>Assets</span>
+
+        </a>
+
+
+        <!-- Add Asset -->
+        <a href="{% url 'asset:asset_create' %}"
+           class="{% if current_url == 'asset_create' %}active{% endif %}">
+
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Asset</span>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- ===================== SUPPORT ===================== -->
+<div class="sidebar-section sidebar-support-title">
+    <span>SUPPORT</span>
+</div>
+
+<a href="#"
+   class="sidebar-support-link">
+
+    <span class="sidebar-module-icon">
+        <i class="fa-solid fa-life-ring"></i>
+    </span>
+
+    <span>
+        Help & Support
+    </span>
+
+</a>
+
+{% endwith %}

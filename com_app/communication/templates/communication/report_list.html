@@ -1,0 +1,69 @@
+{% extends 'communication/base.html' %}
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold">Reports</h4>
+        <a class="btn btn-success" href="{% url 'comm:reports_add' %}">
+            <i class="bi bi-plus-lg"></i> Submit Report
+        </a>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Focus Area</th>
+                    <th>By</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reports %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <a href="{% url 'comm:report_detail' r.pk %}">
+                            {{ r.title|default:r.file.name }}
+                        </a>
+                    </td>
+                    <td>{{ r.get_report_type_display }}</td>
+                    <td>{{ r.focus_area }}</td>
+                    <td>{{ r.sent_by }}</td>
+                    <td>{{ r.date_sent|date:"Y-m-d" }}</td>
+                    <td>
+                        {% if r.received %}
+                            <span class="badge bg-success">Reviewed</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'comm:report_review' r.pk %}">
+                            <i class="bi bi-eye"></i> {% if r.received %}View{% else %}Review{% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted">No reports yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        {% include 'pagination.html' %}
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "hr/base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block content %}
+
+        {% with page_title="Staff Attendance" page_subtitle="Staff Attendance" breadcrumb="Staff Attendance" %}
+            {% include "breadcrumb.html" %}
+        {% endwith %}
+
+
+
+
+    <form method="get" class="d-flex flex-wrap align-items-end gap-3 mb-4">
+
+        <div>
+            <label class="form-label">Start Date:</label>
+            <input type="date" name="start_date" class="form-control">
+        </div>
+
+        <div>
+            <label class="form-label">End Date:</label>
+            <input type="date" name="end_date" class="form-control">
+        </div>
+
+        <div class="dropdown">
+            <button class="btn btn-success dropdown-toggle"
+        type="button"
+        data-bs-toggle="dropdown"
+        aria-expanded="false">
+                <i class="fa fa-download"></i> Export
+            </button>
+
+            <div class="dropdown-menu">
+                <button type="submit" formaction="{% url 'export_attendance_pdf' %}" class="dropdown-item">
+                    PDF
+                </button>
+                <button type="submit" formaction="{% url 'export_attendance_excel' %}" class="dropdown-item">
+                    Excel
+                </button>
+                <button type="submit"
+                        formaction="{% url 'export_attendance_pdf' %}?month={% now 'm' %}"
+                        class="dropdown-item">
+                    Current Monthly
+                </button>
+            </div>
+        </div>
+
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Attendance</h5>
+        </div>
+
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Address</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.employee.get_full_name|default:record.employee }}</td>
+                        <td>{{ record.date }}</td>
+                        <td>
+                            {% if record.status == "Present" %}
+                                <span class="badge bg-success">Present</span>
+                            {% elif record.status == "Leave" %}
+                                <span class="badge bg-warning text-dark">Leave</span>
+                            {% else %}
+                                <span class="badge bg-danger">Absent</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if record.latitude and record.longitude %}
+                                <a href="https://www.google.com/maps?q={{ record.latitude }},{{ record.longitude }}"
+                                   target="_blank">
+                                   📍 View Map
+                                </a>
+                            {% else %}Signed by HR{% endif %}
+                        </td>
+                        <td>{{ record.address|default:"Signed by HR " }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center">No records available.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "pagination.html" with page_obj=records %}
+
+            <div class="text-right mt-3">
+                {% if request.user.is_superuser %}
+                    <a href="{% url 'mark_attendance' %}" class="btn btn-success">
+                        Mark Attendance
+                    </a>
+                {% endif %}
+                <a href="{% url 'staff_mark_attendance' %}" class="btn btn-info">
+                    Mark Attendance
+                </a>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

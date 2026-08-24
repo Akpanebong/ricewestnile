@@ -1,0 +1,52 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+<h4>Compliance Calendar</h4>
+    <div class="card shadow-sm p-3">
+
+    <table class="table table-bordered align-middle" id="task-table">
+        <thead class="table-light">
+            <tr>
+                <th>Requirements</th>
+                <th>Due Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+<tbody>
+    {% for t in tasks %}
+    <tr>
+        <td>
+            <a href="{% url 'task_detail' t.id %}" class="fw-semibold text-decoration-none">
+                {{ t.requirement.title|title }}
+            </a>
+        </td>
+        <td>{{ t.due_date }}</td>
+        <td>
+            {% if t.status == "overdue" %}
+                <span class="badge bg-danger">Overdue</span>
+            {% elif t.status == "in_progress" %}
+                <span class="badge bg-info">In Progress</span>
+             {% elif t.status == "pending" %}
+                <span class="badge bg-primary">Pending</span>
+            {% elif t.status == "warning" %}
+                <span class="badge bg-warning text-dark">Upcoming</span>
+            {% elif t.status == "completed" %}
+                <span class="badge bg-success text-dark">Completed</span>
+            {% else %}
+                <span class="badge bg-secondary">{{t.status}}</span>
+            {% endif %}
+
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+    </table>
+
+</div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold">{{ object.partner_name }}</h3>
+        <small class="text-muted">Partner Due Diligence Overview</small>
+    </div>
+
+    <div>
+        {% if object.status == 'pending' or object.status == 'reviewed' %}
+            <a href="{% url 'partner_approve' object.pk %}" class="btn btn-success btn-sm">Approve</a>
+            <a href="{% url 'partner_reject' object.pk %}" class="btn btn-danger btn-sm">Reject</a>
+            <a href="{% url 'partner_review' object.pk %}" class="btn btn-warning btn-sm">Mark Reviewed</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- STATUS + RISK -->
+<div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h6>Status</h6>
+            <span class="badge bg-{% if object.status == 'approved' %}success{% elif object.status == 'rejected' %}danger{% elif object.status == 'reviewed' %}warning{% else %}secondary{% endif %}">
+                {{ object.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h6>Risk Rating</h6>
+            <span class="badge bg-{% if object.risk_rating == 'low' %}success{% elif object.risk_rating == 'medium' %}warning{% elif object.risk_rating == 'high' %}danger{% else %}dark{% endif %}">
+                {{ object.get_risk_rating_display }}
+            </span>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h6>Start Date</h6>
+            <strong>{{ object.start_date|default:"—" }}</strong>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center p-3">
+            <h6>End Date</h6>
+            <strong class="{% if object.end_date and object.end_date <= today %}text-danger{% endif %}">
+                {{ object.end_date|default:"—" }}
+            </strong>
+        </div>
+    </div>
+
+</div>
+
+<!-- SCORE DASHBOARD -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-light">
+        <strong>Assessment Scores</strong>
+    </div>
+
+    <div class="card-body">
+        <div class="row g-4 text-center">
+
+            <div class="col-md-4">
+                <h6>Governance</h6>
+                <div class="progress">
+                    <div class="progress-bar bg-primary" style="width: {{ object.governance_score }}%">
+                        {{ object.governance_score }}%
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <h6>Financial Capacity</h6>
+                <div class="progress">
+                    <div class="progress-bar bg-success" style="width: {{ object.financial_capacity_score }}%">
+                        {{ object.financial_capacity_score }}%
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <h6>Compliance</h6>
+                <div class="progress">
+                    <div class="progress-bar bg-warning" style="width: {{ object.compliance_score }}%">
+                        {{ object.compliance_score }}%
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- DONOR ALIGNMENT -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-light">
+        <strong>Donor Alignment Notes</strong>
+    </div>
+
+    <div class="card-body">
+        <p class="text-muted">
+            {{ object.donor_alignment_notes|default:"No notes provided." }}
+        </p>
+    </div>
+</div>
+
+<!-- FOOTER ACTIONS -->
+<div class="d-flex justify-content-end gap-2">
+    <a href="{% url 'partner_update' object.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
+    <a href="{% url 'partner_delete' object.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
+</div>
+
+</div>
+
+{% endblock %}

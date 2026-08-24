@@ -1,0 +1,253 @@
+{% extends "garcis/base.html" %}
+{% load form_tags %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow-lg border-0 rounded-4">
+
+        <!-- ================= HEADER ================= -->
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                {% if is_update %}
+                    Update External Audit → {{ form.instance.title }}
+                {% else %}
+                    Create External Audit Engagement
+                {% endif %}
+            </h5>
+
+            <span class="badge bg-light text-dark">
+                {{ form.instance.approval_status|default:"Draft" }}
+            </span>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- ================= ENGAGEMENT INFO ================= -->
+                <h6 class="fw-bold text-muted mb-3">Engagement Information</h6>
+
+                <div class="row g-3">
+
+                     <div class="col-md-12">
+                        <label class="form-label">Audit Log</label>
+                        {{ form.audit_log|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Title</label>
+                        {{ form.title|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Audit Firm</label>
+                        {{ form.audit_firm|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Start Date</label>
+                        {{ form.start_date|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">End Date</label>
+                        {{ form.end_date|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Scope</label>
+                        {{ form.scope|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Shared Data Scope</label>
+                        {{ form.shared_data_scope|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        {{ form.status|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Donor Report Required</label>
+                        <div class="form-check mt-2">
+                            {{ form.donor_report_required }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <hr class="my-4">
+
+                <!-- ================= EXTERNAL FINDINGS ================= -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0">External Audit Findings</h6>
+                    <small class="text-muted">Map to internal findings and risks</small>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
+
+                    {{ formset.management_form }}
+
+                    <div id="external-finding-container">
+                        {% for form in formset %}
+                            <div class="external-finding-row mb-3 border rounded-3 p-3 bg-light">
+                                 {% if form.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.errors }}
+                                    </div>
+                                {% endif %}
+
+                                 {% for hidden in form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+
+
+                                <div class="row g-2">
+
+                                    <div class="col-md-6">
+                                        <label class="small text-muted">Title</label>
+                                        {{ form.title|add_class:"form-control" }}
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="small text-muted">Status</label>
+                                        {{ form.status|add_class:"form-control" }}
+                                    </div>
+
+                                    <div class="col-md-3 d-flex align-items-center">
+                                        {{ form.DELETE }}
+                                        <span class="ms-2 small text-muted">Delete</span>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <label class="small text-muted">Recommendation</label>
+                                        {{ form.recommendation|add_class:"form-control" }}
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="small text-muted">Mapped Reference</label>
+                                        {{ form.mapped_reference|add_class:"form-control" }}
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="small text-muted">Internal Finding</label>
+                                        {{ form.related_internal_finding|add_class:"form-control" }}
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="small text-muted">Related Risk</label>
+                                        {{ form.related_risk|add_class:"form-control" }}
+                                    </div>
+
+                                </div>
+
+                                <div class="text-end mt-2">
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            onclick="removeRow(this)">
+                                        Remove
+                                    </button>
+                                </div>
+
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addExternalFinding()">
+                        + Add External Finding
+                    </button>
+
+                </div>
+
+                <!-- ================= ACTIONS ================= -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+
+                    <a href="{% url 'external_audit_engagement_list' %}" class="btn btn-outline-secondary px-4">
+                        Cancel
+                    </a>
+
+                    <div class="d-flex gap-2">
+
+                        {% if form.instance.approval_status == "draft" %}
+                        <button name="save_draft" class="btn btn-secondary px-4">
+                            Save Draft
+                        </button>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary px-4">
+                            Save Engagement
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- ================= JS ================= -->
+<script>
+
+function addExternalFinding() {
+    const container = document.getElementById('external-finding-container');
+    const totalForms = document.getElementById('id_externalauditfinding_set-TOTAL_FORMS');
+
+    let formNum = parseInt(totalForms.value);
+    let firstForm = container.children[0];
+    let newForm = firstForm.cloneNode(true);
+
+    newForm.innerHTML = newForm.innerHTML.replace(/-0-/g, `-${formNum}-`);
+
+    // reset inputs
+    newForm.querySelectorAll('input, textarea, select').forEach(input => {
+        if (input.type === 'checkbox') input.checked = false;
+        else input.value = '';
+    });
+
+    container.appendChild(newForm);
+    totalForms.value = formNum + 1;
+}
+
+function removeRow(button) {
+    const row = button.closest('.external-finding-row');
+    row.remove();
+}
+
+</script>
+
+
+<!-- ================= STYLING ================= -->
+<style>
+
+.card {
+    transition: all 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.external-finding-row {
+    transition: all 0.2s ease;
+}
+.external-finding-row:hover {
+    background: #f8f9fa;
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+</style>
+
+{% endblock %}

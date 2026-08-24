@@ -1,0 +1,30 @@
+{% extends "garcis/base.html" %}
+
+{% block title %}Audit Findings{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card p-3">
+        <h4>Finding Tracker</h4>
+        <table class="table table-striped">
+            <thead><tr><th>Finding</th><th>Audit</th><th>Severity</th><th>Status</th><th>Due</th><th>Action</th></tr></thead>
+            <tbody>
+                {% for finding in findings %}
+                <tr>
+                    <td><a href="{% url 'finding_update' finding.id %}"> {{ finding.title }}</a></td>
+                    <td>{{ finding.audit }}</td>
+                    <td>{{ finding.severity }}</td>
+                    <td>{{ finding.status }}</td>
+                    <td>{{ finding.due_date|default:"-" }}</td>
+                    <td><a href="{% url 'finding_delete' finding.id %}" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                    </a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-muted">No findings logged.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

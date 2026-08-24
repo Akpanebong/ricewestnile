@@ -1,0 +1,548 @@
+
+{% extends "procurement/base.html" %}
+{% load custom_tags %}
+{% load humanize %}
+
+{% block title %}Enterprise Purchase Orders{% endblock %}
+
+{% block content %}
+
+<style>
+
+    .elite-card{
+        border:none;
+        border-radius:20px;
+        overflow:hidden;
+        background:#ffffff;
+        box-shadow:0 4px 24px rgba(15,23,42,.08);
+    }
+
+    .elite-header{
+        background:linear-gradient(135deg,#0f172a,#1e293b);
+        color:white;
+        padding:26px;
+    }
+
+    .elite-header h4{
+        color:white;
+        margin:0;
+        font-weight:800;
+        color:white;
+    }
+
+    .kpi-card{
+        background:white;
+        border-radius:18px;
+        padding:24px;
+        box-shadow:0 3px 18px rgba(0,0,0,.05);
+        height:100%;
+        transition:.3s;
+    }
+
+    .kpi-card:hover{
+        transform:translateY(-3px);
+    }
+
+    .kpi-icon{
+        width:60px;
+        Height:60px;
+        border-radius:16px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:24px;
+        margin-bottom:16px;
+    }
+
+    .search-box{
+        border-radius:14px;
+        overflow:hidden;
+        border:1px solid #dbe2ea;
+        background:white;
+    }
+
+    .search-box input{
+        border:none;
+        box-shadow:none;
+        padding:14px;
+    }
+
+    .search-box .input-group-text{
+        border:none;
+        background:white;
+    }
+
+    .table-enterprise thead{
+        background:#f8fafc;
+    }
+
+    .table-enterprise th{
+        font-size:12px;
+        text-transform:uppercase;
+        letter-spacing:.6px;
+        color:#64748b;
+        border:none;
+        padding:18px;
+        font-weight:700;
+    }
+
+    .table-enterprise td{
+        padding:18px;
+        vertical-align:middle;
+        border-color:#f1f5f9;
+    }
+
+    .po-badge{
+        padding:8px 16px;
+        border-radius:40px;
+        font-size:12px;
+        font-weight:700;
+    }
+
+    .badge-active{
+        background:#dcfce7;
+        color:#166534;
+    }
+
+    .badge-cancelled{
+        background:#fee2e2;
+        color:#991b1b;
+    }
+
+    .supplier-avatar{
+        width:46px;
+        height:46px;
+        border-radius:50%;
+        background:#0d6efd;
+        color:white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-weight:700;
+    }
+
+    .btn-enterprise{
+        border-radius:12px;
+        padding:10px 18px;
+        font-weight:600;
+    }
+
+    .table-hover tbody tr:hover{
+        background:#f8fafc;
+    }
+
+    .dropdown-menu{
+    border:none;
+    border-radius:14px;
+    box-shadow:0 10px 25px rgba(0,0,0,.12);
+}
+
+.dropdown-item{
+    padding:.75rem 1rem;
+    font-weight:500;
+}
+
+.dropdown-item:hover{
+    background:#f8fafc;
+}
+
+.dropdown-toggle::after{
+    display:none;
+}
+
+</style>
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        <!-- PAGE HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+
+            <div>
+
+                <h2 class="fw-bold mb-1">
+                    Local Purchase Orders
+                </h2>
+
+                <div class="text-muted">
+                    Enterprise Procurement Award & Supplier Contract Management
+                </div>
+
+            </div>
+
+            <a href="{% url 'rfq_list' %}"
+               class="btn btn-dark btn-enterprise mt-3 mt-lg-0">
+
+                <i class="fa fa-arrow-left me-2"></i>
+                Back to RFQs
+
+            </a>
+
+        </div>
+
+        <!-- KPI SECTION -->
+        <div class="row mb-4">
+
+            <!-- TOTAL LPO -->
+            <div class="col-lg-4 mb-3">
+
+                <div class="kpi-card">
+
+                    <div class="kpi-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fa fa-file-contract"></i>
+                    </div>
+
+                    <div class="small text-muted">
+                        Total Purchase Orders
+                    </div>
+
+                    <h3 class="fw-bold">
+                        {{ total_po }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+            <!-- ACTIVE -->
+            <div class="col-lg-4 mb-3">
+
+                <div class="kpi-card">
+
+                    <div class="kpi-icon bg-success bg-opacity-10 text-success">
+                        <i class="fa fa-check-circle"></i>
+                    </div>
+
+                    <div class="small text-muted">
+                        Active Purchase Orders
+                    </div>
+
+                    <h3 class="fw-bold">
+                        {{ active_po }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+            <!-- PROCUREMENT VALUE -->
+            <div class="col-lg-4 mb-3">
+
+                <div class="kpi-card">
+
+                    <div class="kpi-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fa fa-money-bill-wave"></i>
+                    </div>
+
+                    <div class="small text-muted">
+                        Procurement Value
+                    </div>
+
+                    <h4 class="fw-bold text-success">
+                        {{ total_amount|money:request }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- MAIN TABLE CARD -->
+        <div class="elite-card">
+
+            <!-- HEADER -->
+            <div class="elite-header">
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+                    <div>
+
+                        <h4>
+                            <i class="fa fa-clipboard-list me-2"></i>
+                            Purchase Order Registry
+                        </h4>
+
+                        <small class="opacity-75">
+                            Procurement audit trail and supplier contract workflow
+                        </small>
+
+                    </div>
+
+                    <!-- SEARCH -->
+                    <div class="search-box input-group mt-3 mt-lg-0"
+                         style="max-width:420px;">
+
+                        <span class="input-group-text">
+                            <i class="fa fa-search"></i>
+                        </span>
+
+                        <input type="text"
+                               id="profileSearch"
+                               class="form-control"
+                               placeholder="Search LPO, supplier, amount...">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- TABLE -->
+            <div class="p-4">
+
+                <div class="table-responsive">
+
+                    <table id="profileTable"
+                           class="table table-hover table-enterprise align-middle">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>#</th>
+                                <th>LPO Number</th>
+                                <th>Supplier</th>
+                                <th>Approved Amount</th>
+                                <th>Issue Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for req in po %}
+
+                            <tr>
+
+                                <!-- INDEX -->
+                                <td>
+
+                                    {{ forloop.counter }}
+
+                                </td>
+
+                                <!-- PO NUMBER -->
+                                <td>
+
+                                    <div>
+
+                                        <div class="fw-bold text-primary">
+                                            <a href="{% url 'purchase_order_detail' req.id %}">
+                                                {{req.po_number }}</a>
+                                        </div>
+
+                                        <small class="text-muted">
+                                         LPO Record
+                                        </small>
+
+                                    </div>
+
+                                </td>
+
+                                <!-- SUPPLIER -->
+                                <td>
+
+                                    <div class="d-flex align-items-center">
+
+                                        <div>
+
+                                            <div class="fw-bold">
+
+                                                {{ req.supplier }}
+
+                                            </div>
+
+                                            <small class="text-muted">
+                                                Approved Supplier
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <!-- AMOUNT -->
+                                <td>
+
+                                    <strong class="text-success">
+
+                                        {{ req.final_amount|money:request }}
+
+                                    </strong>
+
+                                </td>
+
+                                <!-- ISSUE DATE -->
+                                <td>
+
+                                    {{ req.issue_date|date:"d M Y" }}
+
+                                    <div class="small text-muted">
+
+                                        {{ req.issue_date|time:"H:i" }}
+
+                                    </div>
+
+                                </td>
+
+                                <!-- STATUS -->
+                                <td>
+
+                                    {% if req.sent %}
+
+                                        <span class="po-badge badge-active">
+
+                                            <i class="fa fa-check-circle me-1"></i>
+                                            Active
+
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="po-badge badge-cancelled">
+
+                                            <i class="fa fa-times-circle me-1"></i>
+                                            Cancelled
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <!-- ACTIONS -->
+                               <td>
+
+                                     <div class="dropdown">
+
+        <button class="btn btn-light btn-sm border"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+
+            <i class="fa fa-ellipsis-v"></i>
+
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow">
+
+            {% if req.pdf %}
+
+            <li>
+
+                <a class="dropdown-item"
+                   href="{{ req.pdf.url }}"
+                   target="_blank">
+
+                    <i class="fa fa-download text-primary me-2"></i>
+                    Download LPO
+
+                </a>
+
+            </li>
+
+            {% endif %}
+
+               <li>
+
+                <a class="dropdown-item"
+                   href="{% url 'finance:create_cash_req_from_procurement' req.requisition.pk %}">
+
+                    <i class="fa fa-receipt text-success me-2"></i>
+                    Request for Payment
+
+                </a>
+
+            </li>
+
+            <li>
+
+              {% if req.supplier %}
+            <a class="dropdown-item"
+               href="{% url 'supplier_spend_report_detail' req.pk %}">
+                <i class="fa fa-receipt text-success me-2"></i>
+                Receipt / Report
+            </a>
+            {% endif %}
+            </li>
+
+            {% if req.sent %}
+
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+
+            <li>
+
+                <a class="dropdown-item text-danger"
+                   href="{% url 'po_cancel' req.slug %}">
+
+                    <i class="fa fa-times-circle me-2"></i>
+                    Cancel Purchase Order
+
+                </a>
+
+            </li>
+
+            {% endif %}
+
+        </ul>
+
+    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% empty %}
+
+                            <tr>
+
+                                <td colspan="7" class="text-center py-5">
+
+                                    <div class="text-muted">
+
+                                        <i class="fa fa-inbox fa-3x mb-3"></i>
+
+                                        <h5>
+                                            No Purchase Orders Found
+                                        </h5>
+
+                                        <p>
+                                            No LPO records are currently available.
+                                        </p>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- PAGINATION -->
+        {% if is_paginated %}
+            {% include 'pagination.html' %}
+        {% endif %}
+
+    </div>
+
+</main>
+
+{% endblock %}

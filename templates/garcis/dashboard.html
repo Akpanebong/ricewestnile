@@ -1,0 +1,1465 @@
+
+{% extends "garcis/base.html" %}
+
+{% block title %}GARCIS | Enterprise Risk Dashboard{% endblock %}
+
+{% block content %}
+
+<style>
+    .risk-dashboard {
+        --rd-border: #e9ecef;
+        --rd-muted: #6c757d;
+        --rd-dark: #17202a;
+        --rd-success: #198754;
+        --rd-danger: #dc3545;
+        --rd-warning: #f0ad4e;
+        --rd-primary: #0d6efd;
+    }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, #17202a, #243746);
+        color: #fff;
+        border-radius: 18px;
+        padding: 28px;
+        margin-bottom: 24px;
+    }
+
+    .dashboard-header h2 {
+        font-weight: 700;
+        letter-spacing: -.4px;
+    }
+
+    .dashboard-header p {
+        color: rgba(255,255,255,.72);
+    }
+
+    .dashboard-card {
+        background: #fff;
+        border: 1px solid var(--rd-border);
+        border-radius: 16px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.04);
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .dashboard-card-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--rd-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .dashboard-card-header h6 {
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .dashboard-card-body {
+        padding: 20px;
+    }
+
+    .kpi-card {
+        background: #fff;
+        border: 1px solid var(--rd-border);
+        border-radius: 15px;
+        padding: 18px;
+        height: 100%;
+        transition: transform .18s ease,
+                    box-shadow .18s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,.07);
+    }
+
+    .kpi-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 13px;
+        font-size: 17px;
+    }
+
+    .kpi-success .kpi-icon {
+        background: rgba(25,135,84,.1);
+        color: #198754;
+    }
+
+    .kpi-danger .kpi-icon {
+        background: rgba(220,53,69,.1);
+        color: #dc3545;
+    }
+
+    .kpi-warning .kpi-icon {
+        background: rgba(255,193,7,.13);
+        color: #b58100;
+    }
+
+    .kpi-primary .kpi-icon {
+        background: rgba(13,110,253,.1);
+        color: #0d6efd;
+    }
+
+    .kpi-label {
+        font-size: 12px;
+        color: var(--rd-muted);
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .kpi-value {
+        font-size: 25px;
+        line-height: 1.1;
+        font-weight: 750;
+        color: var(--rd-dark);
+    }
+
+    .kpi-meta {
+        font-size: 11px;
+        color: var(--rd-muted);
+        margin-top: 5px;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        height: 300px;
+    }
+
+    .chart-wrapper-sm {
+        height: 270px;
+    }
+
+    .heatmap-wrapper {
+        overflow-x: auto;
+    }
+
+    .risk-heatmap {
+        min-width: 620px;
+        border-collapse: separate;
+        border-spacing: 5px;
+    }
+
+    .risk-heatmap th {
+        font-size: 11px;
+        color: #6c757d;
+        font-weight: 700;
+        padding: 8px;
+    }
+
+    .heat-cell {
+        width: 88px;
+        height: 58px;
+        border-radius: 9px;
+        font-weight: 700;
+        font-size: 15px;
+        border: 0 !important;
+        transition: transform .15s ease;
+    }
+
+    .heat-cell:hover {
+        transform: scale(1.04);
+    }
+
+    .heat-empty {
+        background: #f3f5f7 !important;
+        color: #adb5bd;
+    }
+
+    .heat-very-low {
+        background: #d1e7dd !important;
+        color: #146c43;
+    }
+
+    .heat-low {
+        background: #cfe2ff !important;
+        color: #084298;
+    }
+
+    .heat-moderate {
+        background: #fff3cd !important;
+        color: #997404;
+    }
+
+    .heat-high {
+        background: #f8d7da !important;
+        color: #b02a37;
+    }
+
+    .heat-critical {
+        background: #842029 !important;
+        color: #fff;
+    }
+
+    .heatmap-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 18px;
+        font-size: 11px;
+        color: #6c757d;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .legend-box {
+        width: 13px;
+        height: 13px;
+        border-radius: 3px;
+    }
+
+    .activity-table th {
+        font-size: 11px;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+
+    .activity-table td {
+        font-size: 13px;
+    }
+
+    .quick-link {
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    @media (max-width: 767px) {
+        .dashboard-header {
+            padding: 20px;
+            border-radius: 14px;
+        }
+
+        .chart-wrapper {
+            height: 250px;
+        }
+
+        .kpi-value {
+            font-size: 22px;
+        }
+    }
+</style>
+
+<div class="risk-dashboard container-fluid py-4">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="dashboard-header">
+
+        <div class="d-flex flex-column flex-lg-row
+                    justify-content-between
+                    align-items-lg-center gap-3">
+
+            <div>
+                <div class="small mb-2 opacity-75">
+                    <i class="fa fa-shield-halved me-1"></i>
+                    GARCIS / Enterprise Risk
+                </div>
+
+                <h2 class="mb-1">
+                    Risk & Governance Dashboard
+                </h2>
+
+                <p class="mb-0">
+                    Enterprise-wide overview of risk exposure,
+                    controls, compliance and governance performance.
+                </p>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+
+                <a href="{% url 'risk_list' %}"
+                   class="btn btn-light quick-link">
+                    <i class="fa fa-list me-1"></i>
+                    Risk Register
+                </a>
+
+                <a href="{% url 'export_risk_excel' %}"
+                   class="btn btn-success quick-link">
+                    <i class="fa fa-file-excel me-1"></i>
+                    Excel
+                </a>
+
+                <a href="{% url 'export_risk_pdf' %}"
+                   target="_blank"
+                   class="btn btn-warning quick-link">
+                    <i class="fa fa-file-pdf me-1"></i>
+                    PDF
+                </a>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         KPI GRID
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card kpi-primary">
+                <div class="kpi-icon">
+                    <i class="fa fa-shield-halved"></i>
+                </div>
+
+                <div class="kpi-label">Total Risks</div>
+                <div class="kpi-value">{{ total }}</div>
+                <div class="kpi-meta">Registered risks</div>
+            </div>
+        </div>
+
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card kpi-danger">
+                <div class="kpi-icon">
+                    <i class="fa fa-triangle-exclamation"></i>
+                </div>
+
+                <div class="kpi-label">High Risks</div>
+                <div class="kpi-value text-danger">
+                    {{ high }}
+                </div>
+
+                <div class="kpi-meta">
+                    High & very high
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card kpi-warning">
+                <div class="kpi-icon">
+                    <i class="fa fa-folder-open"></i>
+                </div>
+
+                <div class="kpi-label">Open Risks</div>
+                <div class="kpi-value">
+                    {{ open }}
+                </div>
+
+                <div class="kpi-meta">
+                    Currently identified
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card kpi-primary">
+                <div class="kpi-icon">
+                    <i class="fa fa-gauge-high"></i>
+                </div>
+
+                <div class="kpi-label">Avg. Risk Score</div>
+
+                <div class="kpi-value">
+                    {{ avg_score|floatformat:1 }}
+                </div>
+
+                <div class="kpi-meta">
+                    Portfolio exposure
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card kpi-success">
+                <div class="kpi-icon">
+                    <i class="fa fa-file-shield"></i>
+                </div>
+
+                <div class="kpi-label">Policies</div>
+
+                <div class="kpi-value">
+                    {{ policy_count }}
+                </div>
+
+                <div class="kpi-meta">
+                    Governance policies
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card kpi-success">
+                <div class="kpi-icon">
+                    <i class="fa fa-sliders"></i>
+                </div>
+
+                <div class="kpi-label">Controls</div>
+
+                <div class="kpi-value">
+                    {{ control_count }}
+                </div>
+
+                <div class="kpi-meta">
+                    Active controls
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SECONDARY KPI
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-body">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-center">
+
+                        <div>
+                            <div class="kpi-label">
+                                System Health
+                            </div>
+
+                            <h4 class="fw-bold mb-0">
+                                {{ system_health }}
+                            </h4>
+                        </div>
+
+                        <span class="badge
+                            bg-{{ system_health_class }}-subtle
+                            text-{{ system_health_class }}
+                            px-3 py-2">
+
+                            <i class="fa fa-circle me-1"></i>
+                            {{ system_health }}
+
+                        </span>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-body">
+
+                    <div class="kpi-label">
+                        Open Audit Findings
+                    </div>
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-end">
+
+                        <h4 class="fw-bold mb-0 text-primary">
+                            {{ open_audit_findings }}
+                        </h4>
+
+                        <span class="small text-muted">
+                            Requiring attention
+                        </span>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-4">
+            <div class="dashboard-card">
+                <div class="dashboard-card-body">
+
+                    <div class="kpi-label">
+                        Compliance Score
+                    </div>
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-end">
+
+                        <h4 class="fw-bold mb-0">
+                            {{ avg_compliance_score|floatformat:0 }}%
+                        </h4>
+
+                        <span class="small text-muted">
+                            Enterprise average
+                        </span>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CROSS-MODULE RISK FEATURE MONITOR
+    ====================================================== -->
+
+    <div class="dashboard-card mb-4">
+
+        <div class="dashboard-card-header">
+            <div>
+                <h6>GARCIS Feature Monitor</h6>
+                <small class="text-muted">Incidents, KRIs, controls, continuity, third-party, ESG, and ethics case status</small>
+            </div>
+            <span class="badge bg-light text-dark border">Integrated assurance</span>
+        </div>
+
+        <div class="dashboard-card-body">
+            <div class="row g-3">
+                <div class="col-md-6 col-xl-3">
+                    <a href="{% url 'risk_incident_list' %}" class="kpi-card d-block text-reset">
+                        <div class="kpi-icon kpi-danger"><i class="fa fa-bolt"></i></div>
+                        <div class="kpi-label">Open Incidents</div>
+                        <div class="kpi-value">{{ open_incidents }}</div>
+                        <div class="kpi-meta">Incidents, near misses, fraud, and breaches</div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{% url 'risk_kri_list' %}" class="kpi-card d-block text-reset">
+                        <div class="kpi-icon kpi-warning"><i class="fa fa-wave-square"></i></div>
+                        <div class="kpi-label">Breached KRIs</div>
+                        <div class="kpi-value">{{ breached_kris }}</div>
+                        <div class="kpi-meta">Thresholds requiring escalation</div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{% url 'risk_control_list' %}" class="kpi-card d-block text-reset">
+                        <div class="kpi-icon kpi-primary"><i class="fa fa-shield-halved"></i></div>
+                        <div class="kpi-label">Weak Controls</div>
+                        <div class="kpi-value">{{ weak_controls }}</div>
+                        <div class="kpi-meta">Needs improvement or weak effectiveness</div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{% url 'risk_whistleblower_list' %}" class="kpi-card d-block text-reset">
+                        <div class="kpi-icon kpi-danger"><i class="fa fa-user-shield"></i></div>
+                        <div class="kpi-label">Open Ethics Cases</div>
+                        <div class="kpi-value">{{ open_whistleblower_cases }}</div>
+                        <div class="kpi-meta">Confidential case management</div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'risk_continuity_list' %}" class="dashboard-card d-block text-reset p-3">
+                        <div class="kpi-label">Continuity Tests Due</div>
+                        <div class="kpi-value">{{ continuity_due }}</div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'risk_third_party_list' %}" class="dashboard-card d-block text-reset p-3">
+                        <div class="kpi-label">High Third-Party Exposure</div>
+                        <div class="kpi-value">{{ high_third_party }}</div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'risk_esg_list' %}" class="dashboard-card d-block text-reset p-3">
+                        <div class="kpi-label">Active ESG Records</div>
+                        <div class="kpi-value">{{ active_esg }}</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SCENARIO CONTROL
+    ====================================================== -->
+
+    <div class="dashboard-card mb-4">
+
+        <div class="dashboard-card-body">
+
+            <form method="get"
+                  class="row g-3 align-items-end">
+
+                <div class="col-md-7">
+
+                    <label class="form-label small fw-semibold">
+                        Scenario Analysis
+                    </label>
+
+                    <select name="scenario"
+                            class="form-select">
+
+                        {% for scenario in scenarios %}
+
+                            <option value="{{ scenario.id }}"
+                                {% if selected_scenario and selected_scenario.id == scenario.id %}
+                                    selected
+                                {% endif %}>
+
+                                {{ scenario.name }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-auto">
+
+                    <button type="submit"
+                            class="btn btn-dark">
+
+                        <i class="fa fa-play me-1"></i>
+                        Run Analysis
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CHARTS
+    ====================================================== -->
+
+    <div class="row g-4 mb-4">
+
+        <!-- Risk Distribution -->
+
+        <div class="col-lg-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+                        <h6>
+                            Risk Distribution
+                        </h6>
+
+                        <small class="text-muted">
+                            Current risk exposure by level
+                        </small>
+                    </div>
+
+                    <span class="badge bg-light
+                                 text-dark border">
+                        Portfolio
+                    </span>
+
+                </div>
+
+                <div class="dashboard-card-body">
+
+                    <div class="chart-wrapper">
+                        <canvas id="distChart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Scenario -->
+
+        <div class="col-lg-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+                        <h6>
+                            Scenario Comparison
+                        </h6>
+
+                        <small class="text-muted">
+                            Current versus projected exposure
+                        </small>
+                    </div>
+
+                    <span class="badge bg-light
+                                 text-dark border">
+                        Scenario
+                    </span>
+
+                </div>
+
+                <div class="dashboard-card-body">
+
+                    <div class="chart-wrapper">
+                        <canvas id="scenarioChart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Categories -->
+
+        <div class="col-lg-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+                        <h6>Risk Categories</h6>
+
+                        <small class="text-muted">
+                            Distribution by risk category
+                        </small>
+                    </div>
+
+                </div>
+
+                <div class="dashboard-card-body">
+
+                    <div class="chart-wrapper chart-wrapper-sm">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Trend -->
+
+        <div class="col-lg-6">
+
+            <div class="dashboard-card">
+
+                <div class="dashboard-card-header">
+
+                    <div>
+                        <h6>Risk Trend</h6>
+
+                        <small class="text-muted">
+                            New risks recorded during the last 30 days
+                        </small>
+                    </div>
+
+                </div>
+
+                <div class="dashboard-card-body">
+
+                    <div class="chart-wrapper chart-wrapper-sm">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         RISK HEATMAP
+    ====================================================== -->
+
+    <div class="dashboard-card mb-4">
+
+        <div class="dashboard-card-header">
+
+            <div>
+                <h6>Enterprise Risk Heatmap</h6>
+
+                <small class="text-muted">
+                    Risk concentration by likelihood and impact
+                </small>
+            </div>
+
+            <span class="badge bg-danger-subtle text-danger">
+                Risk Exposure
+            </span>
+
+        </div>
+
+        <div class="dashboard-card-body">
+
+            <div class="heatmap-wrapper">
+
+                <table class="risk-heatmap
+                              table-borderless
+                              text-center">
+
+                    <thead>
+
+                        <tr>
+                            <th rowspan="2">
+                                Likelihood
+                            </th>
+
+                            <th colspan="5">
+                                Impact
+                            </th>
+                        </tr>
+
+                        <tr>
+                            <th>1</th>
+                            <th>2</th>
+                            <th>3</th>
+                            <th>4</th>
+                            <th>5</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for row in heatmap_rows %}
+
+                            <tr>
+
+                                <th>
+                                    {{ row.likelihood }}
+                                </th>
+
+                                {% for cell in row.cells %}
+
+                                    <td
+                                        class="heat-cell {{ cell.class }}"
+                                        title="Likelihood {{ row.likelihood }}, Impact {{ cell.impact }}: {{ cell.count }} risk(s), score {{ cell.score }} - {{ cell.level }}"
+                                    >
+                                        {{ cell.count|default:0 }}
+                                    </td>
+
+                                {% endfor %}
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <div class="heatmap-legend">
+
+                <div class="legend-item">
+                    <span class="legend-box heat-empty"></span>
+                    None
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box heat-very-low"></span>
+                    Very Low (1-4)
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box heat-low"></span>
+                    Low (5-9)
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box heat-moderate"></span>
+                    Moderate (10-14)
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box heat-high"></span>
+                    High (15-19)
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box heat-critical"></span>
+                    Critical (20-25)
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         EMERGING RISKS
+    ====================================================== -->
+
+    <div class="dashboard-card mb-4">
+
+        <div class="dashboard-card-header">
+
+            <div>
+                <h6>Emerging Risks</h6>
+
+                <small class="text-muted">
+                    Risks requiring management attention
+                </small>
+            </div>
+
+            <i class="fa fa-bolt text-warning"></i>
+
+        </div>
+
+        <div class="list-group list-group-flush">
+
+            {% for risk in emerging %}
+
+                <div class="list-group-item
+                            d-flex
+                            justify-content-between
+                            align-items-center">
+
+                    <div>
+                        <div class="fw-semibold">
+                            {{ risk.risk }}
+                        </div>
+
+                        <div class="small text-muted">
+                            {{ risk.risk_id }} · Score {{ risk.score }}
+                            ·
+                            {% if risk.ai_used %}
+                                AI {{ risk.ai_confidence|floatformat:2 }}
+                            {% else %}
+                                Rule-based
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <span class="badge bg-danger">
+                        {{ risk.level }}
+                    </span>
+
+                </div>
+
+            {% empty %}
+
+                <div class="p-4 text-center text-muted">
+
+                    <i class="fa fa-circle-check
+                              text-success
+                              fa-2x mb-2"></i>
+
+                    <div class="fw-semibold">
+                        No emerging risks identified
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ACTIVITY FEED
+    ====================================================== -->
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <div>
+                <h6>Enterprise Activity</h6>
+
+                <small class="text-muted">
+                    Latest governance and risk activity
+                </small>
+            </div>
+
+            <span class="small text-muted">
+                {{ policy_count }} policies ·
+                {{ control_count }} controls
+            </span>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table
+                          table-hover
+                          align-middle
+                          activity-table
+                          mb-0">
+
+                <thead class="table-light">
+
+                    <tr>
+                        <th>When</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th>User</th>
+                        <th>Target</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for activity in recent_activities %}
+
+                        <tr>
+
+                            <td>
+                                {{ activity.created_at|date:"d M Y H:i" }}
+                            </td>
+
+                            <td>
+                                <span class="badge
+                                             bg-light
+                                             text-dark
+                                             border">
+
+                                    {{ activity.module|title }}
+
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ activity.action }}
+                            </td>
+
+                            <td>
+                                {{ activity.actor|default:"System" }}
+                            </td>
+
+                            <td>
+                                {{ activity.object_repr|truncatechars:60 }}
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="5"
+                                class="text-center
+                                       text-muted
+                                       py-5">
+
+                                No tracked activity yet.
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    "use strict";
+
+    /* =========================================================
+       SAFE JSON DATA
+    ========================================================= */
+
+    const riskLevels =
+        {{ levels_json|safe }};
+
+    const riskCounts =
+        {{ level_counts_json|safe }};
+
+    const categoryLabels =
+        {{ category_labels_json|safe }};
+
+    const categoryCounts =
+        {{ category_counts_json|safe }};
+
+    const categoryColors =
+        {{ category_colors_json|safe }};
+
+    const comparison =
+        {{ comparison_json|safe }};
+
+    const trendLabels =
+        {{ trend_labels_json|safe }};
+
+    const trendValues =
+        {{ trend_values_json|safe }};
+
+
+    /* =========================================================
+       GLOBAL CHART DEFAULTS
+    ========================================================= */
+
+    Chart.defaults.font.family =
+        "Inter, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+
+    Chart.defaults.font.size = 12;
+
+    Chart.defaults.color = "#6c757d";
+
+    Chart.defaults.animation = false;
+
+    Chart.defaults.responsive = true;
+
+    Chart.defaults.maintainAspectRatio = false;
+
+
+    /* =========================================================
+       COMMON OPTIONS
+    ========================================================= */
+
+    const commonScales = {
+
+        x: {
+            grid: {
+                display: false
+            },
+
+            ticks: {
+                maxRotation: 0
+            }
+        },
+
+        y: {
+            beginAtZero: true,
+
+            ticks: {
+                precision: 0
+            },
+
+            grid: {
+                color: "#edf0f2"
+            }
+        }
+
+    };
+
+
+    /* =========================================================
+       RISK DISTRIBUTION
+    ========================================================= */
+
+    const distCanvas =
+        document.getElementById("distChart");
+
+    if (distCanvas) {
+
+        new Chart(distCanvas, {
+
+            type: "bar",
+
+            data: {
+
+                labels: riskLevels,
+
+                datasets: [{
+
+                    label: "Risks",
+
+                    data: riskCounts,
+
+                    backgroundColor: [
+                        "#d1e7dd",
+                        "#9ec5fe",
+                        "#ffe69c",
+                        "#f8d7da",
+                        "#842029"
+                    ],
+
+                    borderRadius: 7,
+
+                    borderSkipped: false
+
+                }]
+
+            },
+
+            options: {
+
+                scales: commonScales,
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function(context) {
+
+                                return " " +
+                                    context.raw +
+                                    " risk(s)";
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    /* =========================================================
+       CATEGORY CHART
+    ========================================================= */
+
+    const categoryCanvas =
+        document.getElementById("categoryChart");
+
+    if (categoryCanvas && categoryLabels.length) {
+
+        new Chart(categoryCanvas, {
+
+            type: "doughnut",
+
+            data: {
+
+                labels: categoryLabels,
+
+                datasets: [{
+
+                    data: categoryCounts,
+
+                    backgroundColor: categoryColors,
+
+                    hoverBackgroundColor: categoryColors,
+
+                    borderWidth: 3,
+
+                    borderColor: "#ffffff"
+
+                }]
+
+            },
+
+            options: {
+
+                cutout: "68%",
+
+                plugins: {
+
+                    legend: {
+
+                        position: "bottom",
+
+                        labels: {
+
+                            usePointStyle: true,
+
+                            padding: 15
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    /* =========================================================
+       SCENARIO COMPARISON
+    ========================================================= */
+
+    const scenarioCanvas =
+        document.getElementById("scenarioChart");
+
+    if (
+        scenarioCanvas &&
+        comparison &&
+        comparison.labels
+    ) {
+
+        new Chart(scenarioCanvas, {
+
+            type: "bar",
+
+            data: {
+
+                labels: comparison.labels,
+
+                datasets: [
+
+                    {
+
+                        label: "Current",
+
+                        data: comparison.before,
+
+                        borderRadius: 6,
+
+                        backgroundColor:
+                            "#6c757d"
+
+                    },
+
+                    {
+
+                        label: "After Scenario",
+
+                        data: comparison.after,
+
+                        borderRadius: 6,
+
+                        backgroundColor:
+                            "#198754"
+
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                scales: commonScales,
+
+                plugins: {
+
+                    legend: {
+
+                        position: "bottom",
+
+                        labels: {
+                            usePointStyle: true
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    /* =========================================================
+       30-DAY TREND
+    ========================================================= */
+
+    const trendCanvas =
+        document.getElementById("trendChart");
+
+    if (trendCanvas) {
+
+        new Chart(trendCanvas, {
+
+            type: "line",
+
+            data: {
+
+                labels: trendLabels,
+
+                datasets: [{
+
+                    label: "New Risks",
+
+                    data: trendValues,
+
+                    borderWidth: 2,
+
+                    tension: .35,
+
+                    fill: true,
+
+                    backgroundColor:
+                        "rgba(13,110,253,.08)",
+
+                    borderColor:
+                        "#0d6efd",
+
+                    pointRadius: 3,
+
+                    pointHoverRadius: 5
+
+                }]
+
+            },
+
+            options: {
+
+                scales: commonScales,
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

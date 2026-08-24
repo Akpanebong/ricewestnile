@@ -1,0 +1,67 @@
+{% extends "garcis/base.html" %}
+
+{% block title %}Audit Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="quick-links mb-3">
+        <a href="{% url 'audit_log_list' %}" class="btn btn-dark">Audits</a>
+        <a href="{% url 'external_audit_engagement_list' %}" class="btn btn-info">Engagements</a>
+        <a href="{% url 'audit_finding_list' %}" class="btn btn-outline-dark">Findings</a>
+        <a href="{% url 'audit_evidence_list' %}" class="btn btn-outline-secondary">Evidence</a>
+        <a href="{% url 'external_audit_dashboard' %}" class="btn btn-outline-secondary">External Audit</a>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card p-3"><small>Total Audits</small><h3>{{ audit_count }}</h3></div></div>
+        <div class="col-md-4"><div class="card p-3"><small>Active Audits</small><h3>{{ active_audits }}</h3></div></div>
+        <div class="col-md-4"><div class="card p-3"><small>Open Findings</small><h3>{{ open_findings }}</h3></div></div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h5>Recent Audit Engagements</h5>
+                <table class="table">
+                    <thead><tr><th>Audit</th><th>Type</th><th>Status</th><th>Start</th></tr></thead>
+                    <tbody>
+                        {% for audit in recent_audits %}
+                        <tr><td>{{ audit.title }}</td><td>{{ audit.audit_type }}</td><td>{{ audit.status }}</td><td>{{ audit.start_date }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-muted">No audits scheduled yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h5>Overdue Findings</h5>
+                <table class="table">
+                    <thead><tr><th>Finding</th><th>Severity</th><th>Due Date</th></tr></thead>
+                    <tbody>
+                        {% for finding in overdue_findings %}
+                        <tr><td>{{ finding.title }}</td><td>{{ finding.severity }}</td><td>{{ finding.due_date }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted">No overdue findings.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h5>Recent External Audits</h5>
+                <table class="table">
+                    <thead><tr><th>Title</th><th>Firm</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for audit in recent_external_audits %}
+                        <tr><td>{{ audit.title }}</td><td>{{ audit.audit_firm }}</td><td>{{ audit.get_status_display }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted">No external audits scheduled.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+{% block content %}
+<main class="ttr-wrapper">
+<div class="text-center my-5">
+  {% if code == 400 %}
+    <img src="https://undraw.co/api/illustrations/random?color=FF6F61" class="img-fluid mb-4" style="max-width:300px;">
+    <h1 class="display-4 text-danger">⚠️ 400 - Bad Request</h1>
+    <p class="lead">Oops! Something went wrong with your request.</p>
+  {% elif code == 403 %}
+    <img src="https://cdn-icons-png.flaticon.com/512/564/564619.png" class="img-fluid mb-4" style="max-width:200px;">
+    <h1 class="display-4 text-warning">🚫 403 - Forbidden</h1>
+    <p class="lead">You don’t have permission to access this page.</p>
+  {% elif code == 404 %}
+    <img src="https://cdn-icons-png.flaticon.com/512/580/580185.png" class="img-fluid mb-4" style="max-width:250px;">
+    <h1 class="display-4 text-danger">❌ 404 - Page Not Found</h1>
+    <p class="lead">Sorry, the page you are looking for doesn’t exist.</p>
+  {% elif code == 500 %}
+    <img src="https://cdn-icons-png.flaticon.com/512/3820/3820125.png" class="img-fluid mb-4" style="max-width:250px;">
+    <h1 class="display-4 text-danger">💥 500 - Internal Server Error</h1>
+    <p class="lead">Something went wrong on our side. We’re working to fix it!</p>
+
+    <!-- ✅ Report issue button -->
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="error_code" value="{{ code }}">
+      <input type="hidden" name="error_message" value="Internal Server Error">
+      <button type="submit" class="btn btn-warning mt-3">📩 Report this issue</button>
+    </form>
+  {% else %}
+    <img src="https://cdn-icons-png.flaticon.com/512/564/564619.png" class="img-fluid mb-4" style="max-width:200px;">
+    <h1 class="display-4 text-secondary">⚠️ Error {{ code }}</h1>
+    <p class="lead">{{ message }}</p>
+  {% endif %}
+
+  <!-- Back button -->
+  <a href="{% url 'dashboard' %}" class="btn btn-success mt-3">🏠 Back to Home</a>
+</div>
+</main>
+{% endblock %}

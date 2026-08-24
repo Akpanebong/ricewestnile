@@ -1,0 +1,263 @@
+{% extends "hr/base.html" %}
+{% block title %}Situation Reports{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-white rounded shadow-sm p-4 mb-4 border-start border-4 border-success">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+        <div>
+            <h3 class="fw-bold text-dark mb-1">
+                <i class="fa fa-exclamation-circle text-danger me-2"></i>
+                Situation Reports
+            </h3>
+            <small class="text-muted">
+                Incident & Operational Situation Reports
+            </small>
+        </div>
+
+        <div class="mt-3 mt-md-0">
+            <a href="{% url 'create_sitrep' %}" class="btn btn-success">
+                <i class="fa fa-plus me-1"></i>
+                New Situation Report
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Total Reports</small>
+                    <h6 class="fw-bold">{{ reports.paginator.count }}</h6>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Latest Update</small>
+                    <h6 class="fw-bold">
+                        {% if reports %}
+                            {{ reports.0.created_at|date:"d M Y" }}
+                        {% else %}
+                            --
+                        {% endif %}
+                    </h6>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">System Status</small>
+                    <h6 class="text-success fw-bold">
+                        Operational
+                    </h6>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+
+            <div>
+                <h5 class="mb-0 fw-bold">
+                    <i class="fa fa-file-text-o text-success"></i>
+                    Situation Report Log
+                </h5>
+            </div>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                    <tr>
+
+                        <th width="80">#</th>
+
+                        <th>Situation</th>
+
+                        <th>Reporter</th>
+
+                        <th>Status</th>
+
+                        <th>Reported On</th>
+
+                        {% if request.user.is_superuser %}
+                        <th class="text-end">Action</th>
+                        {% endif %}
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for report in reports %}
+
+                    <tr>
+
+                        <td>
+                            <span class="fw-bold text-secondary">
+                                SIT-{{ report.id|stringformat:"04d" }}
+                            </span>
+                        </td>
+
+                        <td>
+
+                            <div class="fw-semibold">
+                                {{ report.title }}
+                            </div>
+
+                            <small class="text-muted">
+                                Situation Report
+                            </small>
+
+                        </td>
+
+                        <td>
+
+                            <div class="fw-semibold">
+                                {{ report.reporter }}
+                            </div>
+
+                        </td>
+
+                        <td>
+
+                            {% if report.status == "Pending" %}
+
+<span class="badge rounded-pill bg-warning-subtle text-warning border border-warning">
+    <i class="fa fa-clock me-1"></i>
+    Pending
+</span>
+
+{% elif report.status == "Reviewed" %}
+
+<span class="badge rounded-pill bg-info-subtle text-info border border-info">
+    <i class="fa fa-search me-1"></i>
+    Reviewed
+</span>
+
+{% else %}
+
+<span class="badge rounded-pill bg-success-subtle text-success border border-success">
+    <i class="fa fa-check-circle me-1"></i>
+    Resolved
+</span>
+
+{% endif %}
+
+                        </td>
+
+                        <td>
+
+                           <div class="fw-semibold">
+
+                            {{ report.created_at|date:"d M Y" }}
+
+                            </div>
+
+                            <small class="text-muted">
+
+                            {{ report.created_at|timesince }} ago
+
+                            </small>
+
+                        </td>
+
+                        {% if request.user.is_superuser %}
+
+                        <td class="text-end">
+
+                            <a href="{% url 'sitrep_detail' report.id %}"
+                               class="btn btn-outline-success btn-sm">
+
+                                <i class="fa fa-eye"></i>
+
+                                View
+
+                            </a>
+
+                        </td>
+
+                        {% endif %}
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+
+                        <td colspan="6" class="text-center py-5">
+
+                            <div class="py-5 text-center">
+
+                                <i class="fa fa-folder-open fa-4x text-light mb-3"></i>
+
+                                <h4 class="fw-bold">
+
+                                No Situation Reports
+
+                                </h4>
+
+                                <p class="text-muted">
+
+                                Incident reports submitted by staff will appear here.
+
+                                </p>
+
+                                <a class="btn btn-success"
+                                href="{% url 'create_sitrep' %}">
+
+                                Create Situation Report
+
+                                </a>
+
+                                </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div class="card-footer bg-white">
+
+            {% include "pagination.html" with page_obj=reports %}
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

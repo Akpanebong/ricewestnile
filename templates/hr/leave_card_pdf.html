@@ -1,0 +1,124 @@
+
+
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 8px; }
+    .container { border: 1px solid #333; padding: 8px; }
+    .header { display:flex; align-items:center; }
+    .logo { width:120px; }
+    .title { flex:1; text-align:center; font-weight:bold; font-size:16px; }
+    .copy { text-align:right; font-weight:bold; }
+    table { width:100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border:1px solid #333; padding:6px; font-size:11px; vertical-align: top; }
+    .small { font-size:10px; color:#555; }
+
+
+    @page {
+      size: A4 landscape;
+      margin: 12mm;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      margin: 0;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 6px;
+      font-size: 11px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <!-- Use absolute path to the image. If your environment needs file:// prefix add it -->
+        <img src="{{ logo_path }}" alt="logo" style="width:100px;"/>
+      </div>
+      <div class="title">
+        LEAVE RECORDING CARD
+      </div>
+      <div class="copy">
+        {{ copy_title }}
+      </div>
+    </div>
+
+    <p class="small" style="border:none">Employee: {{ employee }} | Generated: {{ generated_at }}</p>
+
+    <p style="border:none">
+        <strong>INSTRUCTION:</strong> The type of Leaves that apply here are:
+  A – Annual B -Maternity C – Paternity D – Study (Pre – Exam and Exams etc.) F – Special (Compassion: Sickness, Family issues) G – Leave without
+  Pay.
+  <p style="border:none">
+  Complete and pass for recommendation to your line manager with whom prior discussions and agreement on the leave must be done. The
+  human resource Officer will sign it as a check and forward it to the Executive Director for Approval. After the Executive Director’s signing, the
+  Human Resource Officer plots it on the Leave Chart. Notice of Annual Leave, Pre – exam leave, exam leave and leave without pay must be given
+  at least 2 weeks early.
+  </p>
+  <strong>Fill both Staff copy and Human Resource Copy and then the staff retains their filled copy.</strong>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date of application</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Type</th>
+          <th>No. of days taken</th>
+          <th>Days entitled</th>
+          <th>Days left</th>
+          <th>Approvals (S / HR / ED)</th>
+        </tr>
+      </thead>
+
+<tbody>
+{% for row in rows %}
+<tr>
+  <td>{{ row.leave.applied_date|date:"Y-m-d" }}</td>
+  <td>{{ row.leave.start_date }}</td>
+  <td>{{ row.leave.end_date }}</td>
+  <td>{{ row.leave.leave_type }}{% if row.leave.special_type %} ({{ row.leave.special_type }}){% endif %}</td>
+  <td>{{ row.days_requested }}</td>
+  <td>{{ row.entitled_days }}</td>
+  <td>{{ row.remaining_days }}</td>
+  <td>
+    {% if row.leave.supervisor_approved %}S✓{% else %}S{% endif %}
+    {% if row.leave.hr_approved %} HR✓{% else %} HR{% endif %}
+    {% if row.leave.ed_approved %} ED✓{% else %} ED{% endif %}
+  </td>
+</tr>
+
+<tr>
+  <td colspan="8" class="small">
+    <strong>Reason:</strong> {{ row.leave.reason|default:"—" }}
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+
+
+    </table>
+
+    <strong>
+        NOTE: Leave cannot be taken unless applied for on this card and approved. Any arrangements made by telephone or word of mouth should
+be confirmed by submitting this card at the earliest Opportunity.
+    </strong>
+
+    <p class="small">NB: This is a system generated card.</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,553 @@
+{% extends 'procurement/base.html' %}
+{% load humanize %}
+
+{% block content %}
+
+<div class="container-fluid mt-4 mb-5">
+
+    <div class="card shadow border-0">
+
+        <!-- HEADER -->
+        <div class="card-header bg-primary text-white py-4">
+
+            <div class="row align-items-center">
+
+                <div class="col-md-8">
+                    <h2 class="fw-bold mb-1">
+                        Supplier Expenditure Report
+                    </h2>
+
+                    <small>
+                        Detailed Supplier Financial Performance &
+                        Procurement Audit Report
+                    </small>
+                </div>
+
+                <div class="col-md-4 text-end">
+                    <h5 class="mb-0">
+                        Report ID #{{ report.id }}
+                    </h5>
+
+                    <small>
+                        Last Updated:
+                        {{ report.last_updated|date:"d M Y H:i" }}
+                    </small>
+                </div>
+
+                <div class="text-end">
+
+    <a href="{% url 'supplier_spend_report_update' report.pk %}"
+       class="btn btn-warning">
+
+        <i class="fas fa-edit"></i>
+        Update Invoice
+    </a>
+
+    <button onclick="window.print()"
+            class="btn btn-primary">
+
+        <i class="fas fa-print"></i>
+        Print Report
+    </button>
+
+</div>
+
+            </div>
+
+        </div>
+
+        <div class="card-body p-5">
+
+            <div class="card-body p-4">
+
+    <!-- SUMMARY CARDS -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-4 mb-3">
+            <div class="card border-success shadow-sm h-100">
+                <div class="card-body text-center">
+                    <small class="text-muted">PO Amount</small>
+                    <h4 class="fw-bold text-success">
+                        {{ report.purchase_order.final_amount|money:request }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card border-info shadow-sm h-100">
+                <div class="card-body text-center">
+                    <small class="text-muted">Invoice Amount</small>
+                    <h4 class="fw-bold text-info">
+                        {{ report.invoice_amount|money:request }}
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card border-warning shadow-sm h-100">
+                <div class="card-body text-center">
+
+                    <small class="text-muted">Payment Status</small>
+
+                    <div class="mt-2">
+
+                        {% if report.payment_status == 'Paid' %}
+                            <span class="badge bg-success fs-6">
+                                PAID
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger fs-6">
+                                NOT PAID
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MAIN CONTENT -->
+
+    <div class="row">
+
+        <!-- SIDEBAR -->
+
+        <div class="col-lg-3 mb-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header bg-dark text-white">
+                    Report Navigation
+                </div>
+
+                <div class="list-group list-group-flush">
+
+                    <button type="button"
+                            class="list-group-item list-group-item-action active section-btn"
+                            data-section="supplier-section">
+
+                        <i class="fas fa-building me-2"></i>
+                        Supplier Information
+
+                    </button>
+
+                    <button type="button"
+                            class="list-group-item list-group-item-action section-btn"
+                            data-section="invoice-section">
+
+                        <i class="fas fa-file-invoice-dollar me-2"></i>
+                        Invoice Details
+
+                    </button>
+
+                    <button type="button"
+                            class="list-group-item list-group-item-action section-btn"
+                            data-section="po-section">
+
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Purchase Order Details
+
+                    </button>
+
+                    <button type="button"
+                            class="list-group-item list-group-item-action section-btn"
+                            data-section="requisition-section">
+
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Requisition Details
+
+                    </button>
+
+                    <button type="button"
+                            class="list-group-item list-group-item-action section-btn"
+                            data-section="items-section">
+
+                        <i class="fas fa-boxes me-2"></i>
+                        Goods / Services
+
+                    </button>
+
+                    <button type="button"
+                            class="list-group-item list-group-item-action section-btn"
+                            data-section="audit-section">
+
+                        <i class="fas fa-history me-2"></i>
+                        Audit Trail
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- CONTENT AREA -->
+
+        <div class="col-lg-9">
+
+            <!-- SUPPLIER SECTION -->
+
+            <div id="supplier-section" class="report-section">
+
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-primary text-white">
+                        Supplier Information
+                    </div>
+
+                    <div class="card-body">
+
+                        <table class="table table-bordered">
+
+                            <tr>
+                                <th width="30%">Supplier</th>
+                                <td>
+                                    {{ report.supplier.full_name|default:report.supplier.title }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Supplier ID</th>
+                                <td>{{ report.supplier.id }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Report ID</th>
+                                <td>{{ report.id }}</td>
+                            </tr>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- INVOICE SECTION -->
+
+            <div id="invoice-section"
+                 class="report-section d-none">
+
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-info text-white">
+                        Invoice Details
+                    </div>
+
+                    <div class="card-body">
+
+                        <table class="table table-bordered">
+
+                            <tr>
+                                <th width="30%">Invoice Number</th>
+                                <td>{{ report.invoice_no|default:"N/A" }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Invoice Date</th>
+                                <td>{{ report.invoice_date|date:"d M Y"|default:"N/A" }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Invoice Amount</th>
+                                <td>
+                                    {{ report.invoice_amount|money:request }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Payment Status</th>
+                                <td>{{ report.payment_status }}</td>
+                            </tr>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- PURCHASE ORDER SECTION -->
+
+            <div id="po-section"
+                 class="report-section d-none">
+
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-success text-white">
+                        Purchase Order Information
+                    </div>
+
+                    <div class="card-body">
+
+                        <table class="table table-bordered">
+
+                            <tr>
+                                <th width="30%">PO Number</th>
+                                <td>{{ report.purchase_order.po_number|default:"N/A" }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Issue Date</th>
+                                <td>{{ report.purchase_order.issue_date|date:"d M Y"|default:"N/A" }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Final Amount</th>
+                                <td>
+                                    {{ report.purchase_order.final_amount|money:request }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Status</th>
+                                <td>
+                                    {% if report.purchase_order.sent %}
+                                        <span class="badge bg-success">Sent</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- REQUISITION SECTION -->
+
+            <div id="requisition-section"
+                 class="report-section d-none">
+
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-warning">
+                        Requisition Information
+                    </div>
+
+                    <div class="card-body">
+
+                        <table class="table table-bordered">
+
+                            <tr>
+                                <th width="30%">Requisition Number</th>
+                                <td>
+                                    {{ report.requisition.number|default:"N/A" }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Request Date</th>
+                                <td>
+                                    {{ report.requisition.date|date:"d M Y"|default:"N/A" }}
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ITEMS SECTION -->
+
+            <div id="items-section"
+                 class="report-section d-none">
+
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-secondary text-white">
+                        Goods / Services Covered By This Payment
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-bordered table-striped">
+
+                                <thead class="table-light">
+
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Description</th>
+                                        <th>Unit</th>
+                                        <th class="text-end">Qty</th>
+                                        <th class="text-end">Unit Price</th>
+                                        <th class="text-end">Line Total</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    {% for item in items %}
+
+                                    <tr>
+
+                                        <td>{{ forloop.counter }}</td>
+
+                                        <td>{{ item.description }}</td>
+
+                                        <td>{{ item.unit_measure }}</td>
+
+                                        <td class="text-end">
+                                            {{ item.qty }}
+                                        </td>
+
+                                        <td class="text-end">
+                                            {{ item.unit_price|money:request }}
+                                        </td>
+
+                                        <td class="text-end fw-bold">
+                                            {{ item.line_total|money:request }}
+                                        </td>
+
+                                    </tr>
+
+                                    {% empty %}
+
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">
+                                            No requisition items found.
+                                        </td>
+                                    </tr>
+
+                                    {% endfor %}
+
+                                </tbody>
+
+                                <tfoot>
+
+                                    <tr class="table-success">
+
+                                        <th colspan="5" class="text-end">
+                                            Invoice Total
+                                        </th>
+
+                                        <th class="text-end">
+                                            {{ report.invoice_amount|money:request }}
+                                        </th>
+
+                                    </tr>
+
+                                </tfoot>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- AUDIT SECTION -->
+
+            <div id="audit-section"
+                 class="report-section d-none">
+
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-dark text-white">
+                        Audit Trail
+                    </div>
+
+                    <div class="card-body">
+
+                        <table class="table table-bordered">
+
+                            <tr>
+                                <th width="30%">Generated By</th>
+                                <td>Procurement Management System</td>
+                            </tr>
+
+                            <tr>
+                                <th>Last Updated</th>
+                                <td>
+                                    {{ report.last_updated|date:"d M Y H:i:s" }}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Total Supplier Spend</th>
+                                <td>
+                                    {{ report.total_spent|money:request }}
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const buttons =
+        document.querySelectorAll('.section-btn');
+
+    const sections =
+        document.querySelectorAll('.report-section');
+
+    buttons.forEach(button => {
+
+        button.addEventListener('click', function () {
+
+            sections.forEach(section => {
+                section.classList.add('d-none');
+            });
+
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document
+                .getElementById(this.dataset.section)
+                .classList.remove('d-none');
+
+            this.classList.add('active');
+
+        });
+
+    });
+
+});
+
+</script>
+
+
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

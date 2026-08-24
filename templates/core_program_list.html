@@ -1,0 +1,1482 @@
+
+{% extends active_base_template|default:'base.html' %}
+
+{% block title %}Core Program Performance{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+
+    <!-- =========================================================
+         PAGE HEADER
+    ========================================================== -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between
+                align-items-lg-center gap-3 mb-4">
+
+        <div>
+            <div class="text-muted small mb-1">
+                <i class="fa fa-home me-1"></i>
+                Dashboard
+                <span class="mx-1">/</span>
+                Core Programs
+            </div>
+
+            <h3 class="fw-bold text-dark mb-1">
+                Core Program Performance
+            </h3>
+
+            <p class="text-muted mb-0">
+                Select a core program to view its current performance,
+                targets and achievement.
+            </p>
+        </div>
+
+        <div class="d-flex align-items-center">
+            <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
+                <i class="fa fa-chart-line me-1"></i>
+                Performance Overview
+            </span>
+        </div>
+
+    </div>
+    <!-- =========================================================
+         PROGRAM GRID
+    ========================================================== -->
+    <div class="row g-4">
+
+        {% for program in programs %}
+
+        <div class="col-12 col-sm-6 col-xl-6">
+
+            <div class="program-card h-100"
+                 role="button"
+                 tabindex="0"
+                 data-chart-url="{% url 'monitoring:core_program_chart' program.pk %}"
+                 data-program-name="{{ program.name|escapejs }}">
+
+                <!-- Card Top -->
+                <div class="program-card-top">
+
+                    <div class="program-icon">
+                        <i class="fa fa-layer-group"></i>
+                    </div>
+
+                    <span class="program-arrow">
+                        <i class="fa fa-arrow-right"></i>
+                    </span>
+
+                </div>
+
+                <!-- Card Content -->
+                <div class="program-card-content">
+
+                    <div class="small text-uppercase text-muted fw-semibold mb-2">
+                        Core Program
+                    </div>
+
+                    <h5 class="program-title">
+                        {{ program.name }}
+                    </h5>
+
+                    <p class="program-description">
+                        View performance against targets and monitor
+                        program achievement.
+                    </p>
+
+                </div>
+
+                <!-- Card Footer -->
+                <div class="program-card-footer">
+
+                    <span>
+                        <i class="fa fa-chart-column me-1"></i>
+                        View Performance
+                    </span>
+
+                    <i class="fa fa-chevron-right"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <div class="col-12">
+
+            <div class="empty-program-state text-center">
+
+                <div class="empty-icon">
+                    <i class="fa fa-folder-open"></i>
+                </div>
+
+                <h5 class="fw-bold mt-3">
+                    No Core Programs Available
+                </h5>
+
+                <p class="text-muted mb-0">
+                    Core programs will appear here once they have been created.
+                </p>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+
+
+<!-- =============================================================
+     PERFORMANCE MODAL
+============================================================== -->
+<div class="modal fade"
+     id="programPerformanceModal"
+     tabindex="-1"
+     aria-labelledby="programPerformanceModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content program-modal-content">
+
+            <!-- =================================================
+                 MODAL HEADER
+            ================================================== -->
+            <div class="modal-header program-modal-header">
+
+                <div class="modal-title-wrapper">
+
+                    <div class="program-modal-kicker">
+                        <i class="fa fa-chart-line me-1"></i>
+                        Core Program Performance
+                    </div>
+
+                    <h5 class="modal-title fw-bold"
+                        id="programPerformanceModalLabel">
+                        Program Performance
+                    </h5>
+
+                </div>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+
+            <!-- =================================================
+                 MODAL BODY
+            ================================================== -->
+            <div class="modal-body program-modal-body">
+
+                <!-- Loading -->
+                <div id="chartLoading"
+                     class="modal-loading text-center py-5">
+
+                    <div class="spinner-border text-success mb-3"
+                         role="status">
+                    </div>
+
+                    <div class="fw-semibold text-dark">
+                        Loading performance data
+                    </div>
+
+                    <small class="text-muted">
+                        Please wait...
+                    </small>
+
+                </div>
+
+
+                <!-- Error -->
+                <div id="chartError"
+                     class="alert alert-danger d-none mb-0">
+
+                    <i class="fa fa-circle-exclamation me-2"></i>
+
+                    <span id="chartErrorMessage">
+                        Unable to load program performance.
+                    </span>
+
+                </div>
+
+
+                <!-- Performance Content -->
+                <div id="chartContent" class="d-none">
+
+                    <!-- =========================================
+                         KPI SUMMARY
+                    ========================================== -->
+                    <div class="row g-3 mb-4">
+
+                        <!-- Reached -->
+                        <div class="col-12 col-sm-4">
+
+                            <div class="kpi-card kpi-success">
+
+                                <div class="kpi-icon">
+                                    <i class="fa fa-users"></i>
+                                </div>
+
+                                <div class="min-w-0">
+
+                                    <div class="kpi-label">
+                                        Reached
+                                    </div>
+
+                                    <div class="kpi-value"
+                                         id="reachedValue">
+                                        0
+                                    </div>
+
+                                    <div class="kpi-description">
+                                        Beneficiaries reached
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Target -->
+                        <div class="col-12 col-sm-4">
+
+                            <div class="kpi-card kpi-primary">
+
+                                <div class="kpi-icon">
+                                    <i class="fa fa-bullseye"></i>
+                                </div>
+
+                                <div class="min-w-0">
+
+                                    <div class="kpi-label">
+                                        Target
+                                    </div>
+
+                                    <div class="kpi-value"
+                                         id="targetValue">
+                                        0
+                                    </div>
+
+                                    <div class="kpi-description">
+                                        Program target
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Achievement -->
+                        <div class="col-12 col-sm-4">
+
+                            <div class="kpi-card kpi-warning">
+
+                                <div class="kpi-icon">
+                                    <i class="fa fa-chart-line"></i>
+                                </div>
+
+                                <div class="min-w-0">
+
+                                    <div class="kpi-label">
+                                        Achievement
+                                    </div>
+
+                                    <div class="kpi-value"
+                                         id="achievementValue">
+                                        0%
+                                    </div>
+
+                                    <div class="kpi-description">
+                                        Target achievement
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         CHART
+                    ========================================== -->
+                    <div class="chart-panel">
+
+                        <div class="chart-panel-header">
+
+                            <div>
+                                <h6 class="fw-bold mb-1">
+                                    Performance Summary
+                                </h6>
+
+                                <small class="text-muted">
+                                    Current year performance
+                                </small>
+                            </div>
+
+                            <span class="current-year-badge">
+                                <i class="fa fa-calendar me-1"></i>
+                                {% now "Y" %}
+                            </span>
+
+                        </div>
+
+
+                        <div class="chart-container">
+                            <canvas id="programChart"></canvas>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 MODAL FOOTER
+            ================================================== -->
+            <div class="modal-footer program-modal-footer">
+
+                <button type="button"
+                        class="btn btn-outline-secondary btn-sm px-4"
+                        data-bs-dismiss="modal">
+
+                    <i class="fa fa-times me-1"></i>
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+/* =========================================================
+   PROGRAM PERFORMANCE MODAL
+   Enterprise / Responsive
+========================================================= */
+
+/*
+ * IMPORTANT:
+ * Do not vertically center this modal.
+ * Start it below the application header.
+ */
+
+#programPerformanceModal {
+    padding-top: 65px !important;
+}
+
+
+/* Modal dialog */
+#programPerformanceModal .modal-dialog {
+    width: calc(100% - 30px);
+    max-width: 850px;
+
+    /*
+     * Override Bootstrap's modal-dialog-centered behaviour.
+     */
+    margin: 0 auto 20px auto !important;
+
+    /*
+     * Leave enough room for the application header.
+     */
+    height: calc(100vh - 85px);
+
+    display: flex;
+    align-items: flex-start;
+}
+
+
+/* Modal itself */
+#programPerformanceModal .modal-content {
+
+    width: 100%;
+
+    max-height: calc(100vh - 85px);
+
+    display: flex;
+    flex-direction: column;
+
+    border: 0;
+    border-radius: 16px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, .20);
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+#programPerformanceModal .program-modal-header {
+
+    position: relative;
+    z-index: 10;
+
+    flex-shrink: 0;
+
+    min-height: 72px;
+
+    padding: 16px 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: linear-gradient(
+        135deg,
+        #198754 0%,
+        #157347 100%
+    );
+
+    color: #ffffff;
+
+    border: 0;
+}
+
+
+/* Header text */
+#programPerformanceModal .modal-title-wrapper {
+    min-width: 0;
+    padding-right: 15px;
+}
+
+
+#programPerformanceModal .program-modal-kicker {
+
+    font-size: .68rem;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: .06em;
+
+    opacity: .82;
+
+    margin-bottom: 3px;
+}
+
+
+#programPerformanceModal .modal-title {
+
+    margin: 0;
+
+    font-size: 1.05rem;
+
+    font-weight: 700;
+
+    line-height: 1.35;
+
+    color: #ffffff;
+
+    word-break: break-word;
+}
+
+
+/* Close button */
+#programPerformanceModal .btn-close {
+
+    flex-shrink: 0;
+
+    opacity: .9;
+
+    filter: brightness(0) invert(1);
+}
+
+
+/* =========================================================
+   BODY
+========================================================= */
+
+#programPerformanceModal .program-modal-body {
+
+    flex: 1 1 auto;
+
+    min-height: 0;
+
+    padding: 20px;
+
+    overflow-y: auto;
+
+    overflow-x: hidden;
+
+    background: #ffffff;
+
+    /*
+     * Prevent body content from pushing
+     * the header out of the viewport.
+     */
+    overscroll-behavior: contain;
+}
+
+
+/* =========================================================
+   KPI CARDS
+========================================================= */
+
+#programPerformanceModal .kpi-card {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-height: 88px;
+
+    padding: 14px 16px;
+
+    background: #ffffff;
+
+    border: 1px solid #e9ecef;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 12px rgba(0, 0, 0, .035);
+}
+
+
+#programPerformanceModal .kpi-icon {
+
+    flex: 0 0 40px;
+
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    font-size: 16px;
+}
+
+
+#programPerformanceModal .kpi-success .kpi-icon {
+
+    background: rgba(25, 135, 84, .10);
+
+    color: #198754;
+}
+
+
+#programPerformanceModal .kpi-primary .kpi-icon {
+
+    background: rgba(13, 110, 253, .10);
+
+    color: #0d6efd;
+}
+
+
+#programPerformanceModal .kpi-warning .kpi-icon {
+
+    background: rgba(255, 193, 7, .13);
+
+    color: #997404;
+}
+
+
+#programPerformanceModal .kpi-label {
+
+    font-size: .67rem;
+
+    text-transform: uppercase;
+
+    letter-spacing: .04em;
+
+    color: #6c757d;
+
+    font-weight: 700;
+}
+
+
+#programPerformanceModal .kpi-value {
+
+    font-size: 1.35rem;
+
+    line-height: 1.25;
+
+    font-weight: 800;
+
+    color: #212529;
+}
+
+
+#programPerformanceModal .kpi-description {
+
+    font-size: .68rem;
+
+    color: #adb5bd;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   CHART PANEL
+========================================================= */
+
+#programPerformanceModal .chart-panel {
+
+    padding: 18px;
+
+    background: #f8f9fa;
+
+    border: 1px solid #e9ecef;
+
+    border-radius: 13px;
+}
+
+
+#programPerformanceModal .chart-panel-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 15px;
+}
+
+
+#programPerformanceModal .current-year-badge {
+
+    flex-shrink: 0;
+
+    padding: 5px 9px;
+
+    border-radius: 20px;
+
+    background: #ffffff;
+
+    border: 1px solid #dee2e6;
+
+    color: #6c757d;
+
+    font-size: .68rem;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   CHART
+========================================================= */
+
+#programPerformanceModal .chart-container {
+
+    position: relative;
+
+    width: 100%;
+
+    height: 250px;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+#programPerformanceModal .modal-loading {
+
+    min-height: 220px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+#programPerformanceModal .program-modal-footer {
+
+    flex-shrink: 0;
+
+    padding: 11px 20px;
+
+    background: #f8f9fa;
+
+    border-top: 1px solid #e9ecef;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 767.98px) {
+
+    #programPerformanceModal {
+
+        padding-top: 55px !important;
+
+    }
+
+
+    #programPerformanceModal .modal-dialog {
+
+        width: calc(100% - 16px);
+
+        height: calc(100vh - 65px);
+
+        margin: 0 auto 10px auto !important;
+
+        max-width: none;
+
+    }
+
+
+    #programPerformanceModal .modal-content {
+
+        max-height: calc(100vh - 65px);
+
+        border-radius: 13px;
+
+    }
+
+
+    #programPerformanceModal .program-modal-header {
+
+        min-height: 64px;
+
+        padding: 13px 16px;
+
+    }
+
+
+    #programPerformanceModal .program-modal-body {
+
+        padding: 15px;
+
+    }
+
+
+    #programPerformanceModal .kpi-card {
+
+        min-height: 75px;
+
+        padding: 11px 12px;
+
+    }
+
+
+    #programPerformanceModal .kpi-icon {
+
+        width: 36px;
+
+        height: 36px;
+
+        flex-basis: 36px;
+
+        font-size: 14px;
+
+    }
+
+
+    #programPerformanceModal .kpi-value {
+
+        font-size: 1.15rem;
+
+    }
+
+
+    #programPerformanceModal .chart-panel {
+
+        padding: 14px;
+
+    }
+
+
+    #programPerformanceModal .chart-container {
+
+        height: 210px;
+
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width: 400px) {
+
+    #programPerformanceModal {
+
+        padding-top: 50px !important;
+
+    }
+
+
+    #programPerformanceModal .modal-dialog {
+
+        width: calc(100% - 10px);
+
+        height: calc(100vh - 60px);
+
+    }
+
+
+    #programPerformanceModal .modal-content {
+
+        max-height: calc(100vh - 60px);
+
+    }
+
+
+    #programPerformanceModal .program-modal-header {
+
+        padding: 11px 13px;
+
+    }
+
+
+    #programPerformanceModal .program-modal-kicker {
+
+        font-size: .60rem;
+
+    }
+
+
+    #programPerformanceModal .modal-title {
+
+        font-size: .92rem;
+
+    }
+
+
+    #programPerformanceModal .program-modal-body {
+
+        padding: 12px;
+
+    }
+
+
+    #programPerformanceModal .chart-container {
+
+        height: 190px;
+
+    }
+
+}
+
+</style>
+
+
+
+<!-- =============================================================
+     STYLES
+============================================================== -->
+<style>
+
+    .program-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-height: 245px;
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 18px;
+        overflow: hidden;
+        cursor: pointer;
+        transition:
+            transform .25s ease,
+            box-shadow .25s ease,
+            border-color .25s ease;
+    }
+
+    .program-card:hover,
+    .program-card:focus {
+        transform: translateY(-5px);
+        border-color: rgba(25, 135, 84, .25);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, .09);
+        outline: none;
+    }
+
+    .program-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 22px 22px 10px;
+    }
+
+    .program-icon {
+        width: 52px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: rgba(25, 135, 84, .10);
+        color: #198754;
+        font-size: 21px;
+    }
+
+    .program-arrow {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #f8f9fa;
+        color: #6c757d;
+        transition: all .25s ease;
+    }
+
+    .program-card:hover .program-arrow {
+        background: #198754;
+        color: #ffffff;
+        transform: translateX(3px);
+    }
+
+    .program-card-content {
+        flex: 1;
+        padding: 10px 22px 20px;
+    }
+
+    .program-title {
+        color: #212529;
+        line-height: 1.35;
+        margin-bottom: 10px;
+    }
+
+    .program-description {
+        color: #6c757d;
+        font-size: .9rem;
+        line-height: 1.6;
+        margin-bottom: 0;
+    }
+
+    .program-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 22px;
+        border-top: 1px solid #f0f0f0;
+        color: #198754;
+        font-size: .85rem;
+        font-weight: 600;
+        background: #fcfcfc;
+    }
+
+    .empty-program-state {
+        padding: 70px 20px;
+        background: #ffffff;
+        border: 1px dashed #dee2e6;
+        border-radius: 18px;
+    }
+
+    .empty-icon {
+        width: 70px;
+        height: 70px;
+        margin: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #f8f9fa;
+        color: #adb5bd;
+        font-size: 28px;
+    }
+
+    /* Modal */
+
+    .program-modal-header {
+        padding: 22px 28px;
+        background: linear-gradient(
+            135deg,
+            #198754 0%,
+            #157347 100%
+        );
+        color: #ffffff;
+    }
+
+    .kpi-card {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        height: 100%;
+        padding: 20px;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 5px 18px rgba(0, 0, 0, .04);
+    }
+
+    .kpi-icon {
+        flex: 0 0 48px;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        font-size: 19px;
+    }
+
+    .kpi-success .kpi-icon {
+        background: rgba(25, 135, 84, .10);
+        color: #198754;
+    }
+
+    .kpi-primary .kpi-icon {
+        background: rgba(13, 110, 253, .10);
+        color: #0d6efd;
+    }
+
+    .kpi-warning .kpi-icon {
+        background: rgba(255, 193, 7, .13);
+        color: #997404;
+    }
+
+    .kpi-label {
+        color: #6c757d;
+        font-size: .78rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: .04em;
+    }
+
+    .kpi-value {
+        color: #212529;
+        font-size: 1.65rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-top: 3px;
+    }
+
+    .kpi-description {
+        color: #adb5bd;
+        font-size: .72rem;
+        margin-top: 3px;
+    }
+
+    .chart-panel {
+        padding: 25px;
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 16px;
+    }
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 340px;
+    }
+
+    @media (max-width: 767.98px) {
+
+        .program-card {
+            min-height: 220px;
+        }
+
+        .program-modal-header {
+            padding: 18px 20px;
+        }
+
+        .modal-body {
+            padding: 20px !important;
+        }
+
+        .chart-panel {
+            padding: 18px;
+        }
+
+        .chart-container {
+            height: 280px;
+        }
+
+        .kpi-value {
+            font-size: 1.35rem;
+        }
+
+    }
+
+</style>
+
+
+<!-- =============================================================
+     CHART.JS
+============================================================== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<!-- =============================================================
+     JAVASCRIPT
+============================================================== -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const modalElement =
+        document.getElementById("programPerformanceModal");
+
+    const modal =
+        new bootstrap.Modal(modalElement);
+
+    const modalTitle =
+        document.getElementById("programPerformanceModalLabel");
+
+    const loading =
+        document.getElementById("chartLoading");
+
+    const content =
+        document.getElementById("chartContent");
+
+    const errorBox =
+        document.getElementById("chartError");
+
+    const errorMessage =
+        document.getElementById("chartErrorMessage");
+
+    const reachedValue =
+        document.getElementById("reachedValue");
+
+    const targetValue =
+        document.getElementById("targetValue");
+
+    const achievementValue =
+        document.getElementById("achievementValue");
+
+    const chartCanvas =
+        document.getElementById("programChart");
+
+    let programChart = null;
+
+
+    /*
+     * Format numbers professionally.
+     */
+    function formatNumber(value) {
+
+        return new Intl.NumberFormat().format(
+            Number(value || 0)
+        );
+
+    }
+
+
+    /*
+     * Reset modal before loading.
+     */
+    function resetModal() {
+
+        loading.classList.remove("d-none");
+        content.classList.add("d-none");
+        errorBox.classList.add("d-none");
+
+        reachedValue.textContent = "0";
+        targetValue.textContent = "0";
+        achievementValue.textContent = "0%";
+
+        if (programChart) {
+
+            programChart.destroy();
+            programChart = null;
+
+        }
+
+    }
+
+
+    /*
+     * Load program performance.
+     */
+    async function loadProgramPerformance(url, programName) {
+
+        resetModal();
+
+        modalTitle.textContent = programName;
+
+        modal.show();
+
+        try {
+
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Accept": "application/json"
+                }
+            });
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `Server returned ${response.status}`
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            /*
+             * Update KPI values.
+             */
+            reachedValue.textContent =
+                formatNumber(data.reached);
+
+            targetValue.textContent =
+                formatNumber(data.target);
+
+            achievementValue.textContent =
+                `${Number(data.achievement || 0).toFixed(1)}%`;
+
+
+            /*
+             * Hide loading and display content.
+             */
+            loading.classList.add("d-none");
+            content.classList.remove("d-none");
+
+
+            /*
+             * Create chart.
+             */
+            programChart =
+                new Chart(chartCanvas, {
+
+                    type: "bar",
+
+                    data: {
+
+                        labels: [
+                            "Reached",
+                            "Target"
+                        ],
+
+                        datasets: [{
+
+                            label: "Program Performance",
+
+                            data: [
+                                Number(data.reached || 0),
+                                Number(data.target || 0)
+                            ],
+
+                            borderRadius: 10,
+
+                            borderWidth: 0,
+
+                            barThickness: 55
+
+                        }]
+
+                    },
+
+                    options: {
+
+                        responsive: true,
+
+                        maintainAspectRatio: false,
+
+                        plugins: {
+
+                            legend: {
+                                display: false
+                            },
+
+                            tooltip: {
+
+                                callbacks: {
+
+                                    label: function (context) {
+
+                                        return (
+                                            " " +
+                                            new Intl.NumberFormat()
+                                                .format(context.raw)
+                                        );
+
+                                    }
+
+                                }
+
+                            }
+
+                        },
+
+                        scales: {
+
+                            y: {
+
+                                beginAtZero: true,
+
+                                ticks: {
+
+                                    precision: 0,
+
+                                    callback: function (value) {
+
+                                        return new Intl.NumberFormat()
+                                            .format(value);
+
+                                    }
+
+                                },
+
+                                grid: {
+                                    color: "rgba(0,0,0,.06)"
+                                }
+
+                            },
+
+                            x: {
+
+                                grid: {
+                                    display: false
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                });
+
+
+        } catch (error) {
+
+            console.error(
+                "Program performance error:",
+                error
+            );
+
+            loading.classList.add("d-none");
+            content.classList.add("d-none");
+
+            errorMessage.textContent =
+                "Unable to load performance data. Please try again.";
+
+            errorBox.classList.remove("d-none");
+
+        }
+
+    }
+
+
+    /*
+     * Program card click.
+     */
+    document.querySelectorAll(".program-card")
+        .forEach(function (card) {
+
+            card.addEventListener("click", function () {
+
+                const url =
+                    this.dataset.chartUrl;
+
+                const programName =
+                    this.dataset.programName;
+
+                loadProgramPerformance(
+                    url,
+                    programName
+                );
+
+            });
+
+
+            /*
+             * Keyboard accessibility.
+             */
+            card.addEventListener("keydown", function (event) {
+
+                if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                ) {
+
+                    event.preventDefault();
+
+                    const url =
+                        this.dataset.chartUrl;
+
+                    const programName =
+                        this.dataset.programName;
+
+                    loadProgramPerformance(
+                        url,
+                        programName
+                    );
+
+                }
+
+            });
+
+        });
+
+
+    /*
+     * Clean up chart when modal closes.
+     */
+    modalElement.addEventListener(
+        "hidden.bs.modal",
+        function () {
+
+            if (programChart) {
+
+                programChart.destroy();
+                programChart = null;
+
+            }
+
+        }
+    );
+
+});
+
+</script>
+
+{% endblock %}
+

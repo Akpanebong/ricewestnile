@@ -1,0 +1,283 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+{% load custom_tags %}
+{% block title %}PO {{ po.number }}{% endblock %}
+{% block content %}
+<main class="ttr-wrapper">
+  <div class="container-fluid">
+    <div class="widget-box">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb bg-light shadow-sm px-3 py-2 rounded">
+        <li class="breadcrumb-item">
+          <a href="{% url 'req_list' %}"><i class="fa fa-home"></i> Procurement Requisitions</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Plan#: {{ po.procurement.number }}</li>
+      </ol>
+    </nav>
+
+    <!-- PO Header -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fa fa-file-invoice"></i> Requisition #{{ po.number }}</h5>
+        <span class="badge bg-light text-success px-3 py-2">Status: {{ po.status|default:"Active" }}</span>
+      </div>
+
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-md-6 mb-3">
+                        <h4>Procurement: {{ po.procurement.number }}</h4>
+
+            <strong>Requisition:</strong> {{ po }}<br/>
+            <strong>Date:</strong> {{ po.date }} <br />
+            <strong>Requester: </strong> {{ po.issued_by }}
+          </div>
+
+
+
+          <!-- Right Column: Approval Progress -->
+          <div class="col-lg-6">
+            <h6 class="text-secondary mb-3"><i class="fa fa-sitemap"></i> Approval Progress</h6>
+
+            <ul class="list-group list-group-flush shadow-sm rounded">
+
+    <!-- Project Head Review -->
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <strong>Project Head Review</strong><br>
+
+            {% if po.reviewed_by and po.status == 'Reviewed' or po.status == 'Approved' %}
+                <small class="text-muted">
+                    By {{ po.reviewed_by.get_full_name|default:po.reviewed_by.username }}
+                    {% if po.reviewed_at %}
+                        on {{ po.reviewed_at|date:"d M Y H:i" }}
+                    {% endif %}
+                </small>
+            {% else %}
+                <small class="text-muted">
+                    Pending review by {{ po.project_head }}
+                </small>
+            {% endif %}
+        </div>
+
+        <span class="badge px-3 py-2 text-white
+            {% if po.status == 'Reviewed' or po.status == 'Checked' or po.status == 'Approved' %}
+                bg-success
+            {% else %}
+                bg-warning
+            {% endif %}
+        ">
+            {% if po.status == 'Reviewed' or po.status == 'Checked' or po.status == 'Approved' %}
+                Reviewed
+            {% else %}
+                Pending
+            {% endif %}
+        </span>
+    </li>
+
+    <!-- Project Accountant Check -->
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <strong>Project Accountant Check</strong><br>
+
+            {% if po.checked_by and po.status == 'Checked' or po.status == 'Approved'  %}
+                <small class="text-muted">
+                    By {{ po.checked_by.get_full_name|default:po.checked_by.username }}
+                    {% if po.checked_at %}
+                        on {{ po.checked_at|date:"d M Y H:i" }}
+                    {% endif %}
+                </small>
+            {% else %}
+                <small class="text-muted">
+                    Pending check by {{ po.project_accountant }}
+                </small>
+            {% endif %}
+        </div>
+
+        <span class="badge px-3 py-2 text-white
+            {% if po.status == 'Checked' or po.status == 'Approved' %}
+                bg-success
+            {% else %}
+                bg-warning
+            {% endif %}
+        ">
+            {% if po.status == 'Checked' or po.status == 'Approved' %}
+                Checked
+            {% else %}
+                Pending
+            {% endif %}
+        </span>
+    </li>
+
+    <!-- Executive Director Approval -->
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <strong>Executive Director Approval</strong><br>
+
+            {% if po.approved_by and po.status == 'Approved' %}
+                <small class="text-muted">
+                    By {{ po.approved_by.get_full_name|default:po.approved_by.username }}
+                    {% if po.approved_at and po.status == 'Approved' %}
+                        on {{ po.approved_at|date:"d M Y H:i" }}
+                    {% endif %}
+                </small>
+            {% else %}
+                <small class="text-muted">
+                    Awaiting Executive Director approval
+                </small>
+            {% endif %}
+        </div>
+
+        <span class="badge px-3 py-2 text-white
+            {% if po.status == 'Approved' %}
+                bg-success
+            {% else %}
+                bg-warning
+            {% endif %}
+        ">
+            {% if po.status == 'Approved' %}
+                Approved
+            {% else %}
+                Pending
+            {% endif %}
+        </span>
+    </li>
+
+</ul>
+            <!-- Optional: visual progress bar -->
+            <!-- Progress bar (put this where you want the visual indicator) -->
+<div class="mt-3">
+  <div class="d-flex justify-content-between align-items-center mb-1">
+    <small class="text-muted">{{ approvals }} / {{ total_stages }} approvals complete</small>
+    <small class="text-muted">
+      {% if po.status == 'Approved' %}
+        Fully approved
+      {% elif po.status == 'Rejected' %}
+        Rejected
+      {% else %}
+        In progress
+      {% endif %}
+    </small>
+  </div>
+
+  <div class="progress" style="height: 15px; width: {{ progress_percent }}%">
+    <div class="progress-bar"
+         role="progressbar"
+         style="width: {{ progress_percent }}%; background-color:green;"
+         aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">{{ progress_percent }}%
+    </div>
+  </div>
+</div>
+
+          </div>
+
+
+        </div>
+      </div>
+      </div>
+
+      <table class="table table-sm table-striped">
+        <thead>
+        <tr><th>#</th>
+          <th>Subject of Procurement</th>
+          <th>Specification</th>
+          <th>Qty</th>
+          <th>Unit price</th>
+          <th>Line total ({{ display_currency }})</th>
+          <th>Delivery Date</th>
+        </tr></thead>
+        <tbody>
+          {% for it in po.items.all %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ it.description }}</td>
+              <td>{{ it.procurement_item.product}}</td>
+              <td>{{ it.qty }}  {% if it.unit_measure %}{{ it.unit_measure }}{% else %}
+                {{it.procurement_item.unit_measure}}{%endif%}</td>
+              <td>{{ it.unit_price|money:request }}</td>
+              <td>{{ it.line_total|money:request }}</td>
+              <td>{% if it.delivery_date %}{{ it.delivery_date }}{% else %}
+                {{it.procurement_item.delivery_date}}{%endif%}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="text-right"><strong>Total ({{ display_currency }}): </strong>{{ po.total|money:request }}</p>
+     {% if po.status != 'Approved' %}
+      <a class="btn btn-secondary" href="{% url 'po_update' po.pk %}">Edit Req.</a>
+      {%endif%}
+
+      {% if po.status == 'Approved' %}
+            <a href="?format=pdf" class="btn btn-danger btn-sm"><i class="fa fa-file-pdf"></i> Export PDF</a>
+            {% if not rfq %}
+
+          <a href="{% if rfq %}#{% else %}{% url 'plan_rfq' po.pk %} {% endif %}"
+             class="btn {% if not rfq %}btn-info {% else %}disabled{% endif %} btn-sm">
+              <i class="fa fa-file-pdf"></i> RFQ
+            </a>
+            {% endif %}
+          {%endif%}
+
+    </div>
+    <!-- Approval Buttons -->
+    {% if user.is_authenticated %}
+    <div class="card shadow-sm border-0">
+      <div class="card-body text-center">
+       <form method="post" action="{% url 'req_approve' po.pk %}">
+    {% csrf_token %}
+
+    {% if request.user == po.procurement.project.project_head and po.status == 'Pending' %}
+
+        <button name="action" value="Reviewed" class="btn btn-success">
+            Review
+        </button>
+
+        <button
+            type="button"
+            class="btn btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#rejectModal"
+            data-action="{% url 'req_approve' po.pk %}">
+            Reject
+        </button>
+
+    {% elif request.user == po.procurement.project.project_accountant and po.status == 'Reviewed' %}
+
+        <button name="action" value="Checked" class="btn btn-success">
+            Check
+        </button>
+
+        <button
+            type="button"
+            class="btn btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#rejectModal"
+            data-action="{% url 'req_approve' po.pk %}">
+            Reject
+        </button>
+
+    {% elif request.user|has_group:'ED' and po.status == 'Checked' %}
+
+        <button name="action" value="Approved" class="btn btn-success">
+            Approve
+        </button>
+
+        <button
+            type="button"
+            class="btn btn-danger"
+            data-bs-toggle="modal"
+            data-bs-target="#rejectModal"
+            data-action="{% url 'req_approve' po.pk %}">
+            Reject
+        </button>
+
+    {% endif %}
+</form>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</main>
+{% endblock %}

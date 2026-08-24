@@ -1,0 +1,166 @@
+{% load custom_tags %}
+<style>
+
+body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+    h1, h2, h3, h4 { color: #1e5631; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 6px; }
+    th { background-color: #f0f0f0; text-align: left; }
+    .right { text-align: right; }
+    .total { font-weight: bold; background: #eafbea; }
+      /* Footer */
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 10pt;
+        color: #555;
+    }
+
+.header {
+    text-align: center;
+    font-weight: bold;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table td, .table th {
+    border: 1px solid black;
+    padding: 5px;
+}
+
+.signature {
+    margin-top: 40px;
+}
+
+ /* FOOTER */
+    .footer {
+        margin-top: 20px;
+        font-size: 11px;
+        color: #555;
+    }
+
+    .footer table {
+        width: 100%;
+    }
+
+    img.signature {
+        height:20px;
+    }
+
+</style>
+   <div class="header">
+  <table style="width: 100%; border: none;">
+    <tr>
+      <td style="width: 30%; text-align: right;border: none;">
+        <img src="{{ logo_url }}" alt="Logo" width="200" height="80">
+      </td>
+      <td style="width: 70%; text-align: left; font-size: 12px;border: none;">
+        P.O. Box 481 Arua - Uganda<br>
+        <strong>T:</strong> +256 393 238 163 | M: 0773 472234 | 0702 857349<br/>
+        <strong>E:</strong> jambo@ricewestnile.org | ricearua@yahoo.com | ricewn@gmail.com<br/>
+         www.ricewestnile.org
+      </td>
+    </tr>
+  </table>
+</div>
+
+  <div class="info">
+        <center><h2><b>ACCOUNTING FORM</b></h2></center>
+      <table>
+            <thead>
+            <tr style="line-height:1; padding:0">
+                 <td  style="border:none; padding:2px"><b>DONOR CODE:</b> {{ obj.donor_code}}</td>
+                <td style="border:none; padding:2px"><b>Department:</b> {{ obj.department }}</td>
+            </tr>
+            <tr style="line-height:1; padding:0">
+                <td style="border:none; padding:2px"><b>Date of Return:</b> {{ obj.date_of_return }}</td>
+            </tr>
+
+            </thead>
+        </table>
+
+<p><strong>Receipts and Expenditures for:</strong> {{obj.description}}</p>
+
+    </div>
+
+
+<table class="table">
+    <thead>
+<tr>
+    <th>Activity Code</th>
+    <th>Program Code</th>
+    <th>Particulars/Details</th>
+    <th>Amount Received ({{ display_currency }})</th>
+    <th>Amount Spent ({{ display_currency }})</th>
+    <th>Balance ({{ display_currency }})</th>
+</tr>
+    </thead>
+    <tbody>
+{% for item in obj.items.all %}
+<tr>
+    <td>{{ item.activity_code }}</td>
+    <td>{{ item.program_code }}</td>
+    <td>{{ item.details }}</td>
+    <td>{{ item.amount_received|money:request }}</td>
+    <td>{{ item.amount_spent|money:request }}</td>
+    <td>{{ item.balance|money:request }}</td>
+</tr>
+{% endfor %}
+    </tbody>
+    <tfoot>
+                <tr >
+                  <th class="text-right">E & O.E</th>
+                  <th colspan="2" class="text-right">Total ({{ display_currency }})</th>
+                    <th>{{ total_received|money:request }}</th>
+                    <th>{{ total_spent|money:request }}</th>
+                  <th>{{ obj.total_amount|money:request }}</th>
+                </tr>
+              </tfoot>
+</table>
+
+<p><strong>AMOUNT SPENT IN WORDS:</strong> {{ total_spent|num_to_words:request }}</p>
+
+<div class="signature">
+    ACCOUNTED BY: {{ obj.created_by|title }} TITLE: {{ obj.created_by.designation }} SIGN:
+    {% if obj.created_by.signature %}<img class="signature" src="{{ obj.created_by.signature.path }}" /> {% else %}N/A{% endif %}
+    DATE: {{obj.created_at}}
+</div>
+
+<div class="signature">
+    CHECKED BY FINANCE: {{ obj.checked_by|title  }} TITLE: {{ obj.checked_by.designation }} SIGN:
+    {% if obj.checked_by.signature %}<img class="signature" src="{{ obj.checked_by.signature.path }}" /> {% else %}N/A{% endif %}
+    DATE: {{obj.created_at}}
+</div>
+
+<div class="signature">
+    REVIEWED BY: {{ obj.reviewed_by|title  }} TITLE: {{ obj.reviewed_by.designation }} SIGN:
+    {% if obj.reviewed_by.signature %}<img class="signature" src="{{ obj.reviewed_by.signature.path }}" /> {% else %}N/A{% endif %}
+    DATE: {{obj.created_at}}
+</div>
+
+<div class="signature">
+    AUTHORIZED BY: {{ obj.approved_by|title  }} TITLE: {{ obj.approved_by.designation }} SIGN:
+    {% if obj.approved_by.signature %}<img class="signature" src="{{ obj.approved_by.signature.path }}"/> {% else %}N/A{% endif %}
+    DATE: {{obj.created_at}}
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    <table>
+        <tr>
+            <td style="text-align:left;border:none">
+                <strong style="color: green">Head Office - Arua</strong><br>
+                Plot 16 Block Awudele, Odaa Road,<br>
+                Arua Municipality, Arua City.
+            </td>
+            <td style="text-align:right;border:none">
+                <strong style="color: green">Moyo Office</strong><br>
+                Adu Village, Vuraa Parish,<br>
+                Moyo Sub-County, Moyo District.
+            </td>
+        </tr>
+    </table>
+</div>

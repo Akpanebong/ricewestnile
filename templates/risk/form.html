@@ -1,0 +1,113 @@
+{% extends "garcis/base.html" %}
+{% block title %}{% if is_update %}Update Risk{% else %}Create Risk{% endif %}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h3 class="mb-1">{% if is_update %}Update Risk{% else %}Capture Risk{% endif %}</h3>
+            <p class="text-muted mb-0">Use the structured register to record program, source, scoring, and mitigation details.</p>
+        </div>
+        <div class="quick-links">
+            <a href="{% url 'risk_list' %}" class="btn btn-outline-secondary">Back to Register</a>
+            <a href="{% url 'risk_matrix' %}" class="btn btn-outline-dark">Risk Matrix</a>
+        </div>
+    </div>
+
+    <form method="post" class="card p-4">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="{{ form.event.id_for_label }}">Risk Event</label>
+                {{ form.event }}
+                <div class="text-danger small">{{ form.event.errors }}</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="{{ form.cause.id_for_label }}">Cause</label>
+                {{ form.cause }}
+                <div class="text-danger small">{{ form.cause.errors }}</div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="{{ form.category.id_for_label }}">Category</label>
+                {{ form.category }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="{{ form.likelihood.id_for_label }}">Likelihood</label>
+                {{ form.likelihood }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="{{ form.impact.id_for_label }}">Impact</label>
+                {{ form.impact }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="{{ form.risk_owner.id_for_label }}">Risk Owner</label>
+                {{ form.risk_owner }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="{{ form.risk_type.id_for_label }}">Risk Type</label>
+                {{ form.risk_type }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+                {{ form.status }}
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="{{ form.mitigation_plan.id_for_label }}">Mitigation Plan</label>
+                {{ form.mitigation_plan }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="{{ form.date_identified.id_for_label }}">Date Identified</label>
+                {{ form.date_identified }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="{{ form.valid_from.id_for_label }}">Valid From</label>
+                {{ form.valid_from }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="{{ form.valid_to.id_for_label }}">Valid To</label>
+                {{ form.valid_to }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="{{ form.next_review_date.id_for_label }}">Next Review Date</label>
+                {{ form.next_review_date }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="{{ form.program.id_for_label }}">Program / Project</label>
+                {{ form.program }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="{{ form.source.id_for_label }}">Source</label>
+                {{ form.source }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="{{ form.business_unit.id_for_label }}">Business Unit</label>
+                {{ form.business_unit }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="{{ form.esg_area.id_for_label }}">ESG Area</label>
+                {{ form.esg_area }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="{{ form.continuity_dependency.id_for_label }}">Continuity Dependency</label>
+                {{ form.continuity_dependency }}
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check mb-2">
+                    {{ form.is_fraud_related }}
+                    <label class="form-check-label" for="{{ form.is_fraud_related.id_for_label }}">Fraud related risk</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-success">{% if is_update %}Update Risk{% else %}Save Risk{% endif %}</button>
+            <a href="{% url 'risk_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            {% if object %}
+            <a href="{% url 'risk_detail' object.pk %}" class="btn btn-outline-dark">View Risk</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

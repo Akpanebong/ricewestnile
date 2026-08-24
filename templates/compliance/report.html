@@ -1,0 +1,41 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+<h3>Compliance Report</h3>
+
+{% for item in report_data %}
+
+<div class="card mb-4 p-3">
+
+<h5>{{ item.req.title }}</h5>
+<p>{{ item.req.description }}</p>
+
+<strong>Score:</strong> {{ item.score|floatformat:1 }}%
+
+<hr>
+
+<h6>Tasks</h6>
+<ul>
+{% for t in item.tasks %}
+<li>{{ t.status }} - {{ t.due_date }} ({{ t.responsible }})</li>
+{% endfor %}
+</ul>
+
+<h6>Verified Documents (MoV)</h6>
+<ul>
+{% for d in item.verified_docs %}
+<li>{{ d.file }}</li>
+{% empty %}
+<li>No verified evidence</li>
+{% endfor %}
+</ul>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

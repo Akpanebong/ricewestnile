@@ -1,0 +1,38 @@
+{% extends "garcis/base.html" %}
+{% load form_tags %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="card shadow-sm p-4">
+
+<h4 class="mb-4">
+    {{ view.object|yesno:"Update Record,Create Record" }}
+</h4>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="row">
+        {% for field in form %}
+        <div class="col-md-6 mb-3">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field|add_class:"form-control" }}
+            <small class="text-danger">{{ field.errors }}</small>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-3">
+        <button class="btn btn-success">Save</button>
+        <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
+    </div>
+
+</form>
+
+</div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,160 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+     <style>
+    body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+    h1, h2, h3, h4 { color: #1e5631; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 6px; }
+    th { background-color: #f0f0f0; text-align: left; }
+    .right { text-align: right; }
+    .total { font-weight: bold; background: #eafbea; }
+      /* Footer */
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 10pt;
+        color: #555;
+    }
+  </style>
+</head>
+<body>
+       <div class="header">
+  <table style="width: 100%; border: none;">
+    <tr>
+      <td style="width: 30%; text-align: right;border: none;">
+        <img src="{% static 'assets/images/ricewn.png' %}" style="width:200px;height:80px;">
+        </td>
+      <td style="width: 70%; text-align: left; font-size: 12px;border: none;">
+        P.O. Box 481 Arua - Uganda<br>
+        <strong>T:</strong> +256 393 238 163 | M: 0773 472234 | 0702 857349<br/>
+        <strong>E:</strong> procurement@ricewestnile.org | ricearua@yahoo.com | ricewn@gmail.com<br/>
+         www.ricewestnile.org
+      </td>
+    </tr>
+  </table>
+</div>
+
+    <div class="info">
+        <center><h2><b>PROCUREMENT PLAN FOR {{ procurement.fiscal_year }}</b></h2></center>
+      <table>
+            <thead>
+            <tr style="line-height:1; padding:0">
+                 <td  style="border:none; padding:2px"><b>Procurement NO:</b> {{ procurement.number }}</td>
+                <td style="border:none; padding:2px"><b>Date:</b> {{ procurement.created_at }}</td>
+            </tr>
+            <tr style="line-height:1; padding:0">
+                <td style="border:none; padding:2px"><b>project:</b> {{ procurement.project }}</td>
+                <td style="border:none; padding:2px"><b>Fiscal Year:</b> {{ procurement.fiscal_year }}</td>
+            </tr>
+            <tr style="line-height:1; padding:0">
+                <td style="border:none; padding:2px"><b>Donor:</b> {{ procurement.donor }}</td>
+                <td style="border:none; padding:2px"><b>Budget:</b> {{ procurement.budget|money:request }}</td>
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <table>
+        <thead>
+        <tr><td colspan="5"><h6><b>Procurement Items</b></h6></td></tr>
+            <tr>
+                <th align="left" width="30">S/N</th>
+                <th>Description</th>
+                <th width="60">Quantity</th>
+                <th width="60">Unit Cost</th>
+                <th width="80">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.qty }}</td>
+                <td>{{ item.est_unit_cost|money:request }}</td>
+                <td>{{ item.line_total|money:request }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+                <tr >
+                  <td colspan="4" class="text-right">Grand Total ({{ display_currency }})</td>
+                  <td>{{ total_amount|money:request  }}</td>
+                </tr>
+              </tfoot>
+    </table>
+   <div class="header">
+  <table style="width: 100%; border: none; color:grey">
+    <tr>
+      <td style="text-align: left; border: none; vertical-align: top;">
+        <!-- Requested By -->
+        <strong>Requested By:</strong> {{ procurement.requester }}
+        <b>Title:</b> {{ procurement.requester.title }}
+        <b>Sign:</b>
+        {% if procurement.requester.signature %}
+          <img src="{{ procurement.requester.signature.path }}" style="width:60px; height:20px">
+        {% else %}
+          <span>---</span>
+        {% endif %}
+        <b>Date:</b> {{ procurement.created_at|date:"d M Y" }}<br/>
+
+        <!-- Department Head Approval -->
+        <strong>Checked By:</strong>
+        {% if procurement.status == 'Approved' and programs_head %}
+          {{ programs_head }}
+          <b>Title:</b> {{ programs_head.designation }}
+          <b>Sign:</b>
+          {% if programs_head.signature %}
+            <img src="{{ programs_head.signature.path }}" style="width:60px; height:20px">
+          {% else %}
+            <span>---</span>
+          {% endif %}
+          <b>Date:</b> {{ procurement.reviewed_at|date:"d M Y" }}
+        {% else %}
+          <span>Pending</span>
+        {% endif %}
+        <br/>
+
+        <!-- ED Approval -->
+        <strong>Authorised By:</strong>
+        {% if procurement.status == 'Approved' and ed %}
+          {{ ed|default:'Executive Director' }}
+          <b>Title:</b> {{ed.designation|default:'Executive Director'}}
+          <b>Sign:</b>
+          {% if ed.signature %}
+            <img src="{{ ed.signature.path }}" style="width:60px; height:20px">
+          {% else %}
+            <span>---</span>
+          {% endif %}
+          <b>Date:</b> {{ procurement.approved_at|date:"d M Y" }}
+        {% else %}
+          <span>Pending</span>
+        {% endif %}
+        <br/>
+
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+
+         <div class="header">
+  <table style="width: 100%; border: none; color:grey">
+    <tr>
+      <td style="width: 50%; text-align: left;border: none;">
+          <u><strong>Head Office - Arua</strong></u><br/>
+          Plot 16 Block Awudele, Odaa Road<br/>Arua Municipal, Arua City.
+      </td>
+      <td style="width: 70%; text-align: right; font-size: 12px;border: none;">
+          <u><strong>Moyo Office</strong></u><br/>
+          Adua Village, Vuraa Parish,<br/>Moyo Sub-County, Moyo District.
+      </td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+
+{% extends active_base_template|default:'base.html' %}
+{% block title %}{% if is_update %}Update {% else %}Create{% endif %}{{project}}{% endblock %}
+{% block content %}
+  <div class="container-fluid">
+    {% include 'message.html' %}
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="widget-box">
+          <div class="widget-inner">
+            <h4 class="badge-primary text-center">{% if is_update %}Update {% else %}Create Project{% endif %} {{project}}</h4>
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+              {% endif %}
+                   <div class="row">
+
+                     {% include 'form.html' %}
+                   </div>
+              <hr>
+
+              <button type="submit" class="btn btn-success">{% if is_update %}Update {% else %}Create{% endif %} Project</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="sidebar-widget">
+          <h5>Tips</h5>
+          <p></p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+

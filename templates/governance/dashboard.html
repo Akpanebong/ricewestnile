@@ -1,0 +1,83 @@
+{% extends "garcis/base.html" %}
+
+{% block title %}Governance Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="quick-links mb-3">
+        <a href="{% url 'policy_list' %}" class="btn btn-dark">Policy Repository</a>
+        <a href="{% url 'control_list' %}" class="btn btn-outline-dark">Controls</a>
+        <a href="{% url 'decision_list' %}" class="btn btn-outline-secondary">Decision Tracking</a>
+        <a href="{% url 'engagement_list' %}" class="btn btn-outline-secondary">Stakeholder Engagement</a>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card p-3"><small>Policies</small><h3>{{ policy_count }}</h3></div></div>
+        <div class="col-md-3"><div class="card p-3"><small>Active Policies</small><h3>{{ active_policies }}</h3></div></div>
+        <div class="col-md-3"><div class="card p-3"><small>Pending Approvals</small><h3>{{ pending_approvals }}</h3></div></div>
+        <div class="col-md-3"><div class="card p-3"><small>Controls</small><h3>{{ control_count }}</h3></div></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h5>Upcoming Policy Reviews</h5>
+                <table class="table">
+                    <thead><tr><th>Policy</th><th>Status</th><th>Review Date</th></tr></thead>
+                    <tbody>
+                        {% for policy in upcoming_reviews %}
+                        <tr><td>{{ policy.title }}</td><td>{{ policy.approval_status }}</td><td>{{ policy.next_review_date }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted">No upcoming reviews.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h5>Controls Requiring Attention</h5>
+                <table class="table">
+                    <thead><tr><th>Control</th><th>Effectiveness</th><th>Next Test</th></tr></thead>
+                    <tbody>
+                        {% for control in weak_controls %}
+                        <tr><td>{{ control.title }}</td><td>{{ control.effectiveness }}</td><td>{{ control.next_test_date|default:"-" }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted">No weak controls flagged.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h5>Recent Decisions</h5>
+                <table class="table">
+                    <thead><tr><th>Decision</th><th>Date</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for decision in recent_decisions %}
+                        <tr><td>{{ decision.title }}</td><td>{{ decision.meeting_date }}</td><td>{{ decision.get_status_display }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-muted">No decisions recorded.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-3">
+                <h5>Stakeholder Engagement Status</h5>
+                <table class="table">
+                    <thead><tr><th>Status</th><th>Total</th></tr></thead>
+                    <tbody>
+                        {% for item in engagement_summary %}
+                        <tr><td>{{ item.status }}</td><td>{{ item.total }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-muted">No engagement data yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

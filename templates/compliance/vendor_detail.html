@@ -1,0 +1,193 @@
+{% extends 'garcis/base.html' %}
+{% load static %}
+
+{% block title %}Vendor Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+       <!-- ALERTS (Auto Logic via template conditions) -->
+    {% if object.end_date %}
+        {% with days_remaining=object.end_date|timeuntil %}
+            <div class="alert alert-warning shadow-sm rounded-3">
+                ⏳ Contract ending soon: {{ days_remaining }} remaining
+            </div>
+        {% endwith %}
+    {% endif %}
+    <div class="row">
+
+
+        <!-- Header -->
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bold mb-1">{{ object.vendor_name }}</h3>
+                        <small class="text-muted">Service Category: {{ object.service_category }}</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'vendor_update' object.id %}" class="btn btn-outline-primary btn-sm">Edit</a>
+                        <a href="{% url 'vendor_delete' object.id %}" class="btn btn-outline-danger btn-sm">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Compliance & Risk Overview</h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <small class="text-muted">Legal Compliance</small>
+                                <div class="fw-semibold">{{ object.legal_compliance_status|title }}</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <small class="text-muted">Risk Rating</small>
+                                <div>
+                                    <span class="badge
+                                        {% if object.risk_rating == 'low' %}bg-success
+                                        {% elif object.risk_rating == 'medium' %}bg-warning text-dark
+                                        {% elif object.risk_rating == 'high' %}bg-danger
+                                        {% else %}bg-dark{% endif %}">
+                                        {{ object.get_risk_rating_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <small class="text-muted">Performance Status</small>
+                                <div>
+                                    <span class="badge bg-info text-dark">
+                                        {{ object.get_performance_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <small class="text-muted">Financial Stability Score</small>
+                                <div class="fw-semibold">{{ object.financial_stability_score }}/100</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contract Info -->
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="fw-semibold mb-3">Contract Details</h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <small class="text-muted">Start Date</small>
+                            <div class="fw-semibold">{{ object.start_date|default:'—' }}</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <small class="text-muted">End Date</small>
+                            <div class="fw-semibold">{{ object.end_date|default:'—' }}</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <small class="text-muted">Contract Ready</small>
+                            <div>
+                                {% if object.contract_ready %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </div>
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Vendor Status</h6>
+
+                    <div class="my-3">
+                        {% if object.ethical_screening_passed %}
+                            <span class="badge bg-success px-3 py-2">Ethically Approved</span>
+                        {% else %}
+                            <span class="badge bg-danger px-3 py-2">Screening Failed</span>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <small class="text-muted">Created</small>
+                            <div class="fw-semibold">{{ object.created_at|date:"M d, Y" }}</div>
+                        </div>
+                        <div>
+                            <small class="text-muted">Updated</small>
+                            <div class="fw-semibold">{{ object.updated_at|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Insights -->
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-3">Quick Insights</h6>
+
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Risk Level</span>
+                            <strong>{{ object.get_risk_rating_display }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Performance</span>
+                            <strong>{{ object.get_performance_status_display }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Compliance</span>
+                            <strong>{{ object.legal_compliance_status|title }}</strong>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+}
+</style>
+
+{% endblock %}
+
+

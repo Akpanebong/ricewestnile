@@ -1,0 +1,143 @@
+{% extends "procurement/base.html" %}
+{% block content %}
+
+<main class="ttr-wrapper">
+<div class="container-fluid py-4">
+
+<h3 class="mb-4">Accounting Form</h3>
+
+<form method="post">
+    {% csrf_token %}
+<div class="row">
+    <!-- Requisition -->
+    <div class="mb-3 col-6">
+        <label>Requisition</label>
+       <input value="{{requisitions}}" class="form-control">
+    </div>
+
+    <!-- Date of return -->
+    <div class="mb-3 col-6">
+        <label>Department</label>
+        <input type="date" name="date_of_return" class="form-control" required>
+    </div>
+</div>
+
+    <!-- Purpose -->
+    <div class="mb-3">
+        <label>Receipts and Expenditures for</label>
+        <textarea name="description" class="form-control" required></textarea>
+    </div>
+    <!-- TABLE -->
+    <table class="table table-bordered" id="acc-table">
+        <thead class="table-light">
+            <tr>
+                <th>Activity</th>
+                <th>Program</th>
+                <th>Details</th>
+                <th>Received (UGX)</th>
+                <th>Spent (UGX)</th>
+                <th>Balance ({{ display_currency }})</th>
+                <th style="width:60px;"></th>
+            </tr>
+        </thead>
+
+        <tbody id="acc-body"></tbody>
+
+        <!-- TOTAL ROW -->
+        <tfoot>
+            <tr>
+                <th colspan="3">Total ({{ display_currency }})</th>
+                <th><input type="text" id="total-received" class="form-control" readonly></th>
+                <th><input type="text" id="total-spent" class="form-control" readonly></th>
+                <th><input type="text" id="total-balance" class="form-control" readonly></th>
+                <th></th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- BUTTONS -->
+    <button type="button" id="add-acc" class="btn btn-primary">
+        + Add Row
+    </button>
+
+    <button type="submit" class="btn btn-success mt-3">
+        Submit
+    </button>
+
+</form>
+
+</div>
+</main>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+function createRow() {
+    return `
+    <tr>
+        <td><input name="activity_code[]" class="form-control" required></td>
+        <td><input name="program_code[]" class="form-control" required></td>
+        <td><input name="details[]" class="form-control"></td>
+        <td><input type="number" step="0.01" name="received[]" class="form-control received" value="0"></td>
+        <td><input type="number" step="0.01" name="spent[]" class="form-control spent" value="0"></td>
+        <td><input type="number" class="form-control balance" readonly></td>
+        <td>
+            <button type="button" class="remove-row btn btn-danger btn-sm">×</button>
+        </td>
+    </tr>`;
+}
+
+/* Add Row */
+$("#add-acc").on("click", function () {
+    $("#acc-body").append(createRow());
+});
+
+/* Add first row on load */
+$(document).ready(function () {
+    $("#add-acc").click();
+});
+
+/* Remove Row */
+$(document).on("click", ".remove-row", function () {
+    $(this).closest("tr").remove();
+    calculateTotals();
+});
+
+/* Calculate balance per row */
+$(document).on("input", ".received, .spent", function () {
+    let row = $(this).closest("tr");
+    const currencyRate = parseFloat('{{ display_currency_from_ugx_rate }}') || 1;
+
+    let received = parseFloat(row.find(".received").val()) || 0;
+    let spent = parseFloat(row.find(".spent").val()) || 0;
+
+    row.find(".balance").val(((received - spent) * currencyRate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+    calculateTotals();
+});
+
+/* Calculate totals */
+function calculateTotals() {
+    let totalReceived = 0;
+    let totalSpent = 0;
+    let totalBalance = 0;
+    const currencyRate = parseFloat('{{ display_currency_from_ugx_rate }}') || 1;
+
+    $("#acc-body tr").each(function () {
+        let r = parseFloat($(this).find(".received").val()) || 0;
+        let s = parseFloat($(this).find(".spent").val()) || 0;
+        let b = r - s;
+
+        totalReceived += r;
+        totalSpent += s;
+        totalBalance += b;
+    });
+
+    $("#total-received").val((totalReceived * currencyRate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+    $("#total-spent").val((totalSpent * currencyRate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+    $("#total-balance").val((totalBalance * currencyRate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+}
+</script>
+
+{% endblock %}

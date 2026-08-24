@@ -1,0 +1,681 @@
+{% extends "procurement/base.html" %}
+{% load custom_tags %}
+{% load humanize %}
+
+{% block title %}Procurement Plan Management{% endblock %}
+
+{% block content %}
+
+<style>
+
+    :root{
+        --primary:#2563eb;
+        --primary-soft:#eff6ff;
+        --success:#16a34a;
+        --warning:#f59e0b;
+        --danger:#dc2626;
+        --secondary:#6b7280;
+        --dark:#111827;
+        --border:#e5e7eb;
+        --bg:#f4f7fb;
+        --card:#ffffff;
+        --shadow:0 8px 30px rgba(0,0,0,.06);
+        --radius:18px;
+    }
+
+    body{
+        background:var(--bg);
+    }
+
+    .enterprise-wrapper{
+        padding:24px;
+    }
+
+    .enterprise-card{
+        background:var(--card);
+        border-radius:var(--radius);
+        border:none;
+        box-shadow:var(--shadow);
+        overflow:hidden;
+    }
+
+    .enterprise-header{
+        padding:24px;
+        border-bottom:1px solid var(--border);
+        background:linear-gradient(135deg,#ffffff,#f8fbff);
+    }
+
+    .page-title{
+        font-size:1.6rem;
+        font-weight:800;
+        color:var(--dark);
+        margin-bottom:5px;
+    }
+
+    .page-subtitle{
+        color:#6b7280;
+        font-size:.92rem;
+    }
+
+    .breadcrumb-modern{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-bottom:18px;
+    }
+
+    .breadcrumb-modern a{
+        color:var(--primary);
+        text-decoration:none;
+        font-weight:600;
+    }
+
+    .search-box{
+        position:relative;
+        width:100%;
+    }
+
+    .search-box input{
+        padding-left:42px;
+        border-radius:12px;
+        border:1px solid #dbe2ea;
+        height:48px;
+        box-shadow:none;
+    }
+
+    .search-box i{
+        position:absolute;
+        left:15px;
+        top:16px;
+        color:#94a3b8;
+    }
+
+    .btn-enterprise{
+        border-radius:12px;
+        padding:11px 18px;
+        font-weight:700;
+        transition:.3s ease;
+    }
+
+    .btn-enterprise:hover{
+        transform:translateY(-1px);
+    }
+
+    .stats-row{
+        margin-top:20px;
+    }
+
+    .stats-card{
+        background:#fff;
+        border-radius:16px;
+        padding:20px;
+        box-shadow:var(--shadow);
+        height:100%;
+    }
+
+    .stats-title{
+        color:#6b7280;
+        font-size:.88rem;
+        margin-bottom:10px;
+    }
+
+    .stats-value{
+        font-size:1.6rem;
+        font-weight:800;
+        color:var(--dark);
+    }
+
+    .table-wrapper{
+        padding:22px;
+    }
+
+    .enterprise-table{
+        width:100%;
+        border-collapse:separate;
+        border-spacing:0 12px;
+    }
+
+    .enterprise-table thead th{
+        border:none;
+        font-size:.8rem;
+        color:#6b7280;
+        text-transform:uppercase;
+        letter-spacing:.5px;
+        padding:12px;
+        white-space:nowrap;
+    }
+
+    .enterprise-table tbody tr{
+        background:#fff;
+        transition:.3s ease;
+    }
+
+    .enterprise-table tbody tr:hover{
+        transform:translateY(-2px);
+        box-shadow:0 6px 20px rgba(0,0,0,.05);
+    }
+
+    .enterprise-table td{
+        padding:18px 14px;
+        vertical-align:middle;
+        border-top:1px solid #f1f5f9;
+        border-bottom:1px solid #f1f5f9;
+    }
+
+    .enterprise-table td:first-child{
+        border-left:1px solid #f1f5f9;
+        border-top-left-radius:14px;
+        border-bottom-left-radius:14px;
+    }
+
+    .enterprise-table td:last-child{
+        border-right:1px solid #f1f5f9;
+        border-top-right-radius:14px;
+        border-bottom-right-radius:14px;
+    }
+
+    .req-link{
+        text-decoration:none;
+        color:var(--primary);
+        font-weight:700;
+    }
+
+    .amount{
+        font-weight:800;
+        color:var(--success);
+    }
+
+    .badge-status{
+        padding:8px 14px;
+        border-radius:50px;
+        font-size:.78rem;
+        font-weight:700;
+    }
+
+    .status-approved{
+        background:#dcfce7;
+        color:#166534;
+    }
+
+    .status-rejected{
+        background:#fee2e2;
+        color:#991b1b;
+    }
+
+    .status-pending{
+        background:#fef3c7;
+        color:#92400e;
+    }
+
+    .status-other{
+        background:#e5e7eb;
+        color:#374151;
+    }
+
+    .progress-modern{
+        height:10px;
+        border-radius:20px;
+        overflow:hidden;
+        background:#e5e7eb;
+    }
+
+    .approval-flow{
+        margin-top:8px;
+        font-size:.78rem;
+        font-weight:700;
+        text-align:center;
+    }
+
+    .action-group{
+        display:flex;
+        gap:8px;
+        justify-content:center;
+    }
+
+    .action-btn{
+        width:36px;
+        height:36px;
+        border-radius:10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:#fff;
+        text-decoration:none;
+        transition:.3s ease;
+    }
+
+    .action-btn:hover{
+        transform:translateY(-2px);
+        opacity:.9;
+    }
+
+    .view-btn{
+        background:#0ea5e9;
+    }
+
+    .edit-btn{
+        background:#16a34a;
+    }
+
+    .delete-btn{
+        background:#dc2626;
+    }
+
+    .empty-state{
+        text-align:center;
+        padding:70px 20px;
+    }
+
+    .empty-state i{
+        font-size:4rem;
+        color:#cbd5e1;
+        margin-bottom:20px;
+    }
+
+    .dropdown-menu{
+        border:none;
+        border-radius:14px;
+        box-shadow:var(--shadow);
+        padding:10px;
+    }
+
+    .dropdown-item{
+        border-radius:10px;
+        padding:10px 14px;
+        font-weight:600;
+    }
+
+    .dropdown-item:hover{
+        background:#eff6ff;
+        color:var(--primary);
+    }
+
+    @media(max-width:768px){
+
+        .enterprise-header{
+            flex-direction:column;
+            align-items:flex-start!important;
+            gap:18px;
+        }
+
+        .top-actions{
+            width:100%;
+        }
+
+        .search-box{
+            width:100%;
+        }
+
+    }
+
+</style>
+
+<main class="enterprise-wrapper">
+
+    {% include 'message.html' %}
+
+    <!-- HEADER -->
+    <div class="enterprise-card mb-4">
+
+        <div class="enterprise-header">
+
+            <div class="breadcrumb-modern">
+                <a href="{% url 'dashboard' %}">
+                    <i class="fa fa-home"></i> Dashboard
+                </a>
+
+                <span>/</span>
+
+                <span class="text-muted">
+                    Procurement Plans
+                </span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+                <div>
+                    <h2 class="page-title">
+                        <i class="fa fa-layer-group text-primary me-2"></i>
+                        Procurement Plans
+                    </h2>
+
+                    <div class="page-subtitle">
+                        Advanced procurement plan workflow management
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 flex-wrap top-actions">
+
+                    <div class="search-box" style="min-width:320px;">
+                        <i class="fa fa-search"></i>
+
+                        <input type="text"
+                               id="profileSearch"
+                               class="form-control"
+                               placeholder="Search requisitions, projects...">
+                    </div>
+
+                    <div class="dropdown">
+
+                        <button class="btn btn-primary btn-enterprise dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown">
+
+                            <i class="fa fa-plus-circle me-1"></i>
+                            Actions
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+
+                            <li>
+                                <a class="dropdown-item"
+                                   href="{% url 'requisition_create' %}">
+
+                                    <i class="fa fa-file-circle-plus me-2"></i>
+                                    New Procurement Plan
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                   href="{% url 'master_procurement_plan' %}">
+
+                                    <i class="fa fa-layer-group me-2"></i>
+                                    Master Procurement Plan
+                                </a>
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- STATS -->
+    <div class="row stats-row mb-4">
+
+        <div class="col-lg-2 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-title">Total Requisitions</div>
+                <div class="stats-value">
+                    {{ object_list|length }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-title">Approved Requests</div>
+                <div class="stats-value text-success">
+                    {{ approved_count|default:"0" }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-title">Pending Requests</div>
+                <div class="stats-value text-warning">
+                    {{ pending_count|default:"0" }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-title">Total Procurement Value</div>
+                <div class="stats-value text-primary">
+                    {{ grand_total|money:request }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="enterprise-card">
+
+        <div class="table-wrapper">
+
+            <div class="table-responsive">
+
+                <table id="profileTable"
+                       class="enterprise-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>#</th>
+                            <th>Reference</th>
+                            <th>Project</th>
+                            <th>Total Amount</th>
+                            <th>Approval Progress</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for req in object_list %}
+
+                        <tr>
+
+                            <td>{{ forloop.counter }}</td>
+
+                            <td>
+
+                                <a href="{% url 'requisition_detail' req.pk %}"
+                                   class="req-link">
+
+                                    {{ req.number }}
+                                </a>
+
+                                <div class="small text-muted">
+                                    FY {{ req.fiscal_year }}
+                                </div>
+
+                            </td>
+
+
+                            <td>
+                                {{ req.project }}
+                            </td>
+
+                            <td class="amount">
+                                {{ req.total_amount|money:request }}
+                            </td>
+
+                            <td width="220">
+
+                                <div class="progress progress-modern">
+
+                                    {% if req.status == 'Reviewed' or req.status == 'Approved' %}
+                                        <div class="progress-bar bg-success"
+                                             style="width:50%">
+                                        </div>
+
+                                    {% elif req.status == 'Rejected' %}
+                                        <div class="progress-bar bg-danger"
+                                             style="width:50%">
+                                        </div>
+
+                                    {% else %}
+                                        <div class="progress-bar bg-warning"
+                                             style="width:50%">
+                                        </div>
+                                    {% endif %}
+
+                                    {% if req.status == 'Approved' %}
+                                        <div class="progress-bar bg-success"
+                                             style="width:50%">
+                                        </div>
+
+                                    {% elif req.status == 'Rejected' %}
+                                        <div class="progress-bar bg-danger"
+                                             style="width:50%">
+                                        </div>
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="approval-flow">
+
+                                    <span class="
+                                        {% if req.status == 'Reviewed'  or req.status == 'Approved' %}
+                                            text-success
+                                        {% elif req.status == 'Rejected' %}
+                                            text-danger
+                                        {% else %}
+                                            text-warning
+                                        {% endif %}
+                                    ">
+                                        Program Head
+                                    </span>
+
+                                    →
+
+                                    <span class="
+                                        {% if req.status == 'Approved' %}
+                                            text-success
+                                        {% elif req.status == 'Rejected' %}
+                                            text-danger
+                                        {% else %}
+                                            text-warning
+                                        {% endif %}
+                                    ">
+                                        Executive Director
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {% if req.status == 'Approved' %}
+
+                                    <span class="badge-status status-approved">
+                                        Approved
+                                    </span>
+
+                                {% elif req.status == 'Rejected' %}
+
+                                    <span class="badge-status status-rejected">
+                                        Rejected
+                                    </span>
+
+                                {% elif req.status == 'Pending' %}
+
+                                    <span class="badge-status status-pending">
+                                        Pending
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge-status status-other">
+                                        {{ req.status }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                <div class="action-group">
+
+                                    <a href="{% url 'requisition_detail' req.pk %}"
+                                       class="action-btn view-btn"
+                                       title="View">
+
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+
+                                    {% if request.user == req.requester %}
+
+                                    <a href="{% url 'procurement_update' req.pk %}"
+                                       class="action-btn edit-btn"
+                                       title="Edit">
+
+                                        <i class="fa fa-pen"></i>
+                                    </a>
+
+                                    <a href="{% url 'trash_requisition' req.pk req.slug %}"
+                                       class="action-btn delete-btn"
+                                       title="Delete"
+                                       onclick="return confirm('Delete this requisition permanently?')">
+
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="8">
+
+                                <div class="empty-state">
+
+                                    <i class="fa fa-folder-open"></i>
+
+                                    <h4>
+                                        No Requisitions Found
+                                    </h4>
+
+                                    <p class="text-muted">
+                                        There are currently no procurement requisitions available.
+                                    </p>
+
+                                    <a href="{% url 'requisition_create' %}"
+                                       class="btn btn-primary btn-enterprise">
+
+                                        Create Requisition
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- PAGINATION -->
+            {% if is_paginated %}
+
+                <div class="mt-4">
+                    {% include 'pagination.html' %}
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</main>
+
+{% endblock %}

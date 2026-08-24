@@ -1,0 +1,54 @@
+{% extends 'communication/base.html' %}
+{% block content %}
+<div class="container-fluid">
+
+  <h4 class="mb-4"><i class="bi bi-file-earmark-text text-primary"></i> Report Details</h4>
+
+  <div class="row g-4">
+    <!-- Main Report Info -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <p><strong>Title:</strong> {{ report.title|default:report.file.name }}</p>
+          <p><strong>Type:</strong> {{ report.get_report_type_display }}</p>
+          <p><strong>Status:</strong> {{ report.get_status_display }}</p>
+          <p>
+            <a href="{{ report.file.url }}" class="btn btn-sm btn-success">
+              <i class="bi bi-download"></i> Download File
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Existing Comments -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="mb-3"><i class="bi bi-chat-left-text text-secondary"></i> Comments</h5>
+          <ul class="list-group list-group-flush">
+            {% for c in report.comments.all %}
+            <li class="list-group-item">
+              <strong>{{ c.author }}</strong> — {{ c.content }}
+              <small class="text-muted d-block">{{ c.created_at|date:"Y-m-d H:i" }}</small>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-center text-muted">No comments</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar: Add Comment -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm sticky-top" style="top: 80px;">
+        <div class="card-body">
+          <h5 class="mb-3"><i class="bi bi-plus-square text-primary"></i> Add Comment</h5>
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'comm:report_review' report.pk %}">
+                <i class="bi bi-plus-square"></i>
+            </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+<div class="container-fluid">
+
+    <div class="card p-3 mb-3">
+        <form method="get">
+            {% csrf_token %}
+            <select name="scenario" class="form-select">
+                {% for s in scenarios %}
+                 <option value="{{ s.id }}"
+                {% if selected.id == s.id %}selected{% endif %}>
+                    {{ s.name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <button class="btn btn-primary mt-2">Run Simulation</button>
+        </form>
+    </div>
+
+    {% if results %}
+    <div class="card p-3">
+        <h5>Scenario Results: {{ selected.name }}</h5>
+
+        <table class="table table-responsive table-bordered">
+    <thead>
+        <tr>
+            <th>Risk</th>
+            <th>Base Score</th>
+            <th>Adjusted Score</th>
+            <th>Original Level</th>
+            <th>New Level</th>
+            <th>Change</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for r in results %}
+        <tr>
+            <td>{{ r.risk.event }}</td>
+            <td>{{ r.base_score }}</td>
+            <td>{{ r.adjusted_score }}</td>
+            <td>{{ r.original_level }}</td>
+            <td>
+                <span class="badge bg-primary">
+                    {{ r.new_level }}
+                </span>
+            </td>
+            <td>
+                {% if r.change > 0 %}
+                    <span class="text-danger">+{{ r.change|floatformat:2 }}</span>
+                {% else %}
+                    <span class="text-success">{{ r.change|floatformat:2 }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

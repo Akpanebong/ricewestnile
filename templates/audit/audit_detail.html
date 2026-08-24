@@ -1,0 +1,219 @@
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+    <!-- ================= HEADER ================= -->
+    <div class="card shadow border-0 rounded-4 mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+
+            <div>
+                <h4 class="fw-bold mb-1">{{ audit.title }}</h4>
+                <small class="text-muted">Audit Ref: {{ audit.id }}</small>
+            </div>
+
+            <div class="d-flex gap-2 align-items-center">
+                <span class="badge px-3 py-2
+                    {% if audit.status == 'closed' %}bg-success
+                    {% elif audit.status == 'reported' %}bg-info
+                    {% elif audit.status == 'fieldwork' %}bg-warning
+                    {% else %}bg-secondary{% endif %}">
+                    {{ audit.get_status_display }}
+                </span>
+
+                <a href="{% url 'audit_update' audit.id %}" class="btn btn-primary btn-sm">
+                    Edit Audit
+                </a>
+                <a href="{% url 'audit_delete' audit.id %}" class="btn btn-danger btn-sm">
+                    <i class="bi bi-trash"></i>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+        {% if object.rejection_reason %}
+<div class="alert alert-danger">
+    <strong>Rejection Reason:</strong><br>
+    {{ object.rejection_reason }}
+</div>
+{% endif %}
+
+    <!-- ================= META + STATS ================= -->
+    <div class="row g-4">
+
+        <!-- META -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-light fw-semibold">
+                    Audit Overview
+                </div>
+
+                <div class="card-body row g-3">
+
+                    <div class="col-md-6">
+                        <small class="text-muted">Audit Type</small>
+                        <div class="fw-semibold">{{ audit.audit_type|title }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <small class="text-muted">Lead Auditor</small>
+                        <div>{{ audit.lead_auditor|default:"—" }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <small class="text-muted">Start Date</small>
+                        <div>{{ audit.start_date }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <small class="text-muted">End Date</small>
+                        <div>{{ audit.end_date|default:"—" }}</div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <small class="text-muted">Scope</small>
+                        <div>{{ audit.scope|default:"No scope defined" }}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 mb-3 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Actions</h6>
+                      {% if not audit.approved and not audit.rejection_reason %}
+                        <a href="{% url 'auditlog_approve' audit.pk %}" class="btn btn-success w-100 mb-2">
+                            Approve
+                        </a>
+                        {% endif %}
+
+                        <a href="{% url 'auditlog_reject' audit.pk %}" class="btn btn-dark w-100">
+                            Reject
+                        </a>
+
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 mb-3 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Findings</h6>
+                    <h2 class="fw-bold">{{ audit.findings.count }}</h2>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Evidence</h6>
+                    <h2 class="fw-bold">{{ audit.evidence.count }}</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= FINDINGS ================= -->
+    <div class="card shadow-sm border-0 rounded-4 mt-4">
+        <div class="card-header d-flex justify-content-between">
+            <h5 class="mb-0">Findings</h5>
+            <span class="badge bg-dark">{{ audit.findings.count }}</span>
+        </div>
+
+        <div class="card-body table-responsive">
+
+            <table class="table align-middle table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                        <th>Owner</th>
+                        <th>Due</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for f in audit.findings.all %}
+                <tr class="
+                    {% if f.severity == 'critical' %}table-danger
+                    {% elif f.severity == 'high' %}table-warning
+                    {% endif %}
+                ">
+                    <td class="fw-semibold"><a href="{% url 'finding_update' f.id %}">{{ f.title }}</a></td>
+
+                    <td>
+                        <span class="badge
+                            {% if f.severity == 'critical' %}bg-danger
+                            {% elif f.severity == 'high' %}bg-warning
+                            {% elif f.severity == 'moderate' %}bg-info
+                            {% else %}bg-secondary{% endif %}">
+                            {{ f.get_severity_display }}
+                        </span>
+                    </td>
+
+                    <td>{{ f.get_status_display }}</td>
+                    <td>{{ f.owner|default:"—" }}</td>
+
+                    <td>
+                        {% if f.due_date %}
+                            <span class="{% if f.due_date < today %}text-danger fw-bold{% endif %}">
+                                {{ f.due_date }}
+                            </span>
+                        {% else %}—{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted">No findings</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <!-- ================= EVIDENCE ================= -->
+    <div class="card shadow-sm border-0 rounded-4 mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Evidence</h5>
+        </div>
+
+        <div class="card-body table-responsive">
+
+            <table class="table table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Reference</th>
+                        <th>Finance</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for e in audit.evidence.all %}
+                <tr>
+                    <td><a href="{% url 'evidence_update' e.id %}"> {{ e.title }}</a></td>
+                    <td>{{ e.evidence_type }}</td>
+                    <td>{{ e.reference_code|default:"—" }}</td>
+                    <td>
+                        {% if e.is_finance_reconciled %}
+                            <span class="badge bg-success">Yes</span>
+                        {% else %}
+                            <span class="badge bg-secondary">No</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted">No evidence</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

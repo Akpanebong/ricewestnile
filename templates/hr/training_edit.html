@@ -1,0 +1,108 @@
+{% extends "hr/base.html" %}
+{% block title %}Edit Training{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- HEADER -->
+    <div class="bg-white p-4 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="fw-bold text-success mb-1">
+                <i class="fa fa-graduation-cap me-2"></i>
+                Edit Training Program
+            </h4>
+            <small class="text-muted">
+                Modify training details and participant assignments.
+            </small>
+        </div>
+
+        <a href="{% url 'training_list' %}"
+           class="btn btn-outline-secondary">
+            <i class="fa fa-arrow-left me-1"></i> Back
+        </a>
+    </div>
+
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Title</label>
+                        {{ form.title }}
+                        {{ form.title.errors }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Start Date</label>
+                        {{ form.start_date }}
+                        {{ form.start_date.errors }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">End Date</label>
+                        {{ form.end_date }}
+                        {{ form.end_date.errors }}
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Description</label>
+                        {{ form.description }}
+                        {{ form.description.errors }}
+                    </div>
+
+<!--                    <div class="col-12">-->
+<!--                        <label class="form-label fw-semibold">-->
+<!--                            Participants-->
+<!--                        </label>-->
+<!--                        {{ form.participants }}-->
+<!--                        {{ form.participants.errors }}-->
+<!--                    </div>-->
+
+                    <div class="col-12">
+                    <label class="form-label fw-semibold">Participants</label>
+
+                    <div class="row">
+                        {% for checkbox in form.participants %}
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    {{ checkbox.tag }}
+                                    <label class="form-check-label" for="{{checkbox.id_for_label}}">
+                                        {{ checkbox.choice_label }}
+                                    </label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    {{ form.participants.errors }}
+                </div>
+
+                </div>
+
+                <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+
+                    <a href="{% url 'training_list' %}"
+                       class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-success px-4">
+                        <i class="fa fa-save me-1"></i>
+                        Update Training
+                    </button>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

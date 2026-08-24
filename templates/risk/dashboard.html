@@ -1,0 +1,120 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+<!-- ================= KPI CARDS ================= -->
+<div class="row g-4 mb-4">
+
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 text-center">
+            <h6>Total Risks</h6>
+            <h2>{{ total_risks }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 text-center">
+            <h6>Average Risk Score</h6>
+            <h2>{{ avg_score|floatformat:2 }}</h2>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 text-center">
+            <h6>System Health</h6>
+            <h2>
+                {% if avg_score > 15 %}
+                    🔴 Critical
+                {% elif avg_score > 10 %}
+                    🟠 Warning
+                {% else %}
+                    🟢 Stable
+                {% endif %}
+            </h2>
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= CHARTS ================= -->
+<div class="row g-4 mb-4">
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm p-3">
+            <h6>Risk Distribution by Level</h6>
+            <div class="chart-box">
+                <canvas id="levelChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm p-3">
+            <h6>Risk Categories</h6>
+            <div class="chart-box">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</div>
+
+<style>
+.chart-box {
+    height: 300px;
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    let levelLabels = {{ levels_json|safe }};
+    let levelCounts = {{ level_counts_json|safe }};
+
+    let catLabels = {{ category_labels_json|safe }};
+    let catCounts = {{ category_counts_json|safe }};
+
+    // LEVEL CHART
+    new Chart(document.getElementById("levelChart"), {
+        type: "bar",
+        data: {
+            labels: levelLabels,
+            datasets: [{
+                label: "Risks",
+                data: levelCounts
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // CATEGORY CHART
+    new Chart(document.getElementById("categoryChart"), {
+        type: "doughnut",
+        data: {
+            labels: catLabels,
+            datasets: [{
+                data: catCounts
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,309 @@
+after
+
+{% extends "base.html" %}
+{% block title %}CMT Approval{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- HEADER -->
+    <div class="bg-white p-3 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h5 class="fw-bold text-danger mb-0">Core Management Team (CMT)</h5>
+            <small class="text-muted">Final Approval Stage - {{ appraisal.year }}</small>
+        </div>
+
+        <span class="badge bg-dark">
+            Pending CMT Decision
+        </span>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <!-- EMPLOYEE SNAPSHOT -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold text-success mb-3">Employee Overview</h6>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ appraisal.employee }}</p>
+                            <p><strong>Supervisor:</strong> {{ appraisal.supervisor }}</p>
+                        </div>
+
+                        <div class="col-md-6">
+                            <p><strong>Department:</strong> {{ appraisal.employee.user.department }}</p>
+                            <p><strong>Duty Station:</strong> {{ appraisal.duty_station|default:"-" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERFORMANCE SUMMARY -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold text-primary mb-3">Performance Summary</h6>
+
+                    <div class="row text-center">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <small class="text-muted">Job Description Score</small>
+                                <h5 class="fw-bold">{{ appraisal.job_description_score|default:"-" }}</h5>
+                                <span class="badge bg-light text-dark">
+                                    {{ appraisal.job_description_interpretation|default:"-" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="border rounded p-3">
+                                <small class="text-muted">Service Excellence Score</small>
+                                <h5 class="fw-bold">{{ appraisal.service_score|default:"-" }}</h5>
+                                <span class="badge bg-light text-dark">
+                                    {{ appraisal.service_interpretation|default:"-" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STAFF INPUT -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold text-dark mb-3">Staff Assessment</h6>
+
+                    <div class="mb-3">
+                        <label class="fw-semibold">Staff Opinion</label>
+                        <div class="border rounded p-3 bg-light">
+                            {{ appraisal.staff_opinion|default:"Not provided"|linebreaks }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Strengths</label>
+                            <div class="border rounded p-3 bg-light">
+                                {{ appraisal.strengths|default:"-"|linebreaks }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="fw-semibold">Weaknesses</label>
+                            <div class="border rounded p-3 bg-light">
+                                {{ appraisal.weaknesses|default:"-"|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="fw-semibold">Capacity Gaps</label>
+                        <div class="border rounded p-3 bg-light">
+                            {{ appraisal.capacity_gaps|default:"-"|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRIOR REVIEWS -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold text-info mb-3">Previous Reviews</h6>
+
+                    <div class="mb-3">
+                        <label class="fw-semibold">Supervisor Comment</label>
+                        <div class="border rounded p-3 bg-light">
+                            {{ appraisal.supervisor_comment|default:"Pending"|linebreaks }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="fw-semibold">HR Comment</label>
+                        <div class="border rounded p-3 bg-light">
+                            {{ appraisal.hr_comment|default:"Pending"|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FINAL DECISION -->
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+
+                    <h6 class="fw-bold text-danger mb-3">Final Decision</h6>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                CMT Comment
+                            </label>
+                            <textarea name="comment" class="form-control" rows="4" required
+                                placeholder="Provide final strategic decision, justification, and directives..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Verdict
+                            </label>
+                            <select id="verdictSelect" name="verdict" class="form-control" required>
+                                <option value="">-- Select Verdict --</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Renew Contract">Renew Contract</option>
+                                <option value="Promoted">Promoted</option>
+                                <option value="Renewed with Probation">Renewed with Probation</option>
+                                <option value="Retained but sign PIP">Retained but sign PIP</option>
+                                <option value="Contract Not Renewed">Contract Not Renewed</option>
+                            </select>
+                            <div class="form-text" id="verdictHelp"></div>
+                        </div>
+
+                        <!-- Probation modal (only for Renewed with Probation) -->
+                        <div class="modal fade" id="probationModal" tabindex="-1" aria-hidden="true">
+                          <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title">Probation Duration</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+
+                                <div class="alert alert-warning mb-3">
+                                  This verdict requires a probation duration before you can submit.
+                                </div>
+
+                                <div class="row g-3">
+                                  <div class="col-12">
+                                    <label class="form-label fw-semibold">Duration Type</label>
+                                    <div class="d-flex gap-3 flex-wrap">
+                                      <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="probation_mode" id="probationModeDates" value="date_range">
+                                        <label class="form-check-label" for="probationModeDates">Start & end dates</label>
+                                      </div>
+                                      <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="probation_mode" id="probationModeMonths" value="months">
+                                        <label class="form-check-label" for="probationModeMonths">Monthly duration</label>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div class="col-md-6 probation-dates">
+                                    <label class="form-label fw-semibold">Start date</label>
+                                    <input type="date" class="form-control" name="probation_start_date" id="probationStartDate">
+                                  </div>
+                                  <div class="col-md-6 probation-dates">
+                                    <label class="form-label fw-semibold">End date</label>
+                                    <input type="date" class="form-control" name="probation_end_date" id="probationEndDate">
+                                  </div>
+
+                                  <div class="col-md-6 probation-months d-none">
+                                    <label class="form-label fw-semibold">Number of months</label>
+                                    <input type="number" min="1" max="24" class="form-control" name="probation_months" id="probationMonths" placeholder="e.g. 3">
+                                    <div class="form-text">Max 24 months.</div>
+                                  </div>
+                                </div>
+
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Done</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Upload Signature
+                            </label>
+                            <input type="file" name="cmt_signature" class="form-control" required>
+                        </div>
+
+                        <!-- ACTIONS -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'appraisal_detail' appraisal.id %}" class="btn btn-outline-secondary">
+                                Back
+                            </a>
+
+                            <button type="submit" class="btn btn-danger px-4">
+                                Final Approve & Generate Report
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const verdictSelect = document.getElementById('verdictSelect');
+    const verdictHelp = document.getElementById('verdictHelp');
+    const probationModalEl = document.getElementById('probationModal');
+    const probationModal = probationModalEl ? new bootstrap.Modal(probationModalEl, {backdrop: 'static'}) : null;
+
+    const probationModeDates = document.getElementById('probationModeDates');
+    const probationModeMonths = document.getElementById('probationModeMonths');
+    const probationStartDate = document.getElementById('probationStartDate');
+    const probationEndDate = document.getElementById('probationEndDate');
+    const probationMonths = document.getElementById('probationMonths');
+
+    const datesBlocks = Array.from(document.querySelectorAll('.probation-dates'));
+    const monthsBlocks = Array.from(document.querySelectorAll('.probation-months'));
+
+    function setProbationUi(mode) {
+      const isDates = mode === 'date_range';
+      const isMonths = mode === 'months';
+
+      datesBlocks.forEach(el => el.classList.toggle('d-none', !isDates));
+      monthsBlocks.forEach(el => el.classList.toggle('d-none', !isMonths));
+
+      if (probationStartDate) probationStartDate.required = isDates;
+      if (probationEndDate) probationEndDate.required = isDates;
+      if (probationMonths) probationMonths.required = isMonths;
+
+      if (!isDates && probationStartDate) probationStartDate.value = '';
+      if (!isDates && probationEndDate) probationEndDate.value = '';
+      if (!isMonths && probationMonths) probationMonths.value = '';
+    }
+
+    function onVerdictChange() {
+      const v = verdictSelect.value;
+
+      if (v === 'Renewed with Probation') {
+        verdictHelp.textContent = 'Probation duration will be required.';
+        if (probationModeDates && probationModeMonths && !probationModeDates.checked && !probationModeMonths.checked) {
+          probationModeDates.checked = true;
+          setProbationUi('date_range');
+        }
+        probationModal && probationModal.show();
+        return;
+      }
+
+      if (v === 'Retained but sign PIP') {
+        verdictHelp.textContent = 'After approval, you will be able to send the PIP form to the staff for signature.';
+        setProbationUi('');
+        return;
+      }
+
+      verdictHelp.textContent = '';
+      setProbationUi('');
+    }
+
+    verdictSelect && verdictSelect.addEventListener('change', onVerdictChange);
+    probationModeDates && probationModeDates.addEventListener('change', () => setProbationUi('date_range'));
+    probationModeMonths && probationModeMonths.addEventListener('change', () => setProbationUi('months'));
+
+    // initial state (in case of back button)
+    onVerdictChange();
+  })();
+</script>
+{% endblock %}

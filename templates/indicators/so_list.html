@@ -1,0 +1,987 @@
+{% extends active_base_template|default:'base.html' %}
+{% load custom_tags %}
+
+{% block title %}Strategic Objectives | M&E{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       INDICATORS PAGE
+       ========================================================= */
+
+    .indicator-page {
+        --indicator-primary: #198754;
+        --indicator-primary-dark: #146c43;
+        --indicator-soft: #eaf7f0;
+        --indicator-border: #e5e7eb;
+        --indicator-text: #1f2937;
+        --indicator-muted: #6b7280;
+        --indicator-bg: #f7f9fb;
+    }
+
+    .indicator-page {
+        color: var(--indicator-text);
+    }
+
+    /* Breadcrumb */
+    .indicator-breadcrumb {
+        background: #fff;
+        border: 1px solid var(--indicator-border);
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+    }
+
+    .indicator-breadcrumb a {
+        color: var(--indicator-primary);
+        font-weight: 500;
+    }
+
+    .indicator-breadcrumb a:hover {
+        color: var(--indicator-primary-dark);
+    }
+
+    /* Page header */
+    .indicator-header {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f7fbf9 100%
+        );
+        border: 1px solid var(--indicator-border);
+        border-radius: 18px;
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .04);
+    }
+
+    .indicator-title-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--indicator-soft);
+        color: var(--indicator-primary);
+        font-size: 21px;
+        flex-shrink: 0;
+    }
+
+    .indicator-title {
+        font-size: 1.45rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: #172b21;
+    }
+
+    .indicator-subtitle {
+        color: var(--indicator-muted);
+        margin-bottom: 0;
+        font-size: .9rem;
+    }
+
+    /* Buttons */
+    .btn-indicator-primary {
+        background: var(--indicator-primary);
+        border-color: var(--indicator-primary);
+        color: #fff;
+        border-radius: 10px;
+        padding: 9px 16px;
+        font-weight: 600;
+        transition: all .2s ease;
+    }
+
+    .btn-indicator-primary:hover {
+        background: var(--indicator-primary-dark);
+        border-color: var(--indicator-primary-dark);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    /* KPI cards */
+    .indicator-stat {
+        background: #fff;
+        border: 1px solid var(--indicator-border);
+        border-radius: 14px;
+        padding: 17px;
+        height: 100%;
+        transition: all .2s ease;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, .025);
+    }
+
+    .indicator-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .07);
+    }
+
+    .indicator-stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--indicator-soft);
+        color: var(--indicator-primary);
+        font-size: 17px;
+    }
+
+    .indicator-stat-value {
+        font-size: 1.45rem;
+        font-weight: 750;
+        color: #172b21;
+        line-height: 1.1;
+    }
+
+    .indicator-stat-label {
+        color: var(--indicator-muted);
+        font-size: .78rem;
+        font-weight: 500;
+        margin-top: 4px;
+    }
+
+    /* Main panel */
+    .indicator-panel {
+        background: #fff;
+        border: 1px solid var(--indicator-border);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .04);
+    }
+
+    .indicator-panel-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--indicator-border);
+        background: #fff;
+    }
+
+    /* Search */
+    .indicator-search {
+        position: relative;
+    }
+
+    .indicator-search .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        z-index: 3;
+    }
+
+    .indicator-search input {
+        padding-left: 42px;
+        padding-right: 42px;
+        height: 44px;
+        border-radius: 11px;
+        border: 1px solid #dfe4e8;
+        box-shadow: none;
+        font-size: .88rem;
+    }
+
+    .indicator-search input:focus {
+        border-color: #8bc9aa;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    .clear-search {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 0;
+        background: transparent;
+        color: #9ca3af;
+        display: none;
+        z-index: 3;
+    }
+
+    /* Table */
+    .indicator-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .indicator-table {
+        margin-bottom: 0;
+        min-width: 760px;
+    }
+
+    .indicator-table thead th {
+        background: #f8faf9;
+        color: #53645b;
+        border-bottom: 1px solid var(--indicator-border);
+        font-size: .73rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .045em;
+        padding: 14px 18px;
+        white-space: nowrap;
+    }
+
+    .indicator-table tbody td {
+        padding: 16px 18px;
+        vertical-align: middle;
+        border-color: #eef0f2;
+        font-size: .88rem;
+    }
+
+    .indicator-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .indicator-table tbody tr:hover {
+        background: #fbfdfc;
+    }
+
+    .indicator-code {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 58px;
+        padding: 5px 9px;
+        border-radius: 7px;
+        background: var(--indicator-soft);
+        color: var(--indicator-primary-dark);
+        font-size: .75rem;
+        font-weight: 700;
+        font-family: monospace;
+    }
+
+    .indicator-name {
+        color: #1f2937;
+        font-weight: 650;
+        line-height: 1.4;
+    }
+
+    .indicator-description {
+        color: #6b7280;
+        font-size: .78rem;
+        line-height: 1.45;
+        max-width: 500px;
+    }
+
+    .indicator-action {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        color: #6b7280;
+        border: 1px solid transparent;
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+    .indicator-action:hover {
+        color: var(--indicator-primary);
+        background: var(--indicator-soft);
+        border-color: #d7eee1;
+    }
+
+    /* Mobile cards */
+    .indicator-mobile-card {
+        display: none;
+    }
+
+    /* Empty state */
+    .indicator-empty {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .indicator-empty-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f3f5f4;
+        color: #9aa39e;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .indicator-empty h6 {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .indicator-empty p {
+        color: var(--indicator-muted);
+        font-size: .85rem;
+        margin-bottom: 0;
+    }
+
+    /* Results counter */
+    .results-counter {
+        font-size: .78rem;
+        color: var(--indicator-muted);
+    }
+
+    .results-counter strong {
+        color: #374151;
+    }
+
+    /* Responsive */
+    @media (max-width: 991.98px) {
+        .indicator-header {
+            padding: 20px;
+        }
+
+        .indicator-title {
+            font-size: 1.25rem;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+
+        .indicator-breadcrumb {
+            padding: 10px 13px;
+            border-radius: 10px;
+        }
+
+        .indicator-header {
+            padding: 17px;
+            border-radius: 14px;
+        }
+
+        .indicator-title-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 11px;
+        }
+
+        .indicator-title {
+            font-size: 1.1rem;
+        }
+
+        .indicator-subtitle {
+            font-size: .8rem;
+        }
+
+        .indicator-header-actions {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .indicator-header-actions .btn {
+            width: 100%;
+        }
+
+        .indicator-panel {
+            border-radius: 14px;
+        }
+
+        .indicator-panel-header {
+            padding: 15px;
+        }
+
+        .indicator-table-wrapper {
+            display: none;
+        }
+
+        .indicator-mobile-card {
+            display: block;
+            padding: 15px;
+            border-bottom: 1px solid #edf0ef;
+        }
+
+        .indicator-mobile-card:last-child {
+            border-bottom: 0;
+        }
+
+        .mobile-indicator-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .mobile-indicator-name {
+            font-size: .9rem;
+            font-weight: 650;
+            line-height: 1.4;
+            margin-top: 8px;
+        }
+
+        .mobile-indicator-description {
+            color: #6b7280;
+            font-size: .78rem;
+            line-height: 1.5;
+            margin-top: 8px;
+        }
+
+        .mobile-indicator-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .indicator-stat {
+            padding: 14px;
+        }
+
+        .indicator-stat-value {
+            font-size: 1.2rem;
+        }
+
+        .indicator-stat-icon {
+            width: 36px;
+            height: 36px;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .indicator-page .row {
+            --bs-gutter-x: .7rem;
+        }
+
+        .indicator-stat-label {
+            font-size: .7rem;
+        }
+    }
+</style>
+
+<div class="container-fluid indicator-page">
+
+
+<!-- =====================================================
+     BREADCRUMB
+====================================================== -->
+<div class="indicator-breadcrumb">
+    <ul class="db-breadcrumb-list list-inline mb-0 small">
+
+        <li class="list-inline-item">
+            <a href="{% url 'monitoring:dashboard' %}"
+               class="text-decoration-none">
+                <i class="fa fa-home me-1"></i>
+                Home
+            </a>
+        </li>
+
+        <li class="list-inline-item text-muted">/</li>
+
+        <li class="list-inline-item text-muted">
+            Strategic Objectives
+        </li>
+
+    </ul>
+</div>
+
+
+<!-- =====================================================
+     PAGE HEADER
+====================================================== -->
+<div class="indicator-header">
+
+    <div class="d-flex flex-column flex-lg-row
+                justify-content-between
+                align-items-start align-items-lg-center">
+
+        <div class="d-flex align-items-center">
+
+            <div class="indicator-title-icon me-3">
+                <i class="fa fa-bullseye"></i>
+            </div>
+
+            <div>
+                <h1 class="indicator-title">
+                    Strategic Objectives
+                </h1>
+
+                <p class="indicator-subtitle">
+                    Manage and monitor organizational strategic objectives
+                    and their associated indicators.
+                </p>
+            </div>
+
+        </div>
+
+
+        {% if request.user|has_group:"MEAL" and request.user.is_superuser %}
+
+        <div class="indicator-header-actions mt-3 mt-lg-0">
+
+            <a href="{% url 'monitoring:create_so' %}"
+               class="btn btn-indicator-primary">
+                <i class="fa fa-plus me-2"></i>
+                Add Strategic Objective
+            </a>
+
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     KPI SUMMARY
+====================================================== -->
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-lg-3">
+        <div class="indicator-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+                    <div class="indicator-stat-value"
+                         id="totalso_list">
+                        {{ so_list|length|default:"0" }}
+                    </div>
+
+                    <div class="indicator-stat-label">
+                        Total Objectives
+                    </div>
+                </div>
+
+                <div class="indicator-stat-icon">
+                    <i class="fa fa-bullseye"></i>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+        <div class="indicator-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+                    <div class="indicator-stat-value">
+                        <i class="fa fa-check-circle
+                                  text-success"></i>
+                    </div>
+
+                    <div class="indicator-stat-label">
+                        Active Objectives
+                    </div>
+                </div>
+
+                <div class="indicator-stat-icon">
+                    <i class="fa fa-line-chart"></i>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+        <div class="indicator-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+                    <div class="indicator-stat-value">
+                        {{ so_list|length|default:"0" }}
+                    </div>
+
+                    <div class="indicator-stat-label">
+                        Available for Monitoring
+                    </div>
+                </div>
+
+                <div class="indicator-stat-icon">
+                    <i class="fa fa-bar-chart"></i>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+        <div class="indicator-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+                    <div class="indicator-stat-value">
+                        <i class="fa fa-dashboard
+                                  text-success"></i>
+                    </div>
+
+                    <div class="indicator-stat-label">
+                        M&E Framework
+                    </div>
+                </div>
+
+                <div class="indicator-stat-icon">
+                    <i class="fa fa-sitemap"></i>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     MAIN INDICATOR PANEL
+====================================================== -->
+<div class="indicator-panel">
+
+    <!-- Panel Header -->
+    <div class="indicator-panel-header">
+
+        <div class="row g-3 align-items-center">
+
+            <div class="col-lg-5">
+
+                <h5 class="mb-1 fw-bold">
+                    Strategic Objectives
+                </h5>
+
+                <div class="results-counter">
+                    Showing
+                    <strong id="visibleCount">
+                        {{ so_list|length|default:"0" }}
+                    </strong>
+                    objective(s)
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-7">
+
+                <div class="indicator-search">
+
+                    <i class="fa fa-search search-icon"></i>
+
+                    <input type="text"
+                           id="profileSearch"
+                           class="form-control"
+                           placeholder="Search objectives, codes or descriptions..."
+                           autocomplete="off">
+
+                    <button type="button"
+                            id="clearSearch"
+                            class="clear-search"
+                            aria-label="Clear search">
+
+                        <i class="fa fa-times"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         DESKTOP TABLE
+    ================================================== -->
+    <div class="indicator-table-wrapper">
+
+        {% if so_list %}
+
+        <table class="table indicator-table">
+
+            <thead>
+
+                <tr>
+                    <th style="width: 110px;">
+                        Code
+                    </th>
+
+                    <th>
+                        Strategic Objective
+                    </th>
+
+                    <th>
+                        Description
+                    </th>
+
+                    <th class="text-end" style="width: 80px;">
+                        Action
+                    </th>
+                </tr>
+
+            </thead>
+
+            <tbody id="indicatorTableBody">
+
+                {% for indicator in so_list %}
+
+                <tr class="indicator-row">
+
+                    <td><a href="{% url 'monitoring:so_detail' indicator.pk indicator.title %}">
+                        <span class="indicator-code">
+                            {{ indicator.code }}
+                        </span>
+                    </a>
+                    </td>
+
+                    <td>
+                        <div class="indicator-name">
+                            {{ indicator.title }}
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="indicator-description">
+
+                            {% if indicator.description %}
+                                {{ indicator.description|truncatechars:180 }}
+                            {% else %}
+                                <span class="text-muted">
+                                    No description provided.
+                                </span>
+                            {% endif %}
+
+                        </div>
+                    </td>
+
+                    <td>
+                <a class="btn btn-sm btn-primary" href="{% url 'monitoring:update_so' indicator.title indicator.pk %}"><i class="fa fa-edit"></i></a>
+                <a class="btn btn-sm btn-danger" href="{% url 'monitoring:trash_so' indicator.pk indicator.title %}"><i class="fa fa-trash"></i></a>
+              </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% else %}
+
+        <div class="indicator-empty">
+
+            <div class="indicator-empty-icon">
+                <i class="fa fa-bullseye"></i>
+            </div>
+
+            <h6>
+                No strategic objectives found
+            </h6>
+
+            <p>
+                Strategic objectives will appear here once they
+                have been added to the M&E framework.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =================================================
+         MOBILE CARDS
+    ================================================== -->
+    {% if so_list %}
+
+    <div id="indicatorMobileList">
+
+        {% for indicator in so_list %}
+
+        <div class="indicator-mobile-card indicator-row">
+
+            <div class="mobile-indicator-top">
+
+                <div>
+                    <span class="indicator-code">
+                        {{ indicator.code }}
+                    </span>
+
+                    <div class="mobile-indicator-name">
+                        {{ indicator.title }}
+                    </div>
+                </div>
+
+                <a href=""
+                   class="indicator-action"
+                   title="View objective">
+
+                    <i class="fa fa-chevron-right"></i>
+
+                </a>
+
+            </div>
+
+
+            <div class="mobile-indicator-description">
+
+                {% if indicator.description %}
+                    {{ indicator.description|truncatechars:220 }}
+                {% else %}
+                    <span class="text-muted">
+                        No description provided.
+                    </span>
+                {% endif %}
+
+            </div>
+
+
+            <div class="mobile-indicator-footer">
+
+                <small class="text-muted">
+                    <i class="fa fa-bullseye me-1"></i>
+                    Strategic Objective
+                </small>
+
+                <a href=""
+                   class="small text-success text-decoration-none fw-semibold">
+
+                    View details
+                    <i class="fa fa-arrow-right ms-1"></i>
+
+                </a>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- =================================================
+         SEARCH EMPTY STATE
+    ================================================== -->
+    <div id="searchEmptyState"
+         class="indicator-empty d-none">
+
+        <div class="indicator-empty-icon">
+            <i class="fa fa-search"></i>
+        </div>
+
+        <h6>
+            No matching objectives
+        </h6>
+
+        <p>
+            Try searching using another code, objective name,
+            or description.
+        </p>
+
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- =========================================================
+     SEARCH SCRIPT
+========================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("profileSearch");
+    const clearButton = document.getElementById("clearSearch");
+    const visibleCount = document.getElementById("visibleCount");
+    const searchEmptyState = document.getElementById("searchEmptyState");
+
+    if (!searchInput) return;
+
+    function performSearch() {
+
+        const searchTerm = searchInput.value
+            .toLowerCase()
+            .trim();
+
+        const rows = document.querySelectorAll(
+            ".indicator-row"
+        );
+
+        let visible = 0;
+
+        rows.forEach(function (row) {
+
+            const text = row.innerText.toLowerCase();
+
+            const matches =
+                searchTerm === "" ||
+                text.includes(searchTerm);
+
+            row.style.display = matches ? "" : "none";
+
+            if (matches) {
+                visible++;
+            }
+
+        });
+
+        if (visibleCount) {
+            visibleCount.textContent = visible;
+        }
+
+        if (clearButton) {
+            clearButton.style.display =
+                searchTerm ? "block" : "none";
+        }
+
+        if (searchEmptyState) {
+
+            if (visible === 0 && searchTerm !== "") {
+                searchEmptyState.classList.remove("d-none");
+            } else {
+                searchEmptyState.classList.add("d-none");
+            }
+
+        }
+    }
+
+
+    searchInput.addEventListener(
+        "input",
+        performSearch
+    );
+
+
+    if (clearButton) {
+
+        clearButton.addEventListener(
+            "click",
+            function () {
+
+                searchInput.value = "";
+
+                searchInput.focus();
+
+                performSearch();
+
+            }
+        );
+
+    }
+
+});
+</script>
+
+{% endblock %}

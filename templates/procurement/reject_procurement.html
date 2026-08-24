@@ -1,0 +1,136 @@
+<!-- Reject Modal -->
+<div class="modal fade"
+     id="rejectModal"
+     tabindex="-1"
+     aria-labelledby="rejectModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+
+        <form method="post" id="rejectForm">
+            {% csrf_token %}
+
+            <div class="modal-content shadow-lg border-0">
+
+                <!-- Header -->
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="rejectModalLabel">
+                        <i class="fa fa-times-circle me-2"></i>
+                        Reject Procurement Plan
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body">
+
+                    <div class="alert alert-warning mb-3">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <strong>Warning:</strong>
+                        This action cannot be undone. The requester will be notified immediately.
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label fw-bold">
+                            Rejection Reason <span class="text-danger">*</span>
+                        </label>
+
+                        <textarea
+                                id="reason"
+                                name="reason"
+                                class="form-control"
+                                rows="5"
+                                maxlength="1000"
+                                required
+                                placeholder="Please provide a detailed reason for rejecting this procurement plan..."></textarea>
+
+                        <small class="text-muted">
+                            This reason will be visible to the requester and stored in the approval history.
+                        </small>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        <i class="fa fa-times"></i>
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            name="action"
+                            value="Rejected"
+                            class="btn btn-danger">
+                        <i class="fa fa-ban"></i>
+                        Confirm Rejection
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const rejectModal = document.getElementById('rejectModal');
+    const rejectForm = document.getElementById('rejectForm');
+
+    rejectModal.addEventListener('show.bs.modal', function (event) {
+
+        const button = event.relatedTarget;
+
+        if (!button) return;
+
+        const actionUrl = button.getAttribute('data-action');
+
+        if (actionUrl) {
+            rejectForm.action = actionUrl;
+        }
+
+        // Clear previous reason
+        const reasonField = document.getElementById('reason');
+        if (reasonField) {
+            reasonField.value = '';
+        }
+    });
+
+});
+</script>
+
+<style>
+.modal {
+    z-index: 1060 !important;
+}
+
+.modal-backdrop {
+    z-index: 1055 !important;
+}
+
+.modal-content {
+    border-radius: 10px;
+}
+
+.modal-header {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+textarea.form-control {
+    resize: vertical;
+}
+</style>

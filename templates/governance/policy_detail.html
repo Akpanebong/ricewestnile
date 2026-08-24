@@ -1,0 +1,99 @@
+{% extends "garcis/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="row">
+
+<!-- MAIN INFO -->
+<div class="col-lg-8">
+<div class="card shadow-sm p-4">
+
+<h4>{{ object.title }}</h4>
+
+<p class="text-muted">
+    ID: {{ object.policy_id }}
+</p>
+
+<hr>
+
+<p><strong>Description:</strong></p>
+<p>{{ object.summary}}</p>
+
+<hr>
+
+<div class="row">
+    <div class="col-md-6">
+        <p><strong>Status:</strong> {{ object.status }}</p>
+        <p><strong>Owner:</strong> {{ object.owner }}</p>
+    </div>
+    <div class="col-md-6">
+        <p><strong>Effective Date:</strong> {{ object.effective_date }}</p>
+        <p><strong>Next Review:</strong> {{ object.next_review_date }}</p>
+    </div>
+</div>
+
+</div>
+</div>
+
+
+<!-- SIDEBAR -->
+<div class="col-lg-4">
+
+<div class="card shadow-sm p-3 mb-3">
+
+<h6>Approval Status</h6>
+
+<span class="
+    {% if object.approval_status == 'approved' %}text-success
+    {% elif object.approval_status == 'rejected' %}text-danger
+    {% else %}text-warning
+    {% endif %}
+">
+    {{ object.approval_status|default:object.status }}
+</span>
+
+<hr>
+
+<p><strong>Approved By:</strong> {{ object.approved_by }}</p>
+<p><strong>Date:</strong> {{ object.approved_at }}</p>
+
+{% if object.rejection_reason %}
+<div class="alert alert-danger">
+    <strong>Rejection Reason:</strong><br>
+    {{ object.rejection_reason }}
+</div>
+{% endif %}
+
+</div>
+
+
+<!-- ACTIONS -->
+<div class="card p-3 shadow-sm">
+
+<h6>Actions</h6>
+
+<a href="{% url 'policy_update' object.pk %}" class="btn btn-warning w-100 mb-2">Edit</a>
+
+<a href="{% url 'policy_delete' object.pk %}" class="btn btn-danger w-100 mb-2">Delete</a>
+
+{% if object.approval_status != 'approved' %}
+<a href="{% url 'policy_approve' object.pk %}" class="btn btn-success w-100 mb-2">
+    Approve
+</a>
+{% endif %}
+
+<a href="{% url 'policy_reject' object.pk %}" class="btn btn-dark w-100">
+    Reject
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

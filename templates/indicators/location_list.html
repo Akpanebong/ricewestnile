@@ -1,0 +1,1033 @@
+{% extends active_base_template|default:'base.html' %}
+{% load custom_tags %}
+
+{% block title %}Location Management | Enterprise M&E{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       LOCATION MANAGEMENT
+       Enterprise M&E Interface
+       ========================================================= */
+
+    .location-page {
+        --lm-primary: #198754;
+        --lm-primary-dark: #146c43;
+        --lm-primary-soft: #eaf7f0;
+        --lm-border: #e1e7e3;
+        --lm-text: #26332c;
+        --lm-muted: #6c757d;
+    }
+
+    /* =========================================================
+       BREADCRUMB
+       ========================================================= */
+
+    .lm-breadcrumb {
+        background: #fff;
+        border: 1px solid var(--lm-border);
+        border-radius: 10px;
+        padding: 9px 14px;
+        margin-bottom: 18px;
+    }
+
+    .lm-breadcrumb a {
+        color: var(--lm-primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .lm-breadcrumb a:hover {
+        color: var(--lm-primary-dark);
+    }
+
+    /* =========================================================
+       PAGE HEADER
+       ========================================================= */
+
+    .lm-page-header {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f3faf6 100%
+        );
+        border: 1px solid var(--lm-border);
+        border-radius: 16px;
+        padding: 20px 22px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .035);
+    }
+
+    .lm-header-icon {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: var(--lm-primary-soft);
+        color: var(--lm-primary);
+        font-size: 20px;
+    }
+
+    .lm-page-title {
+        color: #1e3027;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .lm-page-subtitle {
+        color: var(--lm-muted);
+        font-size: .78rem;
+        margin: 0;
+    }
+
+    .lm-create-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        background: var(--lm-primary);
+        border: 1px solid var(--lm-primary);
+        color: #fff;
+        border-radius: 9px;
+        padding: 9px 15px;
+        font-size: .78rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .18s ease;
+    }
+
+    .lm-create-btn:hover {
+        color: #fff;
+        background: var(--lm-primary-dark);
+        border-color: var(--lm-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       SUMMARY CARDS
+       ========================================================= */
+
+    .lm-stat-card {
+        background: #fff;
+        border: 1px solid var(--lm-border);
+        border-radius: 13px;
+        padding: 15px 16px;
+        height: 100%;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, .025);
+    }
+
+    .lm-stat-icon {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: var(--lm-primary-soft);
+        color: var(--lm-primary);
+    }
+
+    .lm-stat-label {
+        color: #7a847f;
+        font-size: .68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        margin-bottom: 2px;
+    }
+
+    .lm-stat-value {
+        color: #27352e;
+        font-size: 1.12rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    /* =========================================================
+       MAIN CARD
+       ========================================================= */
+
+    .lm-main-card {
+        background: #fff;
+        border: 1px solid var(--lm-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .04);
+    }
+
+    .lm-toolbar {
+        padding: 17px 20px;
+        border-bottom: 1px solid var(--lm-border);
+        background: #fff;
+    }
+
+    .lm-toolbar-title {
+        color: #29372f;
+        font-size: .95rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .lm-toolbar-subtitle {
+        color: #858e89;
+        font-size: .7rem;
+        margin-top: 3px;
+    }
+
+    /* =========================================================
+       SEARCH
+       ========================================================= */
+
+    .lm-search {
+        position: relative;
+        width: 100%;
+        max-width: 370px;
+    }
+
+    .lm-search i {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9aa39e;
+        font-size: .8rem;
+        z-index: 2;
+    }
+
+    .lm-search input {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 12px 8px 36px;
+        border: 1px solid #dce2df;
+        border-radius: 9px;
+        font-size: .78rem;
+        background: #fbfcfb;
+    }
+
+    .lm-search input:focus {
+        outline: none;
+        background: #fff;
+        border-color: #83c5a1;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    /* =========================================================
+       TABLE
+       ========================================================= */
+
+    .lm-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .lm-table {
+        min-width: 760px;
+        margin: 0;
+    }
+
+    .lm-table thead th {
+        background: #f7f9f8;
+        color: #65716a;
+        border-bottom: 1px solid var(--lm-border);
+        border-top: 0;
+        padding: 12px 14px;
+        font-size: .67rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .035em;
+        white-space: nowrap;
+    }
+
+    .lm-table tbody td {
+        padding: 14px;
+        border-bottom: 1px solid #edf0ee;
+        color: #46524b;
+        font-size: .78rem;
+        vertical-align: middle;
+    }
+
+    .lm-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .lm-table tbody tr:hover {
+        background: #fafcfb;
+    }
+
+    .lm-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    /* =========================================================
+       NUMBER
+       ========================================================= */
+
+    .lm-number {
+        color: #929b96;
+        font-size: .7rem;
+        font-weight: 600;
+    }
+
+    /* =========================================================
+       LOCATION CELLS
+       ========================================================= */
+
+    .lm-location {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .lm-location-icon {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: var(--lm-primary-soft);
+        color: var(--lm-primary);
+        font-size: .72rem;
+    }
+
+    .lm-location-name {
+        color: #35423a;
+        font-weight: 650;
+    }
+
+    .lm-settlement {
+        color: #4d5a52;
+        font-weight: 550;
+    }
+
+    .lm-subcounty {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        border-radius: 6px;
+        background: #f5f6f6;
+        color: #5e6862;
+        border: 1px solid #e6e9e7;
+        font-size: .68rem;
+        font-weight: 600;
+    }
+
+    /* =========================================================
+       ACTIONS
+       ========================================================= */
+
+    .lm-actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .lm-action {
+        width: 33px;
+        height: 33px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        font-size: .72rem;
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+    .lm-action-edit {
+        color: #0d6efd;
+        background: #f0f6ff;
+        border-color: #dceaff;
+    }
+
+    .lm-action-edit:hover {
+        color: #fff;
+        background: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .lm-action-delete {
+        color: #dc3545;
+        background: #fff4f4;
+        border-color: #f4dddd;
+    }
+
+    .lm-action-delete:hover {
+        color: #fff;
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+
+    /* =========================================================
+       EMPTY STATE
+       ========================================================= */
+
+    .lm-empty {
+        padding: 65px 20px;
+        text-align: center;
+    }
+
+    .lm-empty-icon {
+        width: 65px;
+        height: 65px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        border-radius: 16px;
+        background: #f2f6f4;
+        color: #9ba59f;
+        font-size: 25px;
+    }
+
+    .lm-empty h6 {
+        color: #455149;
+        font-size: .9rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .lm-empty p {
+        color: #8a938e;
+        font-size: .74rem;
+        margin: 0;
+    }
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+
+    .lm-footer {
+        padding: 13px 20px;
+        border-top: 1px solid var(--lm-border);
+        background: #fbfcfb;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 767.98px) {
+
+        .lm-page-header {
+            padding: 16px;
+            border-radius: 13px;
+        }
+
+        .lm-page-title {
+            font-size: 1.08rem;
+        }
+
+        .lm-header-actions {
+            width: 100%;
+            margin-top: 14px;
+        }
+
+        .lm-create-btn {
+            width: 100%;
+        }
+
+        .lm-toolbar {
+            padding: 15px;
+        }
+
+        .lm-toolbar-search {
+            margin-top: 13px;
+        }
+
+        .lm-search {
+            max-width: none;
+        }
+
+        .lm-main-card {
+            border-radius: 13px;
+        }
+
+        .lm-stat-card {
+            padding: 13px;
+        }
+    }
+
+    @media (max-width: 400px) {
+
+        .lm-stat-value {
+            font-size: 1rem;
+        }
+
+        .lm-stat-icon {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+        }
+    }
+</style>
+
+<div class="container-fluid location-page">
+
+
+<!-- =====================================================
+     BREADCRUMB
+====================================================== -->
+
+<div class="lm-breadcrumb">
+
+    <ol class="breadcrumb mb-0 small">
+
+        <li class="breadcrumb-item">
+
+            <a href="{% url 'monitoring:dashboard' %}">
+                <i class="fa fa-home me-1"></i>
+                Dashboard
+            </a>
+
+        </li>
+
+        <li class="breadcrumb-item active">
+            Locations
+        </li>
+
+    </ol>
+
+</div>
+
+<!-- =====================================================
+     PAGE HEADER
+====================================================== -->
+
+<div class="lm-page-header">
+
+    <div class="d-flex flex-column flex-md-row
+                align-items-start align-items-md-center
+                justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <div class="lm-header-icon me-3">
+
+                <i class="fa fa-map-marker"></i>
+
+            </div>
+
+            <div>
+
+                <h1 class="lm-page-title">
+                    Location Management
+                </h1>
+
+                <p class="lm-page-subtitle">
+                    Manage geographic locations used across
+                    monitoring, reporting and programme activities.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if request.user|has_group:"MEAL" and request.user.is_superuser %}
+
+        <div class="lm-header-actions">
+
+            <a href="{% url core_url_namespace|add:':location_create' %}"
+               class="lm-create-btn">
+
+                <i class="fa fa-plus-circle"></i>
+
+                New Location
+
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     SUMMARY
+====================================================== -->
+
+<div class="row g-3 mb-4">
+
+    <!-- Total Locations -->
+
+    <div class="col-6 col-lg-3">
+
+        <div class="lm-stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="lm-stat-icon me-3">
+
+                    <i class="fa fa-map-marker"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="lm-stat-label">
+                        Total Locations
+                    </div>
+
+                    <div class="lm-stat-value">
+                        {{ location_list|length }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Geography -->
+
+    <div class="col-6 col-lg-3">
+
+        <div class="lm-stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="lm-stat-icon me-3">
+
+                    <i class="fa fa-globe"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="lm-stat-label">
+                        Geography
+                    </div>
+
+                    <div class="lm-stat-value">
+                        District
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Settlement -->
+
+    <div class="col-6 col-lg-3">
+
+        <div class="lm-stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="lm-stat-icon me-3">
+
+                    <i class="fa fa-home"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="lm-stat-label">
+                        Coverage
+                    </div>
+
+                    <div class="lm-stat-value">
+                        Settlements
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Status -->
+
+    <div class="col-6 col-lg-3">
+
+        <div class="lm-stat-card">
+
+            <div class="d-flex align-items-center">
+
+                <div class="lm-stat-icon me-3">
+
+                    <i class="fa fa-check-circle"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="lm-stat-label">
+                        Directory
+                    </div>
+
+                    <div class="lm-stat-value">
+                        Active
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     MAIN CARD
+====================================================== -->
+
+<div class="lm-main-card">
+
+    <!-- Toolbar -->
+
+    <div class="lm-toolbar">
+
+        <div class="row align-items-center">
+
+            <div class="col-md-5">
+
+                <h2 class="lm-toolbar-title">
+                    Programme Locations
+                </h2>
+
+                <div class="lm-toolbar-subtitle">
+                    Browse and manage registered operational locations.
+                </div>
+
+            </div>
+
+
+            <div class="col-md-7">
+
+                <div class="lm-toolbar-search d-flex
+                            justify-content-md-end">
+
+                    <div class="lm-search">
+
+                        <i class="fa fa-search"></i>
+
+                        <input type="text"
+                               id="profileSearch"
+                               class="form-control"
+                               placeholder="Search district, settlement or sub-county..."
+                               autocomplete="off">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         TABLE
+    ================================================== -->
+
+    <div class="lm-table-wrapper"
+         id="profileTable">
+
+        <table class="table lm-table align-middle">
+
+            <thead>
+
+                <tr>
+
+                    <th style="width:55px;">
+                        #
+                    </th>
+
+                    <th>
+                        District
+                    </th>
+
+                    <th>
+                        Settlement
+                    </th>
+
+                    <th>
+                        Sub-County
+                    </th>
+
+                    {% if request.user|has_group:"MEAL" and request.user.is_superuser %}
+
+                    <th class="text-center"
+                        style="width:125px;">
+                        Actions
+                    </th>
+
+                    {% endif %}
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for locate in location_list %}
+
+                <tr>
+
+                    <!-- Number -->
+
+                    <td>
+
+                        <span class="lm-number">
+                            {{ forloop.counter }}
+                        </span>
+
+                    </td>
+
+
+                    <!-- District -->
+
+                    <td>
+
+                        <div class="lm-location">
+
+                            <div class="lm-location-icon">
+
+                                <i class="fa fa-map-marker"></i>
+
+                            </div>
+
+                            <span class="lm-location-name">
+
+                                {{ locate.district }}
+
+                            </span>
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- Settlement -->
+
+                    <td>
+
+                        <span class="lm-settlement">
+
+                            {{ locate.settlement }}
+
+                        </span>
+
+                    </td>
+
+
+                    <!-- Sub County -->
+
+                    <td>
+
+                        <span class="lm-subcounty">
+
+                            <i class="fa fa-location-arrow me-1"></i>
+
+                            {{ locate.sub_county }}
+
+                        </span>
+
+                    </td>
+
+
+                    <!-- Actions -->
+
+                    {% if request.user|has_group:"MEAL" and request.user.is_superuser %}
+
+                    <td>
+
+                        <div class="lm-actions">
+
+                            <!-- Edit -->
+
+                            <a class="lm-action lm-action-edit"
+                               href="{% url core_url_namespace|add:':location_update' locate.sub_county locate.pk %}"
+                               title="Edit Location"
+                               data-bs-toggle="tooltip">
+
+                                <i class="fa fa-edit"></i>
+
+                            </a>
+
+
+                            <!-- Delete -->
+
+                            <a class="lm-action lm-action-delete"
+                               href="{% url core_url_namespace|add:':trash_location' locate.pk locate.sub_county %}"
+                               title="Delete Location"
+                               data-bs-toggle="tooltip"
+                               onclick="return confirm('Are you sure you want to delete this location?');">
+
+                                <i class="fa fa-trash"></i>
+
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                    {% endif %}
+
+                </tr>
+
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="5">
+
+                        <div class="lm-empty">
+
+                            <div class="lm-empty-icon">
+
+                                <i class="fa fa-map-o"></i>
+
+                            </div>
+
+                            <h6>
+                                No Locations Found
+                            </h6>
+
+                            <p>
+                                No programme locations have been
+                                registered in the system yet.
+                            </p>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <div class="lm-footer">
+
+        {% include "pagination.html" %}
+
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- =========================================================
+     SEARCH + TOOLTIPS
+========================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput =
+        document.getElementById("profileSearch");
+
+    const table =
+        document.getElementById("profileTable");
+
+
+    if (!searchInput || !table) {
+        return;
+    }
+
+
+    const rows =
+        table.querySelectorAll("tbody tr");
+
+
+    searchInput.addEventListener(
+        "input",
+        function () {
+
+            const searchTerm =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+
+            rows.forEach(function (row) {
+
+                /*
+                 * Preserve empty state.
+                 */
+                if (row.querySelector(".lm-empty")) {
+                    return;
+                }
+
+
+                const rowText =
+                    row.textContent
+                        .toLowerCase();
+
+
+                row.style.display =
+                    rowText.includes(searchTerm)
+                        ? ""
+                        : "none";
+
+            });
+
+        }
+    );
+
+
+    /*
+     * Bootstrap tooltips
+     */
+    if (typeof bootstrap !== "undefined") {
+
+        const tooltipElements =
+            document.querySelectorAll(
+                '[data-bs-toggle="tooltip"]'
+            );
+
+        tooltipElements.forEach(function (element) {
+
+            new bootstrap.Tooltip(element);
+
+        });
+
+    }
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'garcis/base.html' %}
+{% block content %}
+
+<div class="container-fluid px-4 py-4">
+    <div class="card shadow-lg border-0 rounded-4">
+
+        <div class="card-header bg-dark text-white rounded-top-4">
+            <h4 class="mb-0">Create Scenario</h4>
+            <small>Simulate risk environments (funding delays, shocks, etc.)</small>
+        </div>
+
+        <div class="card-body p-4">
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row g-4">
+
+                    <!-- Name -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Scenario Name</label>
+                        {{ form.name }}
+                    </div>
+
+                    <!-- Multiplier -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Impact Multiplier</label>
+                        {{ form.multiplier }}
+                        <small class="text-muted">
+                            Example: 1.5 = increase risk severity by 50%
+                        </small>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Scenario Description</label>
+                        {{ form.description }}
+                    </div>
+
+                    <!-- Risks -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Select Affected Risks</label>
+                        {{ form.risks }}
+                        <small class="text-muted">
+                            Select multiple risks impacted by this scenario
+                        </small>
+                    </div>
+
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex justify-content-end mt-4">
+                    <a href="{% url 'scenario_list' %}" class="btn btn-light me-2">Cancel</a>
+                    <button type="submit" class="btn btn-dark px-4">Save Scenario</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

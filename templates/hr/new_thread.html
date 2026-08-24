@@ -1,0 +1,83 @@
+{% extends "hr/base.html" %}
+{% block title %}Create New Thread{% endblock %}
+
+{% block content %}
+<main class="ttr-wrapper">
+    <div class="container-fluid">
+
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h3 class="fw-bold">Create New Thread</h3>
+            <p class="text-muted mb-0">
+                Start a new conversation thread
+            </p>
+        </div>
+
+        {% include 'message.html' %}
+
+        <!-- Centered Card -->
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8 col-sm-10">
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+
+                        <!-- Icon / Visual Cue -->
+                        <div class="mb-3">
+                            <i class="fa fa-comments fa-2x text-primary"></i>
+                        </div>
+
+                        <h5 class="fw-semibold mb-3">Thread Details</h5>
+
+                        <!-- Form -->
+                        <form method="post">
+                            {% csrf_token %}
+{% for field in form %}
+                            <!-- Single Field -->
+                            <div class="mb-3 text-start">
+                                 <label class="form-label fw-semibold">
+                                {{ field.label }}
+                            </label>
+
+                            {{ field }}
+
+                            {% if field.help_text %}
+                                <small class="text-muted d-block">
+                                    {{ field.help_text }}
+                                </small>
+                            {% endif %}
+
+                            {% if field.errors %}
+                                <div class="text-danger small">
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+                            </div>
+{% endfor %}
+                            <!-- Actions -->
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{% url 'forum_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fa fa-arrow-left me-1"></i> Cancel
+                                </a>
+
+                                <button type="submit" class="btn btn-success px-4">
+                                    <i class="fa fa-paper-plane me-1"></i> Create
+                                </button>
+                            </div>
+
+                        </form>
+                        
+                         
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</main>
+{% endblock %}
+
+
+
+               

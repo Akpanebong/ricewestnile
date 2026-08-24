@@ -1,0 +1,158 @@
+{% extends "procurement/base.html" %}
+{% load currency_tags %}
+{% block content %}
+
+<main class="ttr-wrapper">
+<div class="container-fluid py-4">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Administrative Expense Request</h3>
+            <p class="text-muted mb-0">Create and submit an expense proposal for <b>{{cash_req}}</b></p>
+        </div>
+
+        <a href="{% url 'finance:dashboard' %}" class="btn btn-light">
+            ← Back
+        </a>
+    </div>
+
+    <form method="POST" class="card shadow-sm border-0">
+        {% csrf_token %}
+
+        <div class="card-body">
+
+            <!-- BASIC INFO -->
+            <h5 class="fw-bold border-bottom pb-2">Basic Information</h5>
+
+            <div class="row g-3 mt-2 mb-4">
+
+                <!-- ✅ Department FK -->
+                <div class="col-md-4">
+                    <label class="form-label">Department *</label>
+                    <select name="department" class="form-select" required>
+                        <option value="">Select Department</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- ✅ Project FK -->
+                <div class="col-md-4">
+                    <label class="form-label">Project</label>
+                    <select name="project" class="form-select">
+                        <option value="">Select Project</option>
+                        {% for proj in projects %}
+                            <option value="{{ proj.id }}">{{ proj }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Location</label>
+                    <input type="text" name="location" class="form-control">
+                </div>
+
+            </div>
+
+
+            <!-- PURPOSE -->
+            <h5 class="fw-bold border-bottom pb-2">Purpose</h5>
+            <div class="mb-4 mt-2">
+                <textarea name="purpose" class="form-control" rows="3" required>{{cash_req.purpose}}</textarea>
+            </div>
+
+
+            <!-- TIMEFRAME -->
+            <h5 class="fw-bold border-bottom pb-2">Timeframe</h5>
+
+            <div class="row g-3 mt-2 mb-4">
+                <div class="col-md-6">
+                    <label>From</label>
+                    <input type="date" name="timeframe_from" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label>To</label>
+                    <input type="date" name="timeframe_to" class="form-control" required>
+                </div>
+            </div>
+
+
+            <!-- OBJECTIVES -->
+            <h5 class="fw-bold border-bottom pb-2">Objectives & Outputs</h5>
+
+            <div class="row">
+            <div class="mb-4 col-6">
+                 <label class="form-label">Objectives</label>
+                <textarea name="objectives" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="mb-4 col-6">
+                 <label class="form-label">Expected Outputs</label>
+                <textarea name="expected_outputs" class="form-control" rows="3"></textarea>
+            </div>
+            </div>
+
+
+            <!-- FINANCIAL -->
+            <h5 class="fw-bold border-bottom pb-2">Financials</h5>
+
+            <div class="row g-3 mt-2 mb-4">
+
+                <div class="col-md-6">
+                    <label>Proposed Budget ({{ display_currency }})</label>
+                    <input type="number" value="{{ cash_req.total_amount|display_amount:request }}" name="proposed_budget" class="form-control" step="0.01" required>
+                    <div class="form-text">Summary of the sum on the requisition form.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Service Providers</label>
+                    <input type="text" name="service_providers" class="form-control">
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="card-footer d-flex justify-content-between">
+
+            <a href="{% url 'finance:dashboard' %}" class="btn btn-outline-secondary">
+                Cancel
+            </a>
+
+            <div>
+                <button class="btn btn-light border" name="action" value="draft">
+                    Save Draft
+                </button>
+
+                <button class="btn btn-primary" name="action" value="submit">
+                    Submit
+                </button>
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+</main>
+
+
+<!-- ================= UX ENHANCEMENTS ================= -->
+<script>
+    // Prevent invalid timeframe selection
+    document.addEventListener("DOMContentLoaded", function () {
+        const fromDate = document.querySelector('[name="timeframe_from"]');
+        const toDate = document.querySelector('[name="timeframe_to"]');
+
+        fromDate.addEventListener("change", function () {
+            toDate.min = this.value;
+        });
+    });
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+<h4>Compliance Assessment Scorecard</h4>
+
+<div class="card p-3 mb-4">
+    <h6>Overall Score</h6>
+    <div class="progress">
+        <div class="progress-bar" style="width: {{ avg_score }}%">
+            {{ avg_score|floatformat:0 }}%
+        </div>
+    </div>
+</div>
+
+<table class="table table-bordered">
+<tr>
+<th>Requirement</th>
+<th>Score</th>
+<th>Gap</th>
+<th>Recommendation</th>
+<th>Actions</th>
+</tr>
+
+{% for a in assessments %}
+<tr>
+<td>{{ a.requirement.title }}</td>
+<td>{{ a.score }}</td>
+<td>{{ a.gap }}</td>
+<td>{{ a.recommendation }}</td>
+
+<td>
+    <a href="{% url 'assessment_update' a.id %}" class="btn btn-outline-success"><i class="fa fa-pencil"></i> </a>
+    <a href="{% url 'assessment_delete' a.id %}" class="btn btn-outline-danger"><i class="fa fa-trash"></i> </a>
+</td>
+      <td>
+
+    {% with rating=a.get_rating_display %}
+        <span class="badge bg-{{ rating.1 }}">
+            {{ rating.0 }}
+        </span>
+    {% endwith %}
+
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

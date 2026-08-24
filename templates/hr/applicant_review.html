@@ -1,0 +1,94 @@
+{% extends "hr/base.html" %}
+{% block title %}Review Applicant{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {% include "message.html" %}
+
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold mb-1 text-dark">
+                <i class="fa fa-clipboard-check text-success me-2"></i> Review Applicant
+            </h3>
+            <small class="text-muted">{{ applicant.full_name }} — {{ applicant.job.request.title }}</small>
+        </div>
+        <a href="{% url 'vacancy:applicants_list' %}" class="btn btn-outline-secondary btn-sm px-3">
+            <i class="fa fa-arrow-left me-1"></i> Back
+        </a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ form.status.label }}</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}<div class="text-danger small">{{ form.status.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ form.interview_score.label }}</label>
+                            {{ form.interview_score }}
+                            {% if form.interview_score.errors %}<div class="text-danger small">{{ form.interview_score.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ form.interview_notes.label }}</label>
+                            {{ form.interview_notes }}
+                            {% if form.interview_notes.errors %}<div class="text-danger small">{{ form.interview_notes.errors }}</div>{% endif %}
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="fa fa-save me-1"></i> Save Review
+                            </button>
+                            {% if applicant.reviewed_at and applicant.status != "Pending" %}
+                                <a class="btn btn-outline-primary px-4"
+                                   href="{% url 'vacancy:send_applicant_result' applicant.pk %}"
+                                   onclick="return confirm('Send interview result PDF to {{ applicant.email }}?');">
+                                    <i class="fa fa-paper-plane me-1"></i> Send Result PDF
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-semibold mb-2">Applicant</h6>
+                    <div class="text-muted small mb-3">
+                        <div><strong>Email:</strong> {{ applicant.email }}</div>
+                        <div><strong>Applied:</strong> {{ applicant.applied_at|date:"M d, Y H:i" }}</div>
+                    </div>
+
+                    <h6 class="fw-semibold mb-2">Resume</h6>
+                    {% if applicant.resume %}
+                        <a class="btn btn-sm btn-outline-primary" href="{{ applicant.resume.url }}" download>
+                            <i class="fa fa-download me-1"></i> Download resume
+                        </a>
+                    {% else %}
+                        <div class="text-muted small">No resume uploaded.</div>
+                    {% endif %}
+
+                    {% if applicant.decision_sent_at %}
+                        <hr class="my-3">
+                        <div class="text-muted small">
+                            <strong>Result sent:</strong> {{ applicant.decision_sent_at|date:"M d, Y H:i" }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

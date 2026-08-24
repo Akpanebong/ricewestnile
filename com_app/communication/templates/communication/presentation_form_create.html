@@ -1,0 +1,166 @@
+{% extends 'communication/base.html' %}
+{% load form_tags %}
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold">
+            <i class="bi bi-easel-fill text-primary"></i>
+            Upload Presentation
+        </h4>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Main Form -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+
+<form method="post" enctype="multipart/form-data" id="uploadForm">
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            {{ form.program_area.label_tag }}
+            {{ form.program_area|add_class:"form-control" }}
+        </div>
+
+        <div class="col-md-6 mb-3">
+            {{ form.sent_by.label_tag }}
+            {{ form.sent_by }}
+        </div>
+    </div>
+
+    <div class="mb-3">
+        {{ form.comment.label_tag }}
+        {{ form.comment|add_class:"form-control" }}
+    </div>
+
+    <!-- Drag & Drop File Upload -->
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Presentation File</label>
+
+        <div id="dropZone"
+             class="border border-2 border-primary rounded-3 p-4 text-center bg-light"
+             style="cursor:pointer;">
+            <i class="bi bi-cloud-arrow-up display-4 text-primary"></i>
+            <p class="mt-2 mb-0 fw-bold">Drag & Drop your PowerPoint file here</p>
+            <small class="text-muted">or click to browse</small>
+        </div>
+
+        <!-- Hidden Input -->
+        {{ form.file|add_class:"form-control d-none" }}
+        <p id="fileName" class="mt-2 text-success fw-bold d-none"></p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress mb-3 d-none" id="uploadProgress">
+        <div class="progress-bar" role="progressbar"></div>
+    </div>
+
+    <button class="btn btn-primary w-100 mt-2">
+        <i class="bi bi-upload"></i> Upload Presentation
+    </button>
+
+</form>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Tips Panel -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+
+                    <h5 class="fw-bold mb-3 text-secondary">
+                        <i class="bi bi-lightbulb"></i> Helpful Tips
+                    </h5>
+
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item border-0">
+                            <i class="bi bi-filetype-ppt text-primary"></i>
+                            Use PPT or PPTX file format.
+                        </li>
+
+                        <li class="list-group-item border-0">
+                            <i class="bi bi-clock-history text-warning"></i>
+                            Submission time is automatically recorded.
+                        </li>
+
+                        <li class="list-group-item border-0">
+                            <i class="bi bi-person-check text-success"></i>
+                            Reviewers respond on this page.
+                        </li>
+
+                        <li class="list-group-item border-0">
+                            <i class="bi bi-shield-lock text-info"></i>
+                            Your document is stored securely.
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Drag & Drop JS -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("id_file");
+    const uploadForm = document.getElementById("uploadForm");
+    const progressContainer = document.getElementById("uploadProgress");
+    const progressBar = progressContainer.querySelector(".progress-bar");
+    const fileNameDisplay = document.getElementById("fileName");
+
+    if (!dropZone || !fileInput) return;
+
+    dropZone.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files.length > 0) {
+            fileNameDisplay.textContent = "Selected: " + fileInput.files[0].name;
+            fileNameDisplay.classList.remove("d-none");
+        }
+    });
+
+    dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("bg-primary", "text-white");
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("bg-primary", "text-white");
+    });
+
+    dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("bg-primary", "text-white");
+        fileInput.files = e.dataTransfer.files;
+
+        if (e.dataTransfer.files.length > 0) {
+            fileNameDisplay.textContent = "Selected: " + e.dataTransfer.files[0].name;
+            fileNameDisplay.classList.remove("d-none");
+        }
+    });
+
+    uploadForm.addEventListener("submit", () => {
+        progressContainer.classList.remove("d-none");
+        let value = 0;
+        const interval = setInterval(() => {
+            value += 20;
+            progressBar.style.width = value + "%";
+            progressBar.innerText = value + "%";
+            if (value >= 100) clearInterval(interval);
+        }, 200);
+    });
+});
+</script>
+
+{% endblock %}

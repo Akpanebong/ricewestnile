@@ -1,0 +1,73 @@
+
+{% extends 'base.html' %}
+{% block title %}Profile Registration{% endblock %}
+
+{% block content %}
+<main class="ttr-wrapper">
+<div class="container-fluid">
+<div class="container-fluid py-3">
+
+    {% include 'message.html' %}
+
+    <div class="row g-3">
+
+        <!-- Main Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+
+                    <h4 class="mb-3">{{ title }}</h4>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% include 'form.html' %}
+
+                        <div class="mt-3">
+                            <button class="btn btn-primary">
+                                <i class="fa fa-save"></i> Save
+                            </button>  <a href="{% url 'department_list' %}" class="btn btn-secondary">Cancel</a>
+
+                        </div>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+
+                    <h5 class="mb-2">Tips</h5>
+                    {% if not is_update %}
+                    <p>List of departments available.</p>
+                    <p class="text-muted">
+                    <ol>{% for dept in departments %}
+                    <li>{{dept.name.capitalize}} - {{dept.head}} </li>{% endfor %}
+                </ol>
+                    </p>
+                    {% endif %}
+
+                    <hr class="mt-3">
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+</main>
+{% endblock %}
+

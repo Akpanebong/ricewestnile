@@ -1,0 +1,167 @@
+{% extends active_base_template|default:'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+<!-- Page Header -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+<div>
+<h4 class="fw-bold">Knowledge Hub</h4>
+<small class="text-muted">
+Access presentations, reports and success stories
+</small>
+</div>
+
+<a href="{% url core_url_namespace|add:':resource_upload' %}" class="btn btn-primary">
+Upload Resource
+</a>
+
+</div>
+
+
+<!-- Search + Filter -->
+
+<form method="GET" class="row g-3 mb-4">
+
+<div class="col-md-6">
+
+<input
+type="text"
+name="q"
+class="form-control"
+placeholder="Search resources..."
+value="{{ request.GET.q }}"
+>
+
+</div>
+
+<div class="col-md-3">
+
+<select name="type" class="form-select">
+
+<option value="">All Types</option>
+<option value="presentation">Presentations</option>
+<option value="report">Reports</option>
+<option value="success_story">Success Stories</option>
+
+</select>
+
+</div>
+
+<div class="col-md-3">
+
+<button class="btn btn-outline-primary w-100">
+Search
+</button>
+
+</div>
+
+</form>
+
+
+<!-- Resource Cards -->
+
+<div class="row g-4">
+
+{% for r in resources %}
+
+<div class="col-md-4">
+
+<div class="card resource-card h-100 shadow-sm border-0">
+
+<div class="card-body">
+
+<!-- Icon -->
+
+<div class="mb-3">
+
+{% if r.resource_type == "presentation" %}
+<i class="fa fa-file-powerpoint fa-2x text-warning"></i>
+{% elif r.resource_type == "report" %}
+<i class="fa fa-file-pdf fa-2x text-danger"></i>
+{% else %}
+<i class="fa fa-star fa-2x text-success"></i>
+{% endif %}
+
+</div>
+
+<h6 class="fw-bold">
+{{ r.title }}
+</h6>
+
+<p class="text-muted small">
+
+{{ r.description|truncatewords:15 }}
+
+</p>
+
+</div>
+
+
+<div class="card-footer bg-white border-0 d-flex justify-content-between">
+
+<small class="text-muted">
+{{ r.downloads }} downloads
+</small>
+
+<div>
+
+<a
+href="{% url core_url_namespace|add:':download_resource' r.id %}"
+class="btn btn-sm btn-outline-primary"
+>
+Download
+</a>
+
+{% if r.resource_type != "presentation" %}
+
+<a
+href="{{ r.file.url }}"
+target="_blank"
+class="btn btn-sm btn-outline-secondary"
+>
+Preview
+</a>
+
+{% endif %}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+{% empty %}
+
+<div class="col-12 text-center text-muted">
+No resources found
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+
+<style>
+
+.resource-card{
+transition:0.3s;
+border-radius:10px;
+}
+
+.resource-card:hover{
+transform:translateY(-4px);
+box-shadow:0 10px 25px rgba(0,0,0,0.15);
+}
+
+</style>
+
+{% endblock %}

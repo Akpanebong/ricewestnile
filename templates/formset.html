@@ -1,0 +1,98 @@
+
+<main class="ttr-wrapper">
+  <div class="container-fluid">
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="widget-box p-3 shadow-sm rounded bg-white">
+            {{ formset.management_form }}
+
+            <div class="table-responsive mb-3">
+              <table class="table table-sm table-bordered align-middle" id="items-table">
+                <thead class="table-light">
+                  <tr>
+                    <th>Product</th>
+                    <th>Unit Measure</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Line Total</th>
+                    <th>Delivery Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="formset-area">
+                  {% for form in formset %}
+                  <tr class="item-form"><td>
+                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                        {{form}}
+                    {% if form.errors %}
+                <div class="text-danger">
+                    {% for error in form.errors %}
+                        <small>{{ error }}</small>
+                    {% endfor %}
+                </div>{% endif %}
+                   </td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+</main>
+<tr class="item-form">
+  {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+  <td>
+    {{ form.product }}
+    {% if form.product.errors %}
+      <div class="text-danger"><small>{{ form.product.errors.0 }}</small></div>
+    {% endif %}
+  </td>
+
+  <td>
+    {{ form.unit_measure }}
+    {% if form.unit_measure.errors %}
+      <div class="text-danger"><small>{{ form.unit_measure.errors.0 }}</small></div>
+    {% endif %}
+  </td>
+
+  <td>
+    {{ form.qty }}
+    {% if form.qty.errors %}
+      <div class="text-danger"><small>{{ form.qty.errors.0 }}</small></div>
+    {% endif %}
+  </td>
+
+  <td>
+    {{ form.est_unit_cost }}
+    {% if form.est_unit_cost.errors %}
+      <div class="text-danger"><small>{{ form.est_unit_cost.errors.0 }}</small></div>
+    {% endif %}
+  </td>
+
+  <td><input type="text" class="form-control line-total" readonly value="0.00"></td>
+
+  <td>
+    {{ form.delivery_date }}
+    {% if form.delivery_date.errors %}
+      <div class="text-danger"><small>{{ form.delivery_date.errors.0 }}</small></div>
+    {% endif %}
+  </td>
+
+  <td><button type="button" class="btn btn-danger btn-sm remove-form">Remove</button></td>
+</tr>
+
+<!-- Description Row -->
+<tr>
+  <td colspan="7">
+    {{ form.description }}
+    {% if form.description.errors %}
+      <div class="text-danger"><small>{{ form.description.errors.0 }}</small></div>
+    {% endif %}
+  </td>
+</tr>

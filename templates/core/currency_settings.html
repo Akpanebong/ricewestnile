@@ -1,0 +1,198 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+{% block title %}Currency Settings - RICE West Nile Procurement{% endblock %}
+
+
+{% block extra_head %}
+<style>
+.currency-page {
+  max-width: 1500px;
+  margin: 0 auto 2rem;
+}
+.currency-panel {
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .07);
+}
+.currency-hero {
+  border-radius: 8px;
+  background: #10261f;
+  color: #fff;
+  padding: 1.26rem;
+}
+.rate-input {
+  min-width: 150px;
+}
+.matrix-table th,
+.matrix-table td {
+  white-space: nowrap;
+}
+.source-badge {
+  border-radius: 999px;
+  padding: .28rem .7rem;
+  font-size: .76rem;
+  font-weight: 700;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="currency-page">
+  <div class="currency-hero mb-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-lg-8">
+        <div class="text-white-50 small text-uppercase fw-bold">Organization Exchange Rates</div>
+        <h3 class="fw-bold mb-1">Currency Settings</h3>
+        <div class="text-white-50">Manual organization rates stay fixed until changed. The API is used only when a complete manual rate table is not available.</div>
+      </div>
+      <div class="col-lg-4 text-lg-end">
+        <span class="source-badge bg-light text-dark">{{ rate_source_label }}</span>
+        <div class="small text-white-50 mt-2">Active display currency: {{ display_currency }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-lg-4">
+      <div class="currency-panel p-3 h-100">
+        <h5 class="fw-bold mb-3">Display Currency</h5>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="display_currency">
+          <label class="form-label small text-muted">Currency used across forms and reports</label>
+          <select name="currency" class="form-select mb-3">
+            {% for option in currency_options %}
+            <option value="{{ option.code }}" {% if display_currency == option.code %}selected{% endif %}>
+              {{ option.code }} - {{ option.label }}
+            </option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-success">
+            <i class="fa fa-check me-1"></i> Save Display Currency
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="currency-panel p-3 h-100">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+          <div>
+            <h5 class="fw-bold mb-1">Active USD Rate Table</h5>
+            <div class="text-muted small">All system conversions are calculated from these USD-based rates.</div>
+          </div>
+          <span class="badge {% if currency_rate_is_manual %}bg-success{% elif currency_rate_is_fallback %}bg-warning text-dark{% else %}bg-primary{% endif %}">
+            {% if currency_rate_is_manual %}Manual{% elif currency_rate_is_fallback %}Fallback{% else %}API{% endif %}
+          </span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Currency</th>
+                <th>1 USD Equals</th>
+                <th>Rate Date</th>
+                <th>Input By</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in active_rates %}
+              <tr>
+                <td><strong>{{ row.currency }}</strong><div class="small text-muted">{{ row.label }}</div></td>
+                <td>{{ row.rate.rate|floatformat:6|intcomma }}</td>
+                <td>{{ row.rate.rate_date|date:"M d, Y" }}</td>
+                <td>{{ row.rate.input_by|default:"System" }}</td>
+                <td>
+                  {% if row.rate.is_manual %}
+                  <span class="badge bg-success">Organization</span>
+                  {% elif row.rate.is_fallback %}
+                  <span class="badge bg-warning text-dark">Fallback</span>
+                  {% else %}
+                  <span class="badge bg-primary">API</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="currency-panel p-3 mb-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+      <div>
+        <h5 class="fw-bold mb-1">Input Organization Exchange Rates</h5>
+        <div class="text-muted small">Enter how much each currency equals for 1 USD. USD should remain 1.000000.</div>
+      </div>
+      {% if not can_manage_currency %}
+      <span class="badge bg-secondary">View only</span>
+      {% endif %}
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="manual_rates">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Rate Date</label>
+          <input type="date" name="rate_date" value="{{ today|date:'Y-m-d' }}" class="form-control" {% if not can_manage_currency %}disabled{% endif %}>
+        </div>
+        {% for row in active_rates %}
+        <div class="col-md-3">
+          <label class="form-label">{{ row.currency }} <span class="text-muted small">{{ row.label }}</span></label>
+          <input
+            type="number"
+            step="0.000001"
+            min="0.000001"
+            name="rate_{{ row.currency }}"
+            value="{{ row.rate.rate|stringformat:'f' }}"
+            class="form-control rate-input"
+            {% if not can_manage_currency %}disabled{% endif %}
+          >
+        </div>
+        {% endfor %}
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary" {% if not can_manage_currency %}disabled{% endif %}>
+            <i class="fa fa-floppy-disk me-1"></i> Save Organization Rates
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="currency-panel p-3">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+      <div>
+        <h5 class="fw-bold mb-1">Currency Equivalence Matrix</h5>
+        <div class="text-muted small">Each row shows what 1 unit of the source currency equals in every supported currency.</div>
+      </div>
+      <span class="badge bg-light text-dark border">{{ currency_rate_date|date:"M d, Y" }}</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover matrix-table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>1 Unit Of</th>
+            {% for option in currency_options %}
+            <th>{{ option.code }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in currency_matrix %}
+          <tr>
+            <th>{{ row.currency }}<div class="small text-muted fw-normal">{{ row.label }}</div></th>
+            {% for value in row.values %}
+            <td>{{ value.amount|floatformat:2|intcomma }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

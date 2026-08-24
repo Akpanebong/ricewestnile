@@ -1,0 +1,162 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+     <style>
+    body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+    h1, h2, h3, h4 { color: #1e5631; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 6px; }
+    th { background-color: #f0f0f0; text-align: left; }
+    .right { text-align: right; }
+    .total { font-weight: bold; background: #eafbea; }
+      /* Footer */
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 10pt;
+        color: #555;
+    }
+  </style>
+</head>
+<body>
+       <div class="header">
+  <table style="width: 100%; border: none;">
+    <tr>
+      <td style="width: 30%; text-align: right;border: none;">
+
+        <img src="{% static 'assets/images/ricewn.png' %}" style="width:200px;height:80px;">
+      </td>
+      <td style="width: 70%; text-align: left; font-size: 12px;border: none;">
+        P.O. Box 481 Arua - Uganda<br>
+        <strong>T:</strong> +256 393 238 163 | M: 0773 472234 | 0702 857349<br/>
+        <strong>E:</strong> jambo@ricewestnile.org | ricearua@yahoo.com | ricewn@gmail.com<br/>
+         www.ricewestnile.org
+      </td>
+    </tr>
+  </table>
+</div>
+
+    <div class="info">
+        <center><h2><b>PROCUREMENT REQUISITION FORM</b></h2></center>
+        <table style="width: 100%">
+            <tr>
+                <td style="width: 50%; border: none"><strong>Requisition NO:</strong> {{ po.number }}</td>
+                <td style="width: 50%; border: none"><strong>Date:</strong> {{ po.date }}</td>
+            </tr>
+            <tr>
+                <td style="width: 50%; border: none"><strong>project: </strong> {{ po.procurement.project }}</td>
+                <td style="width: 50%; border: none"><strong>Donor:</strong> {{ po.procurement.donor }}</td>
+            </tr>
+            <tr>
+                <td style="width: 50%; border: none"><strong>Budget:</strong> {{po.total|money:request }}</td>
+            </tr>
+        </table>
+        <p><strong>Activity Name:</strong> {{ po.activity_name }}</p>
+
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th align="left" width="30">S/N</th>
+                <th>Subject of Procurement</th>
+                <th >Specifications</th>
+                <th width="60">Quantity</th>
+                <th width="80">Delivery Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in po.items.all %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ item.description }}</td>
+        <td>{{ item.procurement_item.product }}</td>
+        <td>{{ item.qty }}</td>
+        <td>{% if item.delivery_date %}{{ item.delivery_date }}{% else %}
+                {{item.procurement_item.delivery_date}}{%endif%}</td>
+      </tr>
+      {% endfor %}
+        </tbody>
+<!--        <tfoot>-->
+<!--                <tr >-->
+<!--                  <td colspan="4" class="text-right">Grand Total ({{ display_currency }})</td>-->
+<!--                  <td>{{ total_amount }}</td>-->
+<!--                </tr>-->
+<!--              </tfoot>-->
+    </table>
+   <div class="header">
+  <table style="width: 100%; border: none; color:grey">
+    <tr>
+      <td style="text-align: left; border: none; vertical-align: top;">
+        <!-- Requested By -->
+        <strong>Requested By:</strong> {{ po.issued_by }}
+        <b>Title:</b> {{ po.issued_by.designation }}
+        <b>Sign:</b>
+        {% if po.issued_by.signature %}
+          <img src="{{ po.issued_by.signature.path }}" style="width:60px; height:20px">
+        {% else %}
+          <span>---</span>
+        {% endif %}
+        <b>Date:</b> {{ po.created_at|date:"d M Y" }}<br/>
+
+        <!-- Project Head Approval -->
+        <strong>Reviewed By:</strong>
+        {% if po.status == 'Reviewed' or po.status == 'Approved' and project_head %}
+          {{ project_head }}
+          <b>Title:</b> {{ project_head.designation }}
+          <b>Sign:</b>
+          {% if project_head.signature %}
+            <img src="{{ project_head.signature.path }}" style="width:60px; height:20px">
+          {% else %}
+            <span>---</span>
+          {% endif %}
+          <b>Date:</b> {{ po.reviewed_at|date:"d M Y" }}
+        {% else %}
+          <span>Pending</span>
+        {% endif %}
+        <br/>
+
+        <!-- Finance Approval -->
+        <strong>Checked By:</strong>
+        {% if po.status == 'Approved' or po.status == 'Checked' and project_accountant %}
+          {{ project_accountant }}
+          <b>Title:</b> {{ project_accountant.designation }}
+          <b>Sign:</b>
+          {% if project_accountant.signature %}
+            <img src="{{ project_accountant.signature.path }}" style="width:60px; height:20px">
+          {% else %}
+            <span>---</span>
+          {% endif %}
+          <b>Date:</b> {{ po.checked_at|date:"d M Y" }}
+        {% else %}
+          <span>Pending</span>
+        {% endif %}
+        <br/>
+
+        <!-- ED Approval -->
+        <strong>Authorised By:</strong>
+        {% if po.status == 'Approved' and ed %}
+          {{ ed|default:'Executive Director' }}
+          <b>Title:</b> {{ ed.designation|default:'Executive Director' }}
+          <b>Sign:</b>
+          {% if ed.signature %}
+            <img src="{{ ed.signature.path }}" style="width:60px; height:20px">
+          {% else %}
+            <span>---</span>
+          {% endif %}
+          <b>Date:</b> {{ po.approved_at|date:"d M Y" }}
+        {% else %}
+          <span>Pending</span>
+        {% endif %}
+        <br/>
+
+      </td>
+    </tr>
+  </table>
+</div>
+<hr/>
+<p align="center" style="color:gray">Generated by RICE West Nile Procurement System on {% now 'D, d M, Y' %}</p>
+</body>
+</html>

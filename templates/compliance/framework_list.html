@@ -1,0 +1,36 @@
+<!-- register.html -->
+
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+
+<h4>Compliance Framework Register</h4>
+    <p align="right"><a class="btn btn-outline-success" href="{% url 'framework_create' %}"><i class="fa fa-plus-circle"></i> New Compliance</a> </p>
+
+<table class="table table-bordered">
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Actions</th>
+</tr>
+
+{% for r in frames %}
+<tr>
+<td>{{ r.name }}</td>
+<td>{{ r.description }}</td>
+<td>
+        <a class="btn btn-sm btn-success" href="{% url 'framework_update' r.id %}">
+        <i class="fa fa-pencil"></i> </a>
+    <a class="btn btn-sm btn-danger" href="{% url 'framework_delete' r.id %}">
+        <i class="fa fa-trash"></i> </a>
+    <a class="btn btn-sm btn-dark" href="{% url 'framework_detail' r.id %}"><i class="fa fa-eye"></i> </a>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

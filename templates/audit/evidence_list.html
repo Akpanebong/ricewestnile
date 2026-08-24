@@ -1,0 +1,37 @@
+{% extends "garcis/base.html" %}
+{% block title %}Audit Evidence{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h3 class="mb-1">Evidence Repository</h3>
+            <p class="text-muted mb-0">Tagged audit evidence for traceability and reconciliation.</p>
+        </div>
+        <div class="quick-links">
+            <a href="{% url 'audit_dashboard' %}" class="btn btn-outline-secondary">Audit Dashboard</a>
+            <a href="{% url 'external_audit_dashboard' %}" class="btn btn-outline-dark">External Audit</a>
+        </div>
+    </div>
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Audit</th><th>Title</th><th>Type</th><th>Tag</th><th>Reference</th><th>Finance Reconciled</th></tr></thead>
+                <tbody>
+                    {% for item in evidence_items %}
+                    <tr>
+                        <td><a href="{% url 'evidence_update' item.id %}"> {{ item.audit }}</a></td>
+                        <td>{{ item.title }}</td>
+                        <td>{{ item.evidence_type }}</td>
+                        <td>{{ item.document_tag|default:"-" }}</td>
+                        <td>{{ item.reference_code|default:"-" }}</td>
+                        <td>{{ item.is_finance_reconciled|yesno:"Yes,No" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-muted text-center">No audit evidence recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

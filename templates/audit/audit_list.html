@@ -1,0 +1,29 @@
+{% extends "garcis/base.html" %}
+
+{% block title %}Audit Engagements{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card p-3">
+        <h4>Audit Engagement Register</h4>
+        <p align="right"><a class="btn btn-outline-success" href="{% url 'audit_create' %}"><i class="bi bi-plus-circle"></i> New Audit</a></p>
+        <table class="table table-striped">
+            <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Lead</th><th>Dates</th></tr></thead>
+            <tbody>
+                {% for audit in audits %}
+                <tr>
+                    <td><a href="{% url 'audit_log_detail' audit.id %}" style="text-decoration:none">{{ audit.title }}</a></td>
+                    <td>{{ audit.audit_type }}</td>
+                    <td>{{ audit.status }}</td>
+                    <td>{{ audit.lead_auditor|default:"-" }}</td>
+                    <td>{{ audit.start_date }}{% if audit.end_date %} to {{ audit.end_date }}{% endif %}</td>
+
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-muted">No audit engagements found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

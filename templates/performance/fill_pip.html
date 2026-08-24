@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Performance Improvement Plan{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="bg-white shadow-sm rounded p-3 mb-4 d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h4 class="fw-bold text-warning mb-0">
+                Performance Improvement Plan (PIP)
+            </h4>
+            <small class="text-muted">
+                Complete and submit your improvement commitment.
+            </small>
+        </div>
+
+        <span class="badge
+            {% if pip.status == 'sent_to_staff' %}
+                bg-warning text-dark
+            {% elif pip.status == 'submitted_by_staff' %}
+                bg-success
+            {% else %}
+                bg-secondary
+            {% endif %}
+        ">
+            {{ pip.get_status_display }}
+        </span>
+    </div>
+
+    <div class="row">
+
+        <!-- LEFT -->
+        <div class="col-lg-6">
+
+            <!-- Employee Information -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+
+                    <h5 class="fw-bold text-success mb-3">
+                        Employee Information
+                    </h5>
+
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <p>
+                                <strong>Name</strong><br>
+                                {{ pip.employee }}
+                            </p>
+
+                            <p>
+                                <strong>Department | Unit</strong><br>
+                                {{ pip.employee.user.department }} |
+                                {{ pip.employee.user.unit }}
+                            </p>
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <p>
+                                <strong>Appraisal Reference</strong><br>
+                                {{ pip.appraisal.reference }}
+                            </p>
+
+                            <p>
+                                <strong>Year</strong><br>
+                                {{ pip.appraisal.year }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Final Decision -->
+            <div class="card shadow-sm border-0 mb-4">
+
+                <div class="card-body">
+                    <h5 class="fw-bold text-danger mb-3">
+                        Final Appraisal Decision
+                    </h5>
+
+                    <div class="alert alert-warning">
+
+                        <h6 class="fw-bold">
+                            {{ pip.appraisal.verdict }}
+                        </h6>
+
+                        <hr>
+
+                        <strong>CMT Comment</strong>
+
+                        <p class="mb-0">
+                            {{ pip.appraisal.cmt_comment|default:"No comments provided."|linebreaks }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Instructions -->
+            <div class="card shadow-sm border-0 mb-4">
+
+                <div class="card-body">
+
+                    <h5 class="fw-bold text-primary">
+                        Instructions
+                    </h5>
+
+                    <p class="mb-0">
+
+                        You have been retained under a Performance Improvement Plan.
+
+                        Please acknowledge this decision by outlining:
+
+                        <ul class="mt-2">
+                            <li>Your understanding of the performance concerns.</li>
+                            <li>Your commitment to improve.</li>
+                            <li>The actions you intend to take.</li>
+                            <li>Any support you require from management.</li>
+                        </ul>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="col-lg-6">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <h5 class="fw-bold mb-3">
+                        Staff Response
+                    </h5>
+
+                    <form method="POST" enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">
+            1. Areas Requiring Improvement
+        </label>
+
+        <textarea
+            class="form-control"
+            rows="2"
+            name="improvement_areas"
+            required>{{ pip.improvement_areas }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">
+            2. Improvement Actions
+        </label>
+
+        <textarea
+            class="form-control"
+            rows="2"
+            name="improvement_actions"
+            required>{{ pip.improvement_actions }}</textarea>
+
+        <div class="form-text">
+            Describe the specific actions you will take to improve your performance.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">
+            3. Support Required From Management
+        </label>
+
+        <textarea
+            class="form-control"
+            rows="2"
+            name="support_required">{{ pip.support_required }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">
+            5. Employee Commitment
+        </label>
+
+        <textarea
+            class="form-control"
+            rows="2"
+            name="staff_commitment"
+            required>{{ pip.staff_commitment }}</textarea>
+
+        <div class="form-text">
+            State your commitment to successfully complete this Performance Improvement Plan.
+        </div>
+    </div>
+
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">
+            4. Expected Completion Date
+        </label>
+
+        <input
+            type="date"
+            class="form-control"
+            name="expected_completion_date"
+            value="{% if pip.expected_completion_date %}{{ pip.expected_completion_date|date:'Y-m-d' }}{% endif %}"
+            required>
+    </div>
+
+
+    <div class="mb-4">
+        <label class="form-label fw-semibold">
+            Electronic Signature
+        </label>
+
+        <input
+            type="file"
+            class="form-control"
+            name="staff_signature"
+            accept="image/*"
+            required>
+
+        {% if pip.staff_signature %}
+            <div class="mt-3">
+                <img src="{{ pip.staff_signature.url }}"
+                     class="img-thumbnail"
+                     style="max-height:120px;">
+            </div>
+        {% endif %}
+    </div>
+
+
+    <div class="d-grid gap-2">
+
+        <button class="btn btn-success">
+            <i class="fa fa-check-circle"></i>
+            Submit Performance Improvement Plan
+        </button>
+
+        <a href="{% url 'appraisal_detail' pip.appraisal.id %}"
+           class="btn btn-outline-secondary">
+            Back to Appraisal
+        </a>
+
+    </div>
+
+</form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

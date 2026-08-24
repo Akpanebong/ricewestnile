@@ -1,0 +1,92 @@
+<!-- templates/compliance/task_form.html -->
+
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="card shadow-lg border-0">
+
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">
+            {% if task %}Update Task{% else %}Create Task for {{requirement}}{% endif %}
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label>Due Date</label>
+                    <input type="date" name="due_date"
+                           value="{{ task.due_date|date:'Y-m-d' }}"
+                           class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Responsible</label>
+                    <input type="text" name="responsible"
+                           value="{{ task.responsible }}"
+                           class="form-control">
+                </div>
+
+                <div class="col-md-6">
+                    <label>Status</label>
+                    <select name="status" class="form-select">
+                        {% for val, label in statuses %}
+                        <option value="{{ val }}"
+                            {% if task.status == val %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Priority</label>
+                    <select name="priority" class="form-select">
+                        {% for val, label in priorities %}
+                        <option value="{{ val }}"
+                            {% if task.priority == val %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-12">
+                    <label>Progress (%)</label>
+                    <input type="number" name="progress"
+                           value="{{ task.progress|default:0 }}"
+                           min="0" max="100"
+                           class="form-control">
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% if task %}{% url 'task_detail' task.id %}{% else %}{% url 'compliance_calendar' %}{% endif %}"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-primary">
+                    Save Task
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</div>
+
+{% endblock %}

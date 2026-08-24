@@ -1,0 +1,240 @@
+{% extends "communication/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <h3 class="mb-4">Focus Areas & Subgroups</h3>
+
+    <div class="row g-3">
+        {% for area in focus_areas %}
+        <div class="col-md-6">
+            <div class="card shadow-sm focus-area-card"
+                 data-focus-id="{{ area.id }}"
+                 data-focus-name="{{ area.name }}"
+                 style="cursor:pointer;">
+
+                <div class="card-body">
+                    <h5 class="card-title text-primary">{{ area.name }}</h5>
+
+                    <div id="subgroup-list-{{ area.id }}" class="mb-2">
+                        {% for sg in area.subgroups.all %}
+                        <span class="badge bg-success me-1 subgroup-badge"
+                              data-id="{{ sg.id }}"
+                              data-name="{{ sg.name }}"
+                              data-focus="{{ area.id }}"
+                              data-leader="{{ sg.leader_id|default:'' }}">
+
+                            {{ sg.name }}
+
+                            <i class="fa fa-edit ms-1 text-white edit-subgroup"
+                               role="button"></i>
+
+                            <i class="fa fa-trash ms-1 text-white delete-subgroup"
+                               role="button"></i>
+                        </span>
+                        {% empty %}
+                        <span class="text-muted small">No subgroups yet</span>
+                        {% endfor %}
+                    </div>
+
+                    <small class="text-muted">
+                        Click card to add subgroup
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ================= MODAL ================= -->
+<div class="modal fade" id="subGroupModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+
+            <form id="subGroupForm" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="focus_area_id" id="focusAreaId">
+
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Add Subgroup</h5>
+                    <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    {{ form.as_p }}
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn btn-primary">
+                        <span id="submitSpinner"
+                              class="spinner-border spinner-border-sm d-none"></span>
+                        <span id="submitText">Save Subgroup</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const CREATE_URL = "{% url 'comm:subgroup-create' %}";
+const UPDATE_URL = "{% url 'comm:subgroup-update' 0 %}";
+const DELETE_URL = "{% url 'comm:subgroup-delete' 0 %}";
+const CSRF_TOKEN = "{{ csrf_token }}";
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const modalEl = document.getElementById('subGroupModal');
+    const modal = new bootstrap.Modal(modalEl);
+    const form = document.getElementById('subGroupForm');
+    const focusInput = document.getElementById('focusAreaId');
+    const spinner = document.getElementById('submitSpinner');
+    const submitText = document.getElementById('submitText');
+
+    let editId = null;
+
+    /* =============================
+       OPEN ADD MODAL (CARD CLICK)
+    ============================== */
+    document.querySelectorAll('.focus-area-card').forEach(card => {
+        card.addEventListener('click', e => {
+
+            // 🚫 Ignore clicks from subgroup badges or icons
+            if (e.target.closest('.subgroup-badge')) return;
+
+            editId = null;
+            form.reset();
+
+            focusInput.value = card.dataset.focusId;
+            modalEl.querySelector('.modal-title').textContent =
+                `Add Subgroup to ${card.dataset.focusName}`;
+
+            modal.show();
+        });
+    });
+
+    /* =============================
+       SUBMIT CREATE / UPDATE
+    ============================== */
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        spinner.classList.remove('d-none');
+        submitText.textContent = 'Saving...';
+
+        const url = editId
+            ? UPDATE_URL.replace('/0/', `/${editId}/`)
+            : CREATE_URL;
+
+        fetch(url, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            spinner.classList.add('d-none');
+            submitText.textContent = 'Save Subgroup';
+
+            if (!data.success) {
+                Swal.fire('Error', 'Failed to save subgroup', 'error');
+                return;
+            }
+
+            modal.hide();
+
+            Toastify({
+                text: editId ? 'Subgroup updated' : 'Subgroup created',
+                duration: 3000,
+                gravity: 'top',
+                position: 'right',
+                backgroundColor: '#0d6efd'
+            }).showToast();
+
+            location.reload();
+        });
+    });
+
+    /* =============================
+       EDIT SUBGROUP
+    ============================== */
+    document.addEventListener('click', e => {
+        if (!e.target.classList.contains('edit-subgroup')) return;
+
+        e.stopPropagation();
+
+        const badge = e.target.closest('.subgroup-badge');
+        editId = badge.dataset.id;
+
+        form.querySelector('[name="name"]').value = badge.dataset.name;
+        focusInput.value = badge.dataset.focus;
+
+        const leaderField = form.querySelector('[name="leader"]');
+        if (leaderField) {
+            leaderField.value = badge.dataset.leader || '';
+        }
+
+        modalEl.querySelector('.modal-title').textContent = 'Edit Subgroup';
+        modal.show();
+    });
+
+    /* =============================
+       DELETE SUBGROUP
+    ============================== */
+    document.addEventListener('click', e => {
+        if (!e.target.classList.contains('delete-subgroup')) return;
+
+        e.stopPropagation();
+
+        const badge = e.target.closest('.subgroup-badge');
+        const id = badge.dataset.id;
+
+        Swal.fire({
+            title: 'Delete subgroup?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545'
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            fetch(DELETE_URL.replace('/0/', `/${id}/`), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': CSRF_TOKEN,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    badge.remove();
+
+                    Toastify({
+                        text: 'Subgroup deleted',
+                        duration: 3000,
+                        gravity: 'top',
+                        position: 'right',
+                        backgroundColor: '#dc3545'
+                    }).showToast();
+                }
+            });
+        });
+    });
+
+});
+</script>
+{% endblock %}

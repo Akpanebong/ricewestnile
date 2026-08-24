@@ -1,0 +1,596 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+{% load custom_tags %}
+
+{% block title %}
+Enterprise RFQ Management
+{% endblock %}
+
+{% block content %}
+
+<style>
+
+:root{
+    --primary:#2563eb;
+    --success:#16a34a;
+    --warning:#f59e0b;
+    --danger:#dc2626;
+    --dark:#111827;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --radius:18px;
+    --shadow:0 8px 30px rgba(0,0,0,.06);
+}
+
+.rfq-wrapper{
+    padding:24px;
+    background:var(--bg);
+    min-height:100vh;
+}
+
+.enterprise-card{
+    background:#fff;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    border:none;
+}
+
+.enterprise-header{
+    padding:24px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(135deg,#ffffff,#f8fbff);
+}
+
+.page-title{
+    font-size:1.7rem;
+    font-weight:800;
+    color:var(--dark);
+}
+
+.page-subtitle{
+    color:var(--muted);
+    font-size:.92rem;
+}
+
+.filter-box{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.filter-box .form-control,
+.filter-box .form-select{
+    border-radius:12px;
+    border:1px solid #dbe2ea;
+    min-height:46px;
+}
+
+.btn-pro{
+    border-radius:12px;
+    padding:10px 18px;
+    font-weight:700;
+}
+
+.stats-card{
+    background:#fff;
+    border-radius:16px;
+    padding:20px;
+    box-shadow:var(--shadow);
+    height:100%;
+}
+
+.stats-label{
+    color:var(--muted);
+    font-size:.85rem;
+    margin-bottom:10px;
+}
+
+.stats-value{
+    font-size:1.5rem;
+    font-weight:800;
+}
+
+.table-wrapper{
+    padding:22px;
+}
+
+.enterprise-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 12px;
+}
+
+.enterprise-table thead th{
+    border:none;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-size:.78rem;
+    padding:14px;
+    white-space:nowrap;
+}
+
+.enterprise-table tbody tr{
+    background:#fff;
+    transition:.3s ease;
+}
+
+.enterprise-table tbody tr:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(0,0,0,.05);
+}
+
+.enterprise-table td{
+    padding:18px 14px;
+    vertical-align:middle;
+    border-top:1px solid #f1f5f9;
+    border-bottom:1px solid #f1f5f9;
+}
+
+.enterprise-table td:first-child{
+    border-left:1px solid #f1f5f9;
+    border-top-left-radius:14px;
+    border-bottom-left-radius:14px;
+}
+
+.enterprise-table td:last-child{
+    border-right:1px solid #f1f5f9;
+    border-top-right-radius:14px;
+    border-bottom-right-radius:14px;
+}
+
+.rfq-link{
+    text-decoration:none;
+    color:var(--primary);
+    font-weight:700;
+}
+
+.amount{
+    color:var(--success);
+    font-weight:800;
+}
+
+.badge-status{
+    padding:8px 14px;
+    border-radius:50px;
+    font-size:.78rem;
+    font-weight:700;
+}
+
+.status-sent{
+    background:#dbeafe;
+    color:#1d4ed8;
+}
+
+.status-responded{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.action-group{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
+.action-btn{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    text-decoration:none;
+    transition:.3s ease;
+}
+
+.action-btn:hover{
+    transform:translateY(-2px);
+}
+
+.download-btn{
+    background:#16a34a;
+}
+
+.delete-btn{
+    background:#dc2626;
+}
+
+.mail-btn{
+    background:#2563eb;
+}
+
+.log-btn{
+    background:#7c3aed;
+}
+
+.view-btn{
+    background:#0ea5e9;
+}
+
+.empty-state{
+    text-align:center;
+    padding:70px 20px;
+}
+
+.empty-state i{
+    font-size:4rem;
+    color:#cbd5e1;
+    margin-bottom:20px;
+}
+
+.supplier-badge{
+    display:inline-block;
+    padding:5px 10px;
+    border-radius:20px;
+    background:#f3f4f6;
+    font-size:.75rem;
+    margin:2px;
+}
+
+</style>
+
+<main class="rfq-wrapper">
+    
+    <!-- HEADER -->
+    <div class="enterprise-card mb-4">
+
+        <div class="enterprise-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+            <div>
+
+                <h2 class="page-title">
+                    <i class="fa fa-envelope-open-text text-primary me-2"></i>
+                    RFQ Management
+                </h2>
+
+                <div class="page-subtitle">
+                    Smart supplier quotation and procurement communication platform
+                </div>
+
+            </div>
+
+          <form method="GET"
+      class="filter-box d-flex align-items-center flex-nowrap gap-2 w-100">
+
+    <!-- SEARCH -->
+    <div class="flex-grow-1">
+        <input type="text"
+               name="search"
+               value="{{ search_query }}"
+               class="form-control"
+               placeholder="Search RFQs, departments, projects...">
+    </div>
+
+    <!-- STATUS -->
+    <div style="width:180px;">
+        <select name="status" class="form-select">
+
+            <option value="">All Status</option>
+
+            <option value="Sent"
+                {% if status_filter == 'Sent' %}selected{% endif %}>
+                Sent
+            </option>
+
+            <option value="Responded"
+                {% if status_filter == 'Responded' %}selected{% endif %}>
+                Responded
+            </option>
+
+        </select>
+    </div>
+
+    <!-- FILTER BUTTON -->
+    <button type="submit"
+            class="btn btn-primary btn-pro d-flex align-items-center justify-content-center"
+            style="white-space:nowrap; min-width:120px; height:46px;">
+
+        <i class="fa fa-filter me-1"></i>
+        Filter
+
+    </button>
+
+</form>
+
+
+        </div>
+
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="row mb-4">
+
+        <div class="col-md-3 mb-3">
+
+            <div class="stats-card">
+
+                <div class="stats-label">
+                    Total RFQs
+                </div>
+
+                <div class="stats-value text-primary">
+                    {{ total_rfqs }}
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3 mb-3">
+
+            <div class="stats-card">
+
+                <div class="stats-label">
+                    Sent RFQs
+                </div>
+
+                <div class="stats-value text-warning">
+                    {{ sent_count }}
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3 mb-3">
+
+            <div class="stats-card">
+
+                <div class="stats-label">
+                    Supplier Responses
+                </div>
+
+                <div class="stats-value text-success">
+                    {{ responded_count }}
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3 mb-3">
+
+            <div class="stats-card">
+
+                <div class="stats-label">
+                    Total RFQ Value
+                </div>
+
+                <div class="stats-value text-success">
+                    {{ total_value|money:request }}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="enterprise-card">
+
+        <div class="table-wrapper">
+
+            <div class="table-responsive">
+
+                <table class="enterprise-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>#</th>
+                            <th>RFQ Reference</th>
+                            <th>Requisition</th>
+<!--                            <th>Department</th>-->
+                            <th>Project</th>
+                            <th>Suppliers</th>
+                            <th>Deadline</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for req in rfq %}
+
+                        <tr>
+
+                            <td>
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td>
+
+                                <a href="{% url 'rfq_detail' req.slug req.reference_no %}"
+                                   class="rfq-link">
+
+                                    {{ req.reference_no }}
+
+                                </a>
+
+                                <div class="small text-muted">
+                                    {{ req.date_issued|date:"d M Y" }}
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                {% if req.req %}
+                                    {{ req.req.number }}
+                                {% else %}
+                                    —
+                                {% endif %}
+
+                            </td>
+
+<!--                            <td>-->
+
+<!--                                {% if req.req.procurement.department %}-->
+<!--                                    {{ req.req.procurement.department }}-->
+<!--                                {% else %}-->
+<!--                                    —-->
+<!--                                {% endif %}-->
+
+<!--                            </td>-->
+
+                            <td>
+
+                                {% if req.req.procurement.project %}
+                                    {{ req.req.procurement.project }}
+                                {% else %}
+                                    —
+                                {% endif %}
+
+                            </td>
+
+                            <!-- SUPPLIERS -->
+                            <td width="240">
+
+                                    <span class="supplier-badge">
+                                        {{ req.supplier.all|length }}
+
+                                    </span>
+                            </td>
+
+                            <!-- DEADLINE -->
+                            <td>
+
+                                {% if req.deadline %}
+
+                                    <span class="fw-bold">
+
+                                        {{ req.deadline|date:"d M Y" }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        No deadline
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- STATUS -->
+                            <td>
+
+                                {% if req.status == 'Responded' %}
+
+                                    <span class="badge-status status-responded">
+                                        Responded
+                                    </span>
+                                     {% elif req.status == 'Pending' %}
+
+                                    <span class="badge-status status-responded">
+                                        Pending
+                                    </span>
+
+
+                                {% else %}
+
+                                    <span class="badge-status status-sent">
+                                        Sent
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- ACTIONS -->
+                            <td>
+
+                                <div class="action-group">
+
+                                    <!-- VIEW -->
+                                    <a href="{% url 'rfq_detail' req.slug req.reference_no %}"
+                                       class="action-btn view-btn"
+                                       title="View RFQ">
+
+                                        <i class="fa fa-eye"></i>
+
+                                    </a>
+
+
+                                    <!-- SEND -->
+                                    <a href="{% url 'send_rfq_to_supplier' req.reference_no %}"
+                                       class="action-btn mail-btn"
+                                       title="Send RFQ">
+
+                                        <i class="fa fa-envelope"></i>
+
+                                    </a>
+
+                                    <!-- LOG -->
+                                    <a href="{% url 'log_rfq' req.reference_no %}"
+                                       class="action-btn log-btn"
+                                       title="RFQ Log">
+
+                                        <i class="fa fa-history"></i>
+
+                                    </a>
+
+                                    <!-- DELETE -->
+                                    <a href="{% url 'trash_rfq' req.pk req.slug %}"
+                                       class="action-btn delete-btn"
+                                       title="Delete RFQ"
+                                       onclick="return confirm('Delete this RFQ permanently?')">
+
+                                        <i class="fa fa-trash"></i>
+
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="9">
+
+                                <div class="empty-state">
+
+                                    <i class="fa fa-folder-open"></i>
+
+                                    <h4>
+                                        No RFQs Found
+                                    </h4>
+
+                                    <p class="text-muted">
+                                        No request for quotations are currently available.
+                                    </p>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+{% endblock %}

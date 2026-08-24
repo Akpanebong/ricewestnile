@@ -1,0 +1,41 @@
+{% extends 'communication/base.html' %}
+{% block content %}
+<div class="container-fluid">
+
+  <h4 class="mb-4"><i class="bi bi-inboxes-fill text-warning"></i> Review Queue</h4>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0 table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>Report</th><th>Type</th><th>By</th><th>Date</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reports %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><a href="{% url 'comm:report_review' r.pk %}">{{ r.title|default:r.file.name }}</a></td>
+            <td>{{ r.get_report_type_display }}</td>
+            <td>{{ r.sent_by }}</td>
+            <td>{{ r.date_sent|date:'Y-m-d' }}</td>
+            <td>
+              <a class="btn btn-sm btn-{% if r.received %}success{% else %}warning{% endif %}" href="{% url 'comm:report_review' r.pk %}">
+                <i class="bi bi-eye-fill"></i> {% if r.received %}Reviewed{% else %}Open{% endif %}
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center py-3 text-muted">No items to review</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+ <!-- Pagination --><br/>
+            {% if is_paginated %}
+            {% include 'pagination.html' %}
+            {% endif %}
+{% endblock %}
+</div>

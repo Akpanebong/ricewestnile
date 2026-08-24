@@ -1,0 +1,44 @@
+{% extends "hr/base.html" %}
+{% block title %}Exit Flow Progress (CMT){% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Exit Flow Progress (CMT)</h5>
+  </div>
+  <div class="card-body">
+    {% if processes %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>Staff</th>
+              <th>Department</th>
+              <th>Completion</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for process in processes %}
+              <tr>
+                <td>{{ process.staff.get_full_name|default:process.staff.username }}</td>
+                <td>{{ process.staff.department.name|default:"-" }}</td>
+                <td>
+                  <span class="badge bg-primary">{{ process.completion_percent }}%</span>
+                </td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-success" href="{% url 'account_exit_process_cmt_detail' staff_slug=process.staff.slug %}">
+                    View details
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0">No exit processes found.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

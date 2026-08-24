@@ -1,0 +1,42 @@
+{% extends "garcis/base.html" %}
+{% block content %}
+
+<div class="container">
+
+<h4>{{ metric.program_name }}</h4>
+
+<div class="card p-3">
+
+<p><strong>Date:</strong> {{ metric.metric_date }}</p>
+<p><strong>Project:</strong> {{ metric.project_name }}</p>
+
+<hr>
+
+<p>Budget Utilization: {{ metric.budget_utilization }}</p>
+<p>Outcome Score: {{ metric.outcome_score }}</p>
+<p>Inclusion Score: {{ metric.inclusion_score }}</p>
+<p>Sustainability Score: {{ metric.sustainability_score }}</p>
+<p>Risk Index: {{ metric.risk_index }}</p>
+<p>Compliance Index: {{ metric.compliance_index }}</p>
+
+<hr>
+
+<h5>Overall Score:    <span class="
+    {% if metric.overall_score >= 80 %}text-success
+    {% elif metric.overall_score >= 50 %}text-warning
+    {% else %}text-danger
+    {% endif %}
+">
+    {{ metric.overall_score }}
+</span></h5>
+
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'metric_update' metric.pk %}" class="btn btn-warning">Edit</a>
+    <a href="{% url 'metric_delete' metric.pk %}" class="btn btn-danger"> <i class="bi bi-trash"></i> Delete</a>
+</div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,639 @@
+<!-- Performance Improvement Plan Modal -->
+<div class="modal fade"
+     id="pipModal"
+     tabindex="-1"
+     aria-labelledby="pipModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable pip-modal-dialog">
+    <div class="modal-content pip-modal-content">
+
+
+      <!-- Modal Header -->
+      <div class="modal-header pip-header">
+        <div class="pip-header-content">
+          <div class="header-icon">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <div class="header-info">
+            <h4 class="header-title">Performance Improvement Plan</h4>
+            <div class="header-reference">Reference: {{ pip.appraisal.reference }}</div>
+            <div class="header-employee">{{ pip.employee }}</div>
+          </div>
+        </div>
+        <span class="badge rounded-pill status-badge status-{{ pip.status|lower }}">
+          {{ pip.get_status_display }}
+        </span>
+        <button type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="Close">
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+
+        <!-- Summary Cards Section -->
+        <section class="summary-section mb-4">
+          <div class="row g-3">
+            <div class="col-md-6 col-lg-3">
+              <div class="summary-card">
+                <div class="card-icon text-primary">
+                  <i class="fas fa-user"></i>
+                </div>
+                <small class="card-label">Employee</small>
+                <h6 class="card-value">{{ pip.employee }}</h6>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+              <div class="summary-card">
+                <div class="card-icon text-info">
+                  <i class="fas fa-building"></i>
+                </div>
+                <small class="card-label">Department</small>
+                <h6 class="card-value">{{ pip.employee.user.department }}</h6>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+              <div class="summary-card">
+                <div class="card-icon text-warning">
+                  <i class="fas fa-sitemap"></i>
+                </div>
+                <small class="card-label">Unit</small>
+                <h6 class="card-value">{{ pip.employee.user.unit }}</h6>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+              <div class="summary-card">
+                <div class="card-icon text-success">
+                  <i class="fas fa-flag"></i>
+                </div>
+                <small class="card-label">Status</small>
+                <h6 class="card-value">{{ pip.get_status_display }}</h6>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Timeline Section -->
+        <section class="timeline-section mb-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <h5 class="section-title">
+                <i class="fas fa-timeline me-2"></i>Submission Timeline
+              </h5>
+              <div class="row text-center g-3">
+                <div class="col-md-4">
+                  <div class="timeline-box">
+                    <div class="timeline-icon text-primary">
+                      <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <h6 class="timeline-label">Sent</h6>
+                    <small class="timeline-date">{{ pip.sent_at|date:"d M Y H:i" }}</small>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="timeline-box">
+                    <div class="timeline-icon text-success">
+                      <i class="fas fa-file-signature"></i>
+                    </div>
+                    <h6 class="timeline-label">Submitted</h6>
+                    <small class="timeline-date">{{ pip.submitted_at|date:"d M Y H:i" }}</small>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="timeline-box">
+                    <div class="timeline-icon text-danger">
+                      <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h6 class="timeline-label">Expected Completion</h6>
+                    <small class="timeline-date">{{ pip.expected_completion_date|date:"d M Y" }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- Content Sections -->
+        <section class="content-sections">
+          <!-- Improvement Areas -->
+          <div class="content-section content-section-primary">
+            <div class="section-header">
+              <i class="fas fa-bullseye"></i>
+              <h5>Improvement Areas</h5>
+            </div>
+            <div class="section-content">{{ pip.improvement_areas|linebreaks }}</div>
+          </div>
+
+          <!-- Improvement Actions -->
+          <div class="content-section content-section-success">
+            <div class="section-header">
+              <i class="fas fa-tasks"></i>
+              <h5>Improvement Actions</h5>
+            </div>
+            <div class="section-content">{{ pip.improvement_actions|linebreaks }}</div>
+          </div>
+
+          <!-- Support Required -->
+          <div class="content-section content-section-warning">
+            <div class="section-header">
+              <i class="fas fa-handshake"></i>
+              <h5>Support Required</h5>
+            </div>
+            <div class="section-content">{{ pip.support_required|default:"No support requested."|linebreaks }}</div>
+          </div>
+
+          <!-- Staff Commitment -->
+          <div class="content-section content-section-danger">
+            <div class="section-header">
+              <i class="fas fa-handshake-alt"></i>
+              <h5>Staff Commitment</h5>
+            </div>
+            <div class="section-content">{{ pip.staff_commitment|linebreaks }}</div>
+          </div>
+        </section>
+
+        <!-- Electronic Signature Section -->
+        <section class="signature-section mb-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+              <h5 class="section-title">
+                <i class="fas fa-signature me-2"></i>Electronic Signature
+              </h5>
+              {% if pip.staff_signature %}
+                <div class="signature-container">
+                  <img src="{{ pip.staff_signature.url }}"
+                       alt="Staff Signature"
+                       class="signature-image">
+                </div>
+                <div class="signature-name mt-3">
+                  <strong>{{ pip.employee }}</strong>
+                </div>
+              {% else %}
+                <div class="no-signature">
+                  <i class="fas fa-signature"></i>
+                  <p class="mt-2">No signature uploaded</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer pip-footer">
+        <button type="button"
+                class="btn btn-outline-secondary"
+                data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>Close
+        </button>
+        <button type="button"
+                class="btn btn-primary"
+                onclick="window.print()">
+          <i class="fas fa-print me-1"></i>Print
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<style>
+  /* CSS Variables for Theming */
+  :root {
+    --pip-primary-color: #0F4C81;
+    --pip-secondary-color: #1D6FA5;
+    --pip-success-color: #28a745;
+    --pip-danger-color: #dc3545;
+    --pip-warning-color: #ffc107;
+    --pip-info-color: #17a2b8;
+    --pip-light-bg: #f5f7fa;
+    --pip-border-radius: 12px;
+    --pip-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    --pip-box-shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Modal Structure */
+  .pip-modal-dialog {
+    max-width: 980px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  .pip-modal-content {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--pip-box-shadow-lg);
+  }
+
+  /* Modal Header */
+  .pip-header {
+    background: linear-gradient(135deg, var(--pip-primary-color), var(--pip-secondary-color));
+    padding: 1.5rem;
+    border: none;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 1055;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .pip-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+  }
+
+  .header-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .header-info {
+    flex: 1;
+  }
+
+  .header-title {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+  }
+
+  .header-reference {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin-bottom: 0.25rem;
+  }
+
+  .header-employee {
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+  }
+
+  .status-badge {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    background: var(--pip-success-color);
+  }
+
+  .status-badge.status-pending {
+    background: var(--pip-warning-color);
+    color: #000;
+  }
+
+  .status-badge.status-completed {
+    background: var(--pip-success-color);
+  }
+
+  .status-badge.status-failed {
+    background: var(--pip-danger-color);
+  }
+
+  /* Modal Body */
+  .modal-body {
+    background: var(--pip-light-bg);
+    padding: 2rem;
+  }
+
+  /* Summary Cards Section */
+  .summary-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .summary-card {
+    background: #fff;
+    border-radius: var(--pip-border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--pip-box-shadow);
+    text-align: center;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .summary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--pip-box-shadow-lg);
+  }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-label {
+    display: block;
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .card-value {
+    margin-top: 0.75rem;
+    font-weight: 600;
+    color: var(--pip-primary-color);
+    word-break: break-word;
+  }
+
+  /* Timeline Section */
+  .timeline-box {
+    border: 1px solid #e9ecef;
+    border-radius: var(--pip-border-radius);
+    padding: 1.5rem;
+    background: #fff;
+    transition: all 0.3s ease;
+  }
+
+  .timeline-box:hover {
+    border-color: var(--pip-primary-color);
+    box-shadow: var(--pip-box-shadow);
+  }
+
+  .timeline-icon {
+    font-size: 32px;
+    margin-bottom: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .timeline-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--pip-primary-color);
+  }
+
+  .timeline-date {
+    display: block;
+    color: #6c757d;
+    font-size: 0.85rem;
+  }
+
+  /* Section Title */
+  .section-title {
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--pip-primary-color);
+    font-size: 1.1rem;
+  }
+
+  /* Content Sections */
+  .content-sections {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .content-section {
+    background: #fff;
+    border-radius: var(--pip-border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--pip-box-shadow);
+    border-left: 5px solid;
+    transition: all 0.3s ease;
+  }
+
+  .content-section:hover {
+    box-shadow: var(--pip-box-shadow-lg);
+  }
+
+  .content-section-primary {
+    border-left-color: #0d6efd;
+  }
+
+  .content-section-success {
+    border-left-color: var(--pip-success-color);
+  }
+
+  .content-section-warning {
+    border-left-color: var(--pip-warning-color);
+  }
+
+  .content-section-danger {
+    border-left-color: var(--pip-danger-color);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .section-header i {
+    font-size: 1.2rem;
+    opacity: 0.8;
+  }
+
+  .section-header h5 {
+    margin: 0;
+    font-weight: 600;
+    color: var(--pip-primary-color);
+  }
+
+  .section-content {
+    color: #333;
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  .section-content p {
+    margin-bottom: 0.5rem;
+  }
+
+  .section-content p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Signature Section */
+  .signature-section .card-body {
+    padding: 2rem;
+  }
+
+  .signature-container {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem;
+    background: #f9f9f9;
+    border-radius: var(--pip-border-radius);
+  }
+
+  .signature-image {
+    max-height: 180px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.5rem;
+    background: #fff;
+  }
+
+  .signature-name {
+    color: #333;
+    font-size: 1rem;
+  }
+
+  .no-signature {
+    padding: 2rem;
+    color: #6c757d;
+  }
+
+  .no-signature i {
+    font-size: 48px;
+    opacity: 0.5;
+    margin-bottom: 1rem;
+  }
+
+  .no-signature p {
+    margin: 0;
+  }
+
+  /* Modal Footer */
+  .pip-footer {
+    background: #fff;
+    border-top: 1px solid #dee2e6;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  .pip-footer .btn {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .pip-modal-dialog {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .pip-header {
+      flex-wrap: wrap;
+      padding: 1rem;
+    }
+
+    .pip-header-content {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .header-icon {
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+    }
+
+    .modal-body {
+      padding: 1rem;
+    }
+
+    .summary-section {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .summary-card {
+      padding: 1rem;
+    }
+
+    .card-value {
+      font-size: 0.9rem;
+    }
+
+    .row.g-3 .col-md-4 {
+      margin-bottom: 1rem;
+    }
+
+    .timeline-box {
+      padding: 1rem;
+    }
+
+    .timeline-icon {
+      font-size: 24px;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .pip-footer {
+      flex-direction: column;
+    }
+
+    .pip-footer .btn {
+      width: 100%;
+    }
+  }
+
+  /* Print Styles */
+  @media print {
+    .pip-footer,
+    .btn-close {
+      display: none !important;
+    }
+
+    .modal-body {
+      background: #fff !important;
+    }
+
+    .pip-modal-content {
+      box-shadow: none !important;
+      border: 1px solid #dee2e6;
+    }
+
+    .summary-card,
+    .timeline-box,
+    .content-section {
+      box-shadow: none !important;
+      border: 1px solid #dee2e6;
+      page-break-inside: avoid;
+    }
+
+    .pip-header {
+      page-break-after: avoid;
+    }
+
+    .section-content {
+      page-break-inside: avoid;
+    }
+  }
+</style>

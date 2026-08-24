@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Send Notification{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center
+                justify-content-between mb-4">
+
+        <div>
+            <h3 class="fw-bold mb-1 text-dark">
+                <i class="fa fa-bell text-success me-2"></i>
+                Send Notification
+            </h3>
+            <small class="text-muted">
+                Create and dispatch notifications to users or groups
+            </small>
+        </div>
+
+        <nav aria-label="breadcrumb" class="mt-3 mt-md-0">
+            <ol class="breadcrumb mb-0 bg-transparent p-0">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard' %}" class="text-decoration-none text-success">
+                        <i class="fa fa-home"></i> Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    Send Notification
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- ===== FORM CARD ===== -->
+    <div class="row justify-content-center">
+        <div class="col-xl-9 col-lg-10 col-md-10">
+
+            <div class="card border-0 shadow-sm rounded-4">
+
+
+                <!-- Card Header -->
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold text-dark">
+                        <i class="fa fa-paper-plane me-1"></i>
+                        Notification Details
+                    </h6>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body p-4">
+
+                    <form method="post" novalidate enctype="multipart/form-data">
+                        {% csrf_token %}
+
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {{form.recipients.label_tag}}
+                            </label>
+                            {{form.recipients}}
+                            {% if form.recipients.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.recipients.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+
+                          <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {{form.title.label_tag}}
+                            </label>
+                            {{form.title}}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.title.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                          <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {{form.message.label_tag}}
+                            </label>
+                            {{form.message}}
+                            {% if form.message.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.message.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                         <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {{form.category.label_tag}}
+                            </label>
+                            {{form.category}}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.category.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {{form.attachment.label_tag}}
+                            </label>
+                            {{form.attachment}}
+                            {% if form.attachment.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.attachment.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+
+                        <hr class="my-4">
+
+                        <!-- ===== ACTION BAR ===== -->
+                        <div class="d-flex flex-column flex-md-row
+                                    justify-content-between align-items-center gap-3">
+
+                            <a href="javascript:history.back()"
+                               class="btn btn-outline-secondary px-4">
+                                <i class="fa fa-arrow-left me-1"></i>
+                                Cancel
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-success px-4"
+                                    onclick="this.disabled=true;this.form.submit();">
+                                <i class="fa fa-paper-plane me-1"></i>
+                                Send Notification
+                            </button>
+
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== ENTERPRISE STYLING ===== -->
+<style>
+.card {
+    border-radius: 16px;
+}
+
+.card-header {
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.form-control,
+.form-select,
+textarea {
+    border-radius: 8px;
+}
+
+hr {
+    opacity: 0.08;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "hr/base.html" %}
+{% block title %}Leave Report{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-bold text-success mb-0">Leave Analytics</h4>
+      <small class="text-muted">Allotted vs taken vs remaining (year + optional date range)</small>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'leave_report_pdf' %}?year={{ year }}&start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-danger shadow-sm" target="_blank">
+        Export PDF
+      </a>
+      <a href="{% url 'leave_report_excel' %}?year={{ year }}&start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-outline-success shadow-sm">
+        Export Excel
+      </a>
+    </div>
+  </div>
+
+  <div class="row mb-4 g-3">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
+          <form method="get" class="vstack gap-2">
+            <div class="d-flex gap-2">
+              <input type="number" name="year" value="{{ year }}" class="form-control" placeholder="Year">
+              <button class="btn btn-success px-4">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+            <div class="d-flex gap-2">
+              <input type="date" name="start_date" value="{{ start_date }}" class="form-control" />
+              <input type="date" name="end_date" value="{{ end_date }}" class="form-control" />
+            </div>
+            <select name="leave_type" class="form-select">
+              {% for lt in leave_types %}
+                <option value="{{ lt.id }}" {% if selected_leave_type and lt.id == selected_leave_type.id %}selected{% endif %}>{{ lt.name }}</option>
+              {% endfor %}
+            </select>
+            <div class="small text-muted">Exports respect the selected date range.</div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body text-center">
+              <h6 class="text-muted">Total Staff</h6>
+              <h3 class="fw-bold text-primary">{{ total_staff }}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body text-center">
+              <h6 class="text-muted">Allotted (Total)</h6>
+              <h3 class="fw-bold text-dark">{{ total_allotted }}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body text-center">
+              <h6 class="text-muted">Approved (Total)</h6>
+              <h3 class="fw-bold text-success">{{ total_approved }}</h3>
+            </div>
+          </div>
+        </div>
+
+              <div class="col-md-3">
+  <div class="card border-0 shadow-sm rounded-3">
+    <div class="card-body text-center">
+      <h6 class="text-muted">Remaining (Total)</h6>
+      <h3 class="fw-bold">{{ total_remaining }}</h3>
+    </div>
+  </div>
+</div>
+
+      </div>
+
+
+      </div>
+  </div>
+
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-body table-responsive">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h6 class="fw-bold mb-0">Organization Summary (All Leave Types)</h6>
+        <div class="small text-muted">
+          {% if start_date and end_date %}{{ start_date }} → {{ end_date }}{% else %}Full year{% endif %}
+        </div>
+      </div>
+      <table class="table table-hover align-middle">
+        <thead>
+  <tr>
+    <th>#</th>
+    <th>Leave Type</th>
+    <th class="text-end">Allotted</th>
+    <th class="text-end">Approved</th>
+    <th class="text-end">Remaining</th>
+  </tr>
+</thead>
+
+<tbody>
+  {% for row in report_rows %}
+  <tr>
+    <td>{{ forloop.counter }}</td>
+    <td class="fw-semibold">{{ row.leave_type.name }}</td>
+    <td class="text-end">{{ row.allotted_total_days }}</td>
+    <td class="text-end text-success fw-bold">{{ row.approved_total_days }}</td>
+    <td class="text-end fw-bold">{{ row.remaining_total_days }}</td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="6" class="text-center text-muted py-4">
+      No data for {{ year }}
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
+        <tfoot class="table-light">
+  <tr class="fw-bold">
+    <td colspan="2" class="text-end">TOTAL</td>
+    <td class="text-end">{{ total_allotted }}</td>
+    <td class="text-end text-success">{{ total_approved }}</td>
+    <td class="text-end">{{ total_remaining }}</td>
+  </tr>
+ </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 rounded-3 mt-4">
+    <div class="card-body table-responsive">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+          <h6 class="fw-bold mb-0">Staff Balances{% if selected_leave_type %} ({{ selected_leave_type.name }}){% endif %}</h6>
+          <div class="small text-muted">
+            {% if start_date and end_date %}{{ start_date }} → {{ end_date }}{% else %}Full year{% endif %}
+          </div>
+        </div>
+        <a href="{% url 'leave_staff_excel' %}?year={{ year }}&leave_type={% if selected_leave_type %}{{ selected_leave_type.id }}{% endif %}&start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-outline-success shadow-sm">
+          Export Staff Excel
+        </a>
+      </div>
+
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Employee</th>
+            <th class="text-end">Allotted</th>
+            <th class="text-end">Taken</th>
+            <th class="text-end">Remaining</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in staff_rows %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td class="fw-semibold">{{ row.employee }}</td>
+            <td class="text-end">{{ row.allotted_days }}</td>
+            <td class="text-end text-success fw-bold">{{ row.taken_days }}</td>
+            <td class="text-end fw-bold">{{ row.remaining_days }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-4">No staff records found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light">
+          <tr class="fw-bold">
+            <td colspan="2" class="text-end">TOTAL</td>
+            <td class="text-end">{{ staff_total_allotted }}</td>
+            <td class="text-end text-success">{{ staff_total_taken }}</td>
+            <td class="text-end">{{ staff_total_remaining }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "garcis/base.html" %}
+{% load risk_tags %}
+{% block content %}
+<style>
+    .bg-maroon {
+    background-color: maroon !important;
+}
+
+.bg-red {
+    background-color: red !important;
+}
+
+.bg-orange {
+    background-color: orange !important;
+}
+
+.bg-yellow {
+    background-color: yellow !important;
+}
+</style>
+<div class="container-fluid">
+
+<h4 class="text-center mb-4">Risk Matrix</h4>
+
+<div class="row g-3" style="display:flex; align-items:flex-start; gap:2px;">
+
+    <!-- Existing Risk Matrix -->
+    <div class="table-responsive col-md-8">
+        <table class="table table-bordered text-center align-middle table-hover">
+            <!-- X AXIS TITLE -->
+            <tr>
+                <th rowspan="2" colspan="2"></th>
+                <th colspan="5">
+                    <strong>LIKELIHOOD (PROBABILITY OF OCCURRENCE)</strong>
+                </th>
+            </tr>
+
+            <!-- Likelihood scale -->
+            <tr>
+                {% for l in likelihood_range %}
+                    <th>{{ l }}</th>
+                {% endfor %}
+            </tr>
+
+            <!-- MATRIX BODY -->
+            {% for row in matrix %}
+            <tr>
+                {% if forloop.first %}
+                <!-- Y AXIS TITLE -->
+                <th rowspan="5"
+                    style="writing-mode: vertical-rl; transform: rotate(180deg); font-weight:bold; width:50px">
+                    IMPACT
+                </th>
+                {% endif %}
+
+                <!-- Impact values -->
+                <th width="50">{{ impact_range|index:forloop.counter0 }}</th>
+
+                {% for cell in row %}
+                    <td class="{% if cell %}{{ cell.0.color }}{% endif %}"
+                        style="height:90px; width:90px;">
+                        {% if cell %}
+                            {{ cell|length }}
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <!-- Legend -->
+<div class="col-md-3">
+    <h5>Legend</h5>
+    <ul class="list-unstyled">
+    <li>
+        <span class="bg-maroon text-white d-inline-block" style="width:20px;height:20px;margin-right:8px;"></span>
+        Extreme / Critical (20–25)
+    </li>
+    <li>
+        <span class="bg-red text-white d-inline-block" style="width:20px;height:20px;margin-right:8px;"></span>
+        High (15–19)
+    </li>
+    <li>
+        <span class="bg-orange text-dark d-inline-block" style="width:20px;height:20px;margin-right:8px;"></span>
+        Moderate (10–14)
+    </li>
+    <li>
+        <span class="bg-yellow text-dark d-inline-block" style="width:20px;height:20px;margin-right:8px;"></span>
+        Low (5–9)
+    </li>
+    <li>
+        <span class="bg-success text-white d-inline-block" style="width:20px;height:20px;margin-right:8px;"></span>
+        Very Low (1–4)
+    </li>
+</ul>
+</div>
+
+
+</div>
+</div>
+{% endblock %}

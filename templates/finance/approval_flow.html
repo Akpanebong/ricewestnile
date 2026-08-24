@@ -1,0 +1,42 @@
+{% extends "procurement/base.html" %}
+{% block content %}
+<main class="ttr-wrapper">
+<div class="container-fluid py-4">
+<h4>Approval Flow</h4>
+
+<div class="card p-3">
+
+    <p>Status: <strong>{{ obj.status }}</strong></p>
+
+    <div class="d-flex gap-2">
+
+        {% if obj.status == "submitted" %}
+            <a href="{% url 'approve_requisition' obj.id %}" class="btn btn-warning">
+                Finance Approve
+            </a>
+        {% endif %}
+
+        {% if obj.status == "finance_review" %}
+            <a href="{% url 'approve_requisition' obj.id %}" class="btn btn-info">
+                Operations Approve
+            </a>
+        {% endif %}
+
+        {% if obj.status == "operations_review" %}
+            <a href="{% url 'approve_requisition' obj.id %}" class="btn btn-success">
+                ED Approve
+            </a>
+        {% endif %}
+
+    </div>
+
+    {% if obj.status == "approved" %}
+        <a href="{% url 'requisition_pdf' obj.id %}" class="btn btn-dark mt-3">
+            Download PDF
+        </a>
+    {% endif %}
+
+</div>
+</div>
+</main>
+{% endblock %}

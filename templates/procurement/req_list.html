@@ -1,0 +1,485 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+{% block title %}Procurement Requisitions{% endblock %}
+
+{% block content %}
+
+<style>
+    :root{
+        --primary:#0d6efd;
+        --success:#198754;
+        --danger:#dc3545;
+        --warning:#ffc107;
+        --dark:#1f2937;
+        --light:#f8fafc;
+        --border:#e5e7eb;
+        --shadow:0 10px 30px rgba(0,0,0,.06);
+        --radius:16px;
+    }
+
+    .page-wrapper{
+        padding:20px;
+        background:#f4f7fb;
+        min-height:100vh;
+    }
+
+    .enterprise-card{
+        background:#fff;
+        border-radius:var(--radius);
+        box-shadow:var(--shadow);
+        border:none;
+        overflow:hidden;
+    }
+
+    .enterprise-header{
+        padding:22px;
+        border-bottom:1px solid var(--border);
+        background:linear-gradient(135deg,#ffffff,#f8fbff);
+    }
+
+    .enterprise-title{
+        font-size:1.4rem;
+        font-weight:700;
+        color:var(--dark);
+        margin:0;
+    }
+
+    .enterprise-subtitle{
+        font-size:.9rem;
+        color:#6b7280;
+        margin-top:4px;
+    }
+
+    .filter-form .form-select,
+    .filter-form .form-control{
+        border-radius:10px;
+        border:1px solid #dbe2ea;
+        min-width:160px;
+        box-shadow:none;
+    }
+
+    .btn-enterprise{
+        border-radius:10px;
+        padding:10px 18px;
+        font-weight:600;
+        transition:.3s ease;
+    }
+
+    .btn-enterprise:hover{
+        transform:translateY(-1px);
+    }
+
+    .stats-row{
+        margin-top:20px;
+    }
+
+    .stats-card{
+        background:#fff;
+        border-radius:14px;
+        padding:18px;
+        box-shadow:var(--shadow);
+        height:100%;
+    }
+
+    .stats-label{
+        font-size:.85rem;
+        color:#6b7280;
+        margin-bottom:8px;
+    }
+
+    .stats-value{
+        font-size:1.5rem;
+        font-weight:700;
+        color:var(--dark);
+    }
+
+    .table-wrapper{
+        padding:20px;
+    }
+
+    .enterprise-table{
+        width:100%;
+        border-collapse:separate;
+        border-spacing:0 10px;
+    }
+
+    .enterprise-table thead th{
+        border:none;
+        color:#6b7280;
+        font-size:.82rem;
+        font-weight:700;
+        text-transform:uppercase;
+        padding:14px;
+        white-space:nowrap;
+    }
+
+    .enterprise-table tbody tr{
+        background:#fff;
+        box-shadow:0 2px 10px rgba(0,0,0,.03);
+        transition:.2s ease;
+    }
+
+    .enterprise-table tbody tr:hover{
+        transform:scale(1.002);
+        background:#f9fbff;
+    }
+
+    .enterprise-table td{
+        vertical-align:middle;
+        padding:16px 14px;
+        border-top:1px solid #f1f5f9;
+        border-bottom:1px solid #f1f5f9;
+    }
+
+    .enterprise-table td:first-child{
+        border-left:1px solid #f1f5f9;
+        border-top-left-radius:12px;
+        border-bottom-left-radius:12px;
+    }
+
+    .enterprise-table td:last-child{
+        border-right:1px solid #f1f5f9;
+        border-top-right-radius:12px;
+        border-bottom-right-radius:12px;
+    }
+
+    .req-link{
+        text-decoration:none;
+        font-weight:700;
+        color:var(--primary);
+    }
+
+    .amount{
+        font-weight:700;
+        color:var(--success);
+    }
+
+    .badge-status{
+        padding:8px 14px;
+        border-radius:50px;
+        font-size:.78rem;
+        font-weight:700;
+    }
+
+    .status-approved{
+        background:#d1fae5;
+        color:#065f46;
+    }
+
+    .status-pending{
+        background:#fef3c7;
+        color:#92400e;
+    }
+
+    .status-rejected{
+        background:#fee2e2;
+        color:#991b1b;
+    }
+
+    .status-canceled{
+        background:#e5e7eb;
+        color:#374151;
+    }
+
+    .action-group{
+        display:flex;
+        gap:8px;
+    }
+
+    .action-btn{
+        width:34px;
+        height:34px;
+        border-radius:10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-decoration:none;
+        color:#fff;
+        transition:.3s ease;
+    }
+
+    .action-btn:hover{
+        transform:translateY(-2px);
+        opacity:.9;
+    }
+
+    .bg-view{ background:#198754; }
+    .bg-edit{ background:#0dcaf0; }
+    .bg-delete{ background:#dc3545; }
+
+    .empty-state{
+        padding:60px 20px;
+        text-align:center;
+    }
+
+    .empty-state i{
+        font-size:4rem;
+        color:#cbd5e1;
+        margin-bottom:20px;
+    }
+
+    @media(max-width:768px){
+        .enterprise-header{
+            flex-direction:column;
+            gap:15px;
+        }
+
+        .filter-form{
+            width:100%;
+        }
+
+        .filter-form .form-select{
+            width:100%;
+        }
+    }
+</style>
+
+<main class="page-wrapper">
+
+    <!-- HEADER -->
+    <div class="enterprise-card mb-4">
+
+        <div class="enterprise-header d-flex justify-content-between align-items-center flex-wrap">
+
+            <div>
+                <h4 class="enterprise-title">
+                    <i class="fa fa-file-contract text-primary me-2"></i>
+                    Procurement Requisitions
+                </h4>
+
+                <div class="enterprise-subtitle">
+                    Enterprise procurement workflow management system
+                </div>
+            </div>
+
+            <form method="get" class="filter-form d-flex gap-2 flex-wrap align-items-center">
+
+                <select name="status" class="form-select">
+
+                    <option value="">All Status</option>
+
+                    <option value="Pending"
+                        {% if status_filter == 'Pending' %}selected{% endif %}>
+                        Pending
+                    </option>
+
+                    <option value="Approved"
+                        {% if status_filter == 'Approved' %}selected{% endif %}>
+                        Approved
+                    </option>
+
+                    <option value="Rejected"
+                        {% if status_filter == 'Rejected' %}selected{% endif %}>
+                        Rejected
+                    </option>
+
+                    <option value="Canceled"
+                        {% if status_filter == 'Canceled' %}selected{% endif %}>
+                        Canceled
+                    </option>
+
+                </select>
+
+                <button class="btn btn-primary btn-enterprise">
+                    <i class="fa fa-filter me-1"></i> Filter
+                </button>
+
+                <a href="{% url 'req_create' %}"
+                   class="btn btn-success btn-enterprise">
+
+                    <i class="fa fa-plus-circle me-1"></i>
+                    New Requisition
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="row stats-row mb-4">
+
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-label">Total Requisitions</div>
+                <div class="stats-value">{{ po_list|length }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-label">Approved</div>
+                <div class="stats-value text-success">
+                    {{ approved_count|default:"0" }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-label">Pending</div>
+                <div class="stats-value text-warning">
+                    {{ pending_count|default:"0" }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-label">Total Procurement Value</div>
+                <div class="stats-value text-primary">
+                    {{ grand_total|money:request }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="enterprise-card">
+
+        <div class="table-wrapper">
+
+            <div class="table-responsive">
+
+                <table id="profileTable"
+                       class="enterprise-table">
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Req Number</th>
+                            <th>Procurement Plan</th>
+                            <th>Total Amount ({{ display_currency }})</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    {% for po in po_list %}
+
+                        <tr>
+
+                            <td>{{ forloop.counter }}</td>
+
+                            <td>
+                                <a href="{% url 'po_detail' po.pk %}"
+                                   class="req-link">
+                                    {{ po.number }}
+                                </a>
+                            </td>
+
+                            <td>
+                                {{ po.procurement }}
+                            </td>
+
+                            <td class="amount">
+                                {{ po.total|money:request }}
+                            </td>
+
+                            <td>
+                                {{ po.date|date:"d M Y" }}
+                            </td>
+
+                            <td>
+
+                                <span class="badge-status
+                                    {% if po.status == 'Approved' %}
+                                        status-approved
+                                    {% elif po.status == 'Rejected' %}
+                                        status-rejected
+                                    {% elif po.status == 'Canceled' %}
+                                        status-canceled
+                                    {% else %}
+                                        status-pending
+                                    {% endif %}
+                                ">
+                                    {{ po.status }}
+                                </span>
+
+                            </td>
+
+                            <td>
+
+                                <div class="action-group justify-content-center">
+
+                                    <a href="{% url 'po_detail' po.pk %}"
+                                       class="action-btn bg-view"
+                                       title="View">
+
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+
+                                    {% if request.user == po.procurement.requester %}
+
+                                    <a href="{% url 'po_update' po.pk %}"
+                                       class="action-btn bg-edit"
+                                       title="Edit">
+
+                                        <i class="fa fa-pen"></i>
+                                    </a>
+
+                                    <a href="{% url 'trash_po' po.pk po.slug %}"
+                                       class="action-btn bg-delete"
+                                       title="Delete"
+                                       onclick="return confirm('Are you sure you want to delete this requisition?')">
+
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="7">
+
+                                <div class="empty-state">
+                                    <i class="fa fa-folder-open"></i>
+                                    <h5>No Procurement Requisitions Found</h5>
+                                    <p class="text-muted">
+                                        There are currently no procurement requisitions available.
+                                    </p>
+
+                                    <a href="{% url 'req_create' %}"
+                                       class="btn btn-primary">
+
+                                        Create First Requisition
+                                    </a>
+                                </div>
+
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- PAGINATION -->
+            {% if is_paginated %}
+                <div class="mt-4">
+                    {% include 'pagination.html' %}
+                </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</main>
+
+{% endblock %}

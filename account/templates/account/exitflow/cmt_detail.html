@@ -1,0 +1,60 @@
+{% extends "hr/base.html" %}
+{% load dict_extras %}
+{% block title %}Exit Flow Detail (CMT){% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Exit Flow Detail (CMT)</h5>
+  </div>
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <div>
+        <div><strong>Staff:</strong> {{ staff.get_full_name|default:staff.username }}</div>
+        <div><strong>Department:</strong> {{ staff.department.name|default:"-" }}</div>
+      </div>
+      <div>
+        <span class="badge bg-primary fs-6">{{ process.completion_percent }}%</span>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th style="width: 16%">Status</th>
+            <th>Notes</th>
+            <th style="width: 18%">Attachment</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for step in steps %}
+            <tr>
+              <td>{{ step_labels|get_item:step.step_type|default:step.step_type }}</td>
+              <td>
+                {% if step.status == "done" %}
+                  <span class="badge bg-success">Done</span>
+                {% elif step.status == "failed" %}
+                  <span class="badge bg-danger">Failed</span>
+                {% else %}
+                  <span class="badge bg-secondary">Pending</span>
+                {% endif %}
+              </td>
+              <td>{{ step.notes|default:"-" }}</td>
+              <td>
+                {% if step.attachment %}
+                  <a href="{{ step.attachment.url }}">Download</a>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <a class="btn btn-outline-secondary" href="{% url 'account_exit_process_cmt_list' %}">Back</a>
+  </div>
+</div>
+{% endblock %}

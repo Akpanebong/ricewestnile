@@ -1,0 +1,258 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+{% load custom_tags %}
+{% block content %}
+
+<main class="ttr-wrapper">
+<div class="container-fluid py-4">
+    {% if obj.status == "draft" and obj.created_by == request.user %}
+    <marquee>Your fund requisition ({{obj}}) is yet to be submitted,
+        click the submit button to submit to Finance</marquee>
+    {% endif %}
+    <!-- ================= HEADER ================= -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Administrative Expense Request</h3>
+            <small class="text-muted">
+                Linked Requisition: <b><a href="{% url 'finance:requisition_detail' obj.cash_req.id obj.cash_req.slug %}">
+                {{ obj.cash_req }}</a></b> • Created {{ obj.created_at|date:"M d, Y" }}
+            </small>
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a href="{% url 'finance:dashboard' %}" class="btn btn-light">
+                ← Back
+            </a>
+
+            {% if obj.status == "draft" and request.user == obj.created_by %}
+                <a href="{% url 'finance:submit_admin_expense' obj.pk obj.slug %}"
+                   class="btn btn-warning">
+                    Submit
+                </a>
+            {% endif %}
+
+            {% if obj.status != "approved" and obj.status != 'rejected'%}
+            {% if request.user|has_group:'Assets' or request.user|has_group:'Finance' or request.user|has_group:'Operations' or request.user|has_group:'ED' %}
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
+    Approve
+</button>
+            {% endif %}
+            {% else %}
+            <a href="{% url 'finance:admin_expense_pdf' obj.pk obj.slug %}"
+                   class="btn btn-success">
+                    Export PDF
+                </a>
+            {% endif %}
+
+        </div>
+    </div>
+
+
+    <!-- ================= STATUS ================= -->
+    <div class="mb-4">
+        {% if obj.status == "draft" %}
+            <span class="badge bg-secondary">Draft</span>
+        {% elif obj.status == "submitted" %}
+            <span class="badge bg-warning text-dark">Submitted</span>
+        {% elif obj.status == "finance_review" %}
+            <span class="badge bg-info text-dark">Finance Review</span>
+        {% elif obj.status == "operations_review" %}
+            <span class="badge bg-primary">Operations Review</span>
+        {% elif obj.status == "assets_review" %}
+            <span class="badge bg-primary">Assets Review</span>
+        {% elif obj.status == "approved" %}
+            <span class="badge bg-success text-white">Approved</span>
+        {% elif obj.status == "rejected" %}
+            <span class="badge bg-danger">Rejected</span>
+        {% else %}
+         <span class="badge bg-danger">{{obj.status}}</span>
+        {% endif %}
+    </div>
+
+
+    <div class="row g-4">
+
+        <!-- ================= LEFT CONTENT ================= -->
+        <div class="col-lg-8">
+
+            <!-- BASIC INFO -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold">Basic Information</div>
+                <div class="card-body">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <small class="text-muted">Department</small>
+                            <div class="fw-bold">{{ obj.department }}</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <small class="text-muted">Project</small>
+                            <div class="fw-bold">{{ obj.project|default:"-" }}</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <small class="text-muted">Location</small>
+                        <div>{{ obj.location|default:"-" }}</div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- PURPOSE -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold">Purpose & Justification</div>
+                <div class="card-body">
+                    {{ obj.purpose|linebreaks }}
+                </div>
+            </div>
+
+
+            <!-- TIMEFRAME -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold">Timeframe</div>
+                <div class="card-body">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">From</small>
+                            <div class="fw-bold">{{ obj.timeframe_from }}</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <small class="text-muted">To</small>
+                            <div class="fw-bold">{{ obj.timeframe_to }}</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- OBJECTIVES -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold">Objectives</div>
+                <div class="card-body">
+                    {{ obj.objectives|default:"-"|linebreaks }}
+                </div>
+            </div>
+
+
+            <!-- EXPECTED OUTPUTS -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold">Expected Outputs</div>
+                <div class="card-body">
+                    {{ obj.expected_outputs|default:"-"|linebreaks }}
+                </div>
+            </div>
+
+
+            <!-- FINANCIAL -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold">Financial Details</div>
+                <div class="card-body">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">Proposed Budget</small>
+                            <div class="fw-bold text-success">
+                                {{ obj.proposed_budget|money:request }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <small class="text-muted">Service Providers</small>
+                            <div>{{ obj.service_providers|default:"-" }}</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- ================= RIGHT PANEL ================= -->
+        <div class="col-lg-4">
+
+            <!-- WORKFLOW -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white fw-bold">Approval Workflow</div>
+                <div class="card-body">
+
+                    <ul class="list-group list-group-flush">
+
+                        <li class="list-group-item">
+                            <small class="text-muted">Created By</small><br>
+                            <strong>{{ obj.created_by }}</strong>
+                        </li>
+
+                        <li class="list-group-item">
+                            <small class="text-muted">Reviewed By</small><br>
+                            {{ obj.reviewed_by|default:"-" }}
+                        </li>
+
+                        <li class="list-group-item">
+                            <small class="text-muted">Approved By</small><br>
+                            {{ obj.approved_by|default:"-" }}
+                        </li>
+
+                    </ul>
+
+                </div>
+            </div>
+
+
+            <!-- REJECTION -->
+            {% if obj.status == "rejected" %}
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white fw-bold">
+                    Rejection Reason
+                </div>
+                <div class="card-body">
+                    {{ obj.reason_for_rejection|default:"No reason provided" }}
+                </div>
+            </div>
+            {% endif %}
+
+
+        </div>
+<!--    approval modal-->
+
+
+    <div class="modal fade modal-dialog modal-dialog-centered" id="approveModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Approval</h5>
+      </div>
+
+      <div class="modal-body">
+        Are you sure you want to approve this expense?
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+        <form method="post" action="{% url 'finance:approve_admin_expense' obj.pk obj.slug %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Yes, Approve</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+    </div>
+
+</div>
+</main>
+
+
+{% endblock %}

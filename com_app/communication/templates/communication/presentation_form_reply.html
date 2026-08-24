@@ -1,0 +1,70 @@
+{% extends 'communication/base.html' %}
+{% load form_tags %}
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold">
+            <i class="bi bi-easel-fill text-primary"></i>
+            Reply to {{ presentation.sent_by }}
+        </h4>
+    </div>
+
+    <!-- Sender Comment -->
+    <div class="alert alert-info shadow-sm small">
+        <strong>Sender Comment:</strong><br>
+        {{ presentation.comment|default:"No comment provided." }}
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Reply Form -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        {{ form.reply.label_tag }}
+        {{ form.reply|add_class:"form-control" }}
+    </div>
+
+    <button class="btn btn-primary w-100">
+        <i class="bi bi-reply-all"></i> Submit Reply
+    </button>
+</form>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips Panel -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+
+                    <h5 class="fw-bold mb-3 text-secondary">
+                         <i class="bi bi-chat-text text-primary"></i>
+                            <strong>Sender Comment:</strong><br>
+                    </h5>
+
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item border-0">
+
+        {{ presentation.comment|default:"No comment provided." }}
+                        </li>
+
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

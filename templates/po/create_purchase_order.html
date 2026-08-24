@@ -1,0 +1,445 @@
+{% extends 'procurement/base.html' %}
+{% load humanize %}
+{% block title %}Generate Purchase Order{% endblock %}
+
+{% block content %}
+
+<style>
+    .enterprise-card{
+        border:none;
+        border-radius:16px;
+        box-shadow:0 4px 20px rgba(0,0,0,0.06);
+        overflow:hidden;
+        background:#fff;
+    }
+
+    .enterprise-header{
+        background:linear-gradient(135deg,#0d6efd,#0b5ed7);
+        color:#fff;
+        padding:24px;
+    }
+
+    .enterprise-header h3{
+        margin:0;
+        font-weight:700;
+        color:white;
+    }
+
+    .enterprise-header small{
+        opacity:.9;
+    }
+
+    .summary-box{
+        border-radius:14px;
+        background:#f8fafc;
+        padding:18px;
+        margin-bottom:18px;
+        border:1px solid #e9ecef;
+    }
+
+    .summary-label{
+        font-size:13px;
+        text-transform:uppercase;
+        letter-spacing:.5px;
+        color:#6c757d;
+        margin-bottom:5px;
+    }
+
+    .summary-value{
+        font-size:18px;
+        font-weight:700;
+        color:#111827;
+    }
+
+    .form-control{
+        border-radius:12px;
+        padding:12px 15px;
+        border:1px solid #dce1e7;
+        min-height:48px;
+    }
+
+    .form-label{
+        font-weight:600;
+        margin-bottom:8px;
+        color:#374151;
+    }
+
+    .product-table th{
+        background:#f1f5f9;
+        font-size:13px;
+        text-transform:uppercase;
+        letter-spacing:.4px;
+    }
+
+    .product-table td{
+        vertical-align:middle;
+    }
+
+    .stat-card{
+        background:white;
+        border-radius:14px;
+        padding:18px;
+        box-shadow:0 2px 12px rgba(0,0,0,.05);
+        margin-bottom:18px;
+    }
+
+    .stat-icon{
+        width:50px;
+        height:50px;
+        border-radius:12px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:20px;
+        margin-bottom:15px;
+    }
+
+    .btn-enterprise{
+        padding:12px 24px;
+        border-radius:12px;
+        font-weight:600;
+        font-size:15px;
+        box-shadow:0 4px 12px rgba(13,110,253,.25);
+    }
+
+    .page-title{
+        font-weight:800;
+        margin-bottom:5px;
+        color:#111827;
+    }
+
+    .page-subtitle{
+        Color:#6b7280;
+    }
+
+    .info-badge{
+        background:#dcfce7;
+        color:#166534;
+        padding:6px 12px;
+        border-radius:30px;
+        font-size:13px;
+        font-weight:600;
+    }
+</style>
+
+<main class="ttr-wrapper">
+    <div class="container-fluid">
+
+        {% include 'message.html' %}
+
+        <!-- PAGE HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="page-title">
+                    Generate Local Purchase Order
+                </h2>
+                <div class="page-subtitle">
+                    Enterprise Procurement & Supplier Award Workflow
+                </div>
+            </div>
+
+            <div class="info-badge">
+                RFQ Ref: {{ send_log.rfq.reference_no }}
+            </div>
+        </div>
+
+        <div class="row">
+
+            <!-- LEFT CONTENT -->
+            <div class="col-xl-8">
+
+                <div class="enterprise-card mb-4">
+
+                    <div class="enterprise-header">
+                        <h3>
+                            <i class="fa fa-file-contract me-2"></i>
+                            Purchase Order Authorization
+                        </h3>
+
+                        <small>
+                            Supplier:
+                            <strong>
+                                {{ send_log.supplier.full_name|default:send_log.supplier.title }}
+                            </strong>
+                        </small>
+                    </div>
+
+                    <div class="p-4">
+
+                        <!-- SUMMARY -->
+                        <div class="row mb-4">
+
+                            <div class="col-md-4">
+                                <div class="summary-box">
+                                    <div class="summary-label">
+                                        RFQ Number
+                                    </div>
+                                    <div class="summary-value">
+                                        {{ send_log.rfq.reference_no }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="summary-box">
+                                    <div class="summary-label">
+                                        Supplier Quote
+                                    </div>
+                                    <div class="summary-value text-success">
+                                        {{ items_total|money:request }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="summary-box">
+                                    <div class="summary-label">
+                                        Date Sent
+                                    </div>
+                                    <div class="summary-value">
+                                        {{ send_log.date_sent|date:"d M Y" }}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- FORM -->
+                        <form method="POST" enctype="multipart/form-data">
+
+                            {% csrf_token %}
+
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="row">
+
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label">
+                                        Final Approved Amount
+                                    </label>
+                                    {{ form.final_amount }}
+                                    {% for error in form.final_amount.errors %}
+                                        <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label">
+                                        Delivery Due Date
+                                    </label>
+                                    {{ form.due_date }}
+                                    {% for error in form.due_date.errors %}
+                                        <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-md-12 mb-4">
+                                    <label class="form-label">
+                                        Supplier
+                                    </label>
+                                    {{ form.supplier }}
+                                    {% for error in form.supplier.errors %}
+                                        <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-md-12 mb-4">
+                                    <label class="form-label">
+                                        Procurement Remarks / Conditions
+                                    </label>
+                                    {{ form.remarks }}
+                                    {% for error in form.remarks.errors %}
+                                        <small class="text-danger">{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+
+                                <a href="javascript:history.back()"
+                                   class="btn btn-light border">
+                                    <i class="fa fa-arrow-left"></i>
+                                    Cancel
+                                </a>
+
+                                <button type="submit"
+                                        class="btn btn-primary btn-enterprise">
+
+                                    <i class="fa fa-paper-plane me-2"></i>
+                                    Generate & Send LPO
+
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+
+                <!-- PRODUCT TABLE -->
+                <div class="enterprise-card">
+
+                    <div class="p-4">
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">
+                                <i class="fa fa-boxes me-2 text-primary"></i>
+                                Procurement Items
+                            </h5>
+
+                            <span class="badge bg-primary">
+                                {{ products|length }} Item{{ products|pluralize }}
+                            </span>
+                        </div>
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover product-table align-middle">
+
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product</th>
+                                        <th>Qty</th>
+                                        <th>Unit</th>
+                                        <th>Unit Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    {% for item in products %}
+                                    <tr>
+
+                                        <td>{{ forloop.counter }}</td>
+
+                                        <td>
+                                            <strong>
+                                                {{ item.procurement_item.product.name }}
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            {{ item.qty }}
+                                        </td>
+
+                                        <td>
+                                            {{ item.unit_measure }}
+                                        </td>
+
+                                        <td>
+                                            {{ item.unit_price|money:request }}
+                                        </td>
+
+                                        <td class="fw-bold text-success">
+                                            {{ item.line_total|money:request }}
+                                        </td>
+
+                                    </tr>
+                                    {% endfor %}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- RIGHT SIDEBAR -->
+            <div class="col-xl-4">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fa fa-building"></i>
+                    </div>
+
+                    <h5>Supplier Information</h5>
+
+                    <hr>
+
+                    <p class="mb-2">
+                        <strong>Name:</strong><br>
+                        {{ send_log.supplier.full_name|default:send_log.supplier.title }}
+                    </p>
+
+                    <p class="mb-0">
+                        <strong>Email:</strong><br>
+                        {{ send_log.supplier.email }}
+                    </p>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="fa fa-chart-line"></i>
+                    </div>
+
+                    <h5>Procurement Insights</h5>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total Items</span>
+                        <strong>{{ products|length }}</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>RFQ Status</span>
+                        <strong class="text-success">
+                            {{ send_log.rfq.status }}
+                        </strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <span>Supplier Response</span>
+                        <strong>
+                            {{ items_total|money:request }}
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fa fa-lightbulb"></i>
+                    </div>
+
+                    <h5>Procurement Guidelines</h5>
+
+                    <hr>
+
+                    <ul class="small text-muted ps-3">
+                        <li>Verify supplier pricing before approval.</li>
+                        <li>Ensure procurement quantities are validated.</li>
+                        <li>Confirm delivery timelines with supplier.</li>
+                        <li>LPO PDF will automatically be emailed.</li>
+                        <li>Approved records become audit traceable.</li>
+                    </ul>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</main>
+
+{% endblock %}

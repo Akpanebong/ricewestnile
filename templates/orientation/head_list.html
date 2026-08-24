@@ -1,0 +1,71 @@
+{% extends "hr/base.html" %}
+{% load group_tags %}
+{% block title %}Orientation - Unit Head{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold mb-1 text-dark"><i class="fa fa-compass text-success me-2"></i>Orientation Scheduling</h3>
+      <small class="text-muted">Schedule and complete unit orientation sessions.</small>
+    </div>
+    <nav aria-label="breadcrumb" class="mt-3 mt-md-0">
+      <ol class="breadcrumb mb-0 bg-transparent p-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-success"><i class="fa fa-home"></i> Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Orientation</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="card shadow-sm rounded-4 border-0">
+    <div class="card-header bg-white border-bottom py-3">
+      <h6 class="mb-0 fw-semibold"><i class="fa fa-calendar me-1"></i>Your Pending Sessions</h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Staff</th>
+              <th>Unit</th>
+              <th>Schedule</th>
+              <th>Status</th>
+              <th class="text-end pe-4">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for s in sessions %}
+            <tr>
+              <td class="ps-4 fw-semibold">{{ s.plan.staff.get_full_name|default:s.plan.staff.username }}</td>
+              <td>{{ s.unit.name }}</td>
+              <td>
+                {% if s.scheduled_start %}
+                  {{ s.scheduled_start|date:"M d, Y H:i" }} - {{ s.scheduled_end|date:"H:i" }}
+                {% else %}
+                  <span class="text-muted">Not scheduled</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge {% if s.status == 'completed' %}bg-success{% elif s.status == 'scheduled' %}bg-info text-dark{% elif s.status == 'awaiting_schedule' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                  {{ s.get_status_display }}
+                </span>
+              </td>
+              <td class="text-end pe-4">
+                <a class="btn btn-sm btn-outline-success" href="{% url 'orientation_head_session_schedule' s.id %}">
+                  {% if s.scheduled_start %}Reschedule{% else %}Schedule{% endif %}
+                </a>
+                {% if s.status == 'scheduled' or s.status == 'completed' %}
+                  <a class="btn btn-sm btn-success" href="{% url 'orientation_head_session_complete' s.id %}">Complete</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-center py-4 text-muted">No sessions assigned.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

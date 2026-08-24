@@ -1,0 +1,1461 @@
+{% extends active_base_template|default:'base.html' %}
+
+{% block title %}
+{% if is_update %}Update Output{% else %}Create Output{% endif %} | M&E
+{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       OUTPUT FORM
+       Enterprise M&E Interface
+       ========================================================= */
+
+    .output-form-page {
+        --of-primary: #198754;
+        --of-primary-dark: #146c43;
+        --of-primary-soft: #eaf7f0;
+        --of-border: #e2e8e4;
+        --of-text: #1f2937;
+        --of-muted: #6b7280;
+    }
+
+    /* =========================================================
+       BREADCRUMB
+       ========================================================= */
+
+    .of-breadcrumb {
+        background: #fff;
+        border: 1px solid var(--of-border);
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-bottom: 18px;
+    }
+
+    .of-breadcrumb a {
+        color: var(--of-primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .of-breadcrumb a:hover {
+        color: var(--of-primary-dark);
+    }
+
+    /* =========================================================
+       PAGE HEADER
+       ========================================================= */
+
+    .of-header {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f4faf7 100%
+        );
+        border: 1px solid var(--of-border);
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, .035);
+    }
+
+    .of-header-icon {
+        width: 51px;
+        height: 51px;
+        min-width: 51px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--of-primary-soft);
+        color: var(--of-primary);
+        font-size: 21px;
+    }
+
+    .of-title {
+        color: #172b21;
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .of-subtitle {
+        color: var(--of-muted);
+        font-size: .84rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .of-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--of-primary-soft);
+        color: var(--of-primary-dark);
+        padding: 7px 11px;
+        border-radius: 20px;
+        font-size: .73rem;
+        font-weight: 600;
+    }
+
+    .of-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--of-primary);
+    }
+
+    /* =========================================================
+       STRATEGIC OBJECTIVE CONTEXT
+       ========================================================= */
+
+    .of-so-context {
+        background: #fff;
+        border: 1px solid var(--of-border);
+        border-left: 4px solid var(--of-primary);
+        border-radius: 12px;
+        padding: 15px 17px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, .025);
+    }
+
+    .of-so-label {
+        color: #89948e;
+        font-size: .68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: 4px;
+    }
+
+    .of-so-code {
+        display: inline-flex;
+        padding: 4px 8px;
+        background: var(--of-primary-soft);
+        color: var(--of-primary-dark);
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: .7rem;
+        font-weight: 700;
+        margin-right: 7px;
+    }
+
+    .of-so-title {
+        color: #27362f;
+        font-size: .85rem;
+        font-weight: 650;
+    }
+
+    .of-so-description {
+        color: var(--of-muted);
+        font-size: .74rem;
+        margin-top: 5px;
+    }
+
+    /* =========================================================
+       CARDS
+       ========================================================= */
+
+    .of-card {
+        background: #fff;
+        border: 1px solid var(--of-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .04);
+    }
+
+    .of-card-header {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--of-border);
+    }
+
+    .of-card-header h5 {
+        color: #25352d;
+        font-size: .98rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .of-card-header p {
+        color: var(--of-muted);
+        font-size: .76rem;
+        margin: 0;
+    }
+
+    .of-card-body {
+        padding: 24px;
+    }
+
+    /* =========================================================
+       FORM
+       ========================================================= */
+
+    .of-section {
+        margin-bottom: 23px;
+    }
+
+    .of-section-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: #34443c;
+        font-size: .82rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .of-section-title span {
+        width: 27px;
+        height: 27px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--of-primary-soft);
+        color: var(--of-primary);
+        border-radius: 7px;
+        font-size: .7rem;
+    }
+
+    .of-field {
+        margin-bottom: 20px;
+    }
+
+    .of-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #374151;
+        font-size: .82rem;
+        font-weight: 650;
+        margin-bottom: 7px;
+    }
+
+    .of-required {
+        color: #dc3545;
+        font-weight: 700;
+    }
+
+    .of-field input,
+    .of-field textarea,
+    .of-field select {
+        width: 100%;
+        border: 1px solid #d9e0dc;
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: var(--of-text);
+        background: #fff;
+        font-size: .85rem;
+        transition: all .18s ease;
+    }
+
+    .of-field input {
+        min-height: 44px;
+    }
+
+    .of-field textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .of-field input:focus,
+    .of-field textarea:focus,
+    .of-field select:focus {
+        outline: none;
+        border-color: #83c5a1;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    .of-field input::placeholder,
+    .of-field textarea::placeholder {
+        color: #adb5bd;
+    }
+
+    .of-help {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        color: #7c8781;
+        font-size: .73rem;
+        line-height: 1.45;
+        margin-top: 7px;
+    }
+
+    .of-help i {
+        color: #96a19b;
+        margin-top: 2px;
+    }
+
+    .of-error {
+        color: #dc3545;
+        font-size: .74rem;
+        font-weight: 500;
+        margin-top: 6px;
+    }
+
+    .of-error ul {
+        margin: 0;
+        padding-left: 17px;
+    }
+
+    /* =========================================================
+       DESCRIPTION META
+       ========================================================= */
+
+    .of-description-meta {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .of-counter {
+        color: #909a95;
+        font-size: .7rem;
+        white-space: nowrap;
+        margin-top: 8px;
+    }
+
+    /* =========================================================
+       ACTION BAR
+       ========================================================= */
+
+    .of-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 22px;
+        background: #fafcfb;
+        border-top: 1px solid var(--of-border);
+    }
+
+    .of-btn {
+        border-radius: 9px;
+        padding: 9px 17px;
+        font-size: .81rem;
+        font-weight: 600;
+        transition: all .18s ease;
+    }
+
+    .of-btn-cancel {
+        color: #5c6660;
+        background: #fff;
+        border: 1px solid #d7ddd9;
+        text-decoration: none;
+    }
+
+    .of-btn-cancel:hover {
+        color: #34423a;
+        background: #f3f5f4;
+    }
+
+    .of-btn-submit {
+        color: #fff;
+        background: var(--of-primary);
+        border: 1px solid var(--of-primary);
+    }
+
+    .of-btn-submit:hover {
+        color: #fff;
+        background: var(--of-primary-dark);
+        border-color: var(--of-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       SIDEBAR
+       ========================================================= */
+
+    .of-sidebar-card {
+        background: #fff;
+        border: 1px solid var(--of-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .035);
+    }
+
+    .of-sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 17px 19px;
+        border-bottom: 1px solid var(--of-border);
+    }
+
+    .of-sidebar-icon {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--of-primary-soft);
+        color: var(--of-primary);
+        border-radius: 9px;
+        font-size: 14px;
+    }
+
+    .of-sidebar-header h6 {
+        color: #28372f;
+        font-size: .86rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .of-sidebar-body {
+        padding: 18px 19px;
+    }
+
+    /* =========================================================
+       EXISTING OUTPUTS
+       ========================================================= */
+
+    .of-existing-output {
+        padding: 10px 0;
+        border-bottom: 1px solid #edf0ee;
+    }
+
+    .of-existing-output:last-child {
+        border-bottom: 0;
+    }
+
+    .of-existing-code {
+        display: inline-flex;
+        min-width: 48px;
+        justify-content: center;
+        padding: 4px 7px;
+        border-radius: 6px;
+        background: var(--of-primary-soft);
+        color: var(--of-primary-dark);
+        font-family: monospace;
+        font-size: .67rem;
+        font-weight: 700;
+        margin-right: 7px;
+    }
+
+    .of-existing-title {
+        color: #56625c;
+        font-size: .75rem;
+        line-height: 1.45;
+    }
+
+    /* =========================================================
+       TIPS
+       ========================================================= */
+
+    .of-tip {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .of-tip:last-child {
+        margin-bottom: 0;
+    }
+
+    .of-tip-icon {
+        width: 25px;
+        height: 25px;
+        min-width: 25px;
+        border-radius: 7px;
+        background: var(--of-primary-soft);
+        color: var(--of-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+    }
+
+    .of-tip p {
+        color: #6c7771;
+        font-size: .74rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* =========================================================
+       FRAMEWORK NOTE
+       ========================================================= */
+
+    .of-framework-note {
+        background: #f7faf8;
+        border: 1px solid #e3ebe6;
+        border-radius: 10px;
+        padding: 13px;
+        margin-top: 16px;
+    }
+
+    .of-framework-title {
+        color: #34443c;
+        font-size: .74rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .of-framework-note p {
+        color: #78827d;
+        font-size: .71rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 991.98px) {
+
+        .of-sidebar {
+            margin-top: 20px;
+        }
+
+    }
+
+    @media (max-width: 767.98px) {
+
+        .of-breadcrumb {
+            padding: 9px 12px;
+            margin-bottom: 14px;
+        }
+
+        .of-header {
+            padding: 17px;
+            border-radius: 13px;
+        }
+
+        .of-header-icon {
+            width: 44px;
+            min-width: 44px;
+            height: 44px;
+            border-radius: 10px;
+        }
+
+        .of-title {
+            font-size: 1.08rem;
+        }
+
+        .of-subtitle {
+            font-size: .76rem;
+        }
+
+        .of-status {
+            margin-top: 13px;
+        }
+
+        .of-so-context {
+            padding: 13px;
+        }
+
+        .of-card,
+        .of-sidebar-card {
+            border-radius: 13px;
+        }
+
+        .of-card-header {
+            padding: 15px 16px;
+        }
+
+        .of-card-body {
+            padding: 18px 16px;
+        }
+
+        .of-actions {
+            padding: 13px 16px;
+        }
+
+        .of-btn {
+            flex: 1;
+            text-align: center;
+        }
+
+    }
+
+    @media (max-width: 400px) {
+
+        .of-actions {
+            flex-direction: column-reverse;
+        }
+
+        .of-btn {
+            width: 100%;
+        }
+
+        .of-description-meta {
+            flex-direction: column;
+        }
+
+        .of-counter {
+            margin-top: 0;
+        }
+
+    }
+</style>
+
+<div class="container-fluid output-form-page">
+
+
+<!-- =====================================================
+     BREADCRUMB
+====================================================== -->
+
+<div class="of-breadcrumb">
+
+    <ul class="list-inline mb-0 small">
+
+        <li class="list-inline-item">
+
+            <a href="{% url 'monitoring:dashboard' %}">
+                <i class="fa fa-home me-1"></i>
+                Dashboard
+            </a>
+
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item">
+
+            <a href="{% url 'monitoring:so_list' %}">
+                Strategic Objectives
+            </a>
+
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item text-muted">
+            {% if is_update %}
+                Update Output
+            {% else %}
+                Create Output
+            {% endif %}
+        </li>
+
+    </ul>
+
+</div>
+
+
+{% include 'message.html' %}
+
+
+<!-- =====================================================
+     PAGE HEADER
+====================================================== -->
+
+<div class="of-header">
+
+    <div class="d-flex flex-column
+                flex-md-row
+                align-items-start
+                align-items-md-center
+                justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <div class="of-header-icon me-3">
+
+                <i class="fa fa-sitemap"></i>
+
+            </div>
+
+            <div>
+
+                <h1 class="of-title">
+
+                    {% if is_update %}
+                        Update Strategic Output
+                    {% else %}
+                        Create Strategic Output
+                    {% endif %}
+
+                </h1>
+
+                <p class="of-subtitle">
+
+                    {% if is_update %}
+
+                        Modify output details and maintain
+                        strategic alignment.
+
+                    {% else %}
+
+                        Define a measurable deliverable aligned
+                        to the strategic objective.
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="of-status">
+
+            <span class="of-status-dot"></span>
+
+            M&E Framework
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     STRATEGIC OBJECTIVE CONTEXT
+====================================================== -->
+
+<div class="of-so-context">
+
+    <div class="row align-items-center">
+
+        <div class="col">
+
+            <div class="of-so-label">
+                Parent Strategic Objective
+            </div>
+
+            <div>
+
+                <span class="of-so-code">
+                    {{ so.code }}
+                </span>
+
+                <span class="of-so-title">
+                    {{ so.title }}
+                </span>
+
+            </div>
+
+            <div class="of-so-description">
+
+                <i class="fa fa-link me-1"></i>
+
+                This output contributes directly to the achievement
+                of this strategic objective.
+
+            </div>
+
+        </div>
+
+        <div class="col-auto">
+
+            <i class="fa fa-bullseye text-success fs-5"></i>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     FORM + SIDEBAR
+====================================================== -->
+
+<div class="row g-4">
+
+    <!-- =================================================
+         MAIN FORM
+    ================================================== -->
+
+    <div class="col-lg-8">
+
+        <div class="of-card">
+
+            <!-- Card Header -->
+
+            <div class="of-card-header">
+
+                <h5>
+                    Output Information
+                </h5>
+
+                <p>
+                    Complete the output details below.
+                    Fields marked with
+                    <span class="text-danger">*</span>
+                    are required.
+                </p>
+
+            </div>
+
+
+            <!-- Form -->
+
+            <form method="post" novalidate>
+
+                {% csrf_token %}
+
+                <div class="of-card-body">
+
+                    <!-- =================================================
+                         NON-FIELD ERRORS
+                    ================================================== -->
+
+                    {% if form.non_field_errors %}
+
+                        <div class="alert alert-danger">
+
+                            <div class="d-flex gap-2">
+
+                                <i class="fa fa-exclamation-circle mt-1"></i>
+
+                                <div>
+                                    {{ form.non_field_errors }}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- =================================================
+                         BASIC INFORMATION
+                    ================================================== -->
+
+                    <div class="of-section">
+
+                        <div class="of-section-title">
+
+                            <span>
+                                <i class="fa fa-info"></i>
+                            </span>
+
+                            Basic Information
+
+                        </div>
+
+
+                        <div class="row g-3">
+
+                            <!-- Output Code -->
+
+                            <div class="col-md-4">
+
+                                <div class="of-field">
+
+                                    <label
+                                        for="{{ form.code.id_for_label }}"
+                                        class="of-label">
+
+                                        Output Code
+
+                                        {% if form.code.field.required %}
+                                            <span class="of-required">*</span>
+                                        {% endif %}
+
+                                    </label>
+
+                                    {{ form.code }}
+
+                                    {% if form.code.errors %}
+
+                                        <div class="of-error">
+                                            {{ form.code.errors }}
+                                        </div>
+
+                                    {% endif %}
+
+                                    <div class="of-help">
+
+                                        <i class="fa fa-info-circle"></i>
+
+                                        <span>
+                                            Use a unique reference such
+                                            as OUT-01 or 1.1.
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Output Title -->
+
+                            <div class="col-md-8">
+
+                                <div class="of-field">
+
+                                    <label
+                                        for="{{ form.title.id_for_label }}"
+                                        class="of-label">
+
+                                        Output Title
+
+                                        {% if form.title.field.required %}
+                                            <span class="of-required">*</span>
+                                        {% endif %}
+
+                                    </label>
+
+                                    {{ form.title }}
+
+                                    {% if form.title.errors %}
+
+                                        <div class="of-error">
+                                            {{ form.title.errors }}
+                                        </div>
+
+                                    {% endif %}
+
+                                    <div class="of-help">
+
+                                        <i class="fa fa-info-circle"></i>
+
+                                        <span>
+                                            Clearly describe the expected
+                                            deliverable or result.
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         DESCRIPTION
+                    ================================================== -->
+
+                    <div class="of-section mb-0">
+
+                        <div class="of-section-title">
+
+                            <span>
+                                <i class="fa fa-align-left"></i>
+                            </span>
+
+                            Output Description
+
+                        </div>
+
+
+                        <div class="of-field mb-0">
+
+                            <label
+                                for="{{ form.description.id_for_label }}"
+                                class="of-label">
+
+                                Description
+
+                                {% if form.description.field.required %}
+                                    <span class="of-required">*</span>
+                                {% endif %}
+
+                            </label>
+
+                            {{ form.description }}
+
+                            {% if form.description.errors %}
+
+                                <div class="of-error">
+                                    {{ form.description.errors }}
+                                </div>
+
+                            {% endif %}
+
+                            <div class="of-description-meta">
+
+                                <div class="of-help">
+
+                                    <i class="fa fa-lightbulb-o"></i>
+
+                                    <span>
+                                        Describe the scope, expected
+                                        result, measurable characteristics
+                                        and intended contribution.
+                                    </span>
+
+                                </div>
+
+                                <span class="of-counter"
+                                      id="descriptionCounter">
+
+                                    0 characters
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =====================================================
+                     ACTION BAR
+                ====================================================== -->
+
+                <div class="of-actions">
+
+                    <a href="{% url 'monitoring:output_list' %}"
+                       class="of-btn of-btn-cancel">
+
+                        <i class="fa fa-arrow-left me-1"></i>
+
+                        Cancel
+
+                    </a>
+
+
+                    <button type="submit"
+                            class="of-btn of-btn-submit">
+
+                        {% if is_update %}
+
+                            <i class="fa fa-save me-1"></i>
+                            Update Output
+
+                        {% else %}
+
+                            <i class="fa fa-plus me-1"></i>
+                            Create Output
+
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SIDEBAR
+    ================================================== -->
+
+    <div class="col-lg-4">
+
+        {% if is_update %}
+
+            <!-- =============================================
+                 UPDATE CONTEXT
+            ============================================== -->
+
+            <div class="of-sidebar-card">
+
+                <div class="of-sidebar-header">
+
+                    <div class="of-sidebar-icon">
+                        <i class="fa fa-info-circle"></i>
+                    </div>
+
+                    <h6>
+                        Output Context
+                    </h6>
+
+                </div>
+
+
+                <div class="of-sidebar-body">
+
+                    <div class="mb-3">
+
+                        <div class="small text-muted mb-1">
+                            Strategic Objective
+                        </div>
+
+                        <div class="fw-semibold"
+                             style="font-size:.78rem;">
+
+                            {{ output.so }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <div class="small text-muted mb-1">
+                            Current Output
+                        </div>
+
+                        <div>
+
+                            <span class="of-existing-code">
+                                {{ output.code }}
+                            </span>
+
+                            <span class="of-existing-title">
+                                {{ output.title }}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <hr>
+
+
+                    <div class="small fw-semibold mb-3">
+                        Best Practice
+                    </div>
+
+
+                    <div class="of-tip">
+
+                        <div class="of-tip-icon">
+                            <i class="fa fa-check"></i>
+                        </div>
+
+                        <p>
+                            Outputs should describe a measurable
+                            deliverable or result.
+                        </p>
+
+                    </div>
+
+
+                    <div class="of-tip">
+
+                        <div class="of-tip-icon">
+                            <i class="fa fa-crosshairs"></i>
+                        </div>
+
+                        <p>
+                            Use precise language and avoid vague
+                            descriptions.
+                        </p>
+
+                    </div>
+
+
+                    <div class="of-tip">
+
+                        <div class="of-tip-icon">
+                            <i class="fa fa-bullseye"></i>
+                        </div>
+
+                        <p>
+                            Maintain clear alignment with the
+                            parent strategic objective.
+                        </p>
+
+                    </div>
+
+
+                    <div class="of-tip">
+
+                        <div class="of-tip-icon">
+                            <i class="fa fa-tasks"></i>
+                        </div>
+
+                        <p>
+                            Focus on the result or deliverable,
+                            not the activities used to produce it.
+                        </p>
+
+                    </div>
+
+
+                    <div class="of-framework-note">
+
+                        <div class="of-framework-title">
+
+                            <i class="fa fa-sitemap me-1"></i>
+
+                            Results Framework
+
+                        </div>
+
+                        <p>
+                            Outputs represent the immediate
+                            results produced by activities and
+                            contribute to the achievement of
+                            strategic objectives.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        {% else %}
+
+            <!-- =============================================
+                 EXISTING OUTPUTS
+            ============================================== -->
+
+            <div class="of-sidebar-card">
+
+                <div class="of-sidebar-header">
+
+                    <div class="of-sidebar-icon">
+                        <i class="fa fa-list"></i>
+                    </div>
+
+                    <h6>
+                        Existing Outputs
+                    </h6>
+
+                </div>
+
+
+                <div class="of-sidebar-body">
+
+                    <div class="small text-muted mb-3">
+
+                        Outputs already defined for
+
+                        <strong>
+                            {{ so.code }}
+                        </strong>
+
+                    </div>
+
+
+                    {% if output %}
+
+                        <div>
+
+                            {% for out in output %}
+
+                                <div class="of-existing-output">
+
+                                    <span class="of-existing-code">
+                                        {{ out.code }}
+                                    </span>
+
+                                    <span class="of-existing-title">
+                                        {{ out.title }}
+                                    </span>
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="text-center py-3">
+
+                            <i class="fa fa-folder-open
+                                      text-muted mb-2"
+                               style="font-size:22px;">
+                            </i>
+
+                            <p class="small text-muted mb-0">
+                                No outputs have been defined yet.
+                            </p>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="of-framework-note">
+
+                        <div class="of-framework-title">
+
+                            <i class="fa fa-lightbulb-o me-1"></i>
+
+                            Best Practice
+
+                        </div>
+
+                        <p>
+                            Each output should directly contribute
+                            to achieving the strategic objective and
+                            should be sufficiently specific to support
+                            indicator development.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- =================================================
+             SECURITY / SYSTEM NOTE
+        ================================================== -->
+
+        <div class="d-flex gap-2 text-muted mt-3 px-2">
+
+            <i class="fa fa-shield mt-1"></i>
+
+            <small>
+                Information entered here forms part of the
+                organization's M&E results framework.
+            </small>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- =========================================================
+     JAVASCRIPT ENHANCEMENTS
+========================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* =========================================================
+       DESCRIPTION CHARACTER COUNTER
+    ========================================================= */
+
+    const description =
+        document.getElementById(
+            "{{ form.description.id_for_label }}"
+        );
+
+    const counter =
+        document.getElementById(
+            "descriptionCounter"
+        );
+
+
+    function updateCounter() {
+
+        if (!description || !counter) {
+            return;
+        }
+
+        const length =
+            description.value.length;
+
+        counter.textContent =
+            length +
+            (length === 1
+                ? " character"
+                : " characters");
+
+    }
+
+
+    if (description) {
+
+        updateCounter();
+
+        description.addEventListener(
+            "input",
+            updateCounter
+        );
+
+    }
+
+
+    /* =========================================================
+       FORM FIELD CLASSES
+    ========================================================= */
+
+    const fields =
+        document.querySelectorAll(
+            ".of-field input, .of-field textarea, .of-field select"
+        );
+
+
+    fields.forEach(function (field) {
+
+        if (
+            !field.classList.contains("form-control") &&
+            !field.classList.contains("form-select")
+        ) {
+
+            if (field.tagName === "SELECT") {
+
+                field.classList.add(
+                    "form-select"
+                );
+
+            } else {
+
+                field.classList.add(
+                    "form-control"
+                );
+
+            }
+
+        }
+
+    });
+
+
+    /* =========================================================
+       PREVENT DOUBLE SUBMISSION
+    ========================================================= */
+
+    const form =
+        document.querySelector(
+            ".of-card form"
+        );
+
+
+    if (form) {
+
+        form.addEventListener(
+            "submit",
+            function () {
+
+                const button =
+                    form.querySelector(
+                        "button[type='submit']"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                button.disabled = true;
+
+
+                {% if is_update %}
+
+                    button.innerHTML =
+                        '<i class="fa fa-spinner fa-spin me-1"></i> Updating...';
+
+                {% else %}
+
+                    button.innerHTML =
+                        '<i class="fa fa-spinner fa-spin me-1"></i> Creating...';
+
+                {% endif %}
+
+            }
+        );
+
+    }
+
+});
+</script>
+
+{% endblock %}

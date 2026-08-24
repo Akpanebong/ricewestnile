@@ -1,0 +1,173 @@
+{% extends "garcis/base.html" %}
+{% block title %}Risk Detail{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <div>
+            <h3 class="mb-1">{{ risk.event }}</h3>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="badge bg-dark">{{ risk.risk_level }}</span>
+                <span class="badge bg-secondary">Score {{ risk.risk_score }}</span>
+                <span class="badge bg-info text-dark">{{ risk.get_status_display }}</span>
+            </div>
+        </div>
+        <div class="quick-links">
+            <a href="{% url 'risk_update' risk.pk %}" class="btn btn-warning">Edit Risk</a>
+            <a href="{% url 'risk_treatment_create' risk.pk %}" class="btn btn-dark">Add Treatment</a>
+            <a href="{% url 'risk_list' %}" class="btn btn-outline-secondary">Back to Register</a>
+            <a href="{% url 'risk_delete' risk.pk risk.risk_id %}" class="btn btn-outline-danger">
+                <i class="fa fa-trash"></i> Trash</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h5>Risk Profile</h5>
+                <table class="table">
+                    <tr><th>Risk ID</th><td>{{ risk.risk_id }}</td></tr>
+                    <tr><th>Cause</th><td>{{ risk.cause }}</td></tr>
+                    <tr><th>Category</th><td>{{ risk.category|default:"-" }}</td></tr>
+                    <tr><th>Owner</th><td>{{ risk.risk_owner }}</td></tr>
+                    <tr><th>Type</th><td>{{ risk.risk_type|default:"-" }}</td></tr>
+                    <tr><th>Program</th><td>{{ risk.program|default:"-" }}</td></tr>
+                    <tr><th>Source</th><td>{{ risk.source|default:"-" }}</td></tr>
+                    <tr><th>Business Unit</th><td>{{ risk.business_unit|default:"-" }}</td></tr>
+                    <tr><th>Fraud Related</th><td>{{ risk.is_fraud_related|yesno:"Yes,No" }}</td></tr>
+                    <tr><th>ESG Area</th><td>{{ risk.esg_area|default:"-" }}</td></tr>
+                    <tr><th>Continuity Dependency</th><td>{{ risk.continuity_dependency|default:"-" }}</td></tr>
+                    <tr><th>Validity</th><td>{{ risk.valid_from }} to {{ risk.valid_to }}</td></tr>
+                    <tr><th>Next Review</th><td>{{ risk.next_review_date|default:"-" }}</td></tr>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h5>Mitigation and Monitoring</h5>
+                <p>{{ risk.mitigation_plan|default:"No mitigation plan captured." }}</p>
+                <h6 class="mt-4">Treatment Progress</h6>
+                <div class="progress" style="height: 24px;">
+                    <div class="progress-bar bg-success" style="width: {{ progress_avg }}%;">{{ progress_avg|floatformat:0 }}%</div>
+                </div>
+                <div class="mt-4">
+                    {% if risk.ai_used %}
+                    <div class="alert alert-info mb-0">AI-assisted classification confidence: {{ risk.ai_confidence|floatformat:2 }}</div>
+                    {% else %}
+                    <div class="alert alert-warning mb-0">Rule-based risk classification in use.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Incidents and Fraud Cases</h5>
+                    <a href="{% url 'risk_incident_create' %}" class="btn btn-sm btn-outline-dark">Report</a>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for item in incidents %}
+                    <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                        <span>{{ item.title }}</span><span class="badge bg-secondary">{{ item.get_status_display }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item px-0 text-muted">No incidents linked.</li>
+                    {% endfor %}
+                    {% for item in whistleblower_cases %}
+                    <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                        <span>{{ item.case_reference }} - {{ item.allegation }}</span><span class="badge bg-dark">{{ item.get_status_display }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Indicators and Controls</h5>
+                    <a href="{% url 'risk_kri_create' %}" class="btn btn-sm btn-outline-dark">Add KRI</a>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for item in kris %}
+                    <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                        <span>{{ item.name }}</span><span class="badge bg-info text-dark">{{ item.get_status_display }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item px-0 text-muted">No KRIs linked.</li>
+                    {% endfor %}
+                    {% for item in controls %}
+                    <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                        <span>{{ item.name }}</span><span class="badge bg-secondary">{{ item.get_effectiveness_display }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-4 h-100">
+                <h5>Continuity</h5>
+                {% for item in continuity_plans %}
+                <p class="mb-2"><strong>{{ item.name }}</strong><br><span class="text-muted">{{ item.critical_process }}</span></p>
+                {% empty %}
+                <p class="text-muted mb-0">No continuity plans linked.</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-4 h-100">
+                <h5>Third-Party Exposure</h5>
+                {% for item in third_party_exposures %}
+                <p class="mb-2"><strong>{{ item.party_name }}</strong><br><span class="text-muted">{{ item.get_risk_rating_display }} - {{ item.get_status_display }}</span></p>
+                {% empty %}
+                <p class="text-muted mb-0">No third-party records linked.</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card p-4 h-100">
+                <h5>ESG Tracking</h5>
+                {% for item in esg_records %}
+                <p class="mb-2"><strong>{{ item.title }}</strong><br><span class="text-muted">{{ item.esg_area }} - {{ item.get_status_display }}</span></p>
+                {% empty %}
+                <p class="text-muted mb-0">No ESG records linked.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-4 mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Treatment Register</h5>
+            <a href="{% url 'risk_treatment_create' risk.pk %}" class="btn btn-sm btn-outline-dark">New Treatment</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                        <th>Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for treatment in treatments %}
+                    <tr>
+                        <td>{{ treatment.description }}</td>
+                        <td>{{ treatment.owner }}</td>
+                        <td>{{ treatment.get_status_display }}</td>
+                        <td>{{ treatment.due_date|default:"-" }}</td>
+                        <td>{{ treatment.progress_percent }}%</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-muted text-center">No treatment actions recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

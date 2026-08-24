@@ -1,0 +1,248 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RICE WN Enterprise Systems</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="{% static 'assets/images/ricewn.png' %}" type="image/x-icon">
+    <style>
+        :root {
+            --ink: #182230;
+            --muted: #667085;
+            --line: #d0d5dd;
+            --surface: #ffffff;
+            --bg: #f4f6f8;
+            --accent: #0f766e;
+            --accent-dark: #115e59;
+            --gold: #b7791f;
+        }
+        body {
+            min-height: 100vh;
+            color: var(--ink);
+            background: var(--bg);
+            font-family: Inter, system-ui, sans-serif;
+        }
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .brand-logo { height: 44px; width: auto; }
+        .icon-button {
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            color: #344054;
+            background: #fff;
+        }
+        .system-card {
+            height: 100%;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+        }
+        .system-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(15,118,110,.35);
+            box-shadow: 0 14px 32px rgba(16, 24, 40, .10);
+        }
+        .system-icon {
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: #fff;
+            background: var(--accent);
+        }
+        .system-description {
+            color: var(--muted);
+            font-size: .88rem;
+            min-height: 42px;
+        }
+        .btn-enterprise {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+        .btn-enterprise:hover {
+            background: var(--accent-dark);
+            border-color: var(--accent-dark);
+            color: #fff;
+        }
+        .work-panel {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            min-height: 250px;
+        }
+        .work-item {
+            display: flex;
+            gap: .8rem;
+            padding: .9rem 0;
+            border-bottom: 1px solid #eef2f6;
+        }
+        .work-item:last-child { border-bottom: 0; }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            margin-top: .45rem;
+            background: var(--gold);
+            flex: 0 0 auto;
+        }
+    </style>
+</head>
+<body>
+<nav class="topbar py-3">
+    <div class="container-fluid px-3 px-lg-4 d-flex align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <img src="{% static 'assets/images/ricewn.png' %}" class="brand-logo" alt="RICE West Nile">
+            <div>
+                <h1 class="h5 mb-0 fw-bold">Enterprise Management System</h1>
+                <div class="small text-muted">Welcome, {{ request.user.get_full_name|default:request.user.username }}</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <form action="{% url 'logout' %}" method="post" class="m-0">
+                {% csrf_token %}
+                <button class="btn btn-outline-secondary btn-sm" type="submit">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<main class="container-fluid px-3 px-lg-4 py-4">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+        <div>
+            <div class="small text-uppercase fw-bold text-success">Subsystem Access</div>
+            <h2 class="h4 fw-bold mb-0">Choose your workspace</h2>
+        </div>
+        <div class="text-muted small">{{ systems|length }} enterprise subsystems available</div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        {% for system in systems %}
+            <div class="col-12 col-sm-6 col-lg-4 col-xxl-2">
+                <article class="system-card p-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="system-icon"><i class="fa-solid {{ system.icon }}"></i></span>
+                        <h3 class="h6 fw-bold mb-0">{{ system.name }}</h3>
+                    </div>
+                    <p class="system-description mb-3">{{ system.description }}</p>
+                    <a class="btn btn-enterprise btn-sm w-100" href="{{ system.url }}">
+                        Continue <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </article>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-4">
+            <section class="work-panel p-3 p-lg-4">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h3 class="h6 fw-bold mb-0"><i class="fa-solid fa-bell me-2 text-success"></i>Notifications</h3>
+                    <span class="badge text-bg-light">Today</span>
+                </div>
+                <div class="work-item">
+                    <span class="status-dot"></span>
+                    <div>
+                        <div class="fw-semibold">Review pending approvals across your assigned subsystem.</div>
+                        <div class="small text-muted">Open the relevant workspace to view details.</div>
+                    </div>
+                </div>
+                <div class="work-item">
+                    <span class="status-dot bg-success"></span>
+                    <div>
+                        <div class="fw-semibold">Enterprise portal is available for all enabled modules.</div>
+                        <div class="small text-muted">Use the cards above for direct access.</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-12 col-lg-4">
+            <section class="work-panel p-3 p-lg-4">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h3 class="h6 fw-bold mb-0"><i class="fa-solid fa-list-check me-2 text-success"></i>TODO</h3>
+                    <span class="badge text-bg-light">Open</span>
+                </div>
+                <div class="work-item">
+                    <span class="status-dot bg-primary"></span>
+                    <div>
+                        <div class="fw-semibold">Confirm profile and password settings are current.</div>
+                        <div class="small text-muted">Keeps access control clean across subsystems.</div>
+                    </div>
+                </div>
+                <div class="work-item">
+                    <span class="status-dot bg-danger"></span>
+                    <div>
+                        <div class="fw-semibold">Complete open workflow actions before end of day.</div>
+                        <div class="small text-muted">Start from your department workspace.</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-12 col-lg-4">
+            <section class="work-panel p-3 p-lg-4">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h3 class="h6 fw-bold mb-0"><i class="fa-solid fa-gear me-2 text-success"></i>Settings</h3>
+                    <span class="badge text-bg-light">Account</span>
+                </div>
+                <div class="work-item">
+                    <span class="status-dot bg-success"></span>
+                    <div class="w-100">
+                        <div class="fw-semibold mb-2">Manage account access and profile records.</div>
+                        <div class="dropdown mb-2">
+                            <button class="btn btn-sm btn-outline-success dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
+                                Account
+                            </button>
+                            <ul class="dropdown-menu w-100">
+                                {% if request.user.slug %}
+                                <li><a class="dropdown-item" href="{% url 'update_employee' request.user.slug %}">Account Details</a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{% url 'password_change' %}">Change Password</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown mb-2">
+                            <button class="btn btn-sm btn-outline-success dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
+                                Profile
+                            </button>
+                            <ul class="dropdown-menu w-100">
+                                <li><a class="dropdown-item" href="{% url 'profile_list' %}">Profile List</a></li>
+                                <li><a class="dropdown-item" href="{% url 'profile_create' %}">Create Profile</a></li>
+                            </ul>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-success dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
+                                Other Settings
+                            </button>
+                            <ul class="dropdown-menu w-100">
+                                <li><a class="dropdown-item" href="{% url 'procurement_core:currency_settings' %}">Procurement Currency</a></li>
+                                <li><a class="dropdown-item" href="{% url 'mne_core:currency_settings' %}">M&E Currency</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

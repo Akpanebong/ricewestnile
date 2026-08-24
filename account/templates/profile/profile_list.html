@@ -1,0 +1,244 @@
+{% extends "hr/base.html" %}
+{% load group_tags %}
+
+{% block content %}
+<div class="container-fluid">
+
+    {% include "message.html" %}
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
+
+        {% if request.user|has_group:"HR" or request.user.is_superuser %}
+        <a href="{% url 'profile_create' %}" class="btn btn-success px-3 shadow-sm">
+            <i class="fa fa-plus"></i> New Profile
+        </a>
+        {% endif %}
+
+        <div class="input-group shadow-sm" style="max-width: 320px;">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="fa fa-search text-muted"></i>
+            </span>
+            <input type="text" id="profileSearch" class="form-control border-start-0" placeholder="Search profiles...">
+        </div>
+    </div>
+
+    <!-- FILTER BUTTONS -->
+    {% if request.user|has_group:"HR" or request.user.is_superuser %}
+    <div class="mb-4 d-flex flex-wrap gap-2">
+        {% for key, name in filter_types %}
+        <a href="?type={{ key }}"
+           class="btn btn-sm px-3 {% if data_type == key %}btn-success shadow-sm{% else %}btn-outline-success{% endif %}">
+            {{ name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- TABLE -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+
+            <div class="table-responsive" id="profileTable">
+
+                <table class="table align-middle mb-0 table-hover">
+
+                    <!-- HEAD -->
+                    <thead class="table-light sticky-top">
+                        <tr class="text-uppercase small text-muted">
+                            <th style="width:50px;">#</th>
+
+                            {% if data_type == 'profiles' or data_type == 'employee' %}
+                                <th style="min-width:220px;">Full Name</th>
+                                <th style="min-width:150px;">Department</th>
+                                <th style="min-width:200px;">Email</th>
+                                <th style="min-width:140px;">Phone</th>
+
+                                {% if data_type == 'profiles' %}
+                                <th style="min-width:140px;">Category</th>
+                                {% endif %}
+
+                                <th style="min-width:120px;">Status</th>
+
+                                {% if request.user|has_group:"HR" or request.user.is_superuser %}
+                                    {% if data_type == 'employee' %}
+                                    <th class="text-center" style="width:100px;">Action</th>
+                                    {% endif %}
+                                {% endif %}
+
+                            {% else %}
+                                <th style="min-width:200px;">Name</th>
+                                <th style="min-width:150px;">Department</th>
+                                <th style="min-width:200px;">Email</th>
+                                <th style="min-width:140px;">Phone</th>
+                                <th style="min-width:150px;">Date Joined</th>
+                                <th style="min-width:120px;">Status</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+
+                    <!-- BODY -->
+                    <tbody>
+                        {% for obj in page_obj %}
+                        <tr>
+
+                            <td class="text-muted fw-semibold">
+                                {{ forloop.counter }}
+                            </td>
+
+                            {% if data_type == 'profiles' or data_type == 'employee' %}
+
+                            <!-- NAME -->
+                            <td class="fw-semibold">
+                                {% if request.user.employee == obj.supervised_by %}
+                                <a href="{% url 'create_appraisal' obj.pk %}" class="text-decoration-none text-dark">
+                                    {{ obj }}
+                                    <div class="small text-success">Send Appraisal</div>
+                                </a>
+                                {% else %}
+                                    {{ obj }}
+                                {% endif %}
+                            </td>
+
+                            <!-- DEPARTMENT -->
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {% if data_type == 'profiles' %}
+                                        {{ obj.department }}
+                                    {% else %}
+                                        {{ obj.user.department }}
+                                    {% endif %}
+                                </span>
+                            </td>
+
+                            <!-- EMAIL -->
+                            <td class="text-truncate" style="max-width:220px;">
+                                {% if data_type == 'profiles' %}
+                                    {{ obj.email }}
+                                {% else %}
+                                    {{ obj.user.email }}
+                                {% endif %}
+                            </td>
+
+                            <!-- PHONE -->
+                            <td>{{ obj.phone }}</td>
+
+                            <!-- CATEGORY -->
+                            {% if data_type == 'profiles' %}
+                            <td>
+                                <span class="badge bg-info-subtle text-info fw-semibold">
+                                    {{ obj.profile_type }}
+                                </span>
+                            </td>
+                            {% endif %}
+
+                            <!-- STATUS -->
+                            <td>
+                                <span class="badge px-3 py-1
+                                    {% if data_type == 'profiles' %}
+                                        {% if 'active' in obj.status|lower %}bg-success{% else %}bg-secondary{% endif %}
+                                    {% else %}
+                                        {% if 'active' in obj.user.status|lower %}bg-success{% else %}bg-secondary{% endif %}
+                                    {% endif %}
+                                ">
+                                    {% if data_type == 'profiles' %}
+                                        {{ obj.status }}
+                                    {% else %}
+                                        {{ obj.user.status }}
+                                    {% endif %}
+                                </span>
+                            </td>
+
+                            <!-- ACTION -->
+                            {% if request.user|has_group:"HR" or request.user.is_superuser %}
+                                {% if data_type == 'employee' %}
+                                <td class="text-center">
+                                    <a href="{% url 'profile_update' obj.pk obj.slug %}"
+                                       class="btn btn-sm btn-light border shadow-sm">
+                                        <i class="fa fa-pen text-primary"></i>
+                                    </a>
+                                </td>
+                                {% endif %}
+                            {% endif %}
+
+                            {% else %}
+
+                            <!-- INTERNSHIP / OTHERS -->
+                            <td class="fw-semibold">
+                            {% if request.user.employee == obj.supervised_by %}
+                                <a href="{% url 'create_appraisal' obj.pk %}" class="text-decoration-none text-dark">
+                                    {{ obj }}
+                                    <div class="small text-success">Send Appraisal</div>
+                                </a>
+                                {% else %}
+                                    {{ obj }}
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ obj.user.department }}
+                                </span>
+                            </td>
+
+                            <td class="text-truncate" style="max-width:220px;">
+                                {{ obj.user.email }}
+                            </td>
+
+                            <td>{{ obj.user.phone }}</td>
+
+                            <td>{{ obj.date_joined|date:"M d, Y" }}</td>
+
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ obj.user.status }}
+                                </span>
+                            </td>
+
+                            {% endif %}
+
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                No records found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+
+                <div class="d-flex gap-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?type={{ data_type }}&page={{ page_obj.previous_page_number }}"
+                           class="btn btn-sm btn-outline-secondary">
+                           Prev
+                        </a>
+                    {% endif %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?type={{ data_type }}&page={{ page_obj.next_page_number }}"
+                           class="btn btn-sm btn-outline-secondary">
+                           Next
+                        </a>
+                    {% endif %}
+                </div>
+
+                <small class="text-muted">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </small>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

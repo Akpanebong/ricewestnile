@@ -1,0 +1,197 @@
+{% extends "hr/base.html" %}
+{% block title %}Job Openings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    {% with page_title="Job Openings" page_subtitle="Published vacancies open for application" breadcrumb="Job Openings" %} {% include "breadcrumb.html" %} {% endwith %}
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">
+                <i class="fa fa-briefcase text-success"></i> Job Openings
+            </h3>
+            <small class="text-muted">
+                Browse available positions and submit applications
+            </small>
+        </div>
+
+        {% if request.user.is_superuser %}
+        <div class="d-flex gap-2">
+            <a href="{% url 'vacancy:recruitment_request_list' %}"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-list"></i> Requests
+            </a>
+            <a href="{% url 'vacancy:recruitment_request_create' %}"
+               class="btn btn-success btn-sm">
+                <i class="fa fa-plus"></i> New Request
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Search & Filter -->
+    <form method="get" class="card border-0 shadow-sm p-3 mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small text-muted">Search</label>
+                <input type="text"
+                       name="q"
+                       value="{{ request.GET.q }}"
+                       class="form-control"
+                       placeholder="Job title or keyword">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Department</label>
+                <select name="unit" class="form-select">
+    <option value="">All units</option>
+    {% for unit in units %}
+        <option value="{{ unit.id }}"
+            {% if selected_unit == unit.id|stringformat:"s" %}
+                selected
+            {% endif %}
+        >
+            {{ unit.name }}
+        </option>
+    {% endfor %}
+</select>
+            </div>
+
+            <div class="col-md-3">
+                <button class="btn btn-success w-100">
+                    <i class="fa fa-search"></i> Search
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Job Cards -->
+    <div class="row g-4">
+
+        {% for job in jobs %}
+        <div class="col-xl-4 col-lg-6 col-md-6">
+            <div class="card job-card h-100 border-0 shadow-sm">
+
+                <!-- Countdown -->
+                {% if job.deadline %}
+                <span class="badge bg-warning job-badge">
+                    {{ job.days_remaining }} days left
+                </span>
+                {% endif %}
+<br/>
+                <div class="card-body d-flex flex-column">
+
+                    <h5 class="fw-bold mb-1">{{ job.request.title }}</h5>
+
+                    <p class="text-muted small mb-2">
+                        <i class="fa fa-building"></i> {{ job.department|default:job.request.unit }}
+                    </p>
+
+                    <p class="text-muted small flex-grow-1">
+                        {{ job.description|truncatewords:28 }}
+                    </p>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">
+                            <i class="fa fa-users"></i>
+                            {{ job.applicant_count }} applicants
+                        </span>
+
+                        <button type="button"
+                                class="btn btn-outline-success btn-sm"
+                                data-job="{{ job.pk }}"
+                                data-url="{% url 'vacancy:job_detail_modal' job.pk %}"
+                                onclick="openJobModal(this)">
+                            <i class="fa fa-eye"></i> View
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% empty %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fa fa-folder-open fa-2x text-muted mb-3"></i>
+                    <h6 class="text-muted">No Job Openings Available</h6>
+                    <p class="small text-muted mb-0">
+                        There are currently no active vacancies.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4">
+        {% include "pagination.html" with page_obj=jobs %}
+    </div>
+
+</div>
+
+<!-- Enterprise Styling -->
+<style>
+.job-card {
+    border-radius: 14px;
+    position: relative;
+    transition: all 0.25s ease;
+}
+
+.job-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.08);
+}
+
+.job-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.btn {
+    border-radius: 8px;
+}
+
+hr {
+    opacity: 0.08;
+}
+</style>
+<script>
+function openJobModal(btn) {
+    // Remove any existing modal to avoid ID collisions
+    const existingModal = document.getElementById("jobModal");
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    fetch(btn.dataset.url)
+        .then(res => res.json())
+        .then(data => {
+            document.body.insertAdjacentHTML("beforeend", data.html);
+
+            const modalEl = document.getElementById("jobModal");
+            const modal = new bootstrap.Modal(modalEl);
+
+            modal.show();
+
+            // Cleanup after close (enterprise hygiene)
+            modalEl.addEventListener("hidden.bs.modal", () => {
+                modalEl.remove();
+            });
+        });
+}
+</script>
+{% endblock %}
+

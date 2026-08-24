@@ -1,0 +1,2653 @@
+{% load static %}
+{% load group_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>{% block title %}RICEWN HR Dashboard{% endblock %}</title>
+
+<!-- =====================================================
+     BOOTSTRAP
+===================================================== -->
+<link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+>
+
+<!-- =====================================================
+     FONT AWESOME
+===================================================== -->
+<link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    rel="stylesheet"
+>
+
+<!-- =====================================================
+     BOOTSTRAP ICONS
+===================================================== -->
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+>
+
+<link
+    rel="icon"
+    href="{% static 'assets/images/ricewn.png' %}"
+    type="image/x-icon"
+>
+
+
+<style>
+
+/* =========================================================
+   GLOBAL VARIABLES
+========================================================= */
+
+:root {
+
+    --sidebar-width: 260px;
+
+    --sidebar-collapsed-width: 76px;
+
+    --sidebar-bg: #171722;
+
+    --sidebar-color: #cfd3df;
+
+    --sidebar-hover: rgba(255,255,255,.055);
+
+    --sidebar-active: rgba(30,163,109,.10);
+
+    --sidebar-active-border: rgba(30,163,109,.55);
+
+    --sidebar-accent:
+        {% block system_accent %}#1ea36d{% endblock %};
+
+    --header-bg: #0a6b3a;
+
+    --body-bg: #f5f6fb;
+
+    --radius: .6rem;
+
+    --transition: .25s ease;
+
+}
+
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+html,
+body {
+
+    margin: 0;
+
+    padding: 0;
+
+    min-height: 100%;
+
+}
+
+body {
+
+    background: var(--body-bg);
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+}
+
+a {
+
+    text-decoration: none;
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.app-header {
+
+    height: 64px;
+
+    background: var(--header-bg);
+
+    color: #fff;
+
+    position: fixed;
+
+    top: 0;
+
+    left: 0;
+
+    right: 0;
+
+    z-index: 1100;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 1rem;
+
+    box-shadow:
+        0 2px 6px rgba(0,0,0,.15);
+
+}
+
+
+/* =========================================================
+   DESKTOP SIDEBAR
+========================================================= */
+
+.app-sidebar {
+
+    position: fixed;
+
+    top: 64px;
+
+    bottom: 0;
+
+    left: 0;
+
+    width: var(--sidebar-width);
+
+    background:
+        linear-gradient(
+            180deg,
+            #171722 0%,
+            #13131c 100%
+        );
+
+    color: var(--sidebar-color);
+
+    padding:
+        16px
+        12px
+        28px;
+
+    overflow-x: hidden;
+
+    overflow-y: auto;
+
+    transition:
+        width .25s ease,
+        transform .25s ease;
+
+    z-index: 1090;
+
+}
+
+
+/* =========================================================
+   DESKTOP SIDEBAR COLLAPSED
+========================================================= */
+
+body.sidebar-collapsed .app-sidebar {
+
+    width:
+        var(--sidebar-collapsed-width);
+
+}
+
+
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
+
+.app-main {
+
+    margin-left:
+        var(--sidebar-width);
+
+    padding-top: 90px;
+
+    transition:
+        margin-left .25s ease;
+
+}
+
+
+/* =========================================================
+   MAIN CONTENT WHEN SIDEBAR COLLAPSED
+========================================================= */
+
+body.sidebar-collapsed .app-main {
+
+    margin-left:
+        var(--sidebar-collapsed-width);
+
+}
+
+
+/* =========================================================
+   SIDEBAR HEADER
+========================================================= */
+
+.sidebar-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    min-height: 40px;
+
+    margin-bottom: 8px;
+
+    padding:
+        0 8px;
+
+    color:
+        rgba(255,255,255,.75);
+
+    font-size: .78rem;
+
+    font-weight: 700;
+
+    letter-spacing: .05em;
+
+    text-transform: uppercase;
+
+}
+
+
+/* =========================================================
+   SIDEBAR DASHBOARD / NORMAL LINK
+========================================================= */
+
+.sidebar-dashboard {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    width: 100%;
+
+    min-height: 48px;
+
+    margin-bottom: 5px;
+
+    padding: 0 12px;
+
+    border-radius: 10px;
+
+    color:
+        rgba(231,233,240,.88) !important;
+
+    font-size: .90rem;
+
+    font-weight: 500;
+
+    transition:
+        background .2s ease,
+        color .2s ease,
+        border .2s ease;
+
+}
+
+
+/* Hover */
+
+.sidebar-dashboard:hover {
+
+    background:
+        rgba(255,255,255,.055);
+
+    color:
+        #ffffff !important;
+
+}
+
+
+/* =========================================================
+   SUBTLE ACTIVE LINK
+========================================================= */
+
+.sidebar-dashboard.active {
+
+    color:
+        #ffffff !important;
+
+    background:
+        var(--sidebar-active);
+
+    box-shadow:
+        inset 3px 0 0
+        var(--sidebar-active-border);
+
+}
+
+
+/* Active icon */
+
+.sidebar-dashboard.active
+.sidebar-nav-icon {
+
+    color:
+        var(--sidebar-accent);
+
+    background:
+        rgba(30,163,109,.12);
+
+}
+
+
+/* =========================================================
+   NAVIGATION ICON
+========================================================= */
+
+.sidebar-nav-icon {
+
+    width: 32px;
+
+    height: 32px;
+
+    min-width: 32px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background:
+        rgba(255,255,255,.055);
+
+    color:
+        #b8becb;
+
+    font-size: .85rem;
+
+    transition:
+        all .2s ease;
+
+}
+
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.sidebar-section {
+
+    display: flex;
+
+    align-items: center;
+
+    margin:
+        22px 8px
+        8px;
+
+    color:
+        rgba(207,211,223,.42);
+
+    font-size: .64rem;
+
+    font-weight: 700;
+
+    letter-spacing: .12em;
+
+    white-space: nowrap;
+
+}
+
+.sidebar-section::after {
+
+    content: "";
+
+    flex: 1;
+
+    height: 1px;
+
+    margin-left: 10px;
+
+    background:
+        rgba(255,255,255,.055);
+
+}
+
+
+/* =========================================================
+   MODULE
+========================================================= */
+
+.sidebar-module {
+
+    margin-bottom: 3px;
+
+}
+
+
+/* =========================================================
+   MODULE TOGGLE
+========================================================= */
+
+.sidebar-module-toggle {
+
+    width: 100%;
+
+    min-height: 48px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding:
+        0 12px;
+
+    color:
+        #cfd3df;
+
+    background:
+        transparent;
+
+    border: none;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+
+    font-size: .90rem;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        color .2s ease;
+
+}
+
+
+/* Hover */
+
+.sidebar-module-toggle:hover {
+
+    background:
+        rgba(255,255,255,.055);
+
+    color:
+        #ffffff;
+
+}
+
+
+/* Open module */
+
+.sidebar-module.module-open
+.sidebar-module-toggle {
+
+    color:
+        #ffffff;
+
+    background:
+        rgba(255,255,255,.025);
+
+}
+
+
+/* =========================================================
+   MODULE LEFT SIDE
+========================================================= */
+
+.sidebar-module-left {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 0;
+
+}
+
+
+/* =========================================================
+   MODULE TITLE
+========================================================= */
+
+.sidebar-module-title {
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    font-weight: 500;
+
+}
+
+
+/* =========================================================
+   MODULE ICON
+========================================================= */
+
+.sidebar-module-icon {
+
+    width: 34px;
+
+    height: 34px;
+
+    min-width: 34px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 9px;
+
+    color:
+        #b8becb;
+
+    background:
+        rgba(255,255,255,.055);
+
+    font-size: .85rem;
+
+    transition:
+        all .2s ease;
+
+}
+
+
+/* Module hover/open icon */
+
+.sidebar-module-toggle:hover
+.sidebar-module-icon,
+
+.sidebar-module.module-open
+.sidebar-module-icon {
+
+    color:
+        var(--sidebar-accent);
+
+    background:
+        rgba(30,163,109,.10);
+
+}
+
+
+/* =========================================================
+   MODULE ARROW
+========================================================= */
+
+.sidebar-module-arrow {
+
+    flex-shrink: 0;
+
+    font-size: .65rem;
+
+    color:
+        rgba(207,211,223,.38);
+
+    transition:
+        transform .25s ease,
+        color .2s ease;
+
+}
+
+
+/* Arrow when open */
+
+.sidebar-module-toggle[aria-expanded="true"]
+.sidebar-module-arrow {
+
+    transform:
+        rotate(90deg);
+
+    color:
+        var(--sidebar-accent);
+
+}
+
+
+/* =========================================================
+   SUBMENU
+========================================================= */
+
+.sidebar-submenu {
+
+    position: relative;
+
+    margin:
+        2px 0
+        8px
+        28px;
+
+    padding-left: 18px;
+
+    border-left:
+        1px solid
+        rgba(255,255,255,.07);
+
+}
+
+
+/* =========================================================
+   SUBMENU LINK
+========================================================= */
+
+.sidebar-submenu a {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    min-height: 38px;
+
+    padding:
+        7px 10px;
+
+    color:
+        rgba(207,211,223,.72);
+
+    border-radius: 8px;
+
+    font-size: .82rem;
+
+    text-decoration: none;
+
+    transition:
+        background .2s ease,
+        color .2s ease,
+        transform .2s ease;
+
+}
+
+
+/* submenu icon */
+
+.sidebar-submenu a i {
+
+    width: 18px;
+
+    min-width: 18px;
+
+    color:
+        rgba(207,211,223,.48);
+
+    font-size: .72rem;
+
+    text-align: center;
+
+}
+
+
+/* submenu hover */
+
+.sidebar-submenu a:hover {
+
+    color:
+        #ffffff;
+
+    background:
+        rgba(255,255,255,.045);
+
+    transform:
+        translateX(2px);
+
+}
+
+.sidebar-submenu a:hover i {
+
+    color:
+        var(--sidebar-accent);
+
+}
+
+
+/* =========================================================
+   ACTIVE SUBMENU
+========================================================= */
+
+.sidebar-submenu a.active {
+
+    color:
+        #ffffff;
+
+    font-weight: 600;
+
+    background:
+        rgba(30,163,109,.09);
+
+}
+
+
+/* subtle left marker */
+
+.sidebar-submenu a.active::before {
+
+    content: "";
+
+    position: absolute;
+
+    left: -19px;
+
+    top: 50%;
+
+    transform:
+        translateY(-50%);
+
+    width: 3px;
+
+    height: 20px;
+
+    border-radius:
+        0 3px 3px 0;
+
+    background:
+        var(--sidebar-accent);
+
+}
+
+.sidebar-submenu a.active i {
+
+    color:
+        var(--sidebar-accent);
+
+}
+
+
+/* =========================================================
+   SUPPORT LINKS
+========================================================= */
+
+.sidebar-support-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-height: 48px;
+
+    padding:
+        0 12px;
+
+    color:
+        rgba(207,211,223,.80);
+
+    border-radius: 10px;
+
+    font-size: .88rem;
+
+    transition:
+        all .2s ease;
+
+}
+
+.sidebar-support-link:hover {
+
+    color:
+        #ffffff;
+
+    background:
+        rgba(255,255,255,.055);
+
+}
+
+
+/* =========================================================
+   COLLAPSED SIDEBAR
+========================================================= */
+
+body.sidebar-collapsed
+.sidebar-nav-text,
+
+body.sidebar-collapsed
+.sidebar-module-title,
+
+body.sidebar-collapsed
+.sidebar-section,
+
+body.sidebar-collapsed
+.sidebar-header > span,
+
+body.sidebar-collapsed
+.sidebar-support-link > span:not(.sidebar-nav-icon) {
+
+    display: none;
+
+}
+
+
+/* Center dashboard */
+
+body.sidebar-collapsed
+.sidebar-dashboard {
+
+    justify-content: center;
+
+    padding:
+        0;
+
+}
+
+
+/* Center module */
+
+body.sidebar-collapsed
+.sidebar-module-toggle {
+
+    justify-content: center;
+
+    padding:
+        0;
+
+}
+
+
+/* Hide module arrow */
+
+body.sidebar-collapsed
+.sidebar-module-arrow {
+
+    display: none;
+
+}
+
+
+/* Center module left */
+
+body.sidebar-collapsed
+.sidebar-module-left {
+
+    justify-content: center;
+
+}
+
+
+/* Hide submenu completely */
+
+body.sidebar-collapsed
+.sidebar-submenu {
+
+    display: none !important;
+
+}
+
+
+/* Center support */
+
+body.sidebar-collapsed
+.sidebar-support-link {
+
+    justify-content: center;
+
+    padding:
+        0;
+
+}
+
+
+/* Remove active left border when collapsed */
+
+body.sidebar-collapsed
+.sidebar-dashboard.active {
+
+    box-shadow:
+        none;
+
+}
+
+
+/* =========================================================
+   SIDEBAR COLLAPSE BUTTON
+========================================================= */
+
+.sidebar-collapse-btn {
+
+    width: 32px;
+
+    height: 32px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 0;
+
+    color:
+        rgba(255,255,255,.65);
+
+    background:
+        rgba(255,255,255,.06);
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+    border-radius: 8px;
+
+    transition:
+        all .2s ease;
+
+}
+
+.sidebar-collapse-btn:hover {
+
+    color:
+        #ffffff;
+
+    background:
+        rgba(255,255,255,.12);
+
+}
+
+
+/* =========================================================
+   TOOLTIP FOR COLLAPSED SIDEBAR
+========================================================= */
+
+.sidebar-tooltip {
+
+    position: fixed;
+
+    z-index: 5000;
+
+    display: none;
+
+    padding:
+        7px 10px;
+
+    color:
+        #ffffff;
+
+    background:
+        #22232d;
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+    border-radius: 7px;
+
+    font-size: .78rem;
+
+    white-space: nowrap;
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,.25);
+
+    pointer-events: none;
+
+}
+
+
+/* =========================================================
+   QUICK ACCESS
+========================================================= */
+
+.quick-access-dropdown {
+
+    position: relative;
+
+}
+
+.quick-access-btn {
+
+    display: flex;
+
+    align-items: center;
+
+    min-height: 38px;
+
+    padding:
+        7px 12px;
+
+    color:
+        #ffffff;
+
+    background:
+        rgba(255,255,255,.12);
+
+    border:
+        1px solid
+        rgba(255,255,255,.18);
+
+    border-radius: 9px;
+
+    font-size: .88rem;
+
+    font-weight: 500;
+
+    transition:
+        all .2s ease;
+
+}
+
+.quick-access-btn:hover,
+.quick-access-btn:focus {
+
+    color:
+        #ffffff;
+
+    background:
+        rgba(255,255,255,.18);
+
+    border-color:
+        rgba(255,255,255,.28);
+
+    box-shadow:
+        none;
+
+}
+
+
+/* =========================================================
+   QUICK ACCESS MENU
+========================================================= */
+
+.quick-access-menu {
+
+    width: 320px;
+
+    margin-top:
+        12px !important;
+
+    padding:
+        8px;
+
+    border:
+        none;
+
+    border-radius:
+        14px;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 12px 40px rgba(0,0,0,.18) !important;
+
+}
+
+
+/* =========================================================
+   QUICK ACCESS HEADER
+========================================================= */
+
+.quick-access-header {
+
+    padding:
+        10px 12px 12px;
+
+    color:
+        #6c757d;
+
+    font-size: .7rem;
+
+    font-weight: 700;
+
+    letter-spacing: .08em;
+
+    border-bottom:
+        1px solid #edf0f2;
+
+    margin-bottom:
+        5px;
+
+}
+
+
+/* =========================================================
+   QUICK ACCESS ITEMS
+========================================================= */
+
+.quick-access-item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    padding:
+        11px 12px;
+
+    border-radius:
+        10px;
+
+    white-space:
+        normal;
+
+    transition:
+        all .2s ease;
+
+}
+
+.quick-access-item:hover {
+
+    background:
+        #f5f8f7;
+
+    transform:
+        translateX(3px);
+
+}
+
+.quick-access-item strong {
+
+    display: block;
+
+    color:
+        #2f3640;
+
+    font-size:
+        .86rem;
+
+    font-weight:
+        700;
+
+}
+
+.quick-access-item small {
+
+    display: block;
+
+    margin-top:
+        2px;
+
+    color:
+        #8b939c;
+
+    font-size:
+        .72rem;
+
+}
+
+
+/* =========================================================
+   QUICK ACCESS ICON
+========================================================= */
+
+.quick-access-icon {
+
+    width: 42px;
+
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius:
+        10px;
+
+    font-size:
+        1rem;
+
+}
+
+.qa-hr {
+
+    color: #198754;
+
+    background:
+        rgba(25,135,84,.12);
+
+}
+
+.qa-garcis {
+
+    color: #0d6efd;
+
+    background:
+        rgba(13,110,253,.12);
+
+}
+
+.qa-me {
+
+    color: #6f42c1;
+
+    background:
+        rgba(111,66,193,.12);
+
+}
+
+.qa-communication {
+
+    color: #fd7e14;
+
+    background:
+        rgba(253,126,20,.12);
+
+}
+
+.qa-assets {
+
+    color: #20c997;
+
+    background:
+        rgba(32,201,151,.12);
+
+}
+
+.qa-procurement {
+
+    color: #dc3545;
+
+    background:
+        rgba(220,53,69,.12);
+
+}
+
+
+/* =========================================================
+   CARDS / FORMS / BUTTONS
+========================================================= */
+
+.card {
+
+    border-radius:
+        16px;
+
+    border:
+        none;
+
+}
+
+.card-header {
+
+    border-bottom:
+        none;
+
+}
+
+.btn {
+
+    border-radius:
+        10px;
+
+}
+
+.form-control,
+.form-select {
+
+    border-radius:
+        10px;
+
+}
+
+.table-hover tbody tr {
+
+    transition:
+        .2s;
+
+}
+
+.badge {
+
+    padding:
+        .55rem .75rem;
+
+    font-size:
+        .78rem;
+
+}
+
+.shadow-sm {
+
+    box-shadow:
+        0 .125rem .35rem
+        rgba(0,0,0,.08) !important;
+
+}
+
+
+/* =========================================================
+   BODY / MAIN
+========================================================= */
+
+.breadcrumb-block {
+
+    margin-bottom:
+        1rem;
+
+}
+
+.flash-messages {
+
+    z-index:
+        1200;
+
+}
+
+
+/* =========================================================
+   MOBILE SIDEBAR
+========================================================= */
+
+#mobileSidebar {
+
+    transform:
+        translateX(-100%);
+
+    position:
+        fixed;
+
+    z-index:
+        1100;
+
+}
+
+#mobileSidebar.show {
+
+    transform:
+        translateX(0);
+
+}
+
+#mobileOverlay {
+
+    display:
+        none;
+
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    background:
+        rgba(0,0,0,.35);
+
+    z-index:
+        1050;
+
+}
+
+#mobileOverlay.show {
+
+    display:
+        block;
+
+}
+
+
+/* =========================================================
+   FORUM FAB
+========================================================= */
+
+.forum-fab-container {
+
+    position:
+        fixed;
+
+    right:
+        30px;
+
+    bottom:
+        25px;
+
+    z-index:
+        9999;
+
+}
+
+.forum-fab {
+
+    position:
+        relative;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        15px;
+
+    min-width:
+        220px;
+
+    padding:
+        14px 18px;
+
+    background:
+        #ffffff;
+
+    border-radius:
+        18px;
+
+    color:
+        #343a40;
+
+    border:
+        1px solid #e8ecef;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.10);
+
+    transition:
+        all .25s ease;
+
+}
+
+.forum-fab:hover {
+
+    color:
+        #198754;
+
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        0 18px 45px rgba(25,135,84,.20);
+
+    border-color:
+        #198754;
+
+}
+
+.forum-icon {
+
+    width:
+        56px;
+
+    height:
+        56px;
+
+    position:
+        relative;
+
+    border-radius:
+        50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #198754,
+            #20c997
+        );
+
+    color:
+        white;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    font-size:
+        24px;
+
+    flex-shrink:
+        0;
+
+}
+
+.forum-title {
+
+    display:
+        block;
+
+    font-size:
+        16px;
+
+    font-weight:
+        700;
+
+}
+
+.forum-subtitle {
+
+    display:
+        block;
+
+    color:
+        #6c757d;
+
+    font-size:
+        12px;
+
+}
+
+.forum-badge {
+
+    position:
+        absolute;
+
+    top:
+        -8px;
+
+    right:
+        -8px;
+
+    min-width:
+        24px;
+
+    height:
+        24px;
+
+    border-radius:
+        50%;
+
+    background:
+        #dc3545;
+
+    color:
+        white;
+
+    font-size:
+        12px;
+
+    font-weight:
+        700;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        3px solid white;
+
+}
+
+
+/* =========================================================
+   MOBILE RESPONSIVE
+========================================================= */
+
+@media (max-width: 991.98px) {
+
+    .app-main {
+
+        margin-left:
+            0 !important;
+
+        padding-top:
+            100px;
+
+    }
+
+    .app-sidebar {
+
+        width:
+            min(300px, 88vw);
+
+        box-shadow:
+            12px 0
+            40px
+            rgba(0,0,0,.25);
+
+    }
+
+    body.sidebar-collapsed .app-sidebar {
+
+        width:
+            min(300px, 88vw);
+
+    }
+
+    body.sidebar-collapsed
+    .sidebar-nav-text,
+
+    body.sidebar-collapsed
+    .sidebar-module-title,
+
+    body.sidebar-collapsed
+    .sidebar-section,
+
+    body.sidebar-collapsed
+    .sidebar-module-arrow,
+
+    body.sidebar-collapsed
+    .sidebar-header > span {
+
+        display:
+            inline;
+
+    }
+
+    body.sidebar-collapsed
+    .sidebar-dashboard,
+    body.sidebar-collapsed
+    .sidebar-module-toggle {
+
+        justify-content:
+            space-between;
+
+        padding:
+            0 12px;
+
+    }
+
+    body.sidebar-collapsed
+    .sidebar-submenu {
+
+        display:
+            block !important;
+
+    }
+
+}
+
+
+@media (max-width: 767.98px) {
+
+    .quick-access-btn {
+
+        width:
+            38px;
+
+        height:
+            38px;
+
+        justify-content:
+            center;
+
+        padding:
+            0;
+
+    }
+
+    .quick-access-menu {
+
+        width:
+            min(320px, calc(100vw - 24px));
+
+    }
+
+    .forum-fab {
+
+        min-width:
+            65px;
+
+        width:
+            65px;
+
+        height:
+            65px;
+
+        border-radius:
+            50%;
+
+        padding:
+            0;
+
+        justify-content:
+            center;
+
+    }
+
+    .forum-content {
+
+        display:
+            none;
+
+    }
+
+}
+
+</style>
+
+{% block extra_head %}{% endblock %}
+
+</head>
+
+
+<body>
+
+
+{% if request.user.is_authenticated %}
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header class="app-header">
+
+    <!-- LEFT SIDE -->
+    <div class="d-flex align-items-center">
+
+        <!-- MOBILE TOGGLE -->
+        <button
+            class="btn btn-sm text-white d-lg-none me-2"
+            id="mobileToggle"
+            type="button"
+            aria-label="Open menu"
+        >
+            <i class="fa fa-bars fa-lg"></i>
+        </button>
+
+
+        <!-- DESKTOP SIDEBAR TOGGLE -->
+        <button
+            class="sidebar-collapse-btn d-none d-lg-flex me-2"
+            id="desktopSidebarToggle"
+            type="button"
+            title="Collapse sidebar"
+            aria-label="Collapse sidebar"
+        >
+            <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+
+
+        <!-- LOGO -->
+        <a
+            href="{% block header_home_url %}{% url 'dashboard' %}{% endblock %}"
+            class="d-flex align-items-center text-white text-decoration-none"
+        >
+
+            <img
+                src="{% static 'assets/images/ricewn.png' %}"
+                height="36"
+                class="me-2"
+                alt="RICE WN Logo"
+            >
+
+            <span class="ricewn-brand">
+
+                RICE WN
+
+                <small class="text-white-50 d-none d-md-inline">
+                    {% block system_name %}HR Dashboard{% endblock %}
+                </small>
+
+            </span>
+
+        </a>
+
+
+        <!-- =================================================
+             QUICK ACCESS
+        ================================================== -->
+
+        <div class="dropdown ms-3 quick-access-dropdown">
+
+            <button
+                class="btn quick-access-btn"
+                type="button"
+                id="quickAccessDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+            >
+
+                <i class="fa-solid fa-table-cells-large me-2"></i>
+
+                <span class="d-none d-md-inline">
+                    Quick Access
+                </span>
+
+                <i class="fa-solid fa-chevron-down ms-1"></i>
+
+            </button>
+
+
+            <ul
+                class="dropdown-menu quick-access-menu shadow-lg"
+                aria-labelledby="quickAccessDropdown"
+            >
+
+                <li class="quick-access-header">
+                    RICE WN SYSTEMS
+                </li>
+
+
+                <li>
+                    <a
+                        class="dropdown-item quick-access-item"
+                        href="{% url 'dashboard' %}"
+                    >
+
+                        <span class="quick-access-icon qa-hr">
+                            <i class="fa-solid fa-users"></i>
+                        </span>
+
+                        <span>
+                            <strong>HR</strong>
+                            <small>Human Resources</small>
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <li>
+                    <a
+                        class="dropdown-item quick-access-item"
+                        href="{% url 'garcis:dashboard' %}"
+                    >
+
+                        <span class="quick-access-icon qa-garcis">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                        </span>
+
+                        <span>
+                            <strong>GARCIS</strong>
+                            <small>
+                                Government Audit Risk and Compliance Information System
+                            </small>
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <li>
+                    <a
+                        class="dropdown-item quick-access-item"
+                        href="{% url 'monitoring:dashboard' %}"
+                    >
+
+                        <span class="quick-access-icon qa-me">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </span>
+
+                        <span>
+                            <strong>M&amp;E</strong>
+                            <small>Monitoring &amp; Evaluation</small>
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <li>
+                    <a
+                        class="dropdown-item quick-access-item"
+                        href="{% url 'comm:dashboard' %}"
+                    >
+
+                        <span class="quick-access-icon qa-communication">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </span>
+
+                        <span>
+                            <strong>COMMUNICATION</strong>
+                            <small>Communication Management</small>
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <li>
+                    <a
+                        class="dropdown-item quick-access-item"
+                        href="{% url 'asset:dashboard' %}"
+                    >
+
+                        <span class="quick-access-icon qa-assets">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </span>
+
+                        <span>
+                            <strong>ASSETS</strong>
+                            <small>Asset Management</small>
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <li>
+                    <a
+                        class="dropdown-item quick-access-item"
+                        href="{% url 'procurement' %}"
+                    >
+
+                        <span class="quick-access-icon qa-procurement">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </span>
+
+                        <span>
+                            <strong>PROCUREMENT</strong>
+                            <small>Procurement Management</small>
+                        </span>
+
+                    </a>
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         RIGHT SIDE
+    ================================================== -->
+
+    <div class="d-flex align-items-center gap-2">
+
+
+        <!-- NOTIFICATIONS -->
+
+        <div class="dropdown">
+
+            <button
+                class="btn text-white position-relative"
+                data-bs-toggle="dropdown"
+                type="button"
+            >
+
+                <i class="fa fa-bell fa-lg"></i>
+
+                {% if notification_unread_count %}
+
+                <span
+                    class="badge bg-danger position-absolute"
+                    style="top:-6px; right:-6px;"
+                >
+                    {{ notification_unread_count }}
+                </span>
+
+                {% endif %}
+
+            </button>
+
+
+            <div
+                class="dropdown-menu dropdown-menu-end shadow p-0"
+                style="min-width:300px;"
+            >
+
+                <div class="p-3 border-bottom d-flex justify-content-between">
+
+                    <strong>Notifications</strong>
+
+                    <a
+                        href="{% url 'notifications:list' %}"
+                        class="small text-decoration-none"
+                    >
+                        View All
+                    </a>
+
+                </div>
+
+
+                <div style="max-height:300px; overflow:auto;">
+
+                    {% for note in notification_unread %}
+
+                    <div class="px-3 py-2 border-bottom">
+
+                        <small class="text-muted">
+                            {{ note.created_at }}
+                        </small>
+
+                        <div>
+
+                            <a
+                                href="{% url 'notifications:detail' note.notification.pk %}"
+                            >
+                                {{ note.message }}
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                    {% empty %}
+
+                    <div class="px-3 py-3 text-muted text-center">
+                        No notifications
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- USER -->
+
+        <div class="dropdown">
+
+            <a
+                href="#"
+                class="text-white text-decoration-none d-flex align-items-center"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+            >
+
+                <i class="fa fa-user-circle fa-2x"></i>
+
+            </a>
+
+
+            <ul class="dropdown-menu dropdown-menu-end">
+
+                <li>
+
+                    <a
+                        class="dropdown-item"
+                        href="{% url 'update_employee' request.user.slug %}"
+                    >
+                        {{ request.user.get_full_name|default:request.user }}
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a
+                        class="dropdown-item"
+                        href="{% url 'logout' %}"
+                    >
+                        Logout
+                    </a>
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     DESKTOP SIDEBAR
+===================================================== -->
+
+<aside class="app-sidebar d-none d-lg-block">
+
+    <div class="sidebar-header">
+
+        <span>
+            Main Menu
+        </span>
+
+    </div>
+
+
+    <nav class="nav flex-column">
+
+        {% block sidebar_desktop %}
+        {% endblock %}
+
+    </nav>
+
+</aside>
+
+
+<!-- =====================================================
+     MOBILE SIDEBAR
+===================================================== -->
+
+<aside
+    class="app-sidebar d-lg-none"
+    id="mobileSidebar"
+>
+
+    <div class="sidebar-header">
+
+        <span>
+            Menu
+        </span>
+
+    </div>
+
+
+    <nav class="nav flex-column">
+
+        {% block sidebar_mobile %}
+        {% endblock %}
+
+    </nav>
+
+</aside>
+
+
+<div id="mobileOverlay"></div>
+
+
+{% endif %}
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<main class="app-main">
+
+    <div class="container-fluid">
+
+
+        {% block breadcrumb %}
+        {% endblock %}
+
+
+        <!-- FLASH MESSAGES -->
+
+        <div class="flash-messages">
+
+            {% for message in messages %}
+
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+
+                {{ message }}
+
+                <button
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    type="button"
+                ></button>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        {% block content %}
+        {% endblock %}
+
+
+    </div>
+
+
+    <!-- =================================================
+         FORUM FAB
+    ================================================== -->
+
+    <div class="forum-fab-container">
+
+        <a
+            href="{% url 'forum_list' %}"
+            class="forum-fab shadow-lg"
+            title="Discussion Forum"
+        >
+
+            {% if unread_forum_count %}
+
+            <span class="forum-badge">
+                {{ unread_forum_count }}
+            </span>
+
+            {% endif %}
+
+
+            <span class="forum-icon">
+
+                <i class="fa fa-comments"></i>
+
+            </span>
+
+
+            <span class="forum-content">
+
+                <span class="forum-title">
+                    Team Forum
+                </span>
+
+                <small class="forum-subtitle">
+                    Ask • Share • Collaborate
+                </small>
+
+            </span>
+
+        </a>
+
+    </div>
+
+</main>
+
+
+{% include "autosearchtable.html" %}
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+
+/* =========================================================
+   RICE WN SIDEBAR SYSTEM
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const body =
+        document.body;
+
+    const desktopToggle =
+        document.getElementById(
+            "desktopSidebarToggle"
+        );
+
+    const mobileToggle =
+        document.getElementById(
+            "mobileToggle"
+        );
+
+    const mobileSidebar =
+        document.getElementById(
+            "mobileSidebar"
+        );
+
+    const mobileOverlay =
+        document.getElementById(
+            "mobileOverlay"
+        );
+
+
+    /* =====================================================
+       DESKTOP SIDEBAR STATE
+    ===================================================== */
+
+    const savedState =
+        localStorage.getItem(
+            "ricewnSidebarCollapsed"
+        );
+
+
+    if (savedState === "true") {
+
+        body.classList.add(
+            "sidebar-collapsed"
+        );
+
+    }
+
+
+    /* =====================================================
+       DESKTOP TOGGLE
+    ===================================================== */
+
+    if (desktopToggle) {
+
+        desktopToggle.addEventListener(
+            "click",
+            function () {
+
+                body.classList.toggle(
+                    "sidebar-collapsed"
+                );
+
+
+                const collapsed =
+                    body.classList.contains(
+                        "sidebar-collapsed"
+                    );
+
+
+                localStorage.setItem(
+                    "ricewnSidebarCollapsed",
+                    collapsed
+                );
+
+
+                desktopToggle.setAttribute(
+                    "title",
+                    collapsed
+                        ? "Expand sidebar"
+                        : "Collapse sidebar"
+                );
+
+
+                desktopToggle.setAttribute(
+                    "aria-label",
+                    collapsed
+                        ? "Expand sidebar"
+                        : "Collapse sidebar"
+                );
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       MOBILE SIDEBAR
+    ===================================================== */
+
+    if (
+        mobileToggle &&
+        mobileSidebar &&
+        mobileOverlay
+    ) {
+
+        mobileToggle.addEventListener(
+            "click",
+            function () {
+
+                mobileSidebar.classList.toggle(
+                    "show"
+                );
+
+                mobileOverlay.classList.toggle(
+                    "show"
+                );
+
+            }
+        );
+
+
+        mobileOverlay.addEventListener(
+            "click",
+            function () {
+
+                mobileSidebar.classList.remove(
+                    "show"
+                );
+
+                mobileOverlay.classList.remove(
+                    "show"
+                );
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       GENERIC SIDEBAR MODULES
+       
+       This works for ALL sidebar_nav.html files.
+    ===================================================== */
+
+    document
+        .querySelectorAll(
+            ".sidebar-module-toggle"
+        )
+        .forEach(function (toggle) {
+
+
+            toggle.addEventListener(
+                "click",
+                function () {
+
+                    const targetSelector =
+                        toggle.getAttribute(
+                            "data-bs-target"
+                        );
+
+
+                    if (!targetSelector) {
+                        return;
+                    }
+
+
+                    const target =
+                        document.querySelector(
+                            targetSelector
+                        );
+
+
+                    if (!target) {
+                        return;
+                    }
+
+
+                    /*
+                     * Close other modules
+                     * in the same sidebar.
+                     */
+
+                    const sidebar =
+                        toggle.closest(
+                            ".app-sidebar"
+                        );
+
+
+                    if (!sidebar) {
+                        return;
+                    }
+
+
+                    sidebar
+                        .querySelectorAll(
+                            ".sidebar-module .collapse.show"
+                        )
+                        .forEach(function (openMenu) {
+
+                            if (
+                                openMenu !== target
+                            ) {
+
+                                const instance =
+                                    bootstrap.Collapse
+                                        .getInstance(
+                                            openMenu
+                                        );
+
+                                if (instance) {
+
+                                    instance.hide();
+
+                                }
+
+                            }
+
+                        });
+
+                }
+            );
+
+        });
+
+
+    /* =====================================================
+       UPDATE MODULE OPEN CLASS
+    ===================================================== */
+
+    document
+        .querySelectorAll(
+            ".sidebar-module .collapse"
+        )
+        .forEach(function (collapseElement) {
+
+            collapseElement.addEventListener(
+                "shown.bs.collapse",
+                function () {
+
+                    const module =
+                        collapseElement.closest(
+                            ".sidebar-module"
+                        );
+
+                    if (module) {
+
+                        module.classList.add(
+                            "module-open"
+                        );
+
+                    }
+
+                }
+            );
+
+
+            collapseElement.addEventListener(
+                "hidden.bs.collapse",
+                function () {
+
+                    const module =
+                        collapseElement.closest(
+                            ".sidebar-module"
+                        );
+
+                    if (module) {
+
+                        module.classList.remove(
+                            "module-open"
+                        );
+
+                    }
+
+                }
+            );
+
+        });
+
+
+    /* =====================================================
+       AUTOMATICALLY OPEN ACTIVE MODULE
+       
+       If a child link is active, its parent module
+       remains open.
+    ===================================================== */
+
+    document
+        .querySelectorAll(
+            ".sidebar-module"
+        )
+        .forEach(function (module) {
+
+            const activeLink =
+                module.querySelector(
+                    ".sidebar-submenu a.active"
+                );
+
+            const submenu =
+                module.querySelector(
+                    ".sidebar-submenu"
+                );
+
+            const toggle =
+                module.querySelector(
+                    ".sidebar-module-toggle"
+                );
+
+
+            if (
+                activeLink &&
+                submenu &&
+                toggle
+            ) {
+
+                module.classList.add(
+                    "module-open"
+                );
+
+                submenu.classList.add(
+                    "show"
+                );
+
+                toggle.setAttribute(
+                    "aria-expanded",
+                    "true"
+                );
+
+            }
+
+        });
+
+
+    /* =====================================================
+       CLOSE MOBILE SIDEBAR WHEN LINK IS CLICKED
+    ===================================================== */
+
+    if (mobileSidebar) {
+
+        mobileSidebar
+            .querySelectorAll(
+                "a"
+            )
+            .forEach(function (link) {
+
+                link.addEventListener(
+                    "click",
+                    function () {
+
+                        /*
+                         * Don't interfere with submenu
+                         * buttons; these are not links.
+                         */
+
+                        if (
+                            mobileSidebar.classList.contains(
+                                "show"
+                            )
+                        ) {
+
+                            mobileSidebar.classList.remove(
+                                "show"
+                            );
+
+                            if (mobileOverlay) {
+
+                                mobileOverlay.classList.remove(
+                                    "show"
+                                );
+
+                            }
+
+                        }
+
+                    }
+                );
+
+            });
+
+    }
+
+
+});
+
+</script>
+
+
+{% block scripts %}
+{% endblock %}
+
+
+</body>
+</html>

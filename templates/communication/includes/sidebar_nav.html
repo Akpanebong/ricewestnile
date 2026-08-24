@@ -1,0 +1,288 @@
+{% with current_url=request.resolver_match.url_name %}
+
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<a
+    href="{% url 'comm:dashboard' %}"
+    class="sidebar-dashboard
+    {% if current_url == 'dashboard' %}active{% endif %}"
+>
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-house"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Dashboard
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     CONTENT MANAGEMENT
+===================================================== -->
+
+<div class="sidebar-section">
+
+    <span>
+        CONTENT MANAGEMENT
+    </span>
+
+</div>
+
+
+<!-- =====================================================
+     PRESENTATIONS
+===================================================== -->
+
+<div
+    class="sidebar-module
+    {% if current_url == 'presentations' or current_url == 'presentations_add' %}
+        module-open
+    {% endif %}"
+>
+
+    <button
+        class="sidebar-module-toggle"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#communicationPresentationMenu"
+        aria-expanded="{% if current_url == 'presentations' or current_url == 'presentations_add' %}true{% else %}false{% endif %}"
+        aria-controls="communicationPresentationMenu"
+    >
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+
+                <i class="fa-solid fa-file-powerpoint"></i>
+
+            </span>
+
+
+            <span class="sidebar-module-title">
+
+                Presentations
+
+            </span>
+
+        </span>
+
+
+        <i
+            class="fa-solid fa-chevron-right sidebar-module-arrow"
+        ></i>
+
+    </button>
+
+
+    <div
+        class="collapse sidebar-submenu
+        {% if current_url == 'presentations' or current_url == 'presentations_add' %}
+            show
+        {% endif %}"
+        id="communicationPresentationMenu"
+    >
+
+        <a
+            href="{% url 'comm:presentations' %}"
+            class="{% if current_url == 'presentations' %}active{% endif %}"
+        >
+
+            <i class="fa-solid fa-list"></i>
+
+            <span>
+                All Presentations
+            </span>
+
+        </a>
+
+
+        <a
+            href="{% url 'comm:presentations_add' %}"
+            class="{% if current_url == 'presentations_add' %}active{% endif %}"
+        >
+
+            <i class="fa-solid fa-plus"></i>
+
+            <span>
+                Add Presentation
+            </span>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     REPORTS
+===================================================== -->
+
+<div
+    class="sidebar-module
+    {% if current_url == 'reports' or current_url == 'reports_add' %}
+        module-open
+    {% endif %}"
+>
+
+    <button
+        class="sidebar-module-toggle"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#communicationReportMenu"
+        aria-expanded="{% if current_url == 'reports' or current_url == 'reports_add' %}true{% else %}false{% endif %}"
+        aria-controls="communicationReportMenu"
+    >
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+
+                <i class="fa-solid fa-file-lines"></i>
+
+            </span>
+
+
+            <span class="sidebar-module-title">
+
+                Reports
+
+            </span>
+
+        </span>
+
+
+        <i
+            class="fa-solid fa-chevron-right sidebar-module-arrow"
+        ></i>
+
+    </button>
+
+
+    <div
+        class="collapse sidebar-submenu
+        {% if current_url == 'reports' or current_url == 'reports_add' %}
+            show
+        {% endif %}"
+        id="communicationReportMenu"
+    >
+
+        <a
+            href="{% url 'comm:reports' %}"
+            class="{% if current_url == 'reports' %}active{% endif %}"
+        >
+
+            <i class="fa-solid fa-list"></i>
+
+            <span>
+                All Reports
+            </span>
+
+        </a>
+
+
+        <a
+            href="{% url 'comm:reports_add' %}"
+            class="{% if current_url == 'reports_add' %}active{% endif %}"
+        >
+
+            <i class="fa-solid fa-plus"></i>
+
+            <span>
+                Add Report
+            </span>
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     WORKFLOW
+===================================================== -->
+
+<div class="sidebar-section">
+
+    <span>
+        WORKFLOW
+    </span>
+
+</div>
+
+
+<!-- =====================================================
+     REVIEW QUEUE
+===================================================== -->
+
+<a
+    href="{% url 'comm:review_queue' %}"
+    class="sidebar-dashboard
+    {% if current_url == 'review_queue' %}active{% endif %}"
+>
+
+    <span class="sidebar-nav-icon">
+
+        <i class="fa-solid fa-check-double"></i>
+
+    </span>
+
+
+    <span class="sidebar-nav-text">
+
+        Review Queue
+
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     COMMUNICATION
+===================================================== -->
+
+<div class="sidebar-section">
+
+    <span>
+        COMMUNICATION
+    </span>
+
+</div>
+
+
+<!-- =====================================================
+     NOTIFICATIONS
+===================================================== -->
+
+<a
+    href="{% url 'notifications:list' %}"
+    class="sidebar-dashboard
+    {% if request.resolver_match.namespace == 'notifications' %}
+        active
+    {% endif %}"
+>
+
+    <span class="sidebar-nav-icon">
+
+        <i class="fa-solid fa-bell"></i>
+
+    </span>
+
+
+    <span class="sidebar-nav-text">
+
+        Notifications
+
+    </span>
+
+</a>
+
+
+{% endwith %}

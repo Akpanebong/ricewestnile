@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<body style="margin:0; padding:0; background:#f6f8f7; font-family:Arial, sans-serif; color:#1f2933;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f8f7; padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width:640px; width:100%; background:#ffffff; border:1px solid #e5e7eb;">
+          <tr>
+            <td style="padding:20px 24px; border-bottom:3px solid #198754;">
+              <img src="cid:company_logo" alt="RICE West Nile" style="height:48px; display:block; margin-bottom:12px;">
+              <h2 style="margin:0; font-size:20px; color:#198754;">{{ title }}</h2>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px;">
+              <p style="margin-top:0;">Dear {{ recipient_label|default:"Team" }},</p>
+              <p style="white-space:pre-line; line-height:1.55;">{{ message }}</p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0; border-collapse:collapse;">
+                <tr>
+                  <td style="padding:8px 0; color:#6b7280; width:150px;">Vacancy</td>
+                  <td style="padding:8px 0; font-weight:bold;">{{ request_obj.title }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0; color:#6b7280;">Department</td>
+                  <td style="padding:8px 0;">{{ request_obj.department|default:"Not specified" }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 0; color:#6b7280;">Status</td>
+                  <td style="padding:8px 0;">{{ request_obj.get_status_display }}</td>
+                </tr>
+              </table>
+
+              {% if action_url %}
+                <p style="margin:24px 0;">
+                  <a href="{{ action_url }}" style="background:#198754; color:#ffffff; padding:11px 16px; text-decoration:none; display:inline-block;">
+                    Open Related Record
+                  </a>
+                </p>
+              {% endif %}
+
+              <p style="margin-bottom:0; color:#6b7280; font-size:13px;">This is an automated HR recruitment workflow message.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

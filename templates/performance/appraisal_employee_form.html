@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- HEADER -->
+    <div class="bg-white p-3 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h5 class="fw-bold text-success mb-0">
+                <i class="fa fa-user-edit me-2"></i> Self Appraisal
+            </h5>
+            <small class="text-muted">Complete your performance review</small>
+        </div>
+
+        <span class="badge bg-info text-dark">
+            <i class="fa fa-clock me-1"></i> Pending Submission
+        </span>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+            <!-- LEFT COLUMN -->
+            <div class="col-lg-6">
+
+                <!-- BASIC INFO -->
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+
+                        <h6 class="fw-bold text-primary mb-3">
+                            <i class="fa fa-id-badge me-2"></i> Basic Information
+                        </h6>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fa fa-map-marker-alt me-1 text-muted"></i> Duty Station
+                            </label>
+                            <input type="text" name="duty_station" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fa fa-calendar me-1 text-muted"></i> Years in Organization
+                            </label>
+                            <input type="number" name="years_in_org" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fa fa-calendar-alt me-1 text-muted"></i> Year of Appraisal
+                            </label>
+                            <input type="number" name="year" class="form-control" required>
+                        </div>
+
+                    </div>
+
+
+                <!-- STAFF INPUT -->
+                    <div class="card-body">
+
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="fa fa-comment-dots me-2"></i> Staff Input
+                        </h6>
+
+                        <div class="mb-3">
+                            <label>
+                                <i class="fa fa-star me-1 text-warning"></i> Significant Event
+                            </label>
+                            <textarea name="significant_event" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>
+                                <i class="fa fa-lightbulb me-1 text-info"></i> Staff Opinion
+                            </label>
+                            <textarea name="staff_opinion" class="form-control" rows="2"></textarea>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="col-lg-6">
+
+
+                <!-- PERFORMANCE REVIEW -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+
+                        <h6 class="fw-bold text-success mb-3">
+                            <i class="fa fa-chart-line me-2"></i> Performance Review
+                        </h6>
+
+                        <div class="mb-3">
+                            <label>
+                                <i class="fa fa-thumbs-up me-1 text-success"></i> Strengths
+                            </label>
+                            <textarea name="strengths" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>
+                                <i class="fa fa-exclamation-triangle me-1 text-danger"></i> Weaknesses
+                            </label>
+                            <textarea name="weaknesses" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>
+                                <i class="fa fa-graduation-cap me-1 text-primary"></i> Capacity Gaps
+                            </label>
+                            <textarea name="capacity_gaps" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Upload Completed Appraisal (Excel)
+                            </label>
+                            <input type="file" name="filled_appraisal" class="form-control" required>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ACTION BAR -->
+        <div class="bg-white p-3 mt-4 rounded shadow-sm d-flex justify-content-between align-items-center">
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fa fa-arrow-left me-1"></i> Cancel
+            </a>
+
+            <button type="submit" class="btn btn-success px-4">
+                <i class="fa fa-paper-plane me-1"></i> Submit Appraisal
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load group_tags %}
+{% block title %}Approval Confirmation{% endblock %}
+
+{% block content %}
+<main class="ttr-wrapper d-flex align-items-center justify-content-center" style="min-height:80vh;">
+    <div class="container d-flex justify-content-center">
+        <div class="col-md-6">
+            <div class="widget-box text-center p-4 shadow-lg rounded" style="background:#f8fdf8;">
+
+                <h2 class="text-success mb-4">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    {% if req.status == 'Published' %}
+                    {{req.title|truncatechars:20}} has been published
+                    {% elif req.status == 'Rejected' %}
+                    {{req.title|truncatechars:20}} has been Rejected
+                    {% else %}
+                    Approve {{req.title|truncatechars:20}}
+                    {% endif %}
+                </h2>
+                
+                        {% if user|has_group:"ED" and not req.ed_approved %}
+
+                <p class="mb-4">
+                    Are you sure you want to approve <strong>{{ req.title }}</strong>?
+                </p>
+                {% endif %}
+
+                 <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-light">
+                    <tr><th>Title</th><td>{{req.title}}</td></tr>
+                    <tr><th>Department</th><td>{{req.department}}</td></tr>
+                    <tr><th>Justification</th><td>{{req.justification}}</td></tr>
+                    <tr>
+                        <th>Attachment</th>
+                        <td>
+                            {% if req.attach_file %}
+                                <a class="btn btn-sm btn-outline-primary" href="{{ req.attach_file.url }}" download>
+                                    <i class="fa fa-download me-1"></i> Download
+                                </a>
+                            {% else %}
+                                <span class="text-muted">None</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr><th>Requested by</th><td>{{req.requested_by}}</td></tr>
+                    <tr><th>Requested on</th><td>{{req.created_at}}</td></tr>
+                </thead>
+            </table>
+                 </div>
+
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        {% if user|has_group:"ED" and not req.ed_approved and req.hr_reviewed %}                         <a href="{% url 'vacancy:ed_approve_confirm' req.slug %}" class="btn btn-success">
+                            <i class="fa fa-thumbs-up"></i> Yes, Approve
+                        </a>
+                        {% endif %}
+                        {% if user|has_group:"HR" and req.ed_approved %}
+                        {% if req.status == 'Published' %}
+                            <!-- Disabled button after HR approval -->
+                            <button class="btn btn-outline-secondary btn-sm" disabled
+                                    title="Already approved by HR">
+                                <i class="ti-check"></i> Published
+                            </button>
+                        {% else %}
+                        <a href="{% url 'vacancy:publish_job' req.pk req.slug %}" class="btn btn-success">
+                            <i class="fa fa-thumbs-up"></i> Publish
+                        </a>
+                        {% endif %}
+                        {% endif %}
+
+                        <a href="{% url 'vacancy:recruitment_request_list' %}" class="btn btn-secondary">
+                            <i class="fa fa-arrow-left"></i> Go Back
+                        </a>
+
+
+                        <a href="{% url 'vacancy:trash_recruitment_request' req.pk req.slug %}" class="btn btn-danger">
+                            <i class="fa fa-trash"></i> Trash
+                        </a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

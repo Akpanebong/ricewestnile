@@ -1,0 +1,38 @@
+{% extends "garcis/base.html" %}
+{% load form_tags %}
+{% block content %}
+
+<div class="container">
+
+<h4 class="mb-3">
+    {{ view.object|yesno:"Update Metric,Create Metric" }}
+</h4>
+
+<form method="post" class="card p-4 shadow-sm">
+    {% csrf_token %}
+
+    <div class="row">
+        {% for field in form %}
+        {% if field.name != 'created_by' %}
+        <div class="col-md-4 mb-3">
+            <label>{{ field.label }}</label>
+            {{ field|add_class:"form-control form-control-lg" }}
+            <small class="text-danger">{{ field.errors }}</small>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+
+
+    <div class="mt-3">
+   <button class="btn btn-success">Save</button>
+
+    <a href="{% url 'program_metric_list' %}" class="btn btn-secondary">Cancel</a>
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}

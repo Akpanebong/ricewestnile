@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block header_home_url %}{% url 'comm:dashboard' %}{% endblock %}
+{% block system_name %}Communication Management{% endblock %}
+{% block system_accent %}#7c3aed{% endblock %}
+{% block sidebar_desktop %}
+{% include "communication/includes/sidebar_nav.html" %}
+{% endblock %}
+{% block sidebar_mobile %}
+{% include "communication/includes/sidebar_nav.html" %}
+{% endblock %}

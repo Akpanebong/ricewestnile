@@ -1,0 +1,55 @@
+{% extends "hr/base.html" %}
+{% block title %}Device Management{% endblock %}
+
+{% block content %}
+<main class="ttr-wrapper">
+  <div class="db-breadcrumb">
+    <h4 class="breadcrumb-title">Device Management</h4>
+  </div>
+    {% include 'message.html' %}
+
+  <div class="widget-box">
+    <div class="wc-title bg-success text-white p-3">
+      <h4>Registered Devices</h4>
+    </div>
+    <div class="widget-inner">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Staff</th>
+            <th>Device ID</th>
+            <th>Status</th>
+            <th>Registered At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in devices %}
+          <tr>
+            <td>{{ d.staff.user.get_full_name }}</td>
+            <td>{{ d.device_id }}</td>
+            <td>
+              {% if d.is_approved %}
+                <span class="badge badge-success">Approved</span>
+              {% else %}
+                <span class="badge badge-warning">Pending</span>
+              {% endif %}
+            </td>
+            <td>{{ d.registered_at|date:"M d, Y H:i" }}</td>
+            <td>
+              {% if not d.is_approved %}
+                <a href="{% url 'approve_device' d.id %}" class="btn btn-success btn-sm">Approve</a>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center">No devices registered yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}

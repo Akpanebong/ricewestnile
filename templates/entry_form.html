@@ -1,0 +1,1399 @@
+{% extends 'form_base.html' %}
+{% load static %}
+{% load form_tags %}
+
+{% block title %}
+Data Entry | {{ indicator.code }}
+{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       M&E DATA ENTRY FORM
+       Enterprise Data Capture Interface
+       ========================================================= */
+
+    .data-entry-form {
+        --de-primary: #198754;
+        --de-primary-dark: #146c43;
+        --de-primary-soft: #eaf7f0;
+        --de-border: #dfe6e2;
+        --de-text: #27352d;
+        --de-muted: #727d77;
+        --de-bg: #f7f9f8;
+    }
+
+    /* =========================================================
+       PAGE HEADER
+       ========================================================= */
+
+    .def-hero {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f0faf5 100%
+        );
+        border: 1px solid var(--de-border);
+        border-radius: 16px;
+        padding: 21px 23px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .035);
+    }
+
+    .def-icon {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: var(--de-primary-soft);
+        color: var(--de-primary);
+        font-size: 20px;
+    }
+
+    .def-kicker {
+        color: #7c8781;
+        font-size: .68rem;
+        font-weight: 650;
+        margin-bottom: 5px;
+    }
+
+    .def-title {
+        color: #203028;
+        font-size: 1.3rem;
+        font-weight: 750;
+        margin: 0 0 4px;
+    }
+
+    .def-subtitle {
+        color: var(--de-muted);
+        font-size: .75rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .def-indicator-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 11px;
+        border-radius: 8px;
+        background: var(--de-primary-soft);
+        color: var(--de-primary-dark);
+        border: 1px solid #d6eee0;
+        font-size: .68rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    /* =========================================================
+       LAYOUT
+       ========================================================= */
+
+    .def-main-card,
+    .def-sidebar-card {
+        background: #fff;
+        border: 1px solid var(--de-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .035);
+    }
+
+    .def-main-header {
+        padding: 17px 21px;
+        border-bottom: 1px solid var(--de-border);
+    }
+
+    .def-main-header h2 {
+        color: #303d36;
+        font-size: .94rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .def-main-header p {
+        color: #8a938e;
+        font-size: .68rem;
+        margin: 3px 0 0;
+    }
+
+    .def-body {
+        padding: 23px;
+    }
+
+    /* =========================================================
+       SECTION HEADERS
+       ========================================================= */
+
+    .def-section {
+        margin-bottom: 27px;
+    }
+
+    .def-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .def-section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 10px;
+        margin-bottom: 17px;
+        border-bottom: 1px solid #edf0ee;
+    }
+
+    .def-section-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: var(--de-primary-soft);
+        color: var(--de-primary);
+        font-size: .72rem;
+    }
+
+    .def-section-title {
+        color: #35423a;
+        font-size: .82rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .def-section-description {
+        color: #89938d;
+        font-size: .66rem;
+        margin: 2px 0 0;
+    }
+
+    /* =========================================================
+       FORM FIELDS
+       ========================================================= */
+
+    .def-field {
+        margin-bottom: 17px;
+    }
+
+    .def-field label {
+        display: block;
+        color: #4b5851;
+        font-size: .72rem;
+        font-weight: 650;
+        margin-bottom: 6px;
+    }
+
+    .def-field input,
+    .def-field select,
+    .def-field textarea {
+        width: 100%;
+        border: 1px solid #dce3df;
+        border-radius: 8px;
+        background: #fff;
+        color: #344139;
+        font-size: .76rem;
+        min-height: 39px;
+        transition: border-color .15s ease,
+                    box-shadow .15s ease;
+    }
+
+    .def-field textarea {
+        min-height: 105px;
+        resize: vertical;
+    }
+
+    .def-field input:focus,
+    .def-field select:focus,
+    .def-field textarea:focus {
+        border-color: #82c5a0;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+        outline: none;
+    }
+
+    .def-field small.text-danger {
+        display: block;
+        margin-top: 5px;
+        font-size: .67rem;
+    }
+
+    .def-help {
+        color: #929b96;
+        font-size: .63rem;
+        margin-top: 5px;
+    }
+
+    /* =========================================================
+       PWD BREAKDOWN
+       ========================================================= */
+
+    .def-pwd-card {
+        background: #f8faf9;
+        border: 1px solid #dfe8e3;
+        border-radius: 12px;
+        padding: 17px;
+    }
+
+    .def-pwd-heading {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 16px;
+    }
+
+    .def-pwd-icon {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #fff;
+        color: var(--de-primary);
+        border: 1px solid #dfe8e3;
+        font-size: .75rem;
+    }
+
+    .def-pwd-title {
+        color: #3b4941;
+        font-size: .78rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .def-pwd-subtitle {
+        color: #8a938e;
+        font-size: .63rem;
+        margin: 2px 0 0;
+    }
+
+    /* =========================================================
+       ERROR SUMMARY
+       ========================================================= */
+
+    .def-error-summary {
+        border: 1px solid #f1c4c4;
+        border-radius: 10px;
+        background: #fff5f5;
+        padding: 13px 15px;
+        margin-bottom: 22px;
+        color: #842029;
+        font-size: .74rem;
+    }
+
+    /* =========================================================
+       ACTION FOOTER
+       ========================================================= */
+
+    .def-footer {
+        padding: 16px 23px;
+        background: #fafcfb;
+        border-top: 1px solid var(--de-border);
+    }
+
+    .def-btn {
+        min-height: 39px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 8px 17px;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 650;
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+    .def-btn-cancel {
+        color: #66716b;
+        background: #fff;
+        border: 1px solid #d8dfdb;
+    }
+
+    .def-btn-cancel:hover {
+        background: #f4f6f5;
+        color: #404a45;
+    }
+
+    .def-btn-save {
+        color: #fff;
+        background: var(--de-primary);
+        border: 1px solid var(--de-primary);
+        box-shadow: 0 3px 9px rgba(25, 135, 84, .15);
+    }
+
+    .def-btn-save:hover {
+        color: #fff;
+        background: var(--de-primary-dark);
+        border-color: var(--de-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       SIDEBAR
+       ========================================================= */
+
+    .def-sidebar-header {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--de-border);
+    }
+
+    .def-sidebar-header h3 {
+        color: #35423a;
+        font-size: .83rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .def-sidebar-body {
+        padding: 17px;
+    }
+
+    .def-indicator-context {
+        background: var(--de-primary-soft);
+        border: 1px solid #d9eee1;
+        border-radius: 10px;
+        padding: 13px;
+        margin-bottom: 18px;
+    }
+
+    .def-context-code {
+        display: inline-block;
+        color: var(--de-primary-dark);
+        background: #fff;
+        border: 1px solid #d6e9dd;
+        border-radius: 5px;
+        padding: 4px 7px;
+        font-size: .65rem;
+        font-weight: 750;
+        margin-bottom: 7px;
+    }
+
+    .def-context-name {
+        color: #35423b;
+        font-size: .76rem;
+        font-weight: 650;
+        line-height: 1.45;
+    }
+
+    .def-tip {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding-bottom: 11px;
+        margin-bottom: 11px;
+        border-bottom: 1px solid #edf0ee;
+    }
+
+    .def-tip:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: 0;
+    }
+
+    .def-tip i {
+        color: var(--de-primary);
+        font-size: .7rem;
+        margin-top: 3px;
+    }
+
+    .def-tip span {
+        color: #727d77;
+        font-size: .69rem;
+        line-height: 1.5;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 991.98px) {
+
+        .def-sidebar {
+            margin-top: 20px;
+        }
+
+    }
+
+    @media (max-width: 767.98px) {
+
+        .def-hero {
+            padding: 17px;
+            border-radius: 13px;
+        }
+
+        .def-title {
+            font-size: 1.08rem;
+        }
+
+        .def-body {
+            padding: 17px;
+        }
+
+        .def-main-card,
+        .def-sidebar-card {
+            border-radius: 13px;
+        }
+
+        .def-footer {
+            padding: 14px 17px;
+        }
+
+        .def-actions {
+            flex-direction: column-reverse;
+            gap: 9px;
+        }
+
+        .def-actions .def-btn {
+            width: 100%;
+        }
+
+        .def-indicator-badge {
+            margin-top: 12px;
+        }
+
+    }
+</style>
+
+<div class="container-fluid data-entry-form">
+
+
+<!-- =====================================================
+     PAGE HEADER
+====================================================== -->
+
+<div class="def-hero">
+
+    <div class="d-flex flex-column flex-md-row
+                align-items-start align-items-md-center
+                justify-content-between">
+
+        <div class="d-flex align-items-center">
+
+            <div class="def-icon d-none d-sm-flex me-3">
+
+                <i class="fa fa-database"></i>
+
+            </div>
+
+            <div>
+
+                <div class="def-kicker">
+                    <i class="fa fa-home me-1"></i>
+                    M&E / Data Entry
+                </div>
+
+                <h1 class="def-title">
+                    Indicator Data Entry
+                </h1>
+
+                <p class="def-subtitle">
+                    Capture, disaggregate and submit monitoring
+                    data for the selected indicator.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div>
+
+            <span class="def-indicator-badge">
+
+                <i class="fa fa-bar-chart"></i>
+
+                {{ indicator.code }}
+
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ERROR MESSAGES
+====================================================== -->
+
+{% include "message.html" %}
+
+{% if form.non_field_errors %}
+
+    <div class="def-error-summary">
+
+        <div class="fw-semibold mb-1">
+
+            <i class="fa fa-exclamation-circle me-1"></i>
+
+            Please review the submission
+
+        </div>
+
+        {{ form.non_field_errors }}
+
+    </div>
+
+{% endif %}
+
+
+<!-- =====================================================
+     MAIN CONTENT
+====================================================== -->
+
+<div class="row g-4 align-items-start">
+
+
+    <!-- =================================================
+         FORM
+    ================================================== -->
+
+    <div class="col-lg-8 col-xl-9">
+
+        <div class="def-main-card">
+
+            <div class="def-main-header">
+
+                <h2>
+                    <i class="fa fa-edit text-success me-2"></i>
+                    Submission Details
+                </h2>
+
+                <p>
+                    Complete the relevant fields below.
+                    Required fields are validated before submission.
+                </p>
+
+            </div>
+
+
+            <form method="post" novalidate>
+
+                {% csrf_token %}
+
+                <input type="hidden"
+                       name="indicator"
+                       value="{{ indicator.id }}">
+
+
+                <div class="def-body">
+
+
+                    <!-- =================================
+                         01. SUBMISSION CONTEXT
+                    ================================== -->
+
+                    <section class="def-section">
+
+                        <div class="def-section-header">
+
+                            <div class="def-section-icon">
+                                <i class="fa fa-map-marker"></i>
+                            </div>
+
+                            <div>
+
+                                <h3 class="def-section-title">
+                                    Submission Context
+                                </h3>
+
+                                <p class="def-section-description">
+                                    Identify where and when the activity
+                                    or result was recorded.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="row g-3">
+
+
+                            <div class="col-md-6">
+
+                                <div class="def-field">
+
+                                    {{ form.project.label_tag }}
+
+                                    {{ form.project|add_class:"form-control" }}
+
+                                    {% for error in form.project.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <div class="def-field">
+
+                                    {{ form.location.label_tag }}
+
+                                    {{ form.location|add_class:"form-control" }}
+
+                                    {% for error in form.location.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-12">
+
+                                <div class="def-field">
+
+                                    {{ form.program_area.label_tag }}
+
+                                    {{ form.program_area|add_class:"form-control" }}
+
+                                    {% for error in form.program_area.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <div class="def-field">
+
+                                    {{ form.year.label_tag }}
+
+                                    {{ form.year|add_class:"form-control" }}
+
+                                    {% for error in form.year.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <div class="def-field">
+
+                                    {{ form.month.label_tag }}
+
+                                    {{ form.month|add_class:"form-control" }}
+
+                                    {% for error in form.month.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <div class="def-field">
+
+                                    {{ form.sex.label_tag }}
+
+                                    {{ form.sex|add_class:"form-control" }}
+
+                                    {% for error in form.sex.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <div class="def-field">
+
+                                    {{ form.status.label_tag }}
+
+                                    {{ form.status|add_class:"form-control" }}
+
+                                    {% for error in form.status.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <div class="def-field">
+
+                                    {{ form.pwd.label_tag }}
+
+                                    {{ form.pwd|add_class:"form-control" }}
+
+                                    {% for error in form.pwd.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =================================
+                         02. PWD DISAGGREGATION
+                    ================================== -->
+
+                    <section class="def-section">
+
+                        <div class="def-pwd-card">
+
+                            <div class="def-pwd-heading">
+
+                                <div class="def-pwd-icon">
+
+                                    <i class="fa fa-wheelchair"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h3 class="def-pwd-title">
+                                        PWD Breakdown
+                                    </h3>
+
+                                    <p class="def-pwd-subtitle">
+                                        Disaggregate persons with disabilities
+                                        by nationality and sex.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="row g-3">
+
+
+                                <div class="col-md-4">
+
+                                    <div class="def-field mb-0">
+
+                                        {{ form.pwd_nationals.label_tag }}
+
+                                        {{ form.pwd_nationals|add_class:"form-control" }}
+
+                                        {% for error in form.pwd_nationals.errors %}
+                                            <small class="text-danger">
+                                                {{ error }}
+                                            </small>
+                                        {% endfor %}
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <div class="def-field mb-0">
+
+                                        {{ form.pwd_refugees.label_tag }}
+
+                                        {{ form.pwd_refugees|add_class:"form-control" }}
+
+                                        {% for error in form.pwd_refugees.errors %}
+                                            <small class="text-danger">
+                                                {{ error }}
+                                            </small>
+                                        {% endfor %}
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <div class="def-field mb-0">
+
+                                        {{ form.pwd_national_males.label_tag }}
+
+                                        {{ form.pwd_national_males|add_class:"form-control" }}
+
+                                        {% for error in form.pwd_national_males.errors %}
+                                            <small class="text-danger">
+                                                {{ error }}
+                                            </small>
+                                        {% endfor %}
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <div class="def-field mb-0">
+
+                                        {{ form.pwd_refugee_males.label_tag }}
+
+                                        {{ form.pwd_refugee_males|add_class:"form-control" }}
+
+                                        {% for error in form.pwd_refugee_males.errors %}
+                                            <small class="text-danger">
+                                                {{ error }}
+                                            </small>
+                                        {% endfor %}
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <div class="def-field mb-0">
+
+                                        {{ form.pwd_national_females.label_tag }}
+
+                                        {{ form.pwd_national_females|add_class:"form-control" }}
+
+                                        {% for error in form.pwd_national_females.errors %}
+                                            <small class="text-danger">
+                                                {{ error }}
+                                            </small>
+                                        {% endfor %}
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-4">
+
+                                    <div class="def-field mb-0">
+
+                                        {{ form.pwd_refugee_females.label_tag }}
+
+                                        {{ form.pwd_refugee_females|add_class:"form-control" }}
+
+                                        {% for error in form.pwd_refugee_females.errors %}
+                                            <small class="text-danger">
+                                                {{ error }}
+                                            </small>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =================================
+                         03. ENTERPRISE & GROUP
+                    ================================== -->
+
+                    <section class="def-section">
+
+                        <div class="def-section-header">
+
+                            <div class="def-section-icon">
+                                <i class="fa fa-briefcase"></i>
+                            </div>
+
+                            <div>
+
+                                <h3 class="def-section-title">
+                                    Enterprise & Group Information
+                                </h3>
+
+                                <p class="def-section-description">
+                                    Capture enterprise and group-level
+                                    reach where applicable.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="row g-3">
+
+
+                            <div class="col-md-6">
+
+                                <div class="def-field">
+
+                                    {{ form.enterprise_type.label_tag }}
+
+                                    {{ form.enterprise_type|add_class:"form-control" }}
+
+                                    {% for error in form.enterprise_type.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <div class="def-field">
+
+                                    {{ form.no_of_enterprise.label_tag }}
+
+                                    {{ form.no_of_enterprise|add_class:"form-control" }}
+
+                                    {% for error in form.no_of_enterprise.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <div class="def-field">
+
+                                    {{ form.no_of_group_reached.label_tag }}
+
+                                    {{ form.no_of_group_reached|add_class:"form-control" }}
+
+                                    {% for error in form.no_of_group_reached.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <div class="def-field">
+
+                                    {{ form.no_of_group_members.label_tag }}
+
+                                    {{ form.no_of_group_members|add_class:"form-control" }}
+
+                                    {% for error in form.no_of_group_members.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =================================
+                         04. INDICATOR VALUE
+                    ================================== -->
+
+                    <section class="def-section">
+
+                        <div class="def-section-header">
+
+                            <div class="def-section-icon">
+                                <i class="fa fa-bar-chart"></i>
+                            </div>
+
+                            <div>
+
+                                <h3 class="def-section-title">
+                                    Indicator Measurement
+                                </h3>
+
+                                <p class="def-section-description">
+                                    Enter the quantitative result
+                                    and supporting financial information.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="row g-3">
+
+
+                            <div class="col-md-3">
+
+                                <div class="def-field">
+
+                                    {{ form.no_male.label_tag }}
+
+                                    {{ form.no_male|add_class:"form-control" }}
+
+                                    {% for error in form.no_male.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <div class="def-field">
+
+                                    {{ form.no_female.label_tag }}
+
+                                    {{ form.no_female|add_class:"form-control" }}
+
+                                    {% for error in form.no_female.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <div class="def-field">
+
+                                    {{ form.value.label_tag }}
+
+                                    {{ form.value|add_class:"form-control" }}
+
+                                    {% for error in form.value.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                    <div class="def-help">
+                                        Enter the reported indicator value.
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <div class="def-field">
+
+                                    {{ form.donor.label_tag }}
+
+                                    {{ form.donor|add_class:"form-control" }}
+
+                                    {% for error in form.donor.errors %}
+                                        <small class="text-danger">
+                                            {{ error }}
+                                        </small>
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =================================
+                         05. NOTES
+                    ================================== -->
+
+                    <section class="def-section">
+
+                        <div class="def-section-header">
+
+                            <div class="def-section-icon">
+                                <i class="fa fa-sticky-note"></i>
+                            </div>
+
+                            <div>
+
+                                <h3 class="def-section-title">
+                                    Notes & Remarks
+                                </h3>
+
+                                <p class="def-section-description">
+                                    Add relevant explanations,
+                                    assumptions or reporting notes.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="def-field mb-0">
+
+                            {{ form.notes.label_tag }}
+
+                            {{ form.notes|add_class:"form-control" }}
+
+                            {% for error in form.notes.errors %}
+                                <small class="text-danger">
+                                    {{ error }}
+                                </small>
+                            {% endfor %}
+
+                        </div>
+
+                    </section>
+
+
+                </div>
+
+
+                <!-- =====================================
+                     ACTION FOOTER
+                ====================================== -->
+
+                <div class="def-footer">
+
+                    <div class="def-actions
+                                d-flex justify-content-between
+                                align-items-center">
+
+                        <a href="javascript:history.back()"
+                           class="def-btn def-btn-cancel">
+
+                            <i class="fa fa-arrow-left"></i>
+
+                            Cancel
+
+                        </a>
+
+
+                        <button type="submit"
+                                class="def-btn def-btn-save">
+
+                            <i class="fa fa-save"></i>
+
+                            Save Data Entry
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SIDEBAR
+    ================================================== -->
+
+    <div class="col-lg-4 col-xl-3">
+
+        <div class="def-sidebar-card def-sidebar">
+
+            <div class="def-sidebar-header">
+
+                <h3>
+
+                    <i class="fa fa-info-circle text-success me-2"></i>
+
+                    Indicator Context
+
+                </h3>
+
+            </div>
+
+
+            <div class="def-sidebar-body">
+
+
+                <!-- Indicator -->
+
+                <div class="def-indicator-context">
+
+                    <div class="def-context-code">
+
+                        {{ indicator.code }}
+
+                    </div>
+
+                    <div class="def-context-name">
+
+                        {{ indicator.name }}
+
+                    </div>
+
+                </div>
+
+
+                <!-- Guidance -->
+
+                <div class="mb-3">
+
+                    <div class="small fw-bold text-dark mb-2">
+
+                        Data Quality Checklist
+
+                    </div>
+
+                </div>
+
+
+                <div class="def-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Confirm that the project and location
+                        correspond to the reporting period.
+                    </span>
+
+                </div>
+
+
+                <div class="def-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Verify male and female figures before
+                        submitting the record.
+                    </span>
+
+                </div>
+
+
+                <div class="def-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Ensure PWD totals and their sex
+                        breakdown are consistent.
+                    </span>
+
+                </div>
+
+
+                <div class="def-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Use the notes field to explain unusual
+                        values or reporting assumptions.
+                    </span>
+
+                </div>
+
+
+                <div class="def-tip">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Review the complete record before
+                        clicking Save Data Entry.
+                    </span>
+
+                </div>
+
+
+                <!-- Confidentiality -->
+
+                <div class="mt-3 p-3 rounded-3 bg-light">
+
+                    <div class="d-flex align-items-start">
+
+                        <i class="fa fa-shield text-success me-2 mt-1"></i>
+
+                        <div>
+
+                            <div class="fw-semibold small mb-1">
+                                Data Quality
+                            </div>
+
+                            <div class="text-muted"
+                                 style="font-size:.66rem; line-height:1.5;">
+
+                                Accurate and consistent data entry
+                                improves the reliability of programme
+                                performance reporting and analysis.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+{% endblock %}

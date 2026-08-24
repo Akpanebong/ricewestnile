@@ -1,0 +1,35 @@
+{% extends "garcis/base.html" %}
+{% block title %}External Audit{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card p-3"><small>External Engagements</small><h3>{{ engagement_count }}</h3></div></div>
+        <div class="col-md-4"><div class="card p-3"><small>Open Findings</small><h3>{{ open_external_findings }}</h3></div></div>
+        <div class="col-md-4"><div class="card p-3"><small>Mapped References</small><h3>{{ mapped_findings }}</h3></div></div>
+    </div>
+    <div class="quick-links mb-3">
+        <a href="{% url 'external_audit_engagement_list' %}" class="btn btn-dark">View Engagements</a>
+        <a href="{% url 'external_audit_finding_list' %}" class="btn btn-outline-dark">View Findings</a>
+        <a href="{% url 'audit_evidence_list' %}" class="btn btn-outline-secondary">Evidence Repository</a>
+    </div>
+    <div class="card p-3">
+        <h5>Recent External Audit Engagements</h5>
+        <table class="table">
+            <thead><tr><th>Title</th><th>Audit Firm</th><th>Status</th><th>Start</th><th>End</th></tr></thead>
+            <tbody>
+                {% for engagement in engagements %}
+                <tr>
+                    <td>{{ engagement.title }}</td>
+                    <td>{{ engagement.audit_firm }}</td>
+                    <td>{{ engagement.get_status_display }}</td>
+                    <td>{{ engagement.start_date }}</td>
+                    <td>{{ engagement.end_date|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-muted text-center">No external audit engagements scheduled.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

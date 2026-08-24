@@ -1,0 +1,46 @@
+
+{% load form_tags %}
+
+
+{% if form.non_field_errors %}
+    <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="row">
+{% for field in form %}
+    <div class="col-md-6">
+        {% if field.field.widget.input_type == "checkbox" %}
+            <div class="form-check mt-4">
+                {{ field }}
+                <label class="form-check-label" for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    <p>{{field.help_text|safe}}</p>
+                </label>
+                {% if field.errors %}
+                    <div class="text-danger small">
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+         <div class="form-check mt-4">
+        {{ field.label }}
+            <label class="form-label" for="{{ field.id_for_label }}">
+                {{ field.labels }}
+            </label>
+            {{ field|add_class:"form-control" }}
+        <p>{{field.help_text|safe}}</p>
+            {% if field.errors %}
+                <div class="text-danger small">
+                    {{ field.errors }}
+                </div>
+            {% endif %}
+         </div>
+        {% endif %}
+    </div>
+{% endfor %}
+</div>

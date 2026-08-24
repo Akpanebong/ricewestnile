@@ -1,0 +1,103 @@
+<div class="modal-header border-0 bg-success text-white">
+    <div>
+        <h5 class="modal-title fw-bold">
+            <i class="fa fa-graduation-cap me-2"></i>
+            {{ training.title }}
+        </h5>
+        <small class="opacity-75">Training Program Overview</small>
+    </div>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body p-4">
+
+    <!-- KPI Row -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="fa fa-users fa-2x text-primary mb-2"></i>
+                    <div class="fw-semibold">Participants</div>
+                    <h4 class="mb-0">{{ training.participants.count }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="fa fa-calendar fa-2x text-success mb-2"></i>
+                    <div class="fw-semibold">Start Date</div>
+                    <div>{{ training.start_date|date:"M d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body">
+                    <i class="fa fa-calendar-check fa-2x text-danger mb-2"></i>
+                    <div class="fw-semibold">End Date</div>
+                    <div>{{ training.end_date|date:"M d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="mb-4">
+        <h6 class="fw-bold text-success">Description</h6>
+        <p class="text-muted">
+            {{ training.description|default:"No description provided." }}
+        </p>
+    </div>
+
+    <h6 class="fw-bold text-success mb-3">
+        Participants ({{ training.participants.count }})
+    </h6>
+
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Department</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in training.participants.all %}
+                <tr>
+                    <td>{{ p.get_full_name|default:p.username }}</td>
+                    <td>{{ p.department }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="text-muted text-center">
+                        No participants assigned.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="modal-footer bg-light border-0">
+    <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+        Close
+    </button>
+
+    {% if request.user.is_superuser %}
+    <a href="{% url 'training_edit' training.pk training.slug %}"
+       class="btn btn-success btn-sm">
+        <i class="fa fa-pencil"></i> Edit Training
+    </a>
+
+    <a href="{% url 'trash_training' training.pk training.slug %}"
+       class="btn btn-danger btn-sm">
+        <i class="fa fa-trash"></i> Trash Training
+    </a>
+    {% endif %}
+</div>

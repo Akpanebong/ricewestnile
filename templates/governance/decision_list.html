@@ -1,0 +1,39 @@
+{% extends "garcis/base.html" %}
+{% block title %}Decision Tracking{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h3 class="mb-1">Decision Tracking</h3>
+            <p class="text-muted mb-0">Board resolutions, vote summaries, and implementation status.</p>
+
+        </div>
+        <div class="quick-links">
+            <a href="{% url 'decision_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i> Create Decision</a>
+            <a href="{% url 'governance_dashboard' %}" class="btn btn-outline-secondary">Governance Hub</a>
+            <a href="{% url 'policy_list' %}" class="btn btn-outline-dark">Policies</a>
+        </div>
+    </div>
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Title</th><th>Meeting Date</th><th>Vote Summary</th><th>Status</th><th>Version</th></tr></thead>
+                <tbody>
+                    {% for decision in decisions %}
+                    <tr>
+                        <td><a style="text-decoration:none" href="{% url 'decision_detail' decision.id %}">
+                            {{ decision.title }}</a></td>
+                        <td>{{ decision.meeting_date }}</td>
+                        <td>{{ decision.vote_summary|default:"-" }}</td>
+                        <td>{{ decision.get_status_display }}</td>
+                        <td>{{ decision.version }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-muted text-center">No governance decisions logged.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

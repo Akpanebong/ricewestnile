@@ -1,0 +1,122 @@
+{% extends "hr/base.html" %}
+{% load dict_extras %}
+{% block title %}Update Exit Flow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Update Exit Flow</h5>
+  </div>
+  <div class="card-body">
+    <div class="mb-3">
+      <div><strong>Staff:</strong> {{ staff.get_full_name|default:staff.username }}</div>
+      <div><strong>Department:</strong> {{ staff.department.name|default:"-" }}</div>
+    </div>
+
+    {% if is_self_exit_staff %}
+      <div class="alert alert-info">
+        You can only submit your clearance form. Other steps are view-only.
+      </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ formset.management_form }}
+
+      <div class="table-responsive mb-3">
+        <table class="table table-bordered align-middle">
+          <thead>
+            <tr>
+              <th style="width: 22%">Step</th>
+              <th style="width: 14%">Status</th>
+              <th>Notes</th>
+              <th style="width: 22%">Attachment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for form in formset %}
+              <tr>
+                <td>
+                  {{ step_labels|get_item:form.instance.step_type|default:form.instance.step_type }}
+                  {{ form.id }}
+                </td>
+                <td>
+                  {% if is_self_exit_staff %}
+                    <span class="badge bg-secondary">Auto</span>
+                    {{ form.status.as_hidden }}
+                  {% else %}
+                    {{ form.status }}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if is_self_exit_staff %}
+                    {{ form.notes }}
+                  {% else %}
+                    {{ form.notes }}
+                  {% endif %}
+                  {% if form.non_field_errors %}<div class="text-danger">{{ form.non_field_errors }}</div>{% endif %}
+                </td>
+                <td>
+                  {% if form.instance.attachment %}
+                    <div class="mb-1"><a href="{{ form.instance.attachment.url }}">Download current</a></div>
+                  {% endif %}
+                  {{ form.attachment }}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-muted">No editable steps.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-success" type="submit">
+          {% if is_self_exit_staff %}Submit clearance form{% else %}Save updates{% endif %}
+        </button>
+        {% if not is_self_exit_staff %}
+          <a class="btn btn-outline-secondary" href="{% url 'account_exit_process_hr_list' %}">Back</a>
+        {% else %}
+          <a class="btn btn-outline-secondary" href="{% url 'dashboard' %}">Back</a>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if is_self_exit_staff %}
+      <hr>
+      <h6 class="fw-bold mb-2">Other steps (view only)</h6>
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+          <thead>
+            <tr>
+              <th style="width: 30%">Step</th>
+              <th style="width: 14%">Status</th>
+              <th>Notes</th>
+              <th style="width: 22%">Attachment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for step in all_steps %}
+              {% if step.step_type != "clearance_form_submitted" %}
+              <tr>
+                <td>{{ step_labels|get_item:step.step_type|default:step.step_type }}</td>
+                <td>{{ step.get_status_display }}</td>
+                <td>{{ step.notes|default:"-"|linebreaks }}</td>
+                <td>
+                  {% if step.attachment %}
+                    <a href="{{ step.attachment.url }}">Download</a>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

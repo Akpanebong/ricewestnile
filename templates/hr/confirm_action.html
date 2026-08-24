@@ -1,0 +1,31 @@
+{% extends "hr/base.html" %}
+{% block content %}
+
+<main class="ttr-wrapper d-flex align-items-center justify-content-center" style="min-height:80vh;">
+    <div class="container d-flex justify-content-center">
+        <div class="col-md-6">
+            <div class="widget-box text-center p-4 shadow-lg rounded" style="background:#f8fdf8;">
+
+                <h2 class="text-info mb-4">
+                    <i class="fa fa-exclamation-triangle"></i> Action Confirmation
+                </h2>
+
+                <p class="mb-4">
+                    Are you sure you want to {{ action }} for {{ obj }}?
+                </p>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa fa-thumbs-up"></i> Yes, {{ action|capfirst }}
+                        </button>
+                        <a href="{% url 'leave_detail' obj.pk obj.slug %}">Cancel</a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

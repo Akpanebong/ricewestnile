@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>M&E Data Report</title>
+  <style>
+    @page { margin: 22px; }
+    body { font-family: DejaVu Sans, Arial, sans-serif; color:#14231d; font-size:11px; }
+    .report-header { border-bottom:3px solid #0d8b57; padding-bottom:10px; margin-bottom:14px; }
+    .kicker { color:#5e7169; text-transform:uppercase; letter-spacing:.08em; font-size:10px; font-weight:bold; }
+    h1 { margin:3px 0; font-size:20px; color:#0f3d2a; }
+    .meta { color:#5e7169; font-size:10px; }
+    table { width:100%; border-collapse:collapse; font-size:9px; }
+    th, td { border:1px solid #d8e3dd; padding:5px; vertical-align:top; }
+    th { background:#eef6f0; color:#274139; text-transform:uppercase; font-size:8px; }
+    tbody tr:nth-child(even) { background:#f8fbf9; }
+    .empty { text-align:center; color:#5e7169; padding:18px; }
+  </style>
+</head>
+<body>
+  <div class="report-header">
+    <div class="kicker">RICE West Nile MEAL</div>
+    <h1>Monitoring and Evaluation Data Report</h1>
+    <div class="meta">Generated on: {{ now|default:today }}</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Indicator</th><th>Project</th><th>Location</th><th>Year</th>
+        <th>Sex</th><th>Status</th><th>PWD</th><th>PWD Nat.</th><th>PWD Ref.</th>
+        <th>PWD Nat. M</th><th>PWD Ref. M</th><th>PWD Nat. F</th><th>PWD Ref. F</th>
+        <th>Enterprise Type</th><th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in entries %}
+      <tr>
+        <td>{{e.indicator.name}}</td>
+        <td>{{ e.project }}</td>
+        <td>{{ e.location }}</td>
+        <td>{{ e.year }}</td>
+        <td>{{ e.get_sex_display }}</td>
+        <td>{{ e.status }}</td>
+        <td>{{ e.pwd }}</td>
+        <td>{{ e.pwd_nationals }}</td>
+        <td>{{ e.pwd_refugees }}</td>
+        <td>{{ e.pwd_national_males }}</td>
+        <td>{{ e.pwd_refugee_males }}</td>
+        <td>{{ e.pwd_national_females }}</td>
+        <td>{{ e.pwd_refugee_females }}</td>
+        <td>{{ e.enterprise_type }}</td>
+        <td>{{ e.value }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="15" class="empty">No data available for the selected scope.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

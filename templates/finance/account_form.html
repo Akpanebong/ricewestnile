@@ -1,0 +1,646 @@
+{% extends "procurement/base.html" %}
+{% block content %}
+
+<div class="container-fluid py-3">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="fw-bold mb-0">
+        {{ form_obj|yesno:"Update Accounting,Create Accounting" }}
+      </h4>
+      <small class="text-muted">Manage financial accountability for requisitions</small>
+    </div>
+  </div>
+
+  <!-- FORM CARD -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+
+      <form method="post">
+        {% csrf_token %}
+
+        <!-- Top Fields -->
+        <div class="row g-3 mb-3">
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Requisition</label>
+            <input value="{{ requisition }}" class="form-control bg-light" readonly>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Date of Return</label>
+            <input type="date" name="date_of_return"
+                   value="{{ form_obj.date_of_return|default:
+                    }}"
+                   class="form-control" required>
+          </div>
+
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Description (Receipts and Expenditures for)</label>
+          <textarea name="description" rows="3"
+                    class="form-control"
+                    required>{{ form_obj.description|default:'' }}</textarea>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-responsive">
+          <table class="table table-hover align-middle" id="acc-table">
+
+            <thead class="table-light">
+              <tr>
+                <th>Activity</th>
+                <th>Program</th>
+                <th>Details</th>
+                <th width="130">Received ({{ display_currency }})</th>
+                <th width="130">Spent ({{ display_currency }})</th>
+                <th width="130">Balance ({{ display_currency }})</th>
+                <th width="60"></th>
+              </tr>
+            </thead>
+
+            <tbody id="acc-body">
+              {% for item in items %}
+              <tr>
+                <td><input name="activity_code[]" value="{{ item.activity_code }}" class="form-control"></td>
+                <td><input name="program_code[]" value="{{ item.program_code }}" class="form-control"></td>
+                <td><input name="details[]" value="{{ item.details }}" class="form-control"></td>
+                <td><input type="number" step="0.01" name="received[]" value="{{ item.amount_received|display_amount:request }}" class="form-control received"></td>
+                <td><input type="number" step="0.01" name="spent[]" value="{{ item.amount_spent|display_amount:request }}" class="form-control spent"></td>
+                <td><input class="form-control balance bg-light" readonly></td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-danger remove-row">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+            <!-- FOOTER TOTALS -->
+            <tfoot class="table-light">
+              <tr>
+                <th colspan="3" class="text-end">Totals ({{ display_currency }})</th>
+                <th><input id="total-received" class="form-control fw-bold bg-light" readonly></th>
+                <th><input id="total-spent" class="form-control fw-bold bg-light" readonly></th>
+                <th><input id="total-balance" class="form-control fw-bold bg-light text-success" readonly></th>
+                <th></th>
+              </tr>
+            </tfoot>
+
+          </table>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="d-flex justify-content-between align-items-center mt-2">
+
+          <button type="button" id="add-row" class="btn btn-outline-primary btn-sm">
+            <i class="fa fa-plus"></i> Add Row
+          </button>
+
+          <div class="text-muted small">
+            Ensure all entries balance correctly before submission
+          </div>
+
+        </div>
+
+        <!-- SUBMIT -->
+        <div class="mt-4 text-end">
+          <button type="submit" class="btn btn-success px-4">
+            <i class="fa fa-save me-1"></i> Save Accounting
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- JS -->
+<script>
+const body = document.getElementById("acc-body");
+const currencyRate = parseFloat('{{ display_currency_from_ugx_rate }}') || 1;
+
+function createRow(data = {}) {
+    return `
+    <tr>
+        <td><input name="activity_code[]" value="${data.a || ''}" class="form-control"></td>
+        <td><input name="program_code[]" value="${data.p || ''}" class="form-control"></td>
+        <td><input name="details[]" value="${data.d || ''}" class="form-control"></td>
+        <td><input type="number" step="0.01" name="received[]" value="${data.r || 0}" class="form-control received"></td>
+        <td><input type="number" step="0.01" name="spent[]" value="${data.s || 0}" class="form-control spent"></td>
+        <td><input class="form-control balance bg-light" readonly></td>
+        <td>
+          <button type="button" class="btn btn-sm btn-danger remove-row">
+            <i class="fa fa-times"></i>
+          </button>
+        </td>
+    </tr>`;
+}
+
+// Add row
+document.getElementById("add-row").onclick = () => {
+    body.insertAdjacentHTML("beforeend", createRow());
+};
+
+// Remove row
+body.addEventListener("click", e => {
+    if (e.target.closest(".remove-row")) {
+        e.target.closest("tr").remove();
+        calculate();
+    }
+});
+
+// Auto calculate
+body.addEventListener("input", calculate);
+
+function calculate() {
+    let totalR = 0, totalS = 0;
+
+    document.querySelectorAll("#acc-body tr").forEach(row => {
+        let r = parseFloat(row.querySelector(".received").value) || 0;
+        let s = parseFloat(row.querySelector(".spent").value) || 0;
+        let b = r - s;
+
+        row.querySelector(".balance").value = b.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        totalR += r;
+        totalS += s;
+    });
+
+    document.getElementById("total-received").value = totalR.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById("total-spent").value = totalS.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById("total-balance").value = (totalR - totalS).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+// Init
+document.addEventListener("DOMContentLoaded", calculate);
+</script>
+
+{% endblock %}
+
+
+
+<main class="ttr-wrapper">
+<div class="container-fluid py-4">
+
+<h3 class="mb-4">
+    {{ form_obj|yesno:"Update Accounting,Create Accounting" }}
+</h3>
+
+<form method="post">
+{% csrf_token %}
+
+<div class="row">
+    <div class="mb-3 col-6">
+        <label>Requisition</label>
+        <input value="{{ requisition }}" class="form-control" readonly>
+    </div>
+
+    <div class="mb-3 col-6">
+        <label>Date of Return</label>
+        <input type="date" name="date_of_return"
+               value="{{ form_obj.date_of_return|default:'' }}"
+               class="form-control" required>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label>Description</label>
+    <textarea name="description" class="form-control" required>
+        {{ form_obj.description|default:'' }}
+    </textarea>
+</div>
+
+<table class="table table-bordered">
+<thead>
+<tr>
+    <th>Activity</th>
+    <th>Program</th>
+    <th>Details</th>
+    <th>Received</th>
+    <th>Spent</th>
+    <th>Balance</th>
+    <th></th>
+</tr>
+</thead>
+
+<tbody id="acc-body">
+{% for item in items %}
+<tr>
+    <td><input name="activity_code[]" value="{{ item.activity_code }}" class="form-control"></td>
+    <td><input name="program_code[]" value="{{ item.program_code }}" class="form-control"></td>
+    <td><input name="details[]" value="{{ item.details }}" class="form-control"></td>
+    <td><input type="number" step="0.01" name="received[]" value="{{ item.amount_received }}" class="form-control received"></td>
+    <td><input type="number" step="0.01" name="spent[]" value="{{ item.amount_spent }}" class="form-control spent"></td>
+    <td><input class="form-control balance" readonly></td>
+    <td><button type="button" class="btn btn-danger remove-row">×</button></td>
+</tr>
+{% endfor %}
+</tbody>
+
+<tfoot>
+<tr>
+    <th colspan="3">Total</th>
+    <th><input id="total-received" class="form-control" readonly></th>
+    <th><input id="total-spent" class="form-control" readonly></th>
+    <th><input id="total-balance" class="form-control" readonly></th>
+    <th></th>
+</tr>
+</tfoot>
+</table>
+
+<button type="button" id="add-row" class="btn btn-primary">+ Add Row</button>
+<button type="submit" class="btn btn-success mt-3">Save</button>
+
+</form>
+</div>
+</main>
+
+<script>
+const body = document.getElementById("acc-body");
+
+function createRow(data = {}) {
+    return `
+    <tr>
+        <td><input name="activity_code[]" value="${data.a || ''}" class="form-control"></td>
+        <td><input name="program_code[]" value="${data.p || ''}" class="form-control"></td>
+        <td><input name="details[]" value="${data.d || ''}" class="form-control"></td>
+        <td><input type="number" step="0.01" name="received[]" value="${data.r || 0}" class="form-control received"></td>
+        <td><input type="number" step="0.01" name="spent[]" value="${data.s || 0}" class="form-control spent"></td>
+        <td><input class="form-control balance" readonly></td>
+        <td><button type="button" class="btn btn-danger remove-row">×</button></td>
+    </tr>`;
+}
+
+document.getElementById("add-row").onclick = () => {
+    body.insertAdjacentHTML("beforeend", createRow());
+};
+
+body.addEventListener("click", e => {
+    if (e.target.classList.contains("remove-row")) {
+        e.target.closest("tr").remove();
+        calculate();
+    }
+});
+
+body.addEventListener("input", calculate);
+
+function calculate() {
+    let totalR = 0, totalS = 0;
+
+    document.querySelectorAll("#acc-body tr").forEach(row => {
+        let r = parseFloat(row.querySelector(".received").value) || 0;
+        let s = parseFloat(row.querySelector(".spent").value) || 0;
+        let b = r - s;
+
+        row.querySelector(".balance").value = b.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        totalR += r;
+        totalS += s;
+    });
+
+    document.getElementById("total-received").value = totalR.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById("total-spent").value = totalS.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById("total-balance").value = (totalR - totalS).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+// Initialize
+document.addEventListener("DOMContentLoaded", calculate);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Alright — now we’re moving into **real enterprise-grade Django architecture**. This will give you:
+
+* ✅ **Server-side validation (no silent data corruption)**
+* ✅ **HTMX-powered dynamic rows (zero JS complexity)**
+* ✅ **Clean, scalable finance module structure**
+* ✅ **Auditable + maintainable system**
+
+---
+
+# 🧱 1. ENTERPRISE MODULE STRUCTURE
+
+Organize your app like this:
+
+```
+finance/
+├── models/
+│   ├── accounting.py
+│   └── requisition.py
+├── forms/
+│   └── accounting.py
+├── views/
+│   └── accounting.py
+├── templates/finance/accounting/
+│   ├── form.html
+│   ├── row.html
+│   └── table.html
+├── urls.py
+├── services/
+│   └── accounting_service.py
+```
+
+---
+
+# 🧾 2. DJANGO FORMS + FORMSETS (CORE)
+
+### 📌 forms/accounting.py
+
+```python id="f1a92"
+from django import forms
+from django.forms import inlineformset_factory
+from decimal import Decimal
+
+class AccountingFormForm(forms.ModelForm):
+    class Meta:
+        model = AccountingForm
+        fields = ["description", "date_of_return"]
+
+class AccountingItemForm(forms.ModelForm):
+    class Meta:
+        model = AccountingItem
+        fields = [
+            "activity_code",
+            "program_code",
+            "details",
+            "amount_received",
+            "amount_spent",
+        ]
+
+    def clean(self):
+        cleaned = super().clean()
+        r = cleaned.get("amount_received") or Decimal(0)
+        s = cleaned.get("amount_spent") or Decimal(0)
+
+        if s > r:
+            raise forms.ValidationError("Spent cannot exceed received")
+
+        return cleaned
+
+
+AccountingItemFormSet = inlineformset_factory(
+    AccountingForm,
+    AccountingItem,
+    form=AccountingItemForm,
+    extra=1,
+    can_delete=True
+)
+```
+
+---
+
+# ⚙️ 3. SERVICE LAYER (ENTERPRISE PATTERN)
+
+### 📌 services/accounting_service.py
+
+```python id="svc01"
+from django.db import transaction
+
+class AccountingService:
+
+    @staticmethod
+    @transaction.atomic
+    def save(form, formset, user, requisition=None):
+        obj = form.save(commit=False)
+
+        if not obj.pk:
+            obj.created_by = user
+            obj.requisition = requisition
+            obj.donor_code = requisition.donor_code
+            obj.status = "submitted"
+
+        obj.save()
+
+        formset.instance = obj
+        formset.save()
+
+        return obj
+```
+
+---
+
+# 🧠 4. VIEWS (CLEAN + THIN)
+
+### 📌 views/accounting.py
+
+```python id="v92kd"
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def accounting_create(request, slug, pk):
+    requisition = get_object_or_404(CashRequisition, slug=slug, pk=pk)
+
+    form = AccountingFormForm(request.POST or None)
+    formset = AccountingItemFormSet(request.POST or None)
+
+    if request.method == "POST":
+        if form.is_valid() and formset.is_valid():
+            obj = AccountingService.save(form, formset, request.user, requisition)
+            return redirect("finance:accounting_detail", pk=obj.pk, slug=obj.slug)
+
+    return render(request, "finance/accounting/form.html", {
+        "form": form,
+        "formset": formset,
+        "requisition": requisition
+    })
+
+
+@login_required
+def accounting_update(request, slug, pk):
+    obj = get_object_or_404(AccountingForm, slug=slug, pk=pk)
+
+    form = AccountingFormForm(request.POST or None, instance=obj)
+    formset = AccountingItemFormSet(request.POST or None, instance=obj)
+
+    if request.method == "POST":
+        if form.is_valid() and formset.is_valid():
+            obj = AccountingService.save(form, formset, request.user)
+            return redirect("finance:accounting_detail", pk=obj.pk, slug=obj.slug)
+
+    return render(request, "finance/accounting/form.html", {
+        "form": form,
+        "formset": formset,
+        "requisition": obj.requisition
+    })
+```
+
+---
+
+# ⚡ 5. HTMX (NO MORE JS HEADACHES)
+
+### 📌 Install HTMX
+
+```html
+<script src="https://unpkg.com/htmx.org@1.9.6"></script>
+```
+
+---
+
+# 🧩 6. TEMPLATE (FORM)
+
+### 📌 templates/finance/accounting/form.html
+
+
+
+<div class="container py-4">
+
+<h4>Accounting Form</h4>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Activity</th>
+                <th>Program</th>
+                <th>Details</th>
+                <th>Received</th>
+                <th>Spent</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+
+        <tbody id="formset-body">
+            {% for form in formset %}
+                {% include "finance/accounting/row.html" with form=form %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {{ formset.management_form }}
+
+    <!-- HTMX ADD ROW -->
+    <button type="button"
+            class="btn btn-primary"
+            hx-get="{% url 'finance:add_row' %}"
+            hx-target="#formset-body"
+            hx-swap="beforeend">
+        + Add Row
+    </button>
+
+    <button type="submit" class="btn btn-success mt-3">
+        Save
+    </button>
+
+</form>
+</div>
+
+
+# ➕ 7. HTMX ROW PARTIAL
+
+### 📌 templates/finance/accounting/row.html
+
+```html id="tpl02"
+<tr>
+    <td>{{ form.activity_code }}</td>
+    <td>{{ form.program_code }}</td>
+    <td>{{ form.details }}</td>
+    <td>{{ form.amount_received }}</td>
+    <td>{{ form.amount_spent }}</td>
+    <td>{{ form.DELETE }}</td>
+</tr>
+```
+
+---
+
+# 🔌 8. HTMX VIEW (ADD ROW)
+
+```python id="hx01"
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+
+@login_required
+def add_accounting_row(request):
+    form = AccountingItemForm()
+    html = render_to_string("finance/accounting/row.html", {"form": form})
+    return HttpResponse(html)
+```
+
+---
+
+# 🔗 9. URLS
+
+```python id="urls01"
+from django.urls import path
+
+urlpatterns = [
+    path("create/<slug:slug>/<int:pk>/", accounting_create, name="accounting_create"),
+    path("update/<slug:slug>/<int:pk>/", accounting_update, name="accounting_update"),
+    path("add-row/", add_accounting_row, name="add_row"),
+]
+```
+
+---
+
+# 🛡️ WHAT YOU JUST ACHIEVED
+
+### 🔥 Enterprise Features
+
+| Feature             | Status |
+| ------------------- | ------ |
+| Server validation   | ✅      |
+| Clean architecture  | ✅      |
+| DRY views           | ✅      |
+| HTMX dynamic UI     | ✅      |
+| Atomic transactions | ✅      |
+| Scalable structure  | ✅      |
+
+---
+
+# 🚀 NEXT LEVEL (OPTIONAL UPGRADES)
+
+If you want to go even further:
+
+### 🔒 Finance-grade features
+
+* Approval workflow (multi-step)
+* Role-based permissions
+* Audit logs (who edited what)
+* PDF export
+* Budget validation vs requisition
+
+### ⚡ UX upgrades
+
+* Auto totals (HTMX trigger)
+* Inline validation errors
+* Select2 for activity/program codes
+
+---
+
+# 💬 If you want next:
+
+I can upgrade this into:
+
+* ✅ Full **approval workflow system**
+* ✅ **Finance dashboard (charts + summaries)**
+* ✅ **Multi-donor accounting system**
+* ✅ **API + React frontend**
+
+Just tell me what level you're targeting:
+👉 *Startup / NGO / Enterprise ERP*

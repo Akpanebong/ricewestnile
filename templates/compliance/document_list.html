@@ -1,0 +1,49 @@
+{% extends 'garcis/base.html' %}
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between mb-3">
+        <h4 class="fw-bold">Compliance Documents</h4>
+        <a href="{% url 'compliance_doc_create' %}" class="btn btn-primary btn-sm">Upload</a>
+    </div>
+
+    <div class="card shadow-sm rounded-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Requirement</th>
+                        <th>Status</th>
+                        <th>Uploaded</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.requirement }}</td>
+                        <td>
+                            {% if doc.is_verified %}
+                                <span class="badge bg-success">Verified</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ doc.uploaded_at|date:"M d, Y" }}</td>
+                        <td class="text-end">
+                            <a href="{{ doc.file.url }}" class="btn btn-sm btn-outline-info">View</a>
+                            <a href="{% url 'compliance_doc_update' doc.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a href="{% url 'compliance_doc_delete' doc.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">No documents uploaded</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "garcis/base.html" %}
+{% block title %}Vendor Due Diligence{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h3 class="mb-1">Vendor Due Diligence</h3>
+            <p class="text-muted mb-0">Procurement compliance, supplier risk tracking, and performance monitoring.</p>
+        </div>
+        <div class="quick-links">
+            <a href="{% url 'compliance_dashboard' %}" class="btn btn-outline-secondary">Compliance Dashboard</a>
+            <a href="{% url 'partner_due_diligence_list' %}" class="btn btn-outline-dark">Partner Due Diligence</a>
+            <a href="{% url 'vendor_create' %}" class="btn btn-outline-dark">Add Vendor</a>
+        </div>
+    </div>
+    <div class="card p-3">
+        <table class="table">
+            <thead><tr><th>Vendor</th><th>Service</th><th>Legal Status</th><th>Financial Score</th><th>Risk</th><th>Performance</th></tr></thead>
+            <tbody>
+                {% for vendor in vendors %}
+                <tr>
+                    <td><a href="{% url 'vendor_detail' vendor.id %}"> {{vendor.vendor_name }}</a></td>
+                    <td>{{ vendor.service_category }}</td>
+                    <td>{{ vendor.legal_compliance_status }}</td>
+                    <td>{{ vendor.financial_stability_score }}</td>
+                    <td>{{ vendor.get_risk_rating_display }}</td>
+                    <td>{{ vendor.get_performance_status_display }}</td>
+
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-muted text-center">No vendor due diligence records available.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

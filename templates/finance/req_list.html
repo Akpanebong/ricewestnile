@@ -1,0 +1,75 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+
+{% block content %}
+<main class="ttr-wrapper">
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h4 class="fw-bold">Fund Requisitions</h4>
+        <a href="{% url 'finance:create_cash_req' %}" class="btn btn-primary">
+            + New Request
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Donor</th>
+                        <th>Purpose</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for req in objects %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ req.donor_code }}</td>
+                        <td>{{ req.purpose|truncatechars:40 }}</td>
+
+                        <td class="fw-bold">
+                            {{ req.total_amount|money:request }}
+                        </td>
+
+                        <td>
+                            <span class="badge
+                                {% if req.status == 'approved' %}bg-success
+                                {% elif req.status == 'finance_review' %}bg-warning text-dark
+                                {% elif req.status == 'operations_review' %}bg-info
+                                {% else %}bg-secondary{% endif %}">
+                                {{ req.status|title }}
+                            </span>
+                        </td>
+
+                        <td>{{ req.created_at|date:"M d, Y" }}</td>
+
+                        <td class="text-end">
+                            <a href="{% url 'finance:requisition_detail' req.id req.slug %}"
+                               class="btn btn-sm btn-outline-dark">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">
+                            No requisitions found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+</div>
+</main>
+{% endblock %}

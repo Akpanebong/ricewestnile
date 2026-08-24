@@ -1,0 +1,61 @@
+{% extends "hr/base.html" %}
+{% load group_tags %}
+{% block title %}Orientation - CMT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold mb-1 text-dark"><i class="fa fa-compass text-success me-2"></i>Orientation</h3>
+      <small class="text-muted">CMT visibility into probation orientation progress.</small>
+    </div>
+    <nav aria-label="breadcrumb" class="mt-3 mt-md-0">
+      <ol class="breadcrumb mb-0 bg-transparent p-0">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-success"><i class="fa fa-home"></i> Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Orientation</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="card shadow-sm rounded-4 border-0">
+    <div class="card-header bg-white border-bottom py-3">
+      <h6 class="mb-0 fw-semibold"><i class="fa fa-list me-1"></i>Orientation Plans</h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-4">Staff</th>
+              <th>Unit</th>
+              <th>Status</th>
+              <th>Progress</th>
+              <th class="text-end pe-4">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for plan in plans %}
+            <tr>
+              <td class="ps-4 fw-semibold">{{ plan.staff.get_full_name|default:plan.staff.username }}</td>
+              <td>{{ plan.staff.unit.name|default:"—" }}</td>
+              <td><span class="badge {% if plan.status == 'completed' %}bg-success{% elif plan.status == 'canceled' %}bg-secondary{% else %}bg-primary{% endif %}">{{ plan.get_status_display }}</span></td>
+              <td style="min-width:240px;">
+                <div class="progress" style="height:10px;">
+                  <div class="progress-bar bg-success" style="width: {{ plan.completion_percent }}%;"></div>
+                </div>
+                <div class="small text-muted mt-1">{{ plan.completion_percent }}%</div>
+              </td>
+              <td class="text-end pe-4">
+                <a class="btn btn-sm btn-outline-success" href="{% url 'orientation_cmt_detail' plan.id %}">View</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-center py-4 text-muted">No plans available.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

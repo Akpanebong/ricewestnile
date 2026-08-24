@@ -1,0 +1,29 @@
+{% extends "garcis/base.html" %}
+
+{% block title %}Controls{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card p-3">
+        <h4>Control Library</h4>
+                <p align="right"><a href="{% url 'control_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i> Create Control</a> </p>
+
+        <table class="table table-striped">
+            <thead><tr><th>ID</th><th>Title</th><th>Policy</th><th>Status</th><th>Effectiveness</th></tr></thead>
+            <tbody>
+                {% for control in controls %}
+                <tr>
+                    <td><a style="text-decoration:none" href="{% url 'control_detail' control.id %}"> {{ control.control_id }}</a></td>
+                    <td>{{ control.title }}</td>
+                    <td>{{ control.policy|default:"-" }}</td>
+                    <td>{{ control.status }}</td>
+                    <td>{{ control.effectiveness }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-muted">No controls defined yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

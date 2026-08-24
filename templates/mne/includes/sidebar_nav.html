@@ -1,0 +1,271 @@
+{% with current_url=request.resolver_match.url_name %}
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<a href="{% url 'monitoring:dashboard' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'dashboard' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-house"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Dashboard
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     MEAL SECTION
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>MEAL</span>
+</div>
+
+
+<!-- =====================================================
+     STRATEGIC FRAMEWORK
+===================================================== -->
+
+<div class="sidebar-module
+{% if current_url == 'hierarchy' or current_url == 'so_list' or current_url == 'output_list' or current_url == 'indicator_list' or current_url == 'data_entry_list' %}
+module-open
+{% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#strategicCollapse"
+            aria-expanded="{% if current_url == 'hierarchy' or current_url == 'so_list' or current_url == 'output_list' or current_url == 'indicator_list' or current_url == 'data_entry_list' %}true{% else %}false{% endif %}"
+            aria-controls="strategicCollapse">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-folder-tree"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Strategic Framework
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+    {% if current_url == 'hierarchy' or current_url == 'so_list' or current_url == 'output_list' or current_url == 'indicator_list' or current_url == 'data_entry_list' %}
+    show
+    {% endif %}"
+    id="strategicCollapse">
+
+
+        <!-- MEAL FRAMEWORK -->
+
+        <a href="{% url 'monitoring:hierarchy' %}"
+           class="{% if current_url == 'hierarchy' %}active{% endif %}">
+
+            <i class="fa-solid fa-sitemap"></i>
+
+            MEAL Framework
+
+        </a>
+
+
+        <!-- STRATEGIC OBJECTIVES -->
+
+        <a href="{% url 'monitoring:so_list' %}"
+           class="{% if current_url == 'so_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-flag"></i>
+
+            Strategic Objectives
+
+        </a>
+
+
+        <!-- OUTPUTS -->
+
+        <a href="{% url 'monitoring:output_list' %}"
+           class="{% if current_url == 'output_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-diagram-project"></i>
+
+            Outputs
+
+        </a>
+
+
+        <!-- INDICATORS -->
+
+        <a href="{% url 'monitoring:indicator_list' %}"
+           class="{% if current_url == 'indicator_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-chart-line"></i>
+
+            Indicators
+
+        </a>
+
+
+        <!-- DATA ENTRY -->
+
+        <a href="{% url 'monitoring:data_entry_list' %}"
+           class="{% if current_url == 'data_entry_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-bullseye"></i>
+
+            Recent Data Entry
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     PROJECT MANAGEMENT
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>PROJECT MANAGEMENT</span>
+</div>
+
+
+<!-- =====================================================
+     REGISTER PROJECT
+===================================================== -->
+
+<div class="sidebar-module
+{% if current_url == 'project_list' or current_url == 'location_list' or current_url == 'core_program_list' %}
+module-open
+{% endif %}">
+
+    <button class="sidebar-module-toggle"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#projectCollapse"
+            aria-expanded="{% if current_url == 'project_list' or current_url == 'location_list' or current_url == 'core_program_list' %}true{% else %}false{% endif %}"
+            aria-controls="projectCollapse">
+
+        <span class="sidebar-module-left">
+
+            <span class="sidebar-module-icon">
+                <i class="fa-solid fa-folder-plus"></i>
+            </span>
+
+            <span class="sidebar-module-title">
+                Project Setup
+            </span>
+
+        </span>
+
+        <i class="fa-solid fa-chevron-right sidebar-module-arrow"></i>
+
+    </button>
+
+
+    <div class="collapse sidebar-submenu
+    {% if current_url == 'project_list' or current_url == 'location_list' or current_url == 'core_program_list' %}
+    show
+    {% endif %}"
+    id="projectCollapse">
+
+
+        <!-- PROJECTS -->
+
+        <a href="{% url 'core:project_list' %}"
+           class="{% if current_url == 'project_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-folder-open"></i>
+
+            Projects
+
+        </a>
+
+
+        <!-- LOCATIONS -->
+
+        <a href="{% url 'core:location_list' %}"
+           class="{% if current_url == 'location_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-location-dot"></i>
+
+            Locations
+
+        </a>
+
+
+        <!-- PROGRAM AREAS -->
+
+        <a href="{% url 'monitoring:core_program_list' %}"
+           class="{% if current_url == 'core_program_list' %}active{% endif %}">
+
+            <i class="fa-solid fa-map-location-dot"></i>
+
+            Program Areas
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     DATA MANAGEMENT
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>DATA MANAGEMENT</span>
+</div>
+
+
+<!-- =====================================================
+     CSV IMPORT
+===================================================== -->
+
+<a href="{% url 'monitoring:csv_import' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'csv_import' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-file-import"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        CSV Import
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     RESOURCES
+===================================================== -->
+
+<a href="{% url 'mne_core:resource_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'resource_list' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-link"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Resources
+    </span>
+
+</a>
+
+
+{% endwith %}

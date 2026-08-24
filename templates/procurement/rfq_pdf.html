@@ -1,0 +1,249 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Request for Quotation {{ rfq.reference_no }}</title>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-family: "Helvetica", Arial, sans-serif;
+            font-size: 12px;
+            color: #000;
+            margin: 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td, .border {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            vertical-align: top;
+        }
+        th {
+            background-color: #e0e0e0;
+            text-align: left;
+        }
+
+        .no-border td, .no-border th {
+            border: none;
+        }
+
+        .header {
+            width: 100%;
+            border-bottom: 2px solid #000;
+        }
+
+        .header-left {
+            width: 60%;
+
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 11px;
+
+        }
+
+        .center-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 6px 0;
+        }
+
+        .small-text {
+            font-size: 11px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 6px;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .table-header th {
+            background-color: #d9d9d9;
+            color: #000;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .footer {
+            font-size: 10px;
+            text-align: center;
+            margin-top: 8px;
+            border-top: 1px solid #000;
+            padding-top: 3px;
+        }
+
+        .signature-table td {
+            border: none;
+            padding-top: 20px;
+            font-size: 11px;
+        }
+
+        .line {
+            border-top: 1px solid #000;
+            width: 150px;
+            margin-top: 25px;
+        }
+
+        .nowrap {
+            white-space: nowrap;
+        }
+
+        /* Layout adjustment for fitting into one page */
+        td, th {
+            padding: 3px 5px;
+        }
+        .tight-table td, .tight-table th {
+            padding: 2px 4px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <table class="header no-border">
+        <tr>
+            <td class="header-right" style="width:30%; margin-top:-500px; margin-left:100px;">
+
+        <img src="{% static 'assets/images/ricewn.png' %}" style="width:200px;height:80px;">
+        </td>
+            <td class="header-left">
+                P.O. Box 481, Arua – Uganda<br>
+                T: +256 393 238 163 | M: 0773 472234 / 0702 857349<br>
+                E: info@ricewestnile.org | W: www.ricewestnile.org
+            </td>
+        </tr>
+    </table>
+
+    <div class="center-title">REQUEST FOR QUOTATION</div>
+
+    <table class="tight-table">
+        <tr>
+            <td><strong>REFERENCE NO:</strong> {{ rfq.reference_no }}</td>
+            <td><strong>Date:</strong> {{ rfq.date_issued|date:"d/m/Y" }}</td>
+        </tr>
+    </table>
+
+    <p class="small-text"><em>Please include the RFQ number on all documents</em></p>
+
+    <!-- Supplier & Consignee -->
+    <table class="tight-table">
+        <tr>
+            <th colspan="2">SUPPLIER</th>
+            <th colspan="2">CONSIGNEE</th>
+        </tr>
+        <tr>
+            <td colspan="2">
+                {% if suppliers %}
+                   <strong>Name:</strong> <br>
+              <strong>Address:</strong><br>
+              <strong>Contact:</strong> <br>
+              <strong>Phone:</strong> <br>
+              <strong>Email:</strong> <br>
+              <strong>VAT number:</strong>
+                {% else %}
+                    <em>No supplier linked</em>
+                {% endif %}
+            </td>
+            <td colspan="2">
+                <strong>Name:</strong> RICE WEST NILE H/O<br>
+                <strong>Address:</strong> Plot 16, Awudcile Crescent<br>
+                <strong>Contact:</strong> Elimasia Suzan<br>
+                <strong>Phone:</strong> 0779203304 / 0393238163<br>
+                <strong>Email:</strong> procurement@ricewestnile.org
+            </td>
+        </tr>
+    </table>
+      <div class="border border-dark p-2 mb-3" align="center" style="padding:3px">
+          <center>THIS IS NOT A PURCHASE ORDER</center>
+          Please provide a quotation for the items listed below. Please specify the validity period of your quotation, sign or stamp it, and return it to the requester.</p>
+        </div>
+
+    <p class="section-title">SPECIAL INSTRUCTIONS</p>
+    <p class="small-text">
+        Please note any exclusions, expectations, and deviations from our specification. Please outline and describe
+        any additional economies not specified in this RFQ that would result in an improvement in the bid costs.
+        Our Standard terms and conditions apply to any order placed in conjunction with this RFQ-vendor may request a copy any time.
+        All conditions affecting price, delivery, or terms of payment must be quoted in this bid, please return this bid marked as 'will not bid.'
+    </p>
+
+
+
+      <!-- Payment and Delivery Terms -->
+    <p class="section-title">IN RESPONSE, PLEASE SEND US YOUR QUOTATION/PROPOSAL ON YOUR
+        LETTER HEAD TOGETHER WITH THIS PARTICULAR DOCUMENTS STAMPED AND SIGNED IN ACKNOWLEDGEMENT.</p>
+    <table class="tight-table">
+        <tr>
+            <th colspan="2">PAYMENT TERMS</th>
+            <th>Delivery Terms</th>
+            <th>Expiry Date</th>
+            <th>Delivery Date/Lead Time</th>
+        </tr>
+        <tr>
+            <td >Cheque / EFT / RTGS</td>
+            <td style="color:white">-</td>
+            <td>Arua Office</td>
+            <td style="color:white">-</td>
+            <td style="color:white">-</td>
+        </tr>
+    </table>
+
+
+    <!-- Item Table -->
+    <table class="tight-table" align="left">
+        <thead>
+            <tr class="table-header">
+                <th style="width:4%">S/N</th>
+                <th align="left">Item Description</th>
+                <th style="width:10%" align="left">Qty</th>
+                <th style="width:10%" align="left">Unit of Measure</th>
+                <th align="left">Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for it in items %}
+            <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td>{{ it.description}}</td>
+                <td>{{ it.qty }}</td>
+                <td>{{ it.unit_measure|default:"-" }}</td>
+                <td align="left" style="color:white">{{ item.remarks|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+        <table class="tight-table">
+        <tr>
+            <td colspan="2">
+                    </td>
+            <td colspan="2">
+                <strong>Name of contact:</strong> <br>
+                    <strong>Date:</strong> <br>
+                    <strong>Stamp &  Signature:</strong>
+            </td>
+        </tr>
+             <tr>
+            <th colspan="2">DEADLINE FOR SUBMISSION OF OFFER: {{ rfq.deadline|default:"-" }}</th>
+            <th colspan="2">SUPPLIER'S ACKNOWLEDGEMENT</th>
+        </tr>
+    </table>
+
+</body>
+</html>

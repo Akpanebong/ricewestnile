@@ -1,0 +1,89 @@
+
+{% extends "hr/base.html" %}
+{% block content %}
+
+<div class="container-fluid">
+
+    <h4 class="fw-bold mb-4 text-success">Appraisal Analytics</h4>
+
+    <!-- SUMMARY CARDS -->
+    <div class="row mb-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <h6>Total Appraisals</h6>
+                    <h3>{{ stats.total }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <h6>Avg Job Score</h6>
+                    <h3>{{ stats.avg_job|floatformat:1 }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <h6>Avg Service Score</h6>
+                    <h3>{{ stats.avg_service|floatformat:1 }}</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- YEARLY TREND -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h6 class="fw-bold">Yearly Performance Trend</h6>
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- DEPARTMENT TABLE -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h6 class="fw-bold">Department Performance</h6>
+
+            <table class="table table-bordered">
+                <tr>
+                    <th>Department</th>
+                    <th>Average Score</th>
+                </tr>
+
+                {% for d in departments %}
+                <tr>
+                    <td>{{ d.employee__user__department__name }}</td>
+                    <td>{{ d.avg|floatformat:1 }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const data = {{ yearly|safe }};
+
+new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+        labels: data.map(d => d.year),
+        datasets: [{
+            label: 'Avg Score',
+            data: data.map(d => d.avg_score),
+            fill: false
+        }]
+    }
+});
+</script>
+
+{% endblock %}

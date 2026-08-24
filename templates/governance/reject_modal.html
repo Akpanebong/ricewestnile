@@ -1,0 +1,60 @@
+{% extends "garcis/base.html" %}
+
+{% block content %}
+
+<div class="container-fluid d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+
+    <div class="card shadow-lg" style="max-width: 600px; width: 100%; border-radius: 12px;">
+
+        <!-- HEADER -->
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Reject Record</h5>
+        </div>
+
+        <!-- BODY -->
+        <div class="card-body">
+
+            <p class="mb-3">
+                You are about to reject:
+                <strong>{{ object }}</strong>
+            </p>
+
+            <div class="alert alert-warning">
+                Please provide a clear reason for rejection. This will be recorded for audit purposes.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Reason -->
+                <div class="mb-3">
+                    <label class="form-label">Rejection Reason</label>
+                    <textarea name="reason"
+                              rows="4"
+                              class="form-control"
+                              placeholder="Enter reason for rejection..."
+                              required></textarea>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="d-flex justify-content-between">
+
+                    <a href="javascript:history.back()" class="btn btn-secondary">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn btn-danger">
+                        Confirm Rejection
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

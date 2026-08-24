@@ -1,0 +1,667 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<main class="ttr-wrapper">
+
+    <div class="container-fluid">
+
+        {% include 'message.html' %}
+
+        <!-- Enterprise Header -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+
+            <div class="card-body px-4 py-4">
+
+                <div class="row align-items-center justify-content-between g-3">
+
+                    <!-- Left -->
+                    <div class="col-lg-8">
+
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+
+                            <!-- Icon -->
+                            <div class="project-icon">
+
+                                <i class="fa fa-diagram-project"></i>
+
+                            </div>
+
+                            <!-- Content -->
+                            <div>
+
+                                <h2 class="fw-bold text-dark mb-1">
+
+                                    {% if is_update %}
+                                        Update Project
+                                    {% else %}
+                                        Create Project
+                                    {% endif %}
+
+                                </h2>
+
+                                <!-- Breadcrumb -->
+                                <nav aria-label="breadcrumb">
+
+                                    <ol class="breadcrumb enterprise-breadcrumb mb-0">
+
+                                        <li class="breadcrumb-item">
+
+                                            <a href="{% url 'dashboard' %}">
+
+                                                <i class="fa fa-home me-1"></i>
+
+                                                Dashboard
+
+                                            </a>
+
+                                        </li>
+
+                                        <li class="breadcrumb-item">
+                                            Procurement
+                                        </li>
+
+                                        <li class="breadcrumb-item active">
+                                            Projects
+                                        </li>
+
+                                    </ol>
+
+                                </nav>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Right -->
+                    <div class="col-lg-auto">
+
+                        <div class="analytics-card compact-card">
+
+                            <div class="analytics-icon bg-primary-subtle text-primary">
+
+                                <i class="fa fa-folder"></i>
+
+                            </div>
+
+                            <div class="text-nowrap">
+
+                                <small class="text-muted d-block">
+                                    Total Projects
+                                </small>
+
+                                <h4 class="fw-bold mb-0">
+
+                                    {{ project|length }}
+
+                                </h4>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Main Layout -->
+        <div class="row g-4">
+
+            <!-- Form Section -->
+            <div class="col-lg-8">
+
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+                    <!-- Header -->
+                    <div class="card-header bg-white border-0 px-4 py-4">
+
+                        <h5 class="fw-bold text-dark mb-1">
+
+                            <i class="fa fa-pen text-primary me-2"></i>
+
+                            Project Information
+
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Enter project details and assign project leadership.
+                        </p>
+
+                    </div>
+
+                    <!-- Body -->
+                    <div class="card-body px-4 py-4">
+
+                        <form method="post"
+                              enctype="multipart/form-data">
+
+                            {% csrf_token %}
+
+                            {% if form.non_field_errors %}
+
+                            <div class="alert alert-danger rounded-3">
+
+                                {{ form.non_field_errors }}
+
+                            </div>
+
+                            {% endif %}
+
+                            <div class="row g-4">
+
+                                <!-- Name -->
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        Project Name
+                                    </label>
+
+                                    {{ form.name }}
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        Donor
+                                    </label>
+
+                                    {{ form.donor }}
+
+                                </div>
+                                 <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        Project Code
+                                    </label>
+
+                                    {{ form.code}}
+
+                                </div>
+
+                                <!-- Head -->
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        Project Head
+                                    </label>
+
+                                    {{ form.project_head }}
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        Project Accountant
+                                    </label>
+
+                                    {{ form.project_accountant}}
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        Project Officer
+                                    </label>
+
+                                    {{ form.project_officer}}
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        Start Date
+                                    </label>
+
+                                    {{ form.start_date}}
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        End Date
+                                    </label>
+
+                                    {{ form.end_date}}
+
+                                </div>
+                            </div>
+
+                            <div class="mt-5 pt-4 border-top">
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                                    <div>
+
+                                        <h5 class="fw-bold text-dark mb-1">
+                                            <i class="fa fa-coins text-primary me-2"></i>
+                                            Project Budgets
+                                        </h5>
+
+                                        <p class="text-muted small mb-0">
+                                            Set the annual or quarterly budget limits used by procurement plans.
+                                        </p>
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm"
+                                            id="split-quarter-budget">
+                                        Split Full Year Equally
+                                    </button>
+
+                                </div>
+
+                                {% if formset.non_form_errors %}
+                                    <div class="alert alert-danger rounded-3">
+                                        {{ formset.non_form_errors }}
+                                    </div>
+                                {% endif %}
+
+                                {{ formset.management_form }}
+
+                                <div class="table-responsive">
+
+                                    <table class="table table-sm table-bordered align-middle mb-0">
+
+                                        <thead class="table-light">
+
+                                            <tr>
+                                                <th>Fiscal Year</th>
+                                                <th>Period</th>
+                                                <th>Budget Amount</th>
+                                                {% if is_update %}
+                                                    <th>Delete</th>
+                                                {% endif %}
+                                            </tr>
+
+                                        </thead>
+
+                                        <tbody>
+
+                                            {% for budget_form in formset %}
+
+                                                <tr>
+                                                    {% for hidden in budget_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                                    <td>
+                                                        {{ budget_form.fiscal_year }}
+                                                        {% if budget_form.fiscal_year.errors %}
+                                                            <div class="text-danger small">{{ budget_form.fiscal_year.errors.0 }}</div>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {{ budget_form.period }}
+                                                        {% if budget_form.period.errors %}
+                                                            <div class="text-danger small">{{ budget_form.period.errors.0 }}</div>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {{ budget_form.budget_amount }}
+                                                        {% if budget_form.budget_amount.errors %}
+                                                            <div class="text-danger small">{{ budget_form.budget_amount.errors.0 }}</div>
+                                                        {% endif %}
+                                                    </td>
+                                                    {% if is_update %}
+                                                        <td class="text-center">
+                                                            {{ budget_form.DELETE }}
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+
+                                            {% endfor %}
+
+                                        </tbody>
+
+                                    </table>
+
+                                </div>
+
+                                <div class="alert alert-info rounded-3 mt-3 mb-0" id="quarter-budget-summary">
+                                    Remaining amount: <strong id="quarter-budget-remaining">0.00</strong>
+                                </div>
+
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+
+                                <a href="{% url 'core:project_list' %}"
+                                   class="btn btn-light border enterprise-btn px-4">
+
+                                    Cancel
+
+                                </a>
+
+                                <button type="submit"
+                                        class="btn btn-success enterprise-btn px-5">
+
+                                    <i class="fa fa-save me-2"></i>
+
+                                    {% if is_update %}
+                                        Update Project
+                                    {% else %}
+                                        Create Project
+                                    {% endif %}
+
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+                    <!-- Header -->
+                    <div class="card-header bg-white border-0 px-4 py-4">
+
+                        <h5 class="fw-bold text-dark mb-1">
+
+                            <i class="fa fa-layer-group text-primary me-2"></i>
+
+                            {% if is_update %}
+                                Current Project
+                            {% else %}
+                                Existing Projects
+                            {% endif %}
+
+                        </h5>
+
+                        <p class="text-muted small mb-0">
+                            Enterprise procurement project directory.
+                        </p>
+
+                    </div>
+
+                    <!-- Body -->
+                    <div class="card-body px-4 pb-4">
+
+                        {% if not is_update %}
+
+                            <div class="project-list">
+
+                                {% for pro in project %}
+
+                                <div class="project-item">
+
+                                    <div class="project-avatar">
+
+                                        {{ pro.name|slice:":1"|upper }}
+
+                                    </div>
+
+                                    <div>
+
+                                        <div class="fw-semibold">
+
+                                            {{ pro.name }}
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                {% empty %}
+
+                                <div class="text-muted text-center py-4">
+
+                                    No projects available.
+
+                                </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% else %}
+
+                        <div class="project-highlight">
+
+                            <div class="project-avatar large">
+
+                                {{ project.name|slice:":1"|upper }}
+
+                            </div>
+
+                            <h5 class="fw-bold mt-3 mb-1">
+
+                                {{ project.name }}
+
+                            </h5>
+
+                            <p class="text-muted mb-0">
+
+                                {{ project.head }}
+
+                            </p>
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+<style>
+
+:root{
+    --primary-color:#0d6efd;
+    --border-color:#e9ecef;
+}
+
+/* Card */
+.card{
+    border-radius:18px;
+}
+
+/* Icon */
+.project-icon{
+    width:64px;
+    height:64px;
+    border-radius:18px;
+    background:rgba(13,110,253,.1);
+    color:#0d6efd;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+}
+
+/* Inputs */
+.form-control,
+.form-select{
+    height:50px;
+    border-radius:14px;
+    border:1px solid #d0d5dd;
+}
+
+.form-control:focus,
+.form-select:focus{
+    border-color:#0d6efd;
+    box-shadow:0 0 0 4px rgba(13,110,253,.1);
+}
+
+/* Buttons */
+.enterprise-btn{
+    height:48px;
+    border-radius:14px;
+    font-weight:600;
+}
+
+/* Sidebar */
+.project-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.project-item{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:14px;
+    border-radius:14px;
+    border:1px solid #eef2f6;
+    transition:.2s ease;
+}
+
+.project-item:hover{
+    background:#f8fbff;
+}
+
+.project-avatar{
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    background:linear-gradient(135deg,#0d6efd,#3b82f6);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+}
+
+.project-avatar.large{
+    width:70px;
+    height:70px;
+    font-size:24px;
+}
+
+.project-highlight{
+    text-align:center;
+    padding:20px;
+}
+
+/* Analytics */
+.analytics-card{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    border:1px solid #e9ecef;
+    border-radius:16px;
+    padding:14px 18px;
+}
+
+.analytics-icon{
+    width:50px;
+    height:50px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+/* Prevent Wrap */
+.enterprise-breadcrumb,
+.analytics-card{
+    white-space:nowrap;
+}
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const splitButton = document.getElementById('split-quarter-budget');
+    const remainingEl = document.getElementById('quarter-budget-remaining');
+    const summaryEl = document.getElementById('quarter-budget-summary');
+    const rows = Array.from(document.querySelectorAll('input[name$="-budget_amount"]')).map(input => {
+        const prefix = input.name.replace('-budget_amount', '');
+        return {
+            amount: input,
+            period: document.querySelector(`[name="${prefix}-period"]`),
+            fiscalYear: document.querySelector(`[name="${prefix}-fiscal_year"]`)
+        };
+    });
+    const renderedYear = rows.find(row => row.fiscalYear && row.fiscalYear.value)?.fiscalYear.value;
+    const currentYear = renderedYear || String(new Date().getFullYear());
+
+    const parseAmount = value => Number.parseFloat(value || '0') || 0;
+    const formatAmount = value => Number(value || 0).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    rows.forEach(row => {
+        if (row.fiscalYear && !row.fiscalYear.value) row.fiscalYear.value = currentYear;
+    });
+
+    function fullYearRow(){
+        return rows.find(row => row.period && row.period.value === 'FULL_YEAR');
+    }
+
+    function quarterRows(){
+        return rows.filter(row => row.period && ['Q1', 'Q2', 'Q3', 'Q4'].includes(row.period.value));
+    }
+
+    function updateRemaining(){
+        if (!remainingEl || !summaryEl) return;
+        const fullAmount = parseAmount(fullYearRow()?.amount.value);
+        const quarterTotal = quarterRows().reduce((sum, row) => sum + parseAmount(row.amount.value), 0);
+        const remaining = fullAmount - quarterTotal;
+        remainingEl.textContent = formatAmount(remaining);
+        summaryEl.classList.toggle('alert-danger', remaining < 0);
+        summaryEl.classList.toggle('alert-info', remaining >= 0);
+    }
+
+    function splitEqually(){
+        const fullAmount = parseAmount(fullYearRow()?.amount.value);
+        const quarters = quarterRows();
+        if (!fullAmount || quarters.length === 0) {
+            updateRemaining();
+            return;
+        }
+
+        const base = Math.floor((fullAmount / quarters.length) * 100) / 100;
+        let allocated = 0;
+
+        quarters.forEach((row, index) => {
+            const amount = index === quarters.length - 1 ? fullAmount - allocated : base;
+            row.amount.value = amount.toFixed(2);
+            allocated += amount;
+        });
+        updateRemaining();
+    }
+
+    rows.forEach(row => {
+        row.amount.addEventListener('input', updateRemaining);
+        if (row.period) row.period.addEventListener('change', updateRemaining);
+    });
+
+    if (splitButton) splitButton.addEventListener('click', splitEqually);
+    updateRemaining();
+});
+</script>
+
+{% endblock %}

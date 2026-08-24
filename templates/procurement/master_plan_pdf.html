@@ -1,0 +1,103 @@
+{% load custom_tags %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Master Procurement Plan {{ year }}</title>
+  <style>
+    @page { size: A4 landscape; margin: 1cm; }
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 9px; color: #000; }
+    h1, h2, h3, h4 { margin: 0 0 6px 0; }
+    .hdr { width: 100%; margin-bottom: 8px; }
+    .hdr td { vertical-align: top; border: 0; }
+    .muted { color: #555; }
+    .summary { margin: 6px 0 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 3px; }
+    th { background: #e6e6e6; }
+    .right { text-align: right; }
+    .center { text-align: center; }
+    .grand { font-size: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<table class="hdr">
+  <tr>
+    <td>
+      <strong>{{ org_name }}</strong><br>
+      Master Procurement Plan{% if year %} - {{ year }}{% endif %}<br>
+      <span class="muted">Project-based procurement items</span>
+    </td>
+    <td class="right"><strong>{{ display_currency }}</strong></td>
+  </tr>
+</table>
+
+<div class="summary">
+  <strong>Project:</strong>
+  {% if filters.project %}
+    {% for project in projects %}{% if filters.project == project.pk|stringformat:"s" %}{{ project.name }}{% endif %}{% endfor %}
+  {% else %}
+    All projects
+  {% endif %}
+  &nbsp; <strong>Year:</strong> {{ filters.year|default:"All years" }}
+  &nbsp; <strong>Quarter:</strong> {{ filters.period|default:"All periods" }}
+  &nbsp; <strong>Status:</strong> {{ filters.status|default:"All active statuses" }}
+  &nbsp; <strong>Currency:</strong> {{ display_currency }}
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:24px;">#</th>
+      <th>Project</th>
+      <th>Department</th>
+      <th>Plan No.</th>
+      <th>Year</th>
+      <th>Quarter</th>
+      <th>Status</th>
+      <th>Description</th>
+      <th>Unit</th>
+      <th class="right">Qty</th>
+      <th class="right">Est. Unit</th>
+      <th class="right">Line Total</th>
+      <th>Delivery</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td class="center">{{ forloop.counter }}</td>
+      <td>{{ item.procurement.project|default:"Unassigned" }}</td>
+      <td>{{ item.procurement.project.department|default:"-" }}</td>
+      <td>{{ item.procurement.number }}</td>
+      <td>{{ item.procurement.fiscal_year|default:"-" }}</td>
+      <td>{{ item.procurement.get_budget_period_display }}</td>
+      <td>{{ item.procurement.status }}</td>
+      <td>{{ item.product.name|default:item.description }}</td>
+      <td>{{ item.unit_measure }}</td>
+      <td class="right">{{ item.qty }}</td>
+      <td class="right">{{ item.est_unit_cost|money:request }}</td>
+      <td class="right">{{ item.line_total|money:request }}</td>
+      <td>{{ item.delivery_date|date:"Y-m-d"|default:"-" }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="13" class="center">No procurement items match the selected filters.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <th colspan="11" class="right">Grand Total</th>
+      <th class="right">{{ grand_total|money:request }}</th>
+      <th></th>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="right grand" style="margin-top:8px;">{{ grand_total|num_to_words:request }}</div>
+
+</body>
+</html>

@@ -1,0 +1,1137 @@
+{% extends active_base_template|default:'base.html' %}
+
+{% block title %}Indicators | {{ output }}{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       INDICATOR MANAGEMENT
+       Enterprise M&E Interface
+       ========================================================= */
+
+    .indicator-page {
+        --ind-primary: #198754;
+        --ind-primary-dark: #146c43;
+        --ind-primary-soft: #eaf7f0;
+        --ind-border: #e2e8e4;
+        --ind-text: #1f2937;
+        --ind-muted: #6b7280;
+        --ind-warning-soft: #fff8e6;
+        --ind-warning: #b7791f;
+    }
+
+    /* =========================================================
+       BREADCRUMB
+       ========================================================= */
+
+    .ind-breadcrumb {
+        background: #fff;
+        border: 1px solid var(--ind-border);
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-bottom: 18px;
+    }
+
+    .ind-breadcrumb a {
+        color: var(--ind-primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .ind-breadcrumb a:hover {
+        color: var(--ind-primary-dark);
+    }
+
+    /* =========================================================
+       OUTPUT CONTEXT
+       ========================================================= */
+
+    .ind-context {
+        background: linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f4faf7 100%
+        );
+        border: 1px solid var(--ind-border);
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, .035);
+    }
+
+    .ind-context-icon {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--ind-primary-soft);
+        color: var(--ind-primary);
+        font-size: 21px;
+    }
+
+    .ind-context-label {
+        color: #8a958f;
+        font-size: .68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-bottom: 4px;
+    }
+
+    .ind-context-title {
+        color: #172b21;
+        font-size: 1.2rem;
+        font-weight: 700;
+        line-height: 1.4;
+        margin-bottom: 3px;
+    }
+
+    .ind-context-subtitle {
+        color: var(--ind-muted);
+        font-size: .8rem;
+        margin: 0;
+    }
+
+    .ind-context-code {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        margin-right: 7px;
+        background: var(--ind-primary-soft);
+        color: var(--ind-primary-dark);
+        border-radius: 7px;
+        font-family: monospace;
+        font-size: .7rem;
+        font-weight: 700;
+    }
+
+    /* =========================================================
+       ACTION BUTTON
+       ========================================================= */
+
+    .ind-add-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--ind-primary);
+        border: 1px solid var(--ind-primary);
+        color: #fff;
+        border-radius: 9px;
+        padding: 9px 15px;
+        font-size: .8rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .18s ease;
+    }
+
+    .ind-add-btn:hover {
+        background: var(--ind-primary-dark);
+        border-color: var(--ind-primary-dark);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       STATISTICS
+       ========================================================= */
+
+    .ind-stat {
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--ind-border);
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, .025);
+        transition: all .2s ease;
+    }
+
+    .ind-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, .06);
+    }
+
+    .ind-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--ind-primary-soft);
+        color: var(--ind-primary);
+        font-size: 16px;
+    }
+
+    .ind-stat-value {
+        color: #172b21;
+        font-size: 1.25rem;
+        font-weight: 750;
+        line-height: 1.1;
+    }
+
+    .ind-stat-label {
+        color: var(--ind-muted);
+        font-size: .73rem;
+        margin-top: 4px;
+    }
+
+    /* =========================================================
+       MAIN PANEL
+       ========================================================= */
+
+    .ind-panel {
+        background: #fff;
+        border: 1px solid var(--ind-border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, .04);
+    }
+
+    .ind-panel-header {
+        padding: 19px 21px;
+        border-bottom: 1px solid var(--ind-border);
+    }
+
+    .ind-panel-title {
+        color: #25352d;
+        font-size: .98rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .ind-panel-subtitle {
+        color: var(--ind-muted);
+        font-size: .76rem;
+        margin: 0;
+    }
+
+    /* =========================================================
+       SEARCH
+       ========================================================= */
+
+    .ind-search {
+        position: relative;
+    }
+
+    .ind-search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9aa49e;
+        z-index: 3;
+    }
+
+    .ind-search input {
+        height: 43px;
+        padding-left: 40px;
+        padding-right: 40px;
+        border: 1px solid #dce2de;
+        border-radius: 10px;
+        font-size: .82rem;
+        box-shadow: none;
+    }
+
+    .ind-search input:focus {
+        border-color: #83c5a1;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+    }
+
+    .ind-search-clear {
+        position: absolute;
+        right: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 0;
+        background: transparent;
+        color: #9ca3af;
+        display: none;
+    }
+
+    /* =========================================================
+       INDICATOR LIST
+       ========================================================= */
+
+    .ind-list {
+        padding: 0;
+    }
+
+    .ind-item {
+        padding: 18px 21px;
+        border-bottom: 1px solid #edf0ee;
+        transition: all .15s ease;
+    }
+
+    .ind-item:last-child {
+        border-bottom: 0;
+    }
+
+    .ind-item:hover {
+        background: #fbfdfc;
+    }
+
+    .ind-code {
+        width: 68px;
+        min-width: 68px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        background: var(--ind-primary-soft);
+        color: var(--ind-primary-dark);
+        font-family: monospace;
+        font-size: .7rem;
+        font-weight: 700;
+    }
+
+    .ind-name {
+        color: #27362f;
+        font-size: .87rem;
+        font-weight: 650;
+        line-height: 1.45;
+    }
+
+    .ind-description {
+        color: #707b75;
+        font-size: .76rem;
+        line-height: 1.5;
+        margin-top: 5px;
+        max-width: 820px;
+    }
+
+    .ind-meta {
+        color: #929b96;
+        font-size: .7rem;
+        margin-top: 7px;
+    }
+
+    /* =========================================================
+       TYPE / STATUS BADGES
+       ========================================================= */
+
+    .ind-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 8px;
+        border-radius: 7px;
+        font-size: .65rem;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .ind-badge-primary {
+        background: var(--ind-primary-soft);
+        color: var(--ind-primary-dark);
+    }
+
+    .ind-badge-neutral {
+        background: #f1f3f2;
+        color: #66716b;
+    }
+
+    /* =========================================================
+       ACTION
+       ========================================================= */
+
+    .ind-action {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        border: 1px solid #dce4df;
+        background: #fff;
+        color: #65716b;
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+    .ind-action:hover {
+        background: var(--ind-primary-soft);
+        border-color: #cce5d6;
+        color: var(--ind-primary-dark);
+    }
+
+    /* =========================================================
+       EMPTY STATE
+       ========================================================= */
+
+    .ind-empty {
+        padding: 65px 20px;
+        text-align: center;
+    }
+
+    .ind-empty-icon {
+        width: 66px;
+        height: 66px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        background: #f3f6f4;
+        color: #9aa49e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .ind-empty h6 {
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .ind-empty p {
+        color: var(--ind-muted);
+        font-size: .8rem;
+        margin-bottom: 16px;
+    }
+
+    .ind-search-empty {
+        display: none;
+        padding: 55px 20px;
+        text-align: center;
+    }
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+
+    .ind-panel-footer {
+        padding: 13px 20px;
+        border-top: 1px solid var(--ind-border);
+        background: #fff;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 991.98px) {
+
+        .ind-context-action {
+            margin-top: 15px;
+        }
+
+    }
+
+    @media (max-width: 767.98px) {
+
+        .ind-breadcrumb {
+            padding: 9px 12px;
+            margin-bottom: 14px;
+        }
+
+        .ind-context {
+            padding: 17px;
+            border-radius: 13px;
+        }
+
+        .ind-context-icon {
+            width: 44px;
+            min-width: 44px;
+            height: 44px;
+            border-radius: 10px;
+        }
+
+        .ind-context-title {
+            font-size: 1.03rem;
+        }
+
+        .ind-context-subtitle {
+            font-size: .74rem;
+        }
+
+        .ind-context-action {
+            width: 100%;
+        }
+
+        .ind-add-btn {
+            width: 100%;
+        }
+
+        .ind-panel {
+            border-radius: 13px;
+        }
+
+        .ind-panel-header {
+            padding: 15px;
+        }
+
+        .ind-item {
+            padding: 15px;
+        }
+
+        .ind-code {
+            width: 57px;
+            min-width: 57px;
+            height: 38px;
+            font-size: .66rem;
+        }
+
+        .ind-name {
+            font-size: .82rem;
+        }
+
+        .ind-description {
+            font-size: .74rem;
+        }
+
+        .ind-action {
+            width: 32px;
+            height: 32px;
+        }
+
+    }
+</style>
+
+<div class="container-fluid indicator-page">
+
+
+<!-- =====================================================
+     BREADCRUMB
+====================================================== -->
+
+<div class="ind-breadcrumb">
+
+    <ul class="list-inline mb-0 small">
+
+        <li class="list-inline-item">
+
+            <a href="{% url 'monitoring:dashboard' %}">
+                <i class="fa fa-home me-1"></i>
+                Dashboard
+            </a>
+
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item">
+
+            <a href="{% url 'monitoring:so_detail' output.so.pk output.so.title %}">
+                {{ output.so.code }}
+            </a>
+
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item text-muted">
+            {{ output.code }}
+        </li>
+
+        <li class="list-inline-item text-muted">
+            /
+        </li>
+
+        <li class="list-inline-item text-muted">
+            Indicators
+        </li>
+
+    </ul>
+
+</div>
+
+    
+<!-- =====================================================
+     OUTPUT CONTEXT
+====================================================== -->
+
+<div class="ind-context">
+
+    <div class="row align-items-center">
+
+        <div class="col-lg-8">
+
+            <div class="d-flex align-items-center">
+
+                <div class="ind-context-icon me-3">
+
+                    <i class="fa fa-line-chart"></i>
+
+                </div>
+
+                <div>
+
+                    <div class="ind-context-label">
+                        Strategic Output
+                    </div>
+
+                    <div class="ind-context-title">
+
+                        <span class="ind-context-code">
+                            {{ output.code }}
+                        </span>
+
+                        {{ output.title }}
+
+                    </div>
+
+                    <p class="ind-context-subtitle">
+
+                        <i class="fa fa-bullseye me-1"></i>
+
+                        {{ output.so.code }} —
+                        {{ output.so.title }}
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-lg-4">
+
+            <div class="ind-context-action
+                        d-flex justify-content-lg-end">
+
+                <a href="{% url 'monitoring:create_indicator' output.pk %}"
+                   class="ind-add-btn">
+
+                    <i class="fa fa-plus me-2"></i>
+
+                    Add Indicator
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     SUMMARY CARDS
+====================================================== -->
+
+<div class="row g-3 mb-4">
+
+    <div class="col-6 col-lg-3">
+
+        <div class="ind-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+
+                    <div class="ind-stat-value">
+                        {{ indicator|length|default:"0" }}
+                    </div>
+
+                    <div class="ind-stat-label">
+                        Total Indicators
+                    </div>
+
+                </div>
+
+                <div class="ind-stat-icon">
+                    <i class="fa fa-bar-chart"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+        <div class="ind-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+
+                    <div class="ind-stat-value">
+                        <i class="fa fa-check text-success"></i>
+                    </div>
+
+                    <div class="ind-stat-label">
+                        Defined
+                    </div>
+
+                </div>
+
+                <div class="ind-stat-icon">
+                    <i class="fa fa-check-circle"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+        <div class="ind-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+
+                    <div class="ind-stat-value">
+                        <i class="fa fa-database text-success"></i>
+                    </div>
+
+                    <div class="ind-stat-label">
+                        Data Ready
+                    </div>
+
+                </div>
+
+                <div class="ind-stat-icon">
+                    <i class="fa fa-database"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="col-6 col-lg-3">
+
+        <div class="ind-stat">
+
+            <div class="d-flex justify-content-between
+                        align-items-start">
+
+                <div>
+
+                    <div class="ind-stat-value">
+                        <i class="fa fa-line-chart text-success"></i>
+                    </div>
+
+                    <div class="ind-stat-label">
+                        Monitoring
+                    </div>
+
+                </div>
+
+                <div class="ind-stat-icon">
+                    <i class="fa fa-area-chart"></i>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     INDICATOR PANEL
+====================================================== -->
+
+<div class="ind-panel">
+
+    <!-- Header -->
+
+    <div class="ind-panel-header">
+
+        <div class="row g-3 align-items-center">
+
+            <div class="col-lg-5">
+
+                <div class="ind-panel-title">
+                    Performance Indicators
+                </div>
+
+                <p class="ind-panel-subtitle">
+                    Indicators used to measure progress against
+                    this strategic output.
+                </p>
+
+                <div class="small text-muted mt-2">
+
+                    Showing
+                    <strong id="visibleIndicatorCount">
+                        {{ indicator|length|default:"0" }}
+                    </strong>
+                    indicator(s)
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-7">
+
+                <div class="ind-search">
+
+                    <i class="fa fa-search ind-search-icon"></i>
+
+                    <input type="text"
+                           id="profileSearch"
+                           class="form-control"
+                           placeholder="Search by code, indicator, definition..."
+                           autocomplete="off">
+
+                    <button type="button"
+                            id="clearSearch"
+                            class="ind-search-clear">
+
+                        <i class="fa fa-times"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         INDICATOR LIST
+    ================================================== -->
+
+    {% if indicator %}
+
+    <div class="ind-list"
+         id="indicatorList">
+
+        {% for indicator in indicator %}
+
+        <div class="ind-item indicator-search-row">
+
+            <div class="row align-items-center g-3">
+
+                <!-- Indicator Code -->
+
+                <div class="col-auto">
+
+                    <span class="ind-code">
+                        {{ indicator.code }}
+                    </span>
+
+                </div>
+
+
+                <!-- Indicator Information -->
+
+                <div class="col">
+
+                    <div class="ind-name">
+
+                        {{ indicator.name }}
+
+                    </div>
+
+
+                    {% if indicator.description %}
+
+                        <div class="ind-description">
+
+                            {{ indicator.description|truncatechars:220 }}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="ind-meta">
+
+                        <i class="fa fa-link me-1"></i>
+
+                        Measures:
+                        {{ output.code }}
+
+                    </div>
+
+                </div>
+
+
+                <!-- Status -->
+
+                <div class="col-auto d-none d-md-block">
+
+                    <span class="ind-badge ind-badge-primary">
+
+                        <i class="fa fa-circle"
+                           style="font-size:5px;"></i>
+
+                        Indicator
+
+                    </span>
+
+                </div>
+
+
+                <!-- Action -->
+
+                <div class="col-auto">
+
+                    <a href="#"
+                       class="ind-action"
+                       title="Manage indicator"
+                       data-bs-toggle="tooltip">
+
+                        <i class="fa fa-chevron-right"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- =================================================
+         SEARCH EMPTY
+    ================================================== -->
+
+    <div id="searchEmpty"
+         class="ind-search-empty">
+
+        <div class="ind-empty-icon">
+
+            <i class="fa fa-search"></i>
+
+        </div>
+
+        <h6>
+            No matching indicators
+        </h6>
+
+        <p>
+            Try searching by indicator code, name or description.
+        </p>
+
+    </div>
+
+
+    {% else %}
+
+    <!-- =================================================
+         DATABASE EMPTY
+    ================================================== -->
+
+    <div class="ind-empty">
+
+        <div class="ind-empty-icon">
+
+            <i class="fa fa-bar-chart"></i>
+
+        </div>
+
+        <h6>
+            No indicators defined
+        </h6>
+
+        <p>
+            Start measuring this output by defining its first
+            performance indicator.
+        </p>
+
+        <a href="{% url 'monitoring:create_indicator' output.pk %}"
+           class="ind-add-btn">
+
+            <i class="fa fa-plus me-1"></i>
+
+            Add First Indicator
+
+        </a>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <div class="ind-panel-footer">
+
+        {% include "pagination.html" %}
+
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- =========================================================
+     SEARCH SCRIPT
+========================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput =
+        document.getElementById("profileSearch");
+
+    const clearButton =
+        document.getElementById("clearSearch");
+
+    const visibleCount =
+        document.getElementById("visibleIndicatorCount");
+
+    const searchEmpty =
+        document.getElementById("searchEmpty");
+
+
+    if (!searchInput) {
+        return;
+    }
+
+
+    function performSearch() {
+
+        const term =
+            searchInput.value
+                .toLowerCase()
+                .trim();
+
+
+        const rows =
+            document.querySelectorAll(
+                ".indicator-search-row"
+            );
+
+
+        let visible = 0;
+
+
+        rows.forEach(function (row) {
+
+            const content =
+                row.innerText.toLowerCase();
+
+
+            const matches =
+                term === "" ||
+                content.includes(term);
+
+
+            row.style.display =
+                matches ? "" : "none";
+
+
+            if (matches) {
+                visible++;
+            }
+
+        });
+
+
+        if (visibleCount) {
+
+            visibleCount.textContent =
+                visible;
+
+        }
+
+
+        if (clearButton) {
+
+            clearButton.style.display =
+                term ? "block" : "none";
+
+        }
+
+
+        if (searchEmpty) {
+
+            if (
+                visible === 0 &&
+                term !== ""
+            ) {
+
+                searchEmpty.style.display =
+                    "block";
+
+            } else {
+
+                searchEmpty.style.display =
+                    "none";
+
+            }
+
+        }
+
+    }
+
+
+    searchInput.addEventListener(
+        "input",
+        performSearch
+    );
+
+
+    if (clearButton) {
+
+        clearButton.addEventListener(
+            "click",
+            function () {
+
+                searchInput.value = "";
+
+                searchInput.focus();
+
+                performSearch();
+
+            }
+        );
+
+    }
+
+
+    /* =========================================================
+       BOOTSTRAP TOOLTIPS
+    ========================================================= */
+
+    if (
+        typeof bootstrap !== "undefined"
+    ) {
+
+        document
+            .querySelectorAll(
+                '[data-bs-toggle="tooltip"]'
+            )
+            .forEach(function (element) {
+
+                new bootstrap.Tooltip(element);
+
+            });
+
+    }
+
+});
+</script>
+
+{% endblock %}

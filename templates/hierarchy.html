@@ -1,0 +1,218 @@
+{% extends 'mne/base.html' %}
+{% block content %}
+<div class="container-fluid">
+    {% include 'message.html' %}
+    <!-- Breadcrumb -->
+<div class="db-breadcrumb mb-4 p-3 rounded shadow-sm bg-white d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+
+  <!-- Title -->
+  <div>
+    <h4 class="breadcrumb-title mb-1 fw-bold" style="color:#111;"> MEAL Dashboard</h4>
+
+    <!-- List -->
+    <ul class="db-breadcrumb-list list-inline mb-0 small text-muted">
+      <li class="list-inline-item">
+        <a href="{% url 'monitoring:dashboard' %}" class="text-decoration-none text-primary">
+          <i class="fa fa-home me-1"></i> Home
+        </a>
+      </li>
+      <li class="list-inline-item">/</li>
+      <li class="list-inline-item">Results Hierarchy</li>
+    </ul>
+  </div>
+
+
+</div>
+
+    <!-- Summary Widgets -->
+    <div class="row mb-4">
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon mb-2"><i class="fa fa-bullseye text-primary fa-2x"></i></div>
+                    <h6 class="text-muted">Strategic Objectives</h6>
+                    <h3 class="fw-bold">{{ sos.count|default:0 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon mb-2"><i class="fa fa-sitemap text-success fa-2x"></i></div>
+                    <h6 class="text-muted">Outputs</h6>
+                    <h3 class="fw-bold">{{ total_outputs|default:0 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center py-4">
+                    <div class="icon mb-2"><i class="fa fa-chart-line text-info fa-2x"></i></div>
+                    <h6 class="text-muted">Indicators</h6>
+                    <h3 class="fw-bold">{{ total_indicators|default:0 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hierarchy Grid -->
+    <div class="row g-3">
+        <!-- Strategic Objectives -->
+        <div class="col-lg-4 col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Strategic Objectives</h5>
+                </div>
+                <ul class="list-group list-group-flush" id="soList" style="min-height:450px;">
+                    {% for so in sos %}
+                    <li class="list-group-item p-2">
+                        <button class="btn btn-so w-100 text-start" data-so-id="{{ so.id }}"
+                                style="background-color: {{ so.color|default:'#3b82f6' }}; color:white;">
+                            {{ so.code }} — {{ so.title }}
+                            <span class="badge bg-light text-dark float-end">{{ so.outputs.count|default:0 }}</span>
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Outputs -->
+        <div class="col-lg-4 col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Outputs</h5>
+                </div>
+                <ul class="list-group list-group-flush" id="outputs" style="min-height:450px;"></ul>
+            </div>
+        </div>
+
+        <!-- Indicators -->
+        <div class="col-lg-4 col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Indicators</h5>
+                </div>
+                <ul class="list-group list-group-flush" id="indicators" style="min-height:450px;"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Indicator Entry -->
+    <div class="modal fade" id="entryModal" tabindex="-1" aria-labelledby="entryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header btn-success btn-block">
+                    <h5 class="modal-title" id="entryModalLabel">New Data Entry</h5>
+                </div>
+                <div class="modal-body" style="max-height:70vh; overflow-y:auto;" id="modalBody"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+    const soListEl = document.getElementById('soList');
+    const outputsEl = document.getElementById('outputs');
+    const indicatorsEl = document.getElementById('indicators');
+    const outputsUrlTemplate = "{% url 'monitoring:ajax_outputs_for_so' 0 %}";
+    const indicatorsUrlTemplate = "{% url 'monitoring:ajax_indicators_for_output' 0 %}";
+    const entryUrlTemplate = "{% url 'monitoring:entry_form' 0 %}";
+    const urlFor = (template, id) => template.replace('/0/', `/${id}/`);
+
+    // Click listener for Strategic Objectives
+    soListEl.addEventListener('click', async function(e){
+        const btn = e.target.closest('.btn-so');
+        if(!btn) return;
+        const soId = btn.dataset.soId;
+
+        try {
+            const res = await fetch(urlFor(outputsUrlTemplate, soId));
+            if(!res.ok) throw new Error('Failed to fetch outputs');
+            const data = await res.json();
+
+            outputsEl.innerHTML = '';
+            indicatorsEl.innerHTML = '';
+
+            data.outputs.forEach(o => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item p-2';
+
+                const b = document.createElement('button');
+                b.className = 'btn w-100 text-start output-btn';
+                b.style.backgroundColor = o.color;
+                b.style.color = 'white';
+                b.innerHTML = `${o.code} — ${o.title} <span class="badge bg-light text-dark float-end">${o.indicators_count}</span>`;
+
+                li.appendChild(b);
+                outputsEl.appendChild(li);
+
+                // Click listener for Output -> load Indicators
+                b.addEventListener('click', async () => {
+                    try {
+                        const ores = await fetch(urlFor(indicatorsUrlTemplate, o.id));
+                        if(!ores.ok) throw new Error('Failed to fetch indicators');
+                        const odata = await ores.json();
+
+                        indicatorsEl.innerHTML = '';
+                        odata.indicators.forEach(ind => {
+                            const li2 = document.createElement('li');
+                            li2.className = 'list-group-item p-2';
+
+                            const a = document.createElement('a');
+                            a.href = '#';
+                            a.textContent = `${ind.code} — ${ind.name}`;
+                            a.dataset.indId = ind.id;
+                            a.style.color = '#3b82f6';
+
+                            a.addEventListener('click', async (ev) => {
+                                ev.preventDefault();
+                                const fr = await fetch(urlFor(entryUrlTemplate, ind.id));
+                                const html = await fr.text();
+                                document.getElementById('modalBody').innerHTML = html;
+                                new bootstrap.Modal(document.getElementById('entryModal')).show();
+                                attachModalFormSubmit();
+                            });
+
+                            li2.appendChild(a);
+                            indicatorsEl.appendChild(li2);
+                        });
+                    } catch(err){ console.error(err); }
+                });
+            });
+
+        } catch(err){
+            console.error(err);
+        }
+    });
+
+    // Modal form submission
+    function attachModalFormSubmit(){
+        const form = document.querySelector('#modalBody form');
+        if(!form) return;
+
+        form.addEventListener('submit', async ev => {
+            ev.preventDefault();
+            const data = new FormData(form);
+            const resp = await fetch(form.action, {
+                method: 'POST',
+                body: data,
+                headers: {'X-Requested-With':'XMLHttpRequest'}
+            });
+
+            if(resp.ok){
+                alert('Saved successfully.');
+                bootstrap.Modal.getInstance(document.getElementById('entryModal')).hide();
+            } else {
+                const html = await resp.text();
+                document.getElementById('modalBody').innerHTML = html;
+                attachModalFormSubmit();
+            }
+        });
+    }
+
+});
+</script>
+{% endblock %}

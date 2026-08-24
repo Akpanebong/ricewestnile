@@ -1,0 +1,385 @@
+{% extends "procurement/base.html" %}
+{% load humanize %}
+{% load static %}
+{% block title %}RFQ {{ rfq.reference_number }}{% endblock %}
+{% block content %}
+<main class="ttr-wrapper">
+  <div class="container-fluid">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4" style="background-color:#fff; font-size:14px;">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+          <div >
+            <img style="margin-left:100px" src="{% static 'assets/images/ricewn.png' %}"
+                 alt="RICE West Nile" width="250">
+          </div>
+          <div class="contact-info text-end">
+
+    <p class="mb-1">
+        P.O. Box 481 Arua - Uganda
+    </p>
+
+    <p class="mb-1 contact-line">
+        <strong>T:</strong>
+        +256 393 238 163
+        &nbsp;|&nbsp;
+
+        <strong>M:</strong>
+        0773 472234
+        &nbsp;|&nbsp;
+        0702 857349
+    </p>
+
+    <p class="mb-1 contact-line">
+        <strong>E:</strong>
+        info@ricewestnile.org
+        &nbsp;|&nbsp;
+        ricearua@yahoo.com
+        &nbsp;|&nbsp;
+        ricewn@gmail.com
+    </p>
+
+    <p class="mb-0">
+        <strong>Website:</strong>
+        www.ricewestnile.org
+    </p>
+
+</div>
+        </div>
+
+
+
+
+
+        <!-- RFQ Title -->
+        <div class="text-center border border-dark py-2 bg-light mb-4">
+          <h5 class="mb-0 fw-bold text-uppercase">REQUEST FOR QUOTATION</h5>
+        </div>
+
+        <!-- Reference + Date -->
+        <table class="table table-bordered mb-4" style="border-color:#000;">
+          <tr>
+            <td style="width:50%;"><strong>REFERENCE No:</strong> {{ rfq.reference_no }}</td>
+            <td><strong>Date:</strong> {{ rfq.date_issued|date:"d/m/Y" }}</td>
+          </tr>
+        </table>
+
+        <p class="small mb-3"><em>Please include the RFQ number on all documents</em></p>
+
+        <!-- Supplier & Consignee Info -->
+        <table class="table table-bordered" style="border-color:#000;">
+          <tr>
+            <th style="width:50%;">SUPPLIER:</th>
+            <th>CONSIGNEE:</th>
+          </tr>
+          <tr>
+            <td>
+              <strong>Name:</strong> <br>
+              <strong>Address:</strong> <br>
+              <strong>Contact:</strong> <br>
+              <strong>Phone:</strong> <br>
+              <strong>Email:</strong> <br>
+              <strong>VAT number:</strong>
+            </td>
+            <td>
+              <strong>Name:</strong> RICE WEST NILE H/O<br>
+              <strong>Address:</strong> Plot 16, Awudelle Crescent<br>
+              <strong>Contact Person:</strong> Elmasia Suzan<br>
+              <strong>Phone:</strong> 0779203304 / 0393238163<br>
+              <strong>Email:</strong> s.elmasia@ricewestnile.org
+            </td>
+          </tr>
+        </table>
+
+        <!-- Disclaimer -->
+        <div class="border border-dark p-2 mb-3">
+          <p class="mb-1 text-center fw-bold">THIS IS NOT A PURCHASE ORDER</p>
+          <p class="mb-0 small">Please provide a quotation for the items listed below. Please specify the validity period of your quotation, sign or stamp it, and return it to the requester.</p>
+        </div>
+
+        <!-- Special Instructions -->
+        <div class="border border-dark p-2 mb-3">
+          <strong>SPECIAL INSTRUCTIONS:</strong>
+          <p class="small mb-0">
+            Please note any and all exclusions, expectations, and deviations from our specification.
+            Outline and describe any additional economics not specified in this RFQ that would result in an improvement in the bid.
+            Our standard terms and conditions apply to any order placed in conjunction with this RFQ.
+          </p>
+        </div>
+
+        <!-- Items Table -->
+        <table class="table table-bordered table-sm align-middle" style="border-color:#000;">
+          <thead class="bg-light text-center">
+            <tr>
+              <th>S/N</th>
+              <th>BUDGET CODE</th>
+              <th>Item Description</th>
+              <th>QTY</th>
+              <th>Unit of Measure</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td class="text-center">{{ forloop.counter }}</td>
+              <td class="text-center">{{ rfq.plan.budget.code}}</td>
+              <td>{{ item.description }}</td>
+              <td class="text-center">{{ item.qty }}</td>
+              <td class="text-center">{% if item.unit_measure %}{{ item.unit_measure }}{% else %}
+              {{item}}{% endif %}
+              </td>
+              <td>{{ item.remarks }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No items listed.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <!-- Payment Terms -->
+        <table class="table table-bordered" style="border-color:#000;">
+          <tr>
+            <th style="width:25%;">PAYMENT TERMS</th>
+            <th>DELIVERY TERMS</th>
+            <th>EXPIRY DATE</th>
+            <th>DELIVERY DATE/LEAD TIME</th>
+          </tr>
+          <tr>
+            <td>{{ rfq.payment_terms }}</td>
+            <td>{{ rfq.delivery_terms }}</td>
+            <td>{{ rfq.expiry_date|date:"d/m/Y" }}</td>
+            <td>{{ rfq.delivery_date|date:"d/m/Y" }}</td>
+          </tr>
+        </table>
+
+        <!-- Supplier Acknowledgement -->
+        <div class="border border-dark p-3 mt-3">
+          <p class="fw-bold text-center mb-2">SUPPLIER'S ACKNOWLEDGEMENT</p>
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Name of contact:</strong> __________________________</p>
+              <p><strong>Date:</strong> __________________________</p>
+            </div>
+            <div class="col-md-6 text-end">
+              <p><strong>Stamp & Signature:</strong> __________________________</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submission Deadline -->
+        <div class="border border-dark p-2 mt-3 text-center bg-light fw-bold">
+          DEADLINE FOR SUBMISSION OF OFFER: {{ rfq.deadline|date:"d/m/Y"|default:'-' }}
+        </div>
+
+        <!-- Footer -->
+        <div class="text-end mt-3">
+          <a href="?format=pdf" class="btn btn-danger btn-sm"><i class="fa fa-file-pdf"></i> Download as PDF</a>
+          <a href="{% url 'rfq_list' %}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Back to RFQ List</a>
+
+        </div>
+
+
+
+
+
+
+
+
+
+
+   <div class="card mt-4 shadow-sm border-0">
+
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fa fa-paper-plane me-2"></i>
+            RFQ Supplier Evaluation
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        {% if send_logs %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Requisition Value</th>
+                        <th>Date Sent</th>
+                        <th>Awarded Amount</th>
+                        <th>Status</th>
+                        <th width="160">Action</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for log in send_logs %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                {{ log.supplier.full_name|default:log.supplier.title }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ rfq.req.total|money:request }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ log.date_sent|date:"d M Y H:i" }}
+                        </td>
+
+                        <td>
+
+                            {% if log.awarded_amount %}
+
+                                <span class="fw-bold text-success">
+                                    {{ log.awarded_amount|money:request }}
+                                </span>
+
+                            {% else %}
+
+                                <span class="text-muted">
+                                    Not Awarded
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if log.po and log.po.sent %}
+
+                                <span class="badge bg-success">
+                                    Awarded
+                                </span>
+
+                            {% elif awarded_po %}
+
+                                <span class="badge bg-secondary">
+                                    Closed
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-warning text-dark">
+                                    Pending
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if log.po and log.po.sent %}
+
+                                <button class="btn btn-success btn-sm" disabled>
+                                    <i class="fa fa-check-circle"></i>
+                                    LPO Sent
+                                </button>
+
+                            {% elif awarded_po %}
+
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fa fa-lock"></i>
+                                    Award Closed
+                                </button>
+
+                            {% else %}
+
+                                <a href="{% url 'create_purchase_order' log.id %}"
+                                   class="btn btn-primary btn-sm">
+
+                                    <i class="fa fa-paper-plane"></i>
+                                    Award
+
+                                </a>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+                <tfoot>
+
+                    <tr>
+
+                        <td colspan="3">
+
+                            <a href="{% url 'purchase_order' %}"
+                               class="btn btn-success">
+
+                                <i class="fa fa-file-contract me-1"></i>
+                                View LPOs
+
+                            </a>
+
+                        </td>
+
+                        <td colspan="3" class="text-end">
+
+                            <a href="{% url 'log_rfq' rfq.reference_no %}"
+                               class="btn btn-outline-primary">
+
+                                <i class="fa fa-history me-1"></i>
+                                RFQ Audit Log
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                </tfoot>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+            <div class="alert alert-info mb-0">
+
+                <i class="fa fa-info-circle me-2"></i>
+
+                No suppliers have been sent this RFQ yet.
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+
+
+
+
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+

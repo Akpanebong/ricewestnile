@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Update Notification{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+<div class="row justify-content-center">
+
+<div class="col-lg-8">
+
+<div class="card shadow-sm border-0">
+
+<div class="card-header bg-warning">
+
+<h4>
+
+<i class="fa fa-edit me-2"></i>
+
+Update Notification
+
+</h4>
+
+</div>
+
+<form
+
+method="post"
+
+enctype="multipart/form-data"
+
+>
+
+{% csrf_token %}
+
+<div class="card-body">
+
+{% include "notifications/partials/form.html" %}
+
+</div>
+
+<div class="card-footer text-end">
+
+<a
+
+href="{% url 'notifications:list' %}"
+
+class="btn btn-secondary"
+
+>
+
+Cancel
+
+</a>
+
+<button
+
+class="btn btn-warning"
+
+type="submit"
+
+>
+
+<i class="fa fa-save me-1"></i>
+
+Save Changes
+
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

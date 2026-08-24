@@ -1,0 +1,167 @@
+{% extends "garcis/base.html" %}
+{% load form_tags %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow-lg border-0 rounded-4">
+
+        <!-- HEADER -->
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Add Requirement → {{ framework.name }}</h5>
+            <span class="badge bg-light text-dark">Compliance Setup</span>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- ================= BASIC INFO ================= -->
+                <h6 class="fw-bold text-muted mb-3">Basic Information</h6>
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Title</label>
+                        {{ form.title|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Level</label>
+                        {{ form.level|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Description</label>
+                        {{ form.description|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Evidence Required</label>
+                        {{ form.evidence_required|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Frequency</label>
+                        {{ form.frequency|add_class:"form-control" }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Owner</label>
+                        {{ form.owner|add_class:"form-control" }}
+                    </div>
+
+                </div>
+
+                <hr class="my-4">
+
+                <!-- ================= DOCUMENTS ================= -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0">Compliance Documents</h6>
+                    <small class="text-muted">Upload supporting files</small>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-3 p-3 mb-3">
+
+                    {{ formset.management_form }}
+
+                    <div id="formset-container">
+                        {% for form in formset %}
+                            <div class="document-row mb-3 border rounded-3 p-2 bg-light">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <div class="flex-grow-1">
+                                        {{ form.file }}
+                                    </div>
+
+                                    <div>
+                                        {{ form.DELETE }}
+                                    </div>
+
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.document-row').remove()">
+                                        ×
+                                    </button>
+                                </div>
+
+                                {% if form.instance.pk %}
+                                    <small class="text-muted">Existing file attached</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addForm()">
+                        + Add Another Document
+                    </button>
+
+                </div>
+
+                <!-- ================= ACTIONS ================= -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+
+                    <a href="{% url 'framework_detail' framework.id %}" class="btn btn-outline-secondary px-4">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn btn-primary px-4">
+                        Save Requirement
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- ================= JS ================= -->
+<script>
+function addForm() {
+    const container = document.getElementById('formset-container');
+    const totalForms = document.getElementById('id_documents-TOTAL_FORMS');
+
+    let formNum = parseInt(totalForms.value);
+
+    let firstForm = container.children[0];
+    let newForm = firstForm.cloneNode(true);
+
+    newForm.innerHTML = newForm.innerHTML.replace(/-0-/g, `-${formNum}-`);
+
+    // clear file input
+    newForm.querySelectorAll('input').forEach(input => {
+        if (input.type === 'file') input.value = '';
+        if (input.type === 'checkbox') input.checked = false;
+    });
+
+    container.appendChild(newForm);
+    totalForms.value = formNum + 1;
+}
+</script>
+
+<style>
+.card {
+    transition: all 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.document-row {
+    transition: all 0.2s ease;
+}
+.document-row:hover {
+    background: #f8f9fa;
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+}
+</style>
+
+{% endblock %}

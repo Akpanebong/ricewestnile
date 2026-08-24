@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Orientation Scheduled</title>
+  </head>
+  <body style="margin:0;background:#f5f6fb;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.08);">
+            <tr>
+              <td style="background:#0a6b3a;padding:18px 22px;color:#fff;">
+                <div style="font-size:16px;font-weight:700;">RICE WN • Orientation Scheduled</div>
+                <div style="opacity:.85;font-size:13px;margin-top:4px;">{{ department.name }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:22px;">
+                <p style="margin:0 0 12px;color:#111;font-size:14px;">
+                  Hello {{ staff.get_full_name|default:staff.username }},
+                </p>
+                <p style="margin:0 0 14px;color:#333;font-size:14px;line-height:1.55;">
+                  Your orientation session has been scheduled as follows:
+                </p>
+                <div style="background:#f6fff9;border:1px solid #d7f2e4;border-radius:12px;padding:14px;">
+                  <div style="font-weight:700;color:#0a6b3a;font-size:14px;">{{ department.name }} Orientation</div>
+                  <div style="color:#111;font-size:14px;margin-top:6px;">
+                    {{ session.scheduled_start|date:"M d, Y H:i" }} – {{ session.scheduled_end|date:"H:i" }}
+                  </div>
+                </div>
+                <p style="margin:14px 0 0;color:#6b7280;font-size:12px;">
+                  You will also see this in your in-app notifications and Orientation page.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:14px 22px;background:#fafafa;color:#6b7280;font-size:12px;">
+                © {{ year }} RICE West Nile • HR Management System
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+

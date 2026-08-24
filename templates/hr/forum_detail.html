@@ -1,0 +1,284 @@
+{% extends "hr/base.html" %}
+{% block title %}{{ thread.title }}{% endblock %}
+
+{% block content %}
+
+<style>
+
+.chat-wrapper{
+    max-width:900px;
+    margin:auto;
+}
+
+.thread-header{
+    background:#fff;
+    border:1px solid #e9ecef;
+    border-radius:14px;
+    padding:24px;
+}
+
+.avatar{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#198754,#20c997);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:18px;
+    flex-shrink:0;
+}
+
+.message{
+    background:#fff;
+    border:1px solid #edf1f4;
+    border-radius:14px;
+    transition:.25s;
+}
+
+.message:hover{
+    box-shadow:0 8px 22px rgba(0,0,0,.06);
+    border-color:#d7e7dd;
+}
+
+.author-name{
+    font-weight:600;
+    color:#212529;
+}
+
+.message-time{
+    color:#6c757d;
+    font-size:.82rem;
+}
+
+.starter-badge{
+    background:#e9f7ef;
+    color:#198754;
+    border-radius:30px;
+    font-size:.72rem;
+    padding:4px 10px;
+}
+
+.reply-box{
+    background:#fff;
+    border:1px solid #e9ecef;
+    border-radius:14px;
+}
+
+.reply-box textarea{
+    min-height:140px;
+    border:none;
+    resize:vertical;
+    box-shadow:none !important;
+}
+
+.reply-box textarea:focus{
+    box-shadow:none;
+}
+
+</style>
+
+<div class="chat-wrapper mb-4">
+
+    <div class="thread-header shadow-sm">
+
+        <div class="d-flex justify-content-between align-items-start flex-wrap">
+
+            <div>
+
+                <h3 class="fw-bold mb-2">
+
+                    {{ thread.title }}
+
+                </h3>
+
+                <div class="text-muted">
+
+                    Started by
+
+                    <strong>{{ thread.author }}</strong>
+
+                    •
+
+                    {{ thread.created_at|timesince }} ago
+
+                    •
+
+                    {{ posts|length }} Replies
+
+                </div>
+
+            </div>
+
+            <a href="{% url 'forum_list' %}"
+               class="btn btn-outline-success">
+
+                <i class="fa fa-arrow-left me-2"></i>
+
+                All Discussions
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="chat-wrapper">
+
+{% if posts %}
+
+{% for post in posts %}
+
+<div class="message p-4 mb-3">
+
+    <div class="d-flex">
+
+        <div class="avatar me-3">
+
+            {{ post.author.first_name|first|default:post.author.username|first|upper }}
+
+        </div>
+
+        <div class="flex-grow-1">
+
+            <div class="d-flex justify-content-between flex-wrap">
+
+                <div>
+
+                    <span class="author-name">
+
+                        {{ post.author }}
+
+                    </span>
+
+                    {% if post.author == thread.author %}
+
+                        <span class="starter-badge ms-2">
+
+                            Thread Starter
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+                <small class="message-time">
+
+                    {{ post.created_at|timesince }} ago
+
+                </small>
+
+            </div>
+
+            <div class="mt-3">
+
+                {{ post.content|linebreaks }}
+
+            </div>
+
+        </div>
+
+        {% if request.user == post.author or request.user.is_superuser %}
+
+        <div class="ms-3">
+
+            <a href="{% url 'delete_post' post.id %}"
+               class="btn btn-outline-danger btn-sm">
+
+                <i class="fa fa-trash"></i>
+
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endfor %}
+
+{% else %}
+
+<div class="text-center py-5">
+
+    <i class="fa fa-comments fa-4x text-muted opacity-25"></i>
+
+    <h5 class="mt-3">
+
+        No replies yet
+
+    </h5>
+
+    <p class="text-muted">
+
+        Be the first to join this discussion.
+
+    </p>
+
+</div>
+
+{% endif %}
+
+</div>
+
+<div class="chat-wrapper mt-4">
+
+<div class="reply-box shadow-sm">
+
+    <div class="border-bottom px-4 py-3">
+
+        <h6 class="mb-0">
+
+            <i class="fa fa-pen text-success me-2"></i>
+
+            Join the Discussion
+
+        </h6>
+
+    </div>
+
+    <div class="p-4">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {{ form.content }}
+
+            {% if form.content.errors %}
+
+                <div class="text-danger small mt-2">
+
+                    {{ form.content.errors }}
+
+                </div>
+
+            {% endif %}
+
+            <div class="text-end mt-3">
+
+                <button class="btn btn-success px-4">
+
+                    <i class="fa fa-paper-plane me-2"></i>
+
+                    Post Reply
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</div>
+{% endblock %}

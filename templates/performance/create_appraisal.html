@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid">
+   <!-- HEADER -->
+    <div class="bg-white p-3 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h5 class="fw-bold text-success mb-0">
+                <i class="fa fa-user-edit me-2"></i>Appraisal Notification
+            </h5>
+            <small class="text-muted">Notify <strong class="badge bg-info text-dark">{{employee}}</strong> to complete his/her Appraisal</small>
+        </div>
+
+<!--        <span class="badge bg-info text-dark">-->
+<!--            <i class="fa fa-clock me-1"></i> Pending Submission-->
+<!--        </span>-->
+    </div>
+
+
+<form method="post" enctype="multipart/form-data" >
+        {% csrf_token %}
+
+        <div class="row g-4 justify-content-center">
+
+            <!-- LEFT COLUMN -->
+            <div class="col-lg-8">
+
+                <!-- BASIC INFO -->
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+
+                        <h6 class="fw-bold text-primary mb-3">
+                            <i class="fa fa-file-excel me-2"></i>Upload Appraisal Form (Excel)
+                        </h6>
+
+                        <div class="mb-3">
+                            <input type="file" name="template_file" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Expected Date of Submission</label>
+                            <input type="date" name="date_of_submission" class="form-control" required>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+   <!-- ACTION BAR -->
+        <div class="bg-white p-3 mt-4 rounded shadow-sm d-flex justify-content-between align-items-center">
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fa fa-arrow-left me-1"></i> Cancel
+            </a>
+
+            <button type="submit" class="btn btn-success px-4">
+                <i class="fa fa-paper-plane me-1"></i> Submit Appraisal
+            </button>
+        </div>
+
+            </div>
+
+
+        </div>
+
+
+    </form>
+</div>
+{% endblock %}
