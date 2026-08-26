@@ -1407,6 +1407,11 @@ body.sidebar-collapsed
    FORUM FAB
 ========================================================= */
 
+/* =========================================================
+   FORUM FAB
+   Compact icon by default, expands on hover
+========================================================= */
+
 .forum-fab-container {
 
     position:
@@ -1423,6 +1428,11 @@ body.sidebar-collapsed
 
 }
 
+
+/* =========================================================
+   FORUM BUTTON
+========================================================= */
+
 .forum-fab {
 
     position:
@@ -1434,20 +1444,23 @@ body.sidebar-collapsed
     align-items:
         center;
 
-    gap:
-        15px;
+    justify-content:
+        center;
 
-    min-width:
-        220px;
+    width:
+        62px;
+
+    height:
+        62px;
 
     padding:
-        14px 18px;
+        0;
 
     background:
         #ffffff;
 
     border-radius:
-        18px;
+        50%;
 
     color:
         #343a40;
@@ -1458,12 +1471,43 @@ body.sidebar-collapsed
     box-shadow:
         0 10px 30px rgba(0,0,0,.10);
 
+    overflow:
+        visible;
+
     transition:
-        all .25s ease;
+        width .25s ease,
+        height .25s ease,
+        border-radius .25s ease,
+        transform .25s ease,
+        box-shadow .25s ease,
+        border-color .25s ease;
 
 }
 
+
+/* =========================================================
+   HOVER — EXPAND BUTTON
+========================================================= */
+
 .forum-fab:hover {
+
+    width:
+        220px;
+
+    height:
+        76px;
+
+    border-radius:
+        18px;
+
+    justify-content:
+        flex-start;
+
+    padding:
+        10px 16px;
+
+    gap:
+        14px;
 
     color:
         #198754;
@@ -1479,16 +1523,24 @@ body.sidebar-collapsed
 
 }
 
+
+/* =========================================================
+   FORUM ICON
+========================================================= */
+
 .forum-icon {
 
     width:
-        56px;
+        52px;
 
     height:
-        56px;
+        52px;
 
     position:
         relative;
+
+    flex-shrink:
+        0;
 
     border-radius:
         50%;
@@ -1513,12 +1565,100 @@ body.sidebar-collapsed
         center;
 
     font-size:
-        24px;
+        22px;
 
-    flex-shrink:
-        0;
+    transition:
+        width .25s ease,
+        height .25s ease,
+        font-size .25s ease;
 
 }
+
+
+/* Slightly enlarge icon on hover */
+
+.forum-fab:hover .forum-icon {
+
+    width:
+        52px;
+
+    height:
+        52px;
+
+    font-size:
+        22px;
+
+}
+
+
+/* =========================================================
+   FORUM CONTENT
+   Hidden until hover
+========================================================= */
+
+.forum-content {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    justify-content:
+        center;
+
+    min-width:
+        0;
+
+    opacity:
+        0;
+
+    visibility:
+        hidden;
+
+    width:
+        0;
+
+    overflow:
+        hidden;
+
+    white-space:
+        nowrap;
+
+    transform:
+        translateX(-8px);
+
+    transition:
+        opacity .18s ease,
+        transform .22s ease,
+        width .25s ease,
+        visibility .25s ease;
+
+}
+
+
+/* Show content when hovered */
+
+.forum-fab:hover .forum-content {
+
+    opacity:
+        1;
+
+    visibility:
+        visible;
+
+    width:
+        auto;
+
+    transform:
+        translateX(0);
+
+}
+
+
+/* =========================================================
+   FORUM TITLE
+========================================================= */
 
 .forum-title {
 
@@ -1531,12 +1671,23 @@ body.sidebar-collapsed
     font-weight:
         700;
 
+    line-height:
+        1.2;
+
 }
+
+
+/* =========================================================
+   FORUM SUBTITLE
+========================================================= */
 
 .forum-subtitle {
 
     display:
         block;
+
+    margin-top:
+        3px;
 
     color:
         #6c757d;
@@ -1544,7 +1695,15 @@ body.sidebar-collapsed
     font-size:
         12px;
 
+    line-height:
+        1.2;
+
 }
+
+
+/* =========================================================
+   UNREAD BADGE
+========================================================= */
 
 .forum-badge {
 
@@ -1552,16 +1711,19 @@ body.sidebar-collapsed
         absolute;
 
     top:
-        -8px;
+        -5px;
 
     right:
-        -8px;
+        -5px;
 
     min-width:
-        24px;
+        23px;
 
     height:
-        24px;
+        23px;
+
+    padding:
+        0 5px;
 
     border-radius:
         50%;
@@ -1573,7 +1735,7 @@ body.sidebar-collapsed
         white;
 
     font-size:
-        12px;
+        11px;
 
     font-weight:
         700;
@@ -1589,6 +1751,107 @@ body.sidebar-collapsed
 
     border:
         3px solid white;
+
+    z-index:
+        2;
+
+}
+
+
+/* =========================================================
+   MOBILE
+   Keep it compact on phones
+========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .forum-fab-container {
+
+        right:
+            18px;
+
+        bottom:
+            18px;
+
+    }
+
+
+    .forum-fab {
+
+        width:
+            60px;
+
+        height:
+            60px;
+
+        padding:
+            0;
+
+        border-radius:
+            50%;
+
+    }
+
+
+    /* On mobile, keep icon-only */
+
+    .forum-fab:hover {
+
+        width:
+            60px;
+
+        height:
+            60px;
+
+        padding:
+            0;
+
+        border-radius:
+            50%;
+
+        justify-content:
+            center;
+
+        gap:
+            0;
+
+    }
+
+
+    .forum-content {
+
+        display:
+            none !important;
+
+    }
+
+
+    .forum-icon {
+
+        width:
+            50px;
+
+        height:
+            50px;
+
+        font-size:
+            21px;
+
+    }
+
+
+    .forum-fab:hover .forum-icon {
+
+        width:
+            50px;
+
+        height:
+            50px;
+
+        font-size:
+            21px;
+
+    }
 
 }
 
@@ -1943,6 +2206,24 @@ body.sidebar-collapsed
                         <span>
                             <strong>PROCUREMENT</strong>
                             <small>Procurement Management</small>
+                        </span>
+
+                    </a>
+                </li>
+
+                  <li>
+                    <a
+                        class="dropdown-item quick-access-item"
+                        href="{% url 'system_home' %}"
+                    >
+
+                        <span class="quick-access-icon qa-system">
+                            <i class="fa-solid fa-home"></i>
+                        </span>
+
+                        <span>
+                            <strong>All Apps</strong>
+                            <small>Access All Applications</small>
                         </span>
 
                     </a>
