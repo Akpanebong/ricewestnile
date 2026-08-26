@@ -21,9 +21,10 @@ from account.models import Department, Profile, Unit
 from core.project_models import ProjectBudget, Project
 from core.models import CurrencyRate
 from core.services import display_amount_from_ugx, get_user_currency, user_amount_to_ugx
-from notification.models import Notification, NotificationRecipient
+from notification.models import NotificationRecipient
 from notification.utils import notify
-from procurement.finance.models import AccountingForm, AdminExpenseNote, CashRequisition, CashRequisitionItem
+from finance_app.finance.models import AccountingForm, AdminExpenseNote, CashRequisition, CashRequisitionItem
+
 from account.templatetags.custom_tags import has_group
 from .models import (
     AuditLog, Supplier, ProcurementPlan, RFQ,

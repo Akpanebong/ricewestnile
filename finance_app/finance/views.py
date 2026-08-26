@@ -8,8 +8,8 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.urls import reverse
 from account.models import Department
 from core.project_models import Project
-from .models import CashRequisition, CashRequisitionItem, AccountingForm, ApprovalLog,\
-    AccountingItem, AdminExpenseNote
+from finance_app.finance.models import AccountingForm, AdminExpenseNote, CashRequisition, CashRequisitionItem, ApprovalLog, AccountingItem
+
 from .utils.workflow import advance_workflow, user_can_approve
 from .utils.pdf import render_to_pdf
 from django.db.models.functions import Coalesce

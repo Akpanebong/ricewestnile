@@ -17,7 +17,7 @@ urlpatterns = [
     path("hr/recruitment/", include("hr_apps.vacancy.urls")),
     path("hr/performance/", include("hr_apps.appraisals.urls")),
     path("procurement/", include("procurement.procureapp.urls")),
-    path("finance_app/finance/", include("procurement.finance.urls")),
+    path("finance_app/finance/", include("finance_app.finance.urls")),
     path("procurement/core/", include(("core.urls", "core"), namespace="procurement_core")),
     path("mne/core/", include(("core.urls", "core"), namespace="mne_core")),
     path("mne/monitoring/", include("mne.monitoring.urls")),
