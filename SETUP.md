@@ -3,7 +3,7 @@
  Setup instructions for another device
 
 1. Clone the repo.
-2. Create and activate a virtual environment.
+2. Use Python 3.10+ (required for Django 5.2.15), then create and activate a virtual environment.
    ```bash
    python -m venv .venv
    source .venv/bin/activate   # macOS/Linux
@@ -13,7 +13,7 @@
    ```bash
    pip install -r requirements.txt
    ```
-   - This installs core runtime dependencies including Django and `python-dateutil` (required by `core/project_models.py` and `mne/monitoring/models.py`).
+   - This installs core runtime dependencies including Django `5.2.15` and `python-dateutil` (required by `core/project_models.py` and `mne/monitoring/models.py`).
 4. Set the database environment if needed.
    - By default, the app uses SQLite (`enterprise/settings.py`):
      ```bash
