@@ -156,7 +156,7 @@ class Migration(migrations.Migration):
                     "unit",
                     models.ForeignKey(
                         blank=True,
-                        limit_choices_to=models.Q(("name", "ED"), _negated=True),
+                        limit_choices_to=~models.Q(name="ED"),
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         to="account.unit",

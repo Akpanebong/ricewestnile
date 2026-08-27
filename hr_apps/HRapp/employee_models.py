@@ -50,9 +50,10 @@ class Employee(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=~Q(id=F('supervised_by')),
-                name="prevent_self_supervision"
+                name="employee_prevent_self_supervision",
             )
         ]
+
 
 
 class EmployeePersonalInfo(models.Model):

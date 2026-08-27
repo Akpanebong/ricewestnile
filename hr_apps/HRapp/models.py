@@ -99,6 +99,12 @@ class Leave(models.Model):
             models.Index(fields=["employee", "leave_type", "status", "start_date"]),
             models.Index(fields=["status", "start_date"]),
         ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(start_date__lte=models.F("end_date")),
+                name="leave_start_date_before_end_date",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.employee} | {self.leave_type} | {self.start_date} → {self.end_date}"

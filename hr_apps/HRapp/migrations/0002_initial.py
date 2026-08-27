@@ -201,7 +201,7 @@ class Migration(migrations.Migration):
             model_name="orientationplan",
             name="staff",
             field=models.OneToOneField(
-                limit_choices_to=models.Q(("status", "Probation")),
+                limit_choices_to=models.Q(status="Probation"),
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="orientation_plan",
                 to=settings.AUTH_USER_MODEL,
@@ -276,7 +276,7 @@ class Migration(migrations.Migration):
             name="participants",
             field=models.ManyToManyField(
                 blank=True,
-                limit_choices_to=models.Q(("department__name", "ED"), _negated=True),
+                limit_choices_to=~models.Q(department__name="ED"),
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
@@ -290,7 +290,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="employee",
             constraint=models.CheckConstraint(
-                condition=models.Q(("id", models.F("supervised_by")), _negated=True),
+                check=~models.Q(id=models.F("supervised_by")),
                 name="prevent_self_supervision",
             ),
         ),

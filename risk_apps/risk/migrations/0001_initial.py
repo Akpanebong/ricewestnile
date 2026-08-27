@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
                 "ordering": ["rating"],
                 "constraints": [
                     models.CheckConstraint(
-                        condition=models.Q(("rating__gte", 1), ("rating__lte", 5)),
+                        check=models.Q(rating__gte=1, rating__lte=5),
                         name="impact_range",
                     )
                 ],
@@ -79,7 +79,7 @@ class Migration(migrations.Migration):
                 "ordering": ["rating"],
                 "constraints": [
                     models.CheckConstraint(
-                        condition=models.Q(("rating__gte", 1), ("rating__lte", 5)),
+                        check=models.Q(rating__gte=1, rating__lte=5),
                         name="likelihood_range",
                     )
                 ],
