@@ -1,6 +1,6 @@
 # RiceWestNile setup guide
 
- Setup instructions for another device
+## Setup instructions for another device
 
 1. Clone the repo.
 2. Use Python 3.10+ (required for Django 5.2.15), then create and activate a virtual environment.
@@ -25,10 +25,15 @@
    ```bash
    python manage.py migrate
    ```
-6. Start the app:
+6. Create the default admin user for first login (`j` / `j`):
+   ```bash
+   python manage.py shell -c "from django.contrib.auth import get_user_model; U=get_user_model(); u,created=U.objects.get_or_create(username='j', defaults={'is_staff':True,'is_superuser':True,'is_active':True}); u.is_staff=True; u.is_superuser=True; u.is_active=True; u.set_password('j'); u.save(); print('created' if created else 'updated')"
+   ```
+7. Start the app:
    ```bash
    python manage.py runserver
    ```
+   - After first login, change the default admin password immediately.
 
 ## Recommended verification
 
