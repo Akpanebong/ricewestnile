@@ -338,7 +338,7 @@ body.sidebar-collapsed .sidebar-dashboard.active {
         max-width: 280px;
         margin: 0;
         padding: 10px 8px;
-        background: #1e1e2c;
+        background: var(--sidebar-bg-end, #1b3a63);
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: var(--radius-md, 10px);
         box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);

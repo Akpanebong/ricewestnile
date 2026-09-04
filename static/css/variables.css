@@ -20,21 +20,21 @@
     --space-12: 3rem;
 
     /* Theme Colors */
-    --sidebar-bg: #0b1220; /* deep slate */
-    --sidebar-bg-end: #0f1724;
+    --sidebar-bg: #142a4d; /* rich navy, not black */
+    --sidebar-bg-end: #1b3a63;
     --sidebar-color: #e6eef6;
-    --sidebar-hover: rgba(148, 163, 184, 0.06);
-    --sidebar-active: rgba(15, 118, 110, 0.12);
+    --sidebar-hover: rgba(148, 163, 184, 0.08);
+    --sidebar-active: rgba(15, 118, 110, 0.16);
     --sidebar-active-border: rgba(15, 118, 110, 0.9);
     --sidebar-accent: #0f766e; /* primary brand */
-    --header-bg: #0b1220; /* matches sidebar for cohesive shell */
-    --header-bg-strong: #0f1724;
+    --header-bg: #142a4d; /* matches sidebar for cohesive shell */
+    --header-bg-strong: #1b3a63;
     --body-bg: #f7fafc; /* very light neutral */
     --surface: #ffffff;
     --surface-muted: #f8fafc;
     --surface-alt: #eef4f8;
-    --border-subtle: rgba(15, 23, 42, 0.06);
-    --text-primary: #0b1220; /* deep charcoal for readability */
+    --border-subtle: rgba(20, 42, 77, 0.08);
+    --text-primary: #1c2b3a; /* dark navy-gray for readability, not pure black */
     --text-secondary: #475569; /* mid-gray */
     --text-muted: #6b7280;
     --success: #0f766e;
@@ -43,8 +43,8 @@
     --info: #2563eb;
 
     /* Icon colors */
-    --icon-color: rgba(11,18,32,0.88);
-    --icon-muted: rgba(75,85,99,0.65);
+    --icon-color: rgba(28, 43, 58, 0.88);
+    --icon-muted: rgba(75, 85, 99, 0.65);
 
     /* Semantic colors */
     --status-draft-bg: #e2e8f0;
