@@ -27,6 +27,7 @@
     --sidebar-active: rgba(0, 51, 51, 0.35);
     --sidebar-active-border: rgba(45, 212, 191, 0.85);
     --sidebar-accent: #003333; /* Martian Green - primary brand color */
+    --sidebar-accent-on-dark: #2dd4bf; /* bright teal for icons/text on the dark sidebar so they stand out from the green bg */
     --header-bg: #001f1f;
     --header-bg-strong: #003333;
     --body-bg: #f7fafc; /* very light neutral */
