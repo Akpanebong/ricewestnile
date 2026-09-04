@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>{% block title %}RICEWN HR Dashboard{% endblock %}</title>
+<title>{% block title %}RICE WN Enterprise System{% endblock %}</title>
 
 <!-- =====================================================
      BOOTSTRAP
@@ -46,17 +46,7 @@
      DESIGN SYSTEM & MODULAR STYLESHEETS
 ===================================================== -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'css/variables.css' %}">
-<link rel="stylesheet" href="{% static 'css/layout.css' %}">
-<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
-<link rel="stylesheet" href="{% static 'css/components.css' %}">
-
-<!-- Dynamic Subsystem Theme Override -->
-<style>
-:root {
-    --sidebar-accent: {% block system_accent %}#003333{% endblock %};
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/enterprise.css' %}">
 
 {% block extra_head %}{% endblock %}
 
@@ -75,7 +65,7 @@
 <header class="app-header">
 
     <!-- LEFT SIDE -->
-    <div class="d-flex align-items-center">
+    <div class="app-header-start d-flex align-items-center">
 
         <!-- MOBILE TOGGLE -->
         <button
@@ -140,13 +130,13 @@
                 aria-expanded="false"
             >
 
-                <i class="fa-solid fa-table-cells-large me-2"></i>
+                <i class="fa-solid fa-table-cells-large"></i>
 
                 <span class="d-none d-md-inline">
                     Quick Access
                 </span>
 
-                <i class="fa-solid fa-chevron-down ms-1"></i>
+                <i class="fa-solid fa-chevron-down d-none d-md-inline"></i>
 
             </button>
 
@@ -330,33 +320,35 @@
 
 
     <!-- =================================================
-         RIGHT SIDE
+         CENTER: GLOBAL SEARCH
     ================================================== -->
 
-    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end">
+    <div class="app-header-center">
 
         <div class="global-search-shell">
-            <form class="global-search-form" action="{% url 'global_search' %}" method="get" autocomplete="off">
+            <button type="button" id="headerSearchTrigger" class="global-search-form" aria-haspopup="dialog" aria-label="Search or jump to">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input
-                    type="search"
-                    name="q"
-                    value="{{ request.GET.q|default:'' }}"
-                    placeholder="Search people, projects, departments..."
-                    aria-label="Global search"
-                    aria-expanded="false"
-                    aria-controls="global-search-results"
-                >
-                <button type="submit" class="global-search-submit d-none d-sm-inline-flex">
-                    Search
-                </button>
-            </form>
-            <div id="global-search-results" class="global-search-dropdown" role="listbox" aria-live="polite" hidden></div>
+                <span class="global-search-placeholder d-none d-sm-inline">
+                    Search or jump to...
+                </span>
+                <span class="command-palette-hint d-none d-xl-inline-flex">
+                    <span id="commandPaletteHintKey">Ctrl K</span>
+                </span>
+            </button>
         </div>
+
+    </div>
+
+
+    <!-- =================================================
+         RIGHT SIDE: NOTIFICATIONS & ACCOUNT
+    ================================================== -->
+
+    <div class="app-header-end d-flex align-items-center gap-2">
 
         <!-- NOTIFICATIONS -->
 
-        <div class="dropdown">
+        <div class="dropdown flex-shrink-0">
 
             <button
                 class="btn text-white position-relative"
@@ -438,7 +430,7 @@
 
         <!-- USER -->
 
-        <div class="dropdown">
+        <div class="dropdown flex-shrink-0">
 
             <a
                 href="#"
@@ -554,6 +546,19 @@
 
 
         {% block breadcrumb %}
+        <div class="breadcrumb-block">
+            <div class="breadcrumb-card">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'system_home' %}"><i class="fa-solid fa-house"></i> RICE WN Hub</a>
+                        </li>
+                        <li class="breadcrumb-item" id="breadcrumbSubsystem"></li>
+                        <li class="breadcrumb-item active" aria-current="page" id="breadcrumbPage"></li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
         {% endblock %}
 
 
@@ -624,6 +629,52 @@
 </main>
 
 
+<!-- =====================================================
+     MOBILE BOTTOM NAVIGATION
+===================================================== -->
+
+<nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="{% url 'system_home' %}">
+        <i class="fa-solid fa-house"></i>
+        Home
+    </a>
+    <a href="{% url 'notifications:list' %}">
+        <i class="fa-solid fa-bell"></i>
+        Alerts
+    </a>
+    <button type="button" id="mobileBottomSearch">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        Search
+    </button>
+    <button type="button" id="mobileBottomMenuToggle">
+        <i class="fa-solid fa-bars"></i>
+        Menu
+    </button>
+</nav>
+
+
+<!-- =====================================================
+     COMMAND PALETTE (Ctrl+K / Cmd+K)
+===================================================== -->
+
+<div class="command-palette-backdrop" id="commandPaletteBackdrop" hidden>
+    <div class="command-palette" role="dialog" aria-modal="true" aria-label="Command palette">
+        <div class="command-palette-input-row">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input
+                type="text"
+                id="commandPaletteInput"
+                placeholder="Search subsystems, records, or actions..."
+                aria-label="Command palette search"
+                autocomplete="off"
+            >
+            <span class="command-palette-hint">Esc</span>
+        </div>
+        <div class="command-palette-results" id="commandPaletteResults"></div>
+    </div>
+</div>
+
+
 {% include "autosearchtable.html" %}
 
 
@@ -648,6 +699,21 @@ document.addEventListener("DOMContentLoaded", function () {
         const toastInstance = new bootstrap.Toast(toastEl, { delay: Number(toastEl.dataset.bsDelay || 4500) });
         toastInstance.show();
     });
+
+    /* Populate the breadcrumb trail from the already-rendered header brand text and page title */
+    (function () {
+        const subsystemEl = document.getElementById('breadcrumbSubsystem');
+        const pageEl = document.getElementById('breadcrumbPage');
+        const brandLabel = document.querySelector('.ricewn-brand small');
+
+        if (subsystemEl && brandLabel) {
+            subsystemEl.textContent = brandLabel.textContent.trim();
+        }
+        if (pageEl) {
+            const pageTitle = document.title.split('|')[0].trim();
+            pageEl.textContent = pageTitle;
+        }
+    })();
 
 const body =
     document.body;
@@ -1080,115 +1146,363 @@ const body =
         });
     });
 
-    const globalSearchInput = document.querySelector('.global-search-form input[name="q"]');
-    const globalSearchDropdown = document.getElementById('global-search-results');
-    const globalSearchForm = document.querySelector('.global-search-form');
-    const globalSearchShell = globalSearchForm ? globalSearchForm.closest('.global-search-shell') : null;
 
-    if (globalSearchInput && globalSearchDropdown && globalSearchForm) {
-        let searchTimer = null;
+    /* =====================================================
+       COMMAND PALETTE (Ctrl+K / Cmd+K)
+    ===================================================== */
 
-        function hideSearchResults() {
-            globalSearchDropdown.innerHTML = '';
-            globalSearchDropdown.setAttribute('hidden', 'hidden');
-            globalSearchInput.setAttribute('aria-expanded', 'false');
+    (function () {
+        const backdrop = document.getElementById('commandPaletteBackdrop');
+        const input = document.getElementById('commandPaletteInput');
+        const results = document.getElementById('commandPaletteResults');
+        const hintKey = document.getElementById('commandPaletteHintKey');
+
+        if (!backdrop || !input || !results) {
+            return;
         }
 
-        function renderSearchResults(results) {
-            if (!results.length) {
-                hideSearchResults();
+        const isMac = /Mac|iPhone|iPad/.test(window.navigator.platform || window.navigator.userAgent || '');
+        if (hintKey) {
+            hintKey.textContent = isMac ? '⌘ K' : 'Ctrl K';
+        }
+
+        const quickLinks = [
+            { label: 'RICE WN Hub', meta: 'All subsystems', url: "{% url 'system_home' %}", icon: 'fa-house' },
+            { label: 'HR', meta: 'Human Resources dashboard', url: "{% url 'dashboard' %}", icon: 'fa-users-gear' },
+            { label: 'Procurement', meta: 'Procurement dashboard', url: "{% url 'procurement' %}", icon: 'fa-cart-shopping' },
+            { label: 'Finance', meta: 'Finance dashboard', url: "{% url 'finance:dashboard' %}", icon: 'fa-coins' },
+            { label: 'M&E', meta: 'Monitoring & Evaluation dashboard', url: "{% url 'monitoring:dashboard' %}", icon: 'fa-chart-line' },
+            { label: 'GARCIS', meta: 'Governance, Audit, Risk & Compliance', url: "{% url 'garcis:dashboard' %}", icon: 'fa-shield-halved' },
+            { label: 'Communication', meta: 'Communication dashboard', url: "{% url 'comm:dashboard' %}", icon: 'fa-comments' },
+            { label: 'Assets', meta: 'Asset Management dashboard', url: "{% url 'asset:dashboard' %}", icon: 'fa-boxes-stacked' },
+            { label: 'New Fund Requisition', meta: 'Finance · Create', url: "{% url 'finance:create_cash_req' %}", icon: 'fa-money-bill-wave' },
+            { label: 'Currency Settings', meta: 'Organization setting', url: "{% url 'core:currency_settings' %}", icon: 'fa-wallet' },
+            { label: 'Notifications', meta: 'View all notifications', url: "{% url 'notifications:list' %}", icon: 'fa-bell' },
+        ];
+
+        const RECENT_KEY = 'ricewn.commandPalette.recent';
+
+        function getRecent() {
+            try {
+                return JSON.parse(window.localStorage.getItem(RECENT_KEY) || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function pushRecent(item) {
+            try {
+                let recent = getRecent().filter(function (r) { return r.url !== item.url; });
+                recent.unshift({ label: item.label, meta: item.meta, url: item.url, icon: item.icon || 'fa-clock-rotate-left' });
+                recent = recent.slice(0, 5);
+                window.localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+            } catch (e) { /* localStorage unavailable, ignore */ }
+        }
+
+        function escapeHtml(value) {
+            return (value || '').toString().replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function renderGroups(groups) {
+            const visibleGroups = groups.filter(function (g) { return g.items && g.items.length; });
+
+            if (!visibleGroups.length) {
+                results.innerHTML = '<div class="command-palette-empty">No matches. Try a different search term.</div>';
                 return;
             }
 
-            globalSearchDropdown.innerHTML = results.map(function (item) {
-                const icon = item.group === 'Projects' ? 'fa-diagram-project' : item.group === 'Employees' ? 'fa-id-card' : item.group === 'Departments' ? 'fa-building-user' : item.group === 'Units' ? 'fa-people-group' : 'fa-user';
-                return `
-                    <button type="button" class="global-search-suggestion" data-url="${item.url}">
-                        <span class="global-search-suggestion-main">
-                            <span class="global-search-suggestion-icon"><i class="fa-solid ${icon}"></i></span>
-                            <span class="global-search-suggestion-copy">
-                                <strong>${(item.label || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong>
-                                <small>${(item.meta || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</small>
-                            </span>
-                        </span>
-                        <span class="global-search-suggestion-group">${(item.group || 'Item').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
-                    </button>
-                `;
+            results.innerHTML = visibleGroups.map(function (group) {
+                const items = group.items.map(function (item, index) {
+                    return (
+                        '<button type="button" class="command-palette-item" data-url="' + escapeHtml(item.url) + '" ' +
+                        'data-label="' + escapeHtml(item.label) + '" data-meta="' + escapeHtml(item.meta || '') + '" ' +
+                        'data-icon="' + escapeHtml(item.icon || 'fa-arrow-right') + '">' +
+                        '<span class="command-palette-icon"><i class="fa-solid ' + escapeHtml(item.icon || 'fa-arrow-right') + '"></i></span>' +
+                        '<span><strong>' + escapeHtml(item.label) + '</strong>' +
+                        (item.meta ? '<small>' + escapeHtml(item.meta) + '</small>' : '') +
+                        '</span>' +
+                        '</button>'
+                    );
+                }).join('');
+                return '<div class="command-palette-group-label">' + escapeHtml(group.label) + '</div>' + items;
             }).join('');
 
-            globalSearchDropdown.removeAttribute('hidden');
-            globalSearchInput.setAttribute('aria-expanded', 'true');
+            bindItemHandlers();
+            highlightFirst();
+        }
 
-            globalSearchDropdown.querySelectorAll('.global-search-suggestion').forEach(function (suggestionButton) {
-                suggestionButton.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    const targetUrl = suggestionButton.dataset.url;
-                    if (targetUrl) {
-                        window.location.href = targetUrl;
-                    }
+        function bindItemHandlers() {
+            results.querySelectorAll('.command-palette-item').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    selectItem(el);
+                });
+                el.addEventListener('mouseenter', function () {
+                    results.querySelectorAll('.command-palette-item.is-active').forEach(function (a) {
+                        a.classList.remove('is-active');
+                    });
+                    el.classList.add('is-active');
                 });
             });
         }
 
-        const fetchSuggestions = function (term) {
+        function highlightFirst() {
+            const first = results.querySelector('.command-palette-item');
+            if (first) {
+                first.classList.add('is-active');
+            }
+        }
+
+        function selectItem(el) {
+            const url = el.dataset.url;
+            if (!url) {
+                return;
+            }
+            pushRecent({ label: el.dataset.label, meta: el.dataset.meta, url: url, icon: el.dataset.icon });
+            window.location.href = url;
+        }
+
+        function showDefaultState() {
+            const recent = getRecent();
+            const groups = [];
+            if (recent.length) {
+                groups.push({ label: 'Recent', items: recent });
+            }
+            groups.push({ label: 'Subsystems & Quick Actions', items: quickLinks });
+            renderGroups(groups);
+        }
+
+        let searchDebounce = null;
+
+        function runSearch(term) {
             const trimmed = term.trim();
+
             if (!trimmed) {
-                hideSearchResults();
+                showDefaultState();
                 return;
             }
 
-            fetch("{% url 'global_search' %}?q=" + encodeURIComponent(trimmed) + "&format=json", {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(function (response) {
-                if (!response.ok) {
-                    throw new Error('Search failed');
-                }
-                return response.json();
-            })
-            .then(function (payload) {
-                renderSearchResults(payload.results || []);
-            })
-            .catch(function () {
-                hideSearchResults();
+            const lower = trimmed.toLowerCase();
+            const matchingLinks = quickLinks.filter(function (item) {
+                return item.label.toLowerCase().includes(lower) || (item.meta || '').toLowerCase().includes(lower);
             });
-        };
 
-        const triggerSearch = function () {
-            const value = globalSearchInput.value;
-            window.clearTimeout(searchTimer);
-            if (!value.trim()) {
-                hideSearchResults();
-                return;
-            }
-            searchTimer = window.setTimeout(function () {
-                fetchSuggestions(value);
-            }, 200);
-        };
+            window.clearTimeout(searchDebounce);
+            searchDebounce = window.setTimeout(function () {
+                fetch("{% url 'global_search' %}?q=" + encodeURIComponent(trimmed) + "&format=json", {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(function (response) { return response.ok ? response.json() : { results: [] }; })
+                .then(function (payload) {
+                    const records = (payload.results || []).map(function (item) {
+                        return { label: item.label, meta: item.meta || item.group, url: item.url, icon: 'fa-arrow-right' };
+                    });
+                    renderGroups([
+                        { label: 'Subsystems & Quick Actions', items: matchingLinks },
+                        { label: 'Records', items: records }
+                    ]);
+                })
+                .catch(function () {
+                    renderGroups([{ label: 'Subsystems & Quick Actions', items: matchingLinks }]);
+                });
+            }, 180);
+        }
 
-        globalSearchInput.addEventListener('input', triggerSearch);
-        globalSearchInput.addEventListener('keyup', triggerSearch);
-        globalSearchInput.addEventListener('focus', function () {
-            if (globalSearchInput.value.trim()) {
-                triggerSearch();
-            }
-        });
+        function openPalette() {
+            backdrop.hidden = false;
+            document.body.classList.add('command-palette-open');
+            showDefaultState();
+            input.value = '';
+            input.focus();
+        }
 
-        document.addEventListener('click', function (event) {
-            if (!globalSearchShell) {
-                return;
-            }
-            if (!globalSearchShell.contains(event.target)) {
-                hideSearchResults();
-            }
-        });
+        function closePalette() {
+            backdrop.hidden = true;
+            document.body.classList.remove('command-palette-open');
+        }
 
-        globalSearchForm.addEventListener('submit', function (event) {
-            if (!globalSearchInput.value.trim()) {
+        document.addEventListener('keydown', function (event) {
+            const isShortcut = (event.metaKey || event.ctrlKey) && (event.key === 'k' || event.key === 'K');
+            if (isShortcut) {
                 event.preventDefault();
+                if (backdrop.hidden) {
+                    openPalette();
+                } else {
+                    closePalette();
+                }
+                return;
+            }
+
+            if (!backdrop.hidden && event.key === 'Escape') {
+                closePalette();
+                return;
+            }
+
+            if (!backdrop.hidden && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+                event.preventDefault();
+                const items = Array.prototype.slice.call(results.querySelectorAll('.command-palette-item'));
+                if (!items.length) {
+                    return;
+                }
+                let activeIndex = items.findIndex(function (el) { return el.classList.contains('is-active'); });
+                items.forEach(function (el) { el.classList.remove('is-active'); });
+                if (event.key === 'ArrowDown') {
+                    activeIndex = (activeIndex + 1) % items.length;
+                } else {
+                    activeIndex = (activeIndex - 1 + items.length) % items.length;
+                }
+                items[activeIndex].classList.add('is-active');
+                items[activeIndex].scrollIntoView({ block: 'nearest' });
+                return;
+            }
+
+            if (!backdrop.hidden && event.key === 'Enter') {
+                const active = results.querySelector('.command-palette-item.is-active') || results.querySelector('.command-palette-item');
+                if (active) {
+                    event.preventDefault();
+                    selectItem(active);
+                }
             }
         });
-    }
+
+        backdrop.addEventListener('mousedown', function (event) {
+            if (event.target === backdrop) {
+                closePalette();
+            }
+        });
+
+        input.addEventListener('input', function () {
+            runSearch(input.value);
+        });
+
+        const searchTrigger = document.getElementById('headerSearchTrigger');
+        if (searchTrigger) {
+            searchTrigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                openPalette();
+            });
+        }
+
+        const mobileSearchButton = document.getElementById('mobileBottomSearch');
+        if (mobileSearchButton) {
+            mobileSearchButton.addEventListener('click', function () {
+                openPalette();
+            });
+        }
+
+        const mobileMenuButton = document.getElementById('mobileBottomMenuToggle');
+        const desktopMobileToggle = document.getElementById('mobileToggle');
+        if (mobileMenuButton && desktopMobileToggle) {
+            mobileMenuButton.addEventListener('click', function () {
+                desktopMobileToggle.click();
+            });
+        }
+    })();
+
+    /* =====================================================
+       METRIC COUNTER ROLL-UP ANIMATION
+    ===================================================== */
+
+    (function () {
+        const counters = document.querySelectorAll('[data-counter]');
+        if (!counters.length) {
+            return;
+        }
+
+        const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function animateCounter(el) {
+            const target = parseFloat(el.dataset.counter);
+            if (isNaN(target)) {
+                return;
+            }
+
+            const prefix = el.dataset.counterPrefix || '';
+            const suffix = el.dataset.counterSuffix || '';
+            const decimals = parseInt(el.dataset.counterDecimals || '0', 10);
+
+            if (prefersReducedMotion) {
+                el.textContent = prefix + target.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix;
+                return;
+            }
+
+            const duration = 900;
+            const start = performance.now();
+
+            function tick(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const value = target * eased;
+                el.textContent = prefix + value.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix;
+                if (progress < 1) {
+                    window.requestAnimationFrame(tick);
+                }
+            }
+
+            window.requestAnimationFrame(tick);
+        }
+
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        animateCounter(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.3 });
+            counters.forEach(function (el) { observer.observe(el); });
+        } else {
+            counters.forEach(animateCounter);
+        }
+    })();
+
+    /* =====================================================
+       LIVE CURRENCY INPUT FORMATTING
+    ===================================================== */
+
+    (function () {
+        const currencyInputs = document.querySelectorAll('[data-currency-input]');
+
+        currencyInputs.forEach(function (el) {
+            function formatValue(raw) {
+                const digitsOnly = raw.replace(/[^\d.]/g, '');
+                if (!digitsOnly) {
+                    return '';
+                }
+                const parts = digitsOnly.split('.');
+                const wholePart = parts[0].replace(/^0+(?=\d)/, '');
+                const withThousands = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                if (parts.length > 1) {
+                    return withThousands + '.' + parts[1].slice(0, 2);
+                }
+                return withThousands;
+            }
+
+            if (el.value) {
+                el.value = formatValue(el.value);
+            }
+
+            el.addEventListener('input', function () {
+                const cursorFromEnd = el.value.length - el.selectionStart;
+                el.value = formatValue(el.value);
+                const newPosition = Math.max(el.value.length - cursorFromEnd, 0);
+                el.setSelectionRange(newPosition, newPosition);
+            });
+
+            el.addEventListener('blur', function () {
+                el.value = formatValue(el.value);
+            });
+
+            // Strip thousands separators before the raw value reaches the server,
+            // since Decimal(str(value)) on the backend cannot parse "1,000.00".
+            const parentForm = el.closest('form');
+            if (parentForm) {
+                parentForm.addEventListener('submit', function () {
+                    el.value = el.value.replace(/,/g, '');
+                });
+            }
+        });
+    })();
 
 });
 

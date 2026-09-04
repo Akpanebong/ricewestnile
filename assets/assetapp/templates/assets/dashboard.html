@@ -5,9 +5,9 @@
 <div class="container-fluid">
 
     <!-- KPI ROW -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 stagger-grid">
 
-        {% include "assets/partials/kpi_card.html" with icon="bi-box-seam" title="Total Assets" value=total_assets color="success" %}
+        {% include "assets/partials/kpi_card.html" with icon="bi-box-seam" title="Total Assets" value=total_assets color="success" counter=1 %}
 
         {% include "assets/partials/kpi_card.html" with icon="bi-cash-stack" title="Total Asset Value" value=total_asset_value color="primary" %}
 

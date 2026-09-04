@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block header_home_url %}{% url 'finance:dashboard' %}{% endblock %}
+{% block system_name %}Finance{% endblock %}
+{% block sidebar_desktop %}
+{% include "finance/includes/sidebar_nav.html" %}
+{% endblock %}
+{% block sidebar_mobile %}
+{% include "finance/includes/sidebar_nav.html" %}
+{% endblock %}

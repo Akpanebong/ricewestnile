@@ -1,9 +1,9 @@
 <div class="col-md-3">
-    <div class="card shadow-sm border-{{ color }}">
+    <div class="card shadow-sm border-{{ color }} interactive-card">
         <div class="card-body text-center">
             <i class="bi {{ icon }} fs-1 text-{{ color }}"></i>
             <h6 class="mt-2">{{ title }}</h6>
-            <h3 class="fw-bold text-{{ color }}">
+            <h3 class="fw-bold text-{{ color }}"{% if counter %} data-counter="{{ value|default:0 }}"{% endif %}>
                 {{ value|floatformat:2 }}
             </h3>
         </div>

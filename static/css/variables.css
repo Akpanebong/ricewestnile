@@ -20,53 +20,61 @@
     --space-12: 3rem;
 
     /* Theme Colors */
-    --sidebar-bg: #001f1f; /* deep martian green, not blue/black */
-    --sidebar-bg-end: #003333;
-    --sidebar-color: #e6f2f0;
-    --sidebar-hover: rgba(230, 242, 240, 0.08);
-    --sidebar-active: rgba(0, 51, 51, 0.35);
-    --sidebar-active-border: rgba(45, 212, 191, 0.85);
-    --sidebar-accent: #003333; /* Martian Green - primary brand color */
-    --sidebar-accent-on-dark: #2dd4bf; /* bright teal for icons/text on the dark sidebar so they stand out from the green bg */
-    --header-bg: #001f1f;
-    --header-bg-strong: #003333;
-    --body-bg: #f7fafc; /* very light neutral */
+    --sidebar-bg: #123536;
+    --sidebar-bg-end: #1a4848;
+    --sidebar-color: #f1f5f9;
+    --sidebar-hover: rgba(255, 255, 255, 0.09);
+    --sidebar-active: rgba(45, 212, 191, 0.16);
+    --sidebar-active-border: #2dd4bf;
+    --sidebar-accent: #0f766e; /* Single centralized brand accent for links, actions, and highlights across every subsystem */
+    --sidebar-accent-on-dark: #2dd4bf; /* bright teal for icons/text on dark sidebar */
+    --header-bg: #0e7a55; /* Lighter, professional emerald-green for the top navigation bar */
+    --header-bg-strong: #0a5f42;
+    --body-bg: #f6f8f8;
     --surface: #ffffff;
-    --surface-muted: #f8fafc;
-    --surface-alt: #eef4f8;
-    --border-subtle: rgba(0, 51, 51, 0.08);
-    --text-primary: #1c2b2b; /* dark green-gray for readability, not pure black */
-    --text-secondary: #475569; /* mid-gray */
-    --text-muted: #6b7280;
-    --success: #003333;
-    --warning: #b45309;
-    --danger: #b42318;
-    --info: #003333;
+    --surface-muted: #f1f5f9;
+    --surface-alt: #e2e8f0;
+    --border-subtle: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --surface-hover: #f0f7f6;
+    --focus-ring: rgba(15, 118, 110, 0.18);
+    --text-primary: #0f172a; /* Slate 900 for high-contrast readability */
+    --text-secondary: #334155; /* Slate 700 for clear secondary text */
+    --text-muted: #475569; /* Slate 600 for high-legibility metadata */
+    --text-light: #64748b;
+    --success: #166534;
+    --warning: #92400e;
+    --danger: #991b1b;
+    --info: #0369a1;
 
     /* Icon colors */
-    --icon-color: rgba(0, 51, 51, 0.88);
-    --icon-muted: rgba(75, 85, 99, 0.65);
+    --icon-color: #0f766e;
+    --icon-muted: #64748b;
 
-    /* Semantic colors */
-    --status-draft-bg: #e2e8f0;
-    --status-draft-text: #334155;
-    --status-pending-bg: #fff3cd;
-    --status-pending-text: #9a6700;
-    --status-approved-bg: #d1fae5;
-    --status-approved-text: #166534;
-    --status-rejected-bg: #fee2e2;
-    --status-rejected-text: #991b1b;
-    --status-info-bg: #dbeafe;
-    --status-info-text: #1d4ed8;
+    /* Semantic colors with high contrast */
+    --status-draft-bg: rgba(148, 163, 184, 0.12);
+    --status-draft-text: #475569;
+    --status-draft-border: rgba(148, 163, 184, 0.25);
+    --status-pending-bg: rgba(245, 158, 11, 0.12);
+    --status-pending-text: #b45309;
+    --status-pending-border: rgba(245, 158, 11, 0.25);
+    --status-approved-bg: rgba(16, 185, 129, 0.12);
+    --status-approved-text: #047857;
+    --status-approved-border: rgba(16, 185, 129, 0.25);
+    --status-rejected-bg: rgba(239, 68, 68, 0.12);
+    --status-rejected-text: #b91c1c;
+    --status-rejected-border: rgba(239, 68, 68, 0.25);
+    --status-info-bg: #e0f2fe;
+    --status-info-text: #0369a1;
+    --status-info-border: #bae6fd;
 
-    /* Subsystem Accent Palette */
-    --accent-hr: #15803d;
-    --accent-garcis: #7c3aed;
-    --accent-me: #6f42c1;
-    --accent-communication: #fd7e14;
-    --accent-assets: #003333;
-    --accent-procurement: #dc3545;
-    --accent-finance: #003333;
+    /* Elevation system (Surface 0/1/2) */
+    --surface-0: #f8fafc;
+    --surface-1: #ffffff;
+    --surface-1-border: rgba(226, 232, 240, 0.8);
+    --surface-1-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05);
+    --surface-2: #ffffff;
+    --surface-2-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.12);
 
     /* Typography & Radius */
     --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

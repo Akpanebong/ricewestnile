@@ -12,6 +12,11 @@
         background: #fff;
         min-height: 118px;
         box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+    }
+    .hr-dashboard .metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, .1);
     }
     .hr-dashboard .metric-card.warning { border-left-color: #f59f00; }
     .hr-dashboard .metric-card.info { border-left-color: #0dcaf0; }
@@ -74,13 +79,13 @@
 
     {% include "message.html" %}
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 stagger-grid">
         <div class="col-sm-6 col-xl-3">
             <div class="metric-card p-3">
                 <div class="d-flex justify-content-between">
                     <div>
                         <div class="metric-label">Active Employees</div>
-                        <div class="metric-value fw-bold">{{ total_employees }}</div>
+                        <div class="metric-value fw-bold" data-counter="{{ total_employees|default:0 }}">{{ total_employees }}</div>
                     </div>
                     <i class="fa fa-users text-success fs-3"></i>
                 </div>
@@ -92,7 +97,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <div class="metric-label">Pending Leave</div>
-                        <div class="metric-value fw-bold">{{ pending_leaves }}</div>
+                        <div class="metric-value fw-bold" data-counter="{{ pending_leaves|default:0 }}">{{ pending_leaves }}</div>
                     </div>
                     <i class="fa fa-calendar-times text-warning fs-3"></i>
                 </div>
@@ -104,7 +109,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <div class="metric-label">Present Today</div>
-                        <div class="metric-value fw-bold">{{ active_today }}</div>
+                        <div class="metric-value fw-bold" data-counter="{{ active_today|default:0 }}">{{ active_today }}</div>
                     </div>
                     <i class="fa fa-user-check text-info fs-3"></i>
                 </div>
@@ -116,7 +121,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <div class="metric-label">Trainings This Month</div>
-                        <div class="metric-value fw-bold">{{ trainings_this_month }}</div>
+                        <div class="metric-value fw-bold" data-counter="{{ trainings_this_month|default:0 }}">{{ trainings_this_month }}</div>
                     </div>
                     <i class="fa fa-chalkboard-teacher text-primary fs-3"></i>
                 </div>
@@ -128,7 +133,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <div class="metric-label">Open Jobs</div>
-                        <div class="metric-value fw-bold">{{ open_jobs }}</div>
+                        <div class="metric-value fw-bold" data-counter="{{ open_jobs|default:0 }}">{{ open_jobs }}</div>
                     </div>
                     <i class="fa fa-briefcase text-success fs-3"></i>
                 </div>
@@ -140,7 +145,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <div class="metric-label">Recruitment Requests</div>
-                        <div class="metric-value fw-bold">{{ pending_recruitment_requests }}</div>
+                        <div class="metric-value fw-bold" data-counter="{{ pending_recruitment_requests|default:0 }}">{{ pending_recruitment_requests }}</div>
                     </div>
                     <i class="fa fa-file-signature text-warning fs-3"></i>
                 </div>
@@ -152,7 +157,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <div class="metric-label">Pending Applicants</div>
-                        <div class="metric-value fw-bold">{{ pending_applicants }}</div>
+                        <div class="metric-value fw-bold" data-counter="{{ pending_applicants|default:0 }}">{{ pending_applicants }}</div>
                     </div>
                     <i class="fa fa-user-plus text-danger fs-3"></i>
                 </div>
@@ -164,7 +169,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <div class="metric-label">Appraisals</div>
-                        <div class="metric-value fw-bold">{{ total_appraisals }}</div>
+                        <div class="metric-value fw-bold" data-counter="{{ total_appraisals|default:0 }}">{{ total_appraisals }}</div>
                     </div>
                     <i class="fa fa-bar-chart text-primary fs-3"></i>
                 </div>

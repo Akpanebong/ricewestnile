@@ -1,0 +1,146 @@
+/*
+ * Enterprise UI entry point
+ *
+ * All application base templates load this file.  Keep global colors, common
+ * controls, and component behavior in the imported design system files rather
+ * than redefining them in individual subsystem templates.
+ */
+@import url("variables.css");
+@import url("layout.css");
+@import url("sidebar.css");
+@import url("components.css");
+
+:root {
+    --enterprise-accent: var(--sidebar-accent);
+    --enterprise-accent-soft: color-mix(in srgb, var(--sidebar-accent) 12%, white);
+    --enterprise-text: var(--text-primary);
+    --enterprise-muted: var(--text-muted);
+    --enterprise-border: var(--border-subtle);
+    --enterprise-surface: var(--surface);
+    --enterprise-surface-muted: var(--surface-muted);
+}
+
+/*
+ * Compatibility bridge for older page-specific templates.  Their layout
+ * classes remain local, but their visual palette is now supplied centrally.
+ * !important is deliberate here: several of these templates define the same
+ * custom properties in a style block inside the page body.
+ */
+.location-form-page {
+    --lf-primary: var(--enterprise-accent) !important;
+    --lf-primary-dark: var(--header-bg) !important;
+    --lf-primary-soft: var(--enterprise-accent-soft) !important;
+    --lf-border: var(--enterprise-border) !important;
+    --lf-text: var(--enterprise-text) !important;
+    --lf-muted: var(--enterprise-muted) !important;
+}
+
+.so-page,
+.so-output-page {
+    --so-primary: var(--enterprise-accent) !important;
+    --so-primary-dark: var(--header-bg) !important;
+    --so-primary-soft: var(--enterprise-accent-soft) !important;
+    --so-border: var(--enterprise-border) !important;
+    --so-text: var(--enterprise-text) !important;
+    --so-muted: var(--enterprise-muted) !important;
+}
+
+.output-form-page {
+    --of-primary: var(--enterprise-accent) !important;
+    --of-primary-dark: var(--header-bg) !important;
+    --of-primary-soft: var(--enterprise-accent-soft) !important;
+    --of-border: var(--enterprise-border) !important;
+    --of-text: var(--enterprise-text) !important;
+    --of-muted: var(--enterprise-muted) !important;
+}
+
+.indicator-form-page {
+    --if-primary: var(--enterprise-accent) !important;
+    --if-primary-dark: var(--header-bg) !important;
+    --if-primary-soft: var(--enterprise-accent-soft) !important;
+    --if-border: var(--enterprise-border) !important;
+    --if-text: var(--enterprise-text) !important;
+    --if-muted: var(--enterprise-muted) !important;
+}
+
+.location-page {
+    --lm-primary: var(--enterprise-accent) !important;
+    --lm-primary-dark: var(--header-bg) !important;
+    --lm-primary-soft: var(--enterprise-accent-soft) !important;
+}
+
+.indicator-page {
+    --im-primary: var(--enterprise-accent) !important;
+    --im-primary-dark: var(--header-bg) !important;
+    --im-primary-soft: var(--enterprise-accent-soft) !important;
+    --ind-primary: var(--enterprise-accent) !important;
+    --ind-primary-dark: var(--header-bg) !important;
+    --ind-primary-soft: var(--enterprise-accent-soft) !important;
+}
+
+.output-page {
+    --om-primary: var(--enterprise-accent) !important;
+    --om-primary-dark: var(--header-bg) !important;
+    --om-primary-soft: var(--enterprise-accent-soft) !important;
+}
+
+.data-entry-page {
+    --de-primary: var(--enterprise-accent) !important;
+    --de-primary-dark: var(--header-bg) !important;
+    --de-primary-soft: var(--enterprise-accent-soft) !important;
+}
+
+:root {
+    --resource-primary: var(--enterprise-accent) !important;
+    --resource-success: var(--success) !important;
+    --pip-primary-color: var(--enterprise-accent) !important;
+    --pip-secondary-color: var(--header-bg) !important;
+    --pip-success-color: var(--success) !important;
+    --pip-danger-color: var(--danger) !important;
+    --pip-warning-color: var(--warning) !important;
+    --pip-info-color: var(--info) !important;
+    --pip-light-bg: var(--surface-muted) !important;
+}
+
+.risk-dashboard {
+    --rd-primary: var(--enterprise-accent) !important;
+    --rd-success: var(--success) !important;
+    --rd-danger: var(--danger) !important;
+    --rd-warning: var(--warning) !important;
+    --rd-border: var(--enterprise-border) !important;
+    --rd-muted: var(--enterprise-muted) !important;
+    --rd-dark: var(--enterprise-text) !important;
+}
+
+/* Shared fallback for legacy pages which use Bootstrap components directly. */
+.content-card,
+.page-card,
+.panel,
+.widget-box {
+    background: var(--enterprise-surface);
+    border-color: var(--enterprise-border);
+}
+
+.page-title,
+.section-title,
+.card-title {
+    color: var(--enterprise-text);
+}
+
+.page-subtitle,
+.section-subtitle,
+.help-text {
+    color: var(--enterprise-muted);
+}
+
+.btn:focus-visible,
+a:focus-visible,
+button:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.alert {
+    border-radius: var(--radius-md);
+    border-width: 1px;
+}

@@ -1,5 +1,6 @@
-{% extends "procurement/base.html" %}
+{% extends "finance/base.html" %}
 {% load humanize %}
+{% block title %}Finance Dashboard{% endblock %}
 {% block content %}
 <main class="ttr-wrapper">
 <div class="container-fluid py-4">
@@ -19,43 +20,43 @@
     </div>
 
     <!-- KPI CARDS -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 stagger-grid">
 
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 rounded-3">
+            <div class="card interactive-card shadow-sm border-0 rounded-3">
                 <div class="card-body">
                     <small class="text-muted">Pending Requests</small>
-                    <h3 class="fw-bold text-warning">{{ pending_requisitions.count }}</h3>
+                    <h3 class="fw-bold text-warning" data-counter="{{ pending_requisitions.count|default:0 }}">{{ pending_requisitions.count }}</h3>
                     <small class="text-muted">{{ total_pending_amount|money:request }}</small>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 rounded-3">
+            <div class="card interactive-card shadow-sm border-0 rounded-3">
                 <div class="card-body">
                     <small class="text-muted">Approved Requests</small>
-                    <h3 class="fw-bold text-success">{{ approved_requisitions.count }}</h3>
+                    <h3 class="fw-bold text-success" data-counter="{{ approved_requisitions.count|default:0 }}">{{ approved_requisitions.count }}</h3>
                     <small class="text-muted">{{ total_approved_amount|money:request }}</small>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 rounded-3">
+            <div class="card interactive-card shadow-sm border-0 rounded-3">
                 <div class="card-body">
                     <small class="text-muted">Admin Expenses</small>
-                    <h3 class="fw-bold text-primary">{{ admin_expenses.count }}</h3>
+                    <h3 class="fw-bold text-primary" data-counter="{{ admin_expenses.count|default:0 }}">{{ admin_expenses.count }}</h3>
                     <small class="text-muted">{{ total_admin_expenses|money:request }}</small>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card shadow-sm border-0 rounded-3">
+            <div class="card interactive-card shadow-sm border-0 rounded-3">
                 <div class="card-body">
                     <small class="text-muted">Accounting Records</small>
-                    <h3 class="fw-bold text-info">{{ accountings.count }}</h3>
+                    <h3 class="fw-bold text-info" data-counter="{{ accountings.count|default:0 }}">{{ accountings.count }}</h3>
                 </div>
             </div>
         </div>

@@ -1,5 +1,6 @@
-{% extends "procurement/base.html" %}
+{% extends "finance/base.html" %}
 {% load currency_tags %}
+{% block title %}Administrative Expense Request{% endblock %}
 {% block content %}
 
 <main class="ttr-wrapper">
@@ -134,7 +135,7 @@
 
                 <div class="col-md-6">
                     <label>Proposed Budget ({{ display_currency }})</label>
-                    <input type="number" value="{{ cash_req.total_amount|display_amount:request }}" name="proposed_budget" class="form-control" step="0.01" required>
+                    <input type="text" inputmode="decimal" data-currency-input value="{{ cash_req.total_amount|display_amount:request }}" name="proposed_budget" class="form-control" required>
                     <div class="form-text">Summary of the sum on the requisition form.</div>
                 </div>
 

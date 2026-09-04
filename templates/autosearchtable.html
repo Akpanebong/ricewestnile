@@ -3,6 +3,11 @@
 document.addEventListener("DOMContentLoaded", function() {
   const searchInput = document.getElementById("profileSearch");
   const table = document.getElementById("profileTable");
+
+  if (!searchInput || !table) {
+    return;
+  }
+
   const rows = table.getElementsByTagName("tr");
 
   searchInput.addEventListener("keyup", function() {

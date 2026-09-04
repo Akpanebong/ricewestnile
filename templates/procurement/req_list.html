@@ -154,33 +154,6 @@
         color:var(--success);
     }
 
-    .badge-status{
-        padding:8px 14px;
-        border-radius:50px;
-        font-size:.78rem;
-        font-weight:700;
-    }
-
-    .status-approved{
-        background:#d1fae5;
-        color:#065f46;
-    }
-
-    .status-pending{
-        background:#fef3c7;
-        color:#92400e;
-    }
-
-    .status-rejected{
-        background:#fee2e2;
-        color:#991b1b;
-    }
-
-    .status-canceled{
-        background:#e5e7eb;
-        color:#374151;
-    }
-
     .action-group{
         display:flex;
         gap:8px;
@@ -387,15 +360,15 @@
 
                             <td>
 
-                                <span class="badge-status
+                                <span class="status-badge
                                     {% if po.status == 'Approved' %}
-                                        status-approved
+                                        status-badge--approved
                                     {% elif po.status == 'Rejected' %}
-                                        status-rejected
+                                        status-badge--rejected
                                     {% elif po.status == 'Canceled' %}
-                                        status-canceled
+                                        status-badge--draft
                                     {% else %}
-                                        status-pending
+                                        status-badge--pending
                                     {% endif %}
                                 ">
                                     {{ po.status }}

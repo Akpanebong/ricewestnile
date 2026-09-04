@@ -1,0 +1,115 @@
+{% with current_url=request.resolver_match.url_name %}
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<a href="{% url 'finance:dashboard' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'dashboard' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-house"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Dashboard
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     CASH REQUISITIONS
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>CASH REQUISITIONS</span>
+</div>
+
+<a href="{% url 'finance:create_cash_req' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'create_cash_req' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-money-bill-wave"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Fund Requisition
+    </span>
+
+</a>
+
+<a href="{% url 'finance:list_cash_req' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'list_cash_req' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-list-check"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Requisitions
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     SETTINGS
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>SETTINGS</span>
+</div>
+
+<a href="{% url 'core:currency_settings' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'currency_settings' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-wallet"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Currency Settings
+    </span>
+
+</a>
+
+<a href="{% url 'procurement' %}"
+   class="sidebar-dashboard">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-cart-shopping"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Procurement
+    </span>
+
+</a>
+
+
+<!-- =====================================================
+     SUPPORT
+===================================================== -->
+
+<div class="sidebar-section sidebar-support-title">
+    <span>SUPPORT</span>
+</div>
+
+<a href="#" class="sidebar-dashboard">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-life-ring"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Help &amp; Support
+    </span>
+
+</a>
+
+{% endwith %}
