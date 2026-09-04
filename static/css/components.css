@@ -70,13 +70,13 @@
 
 .quick-access-item.active,
 .quick-access-item.current-subsystem {
-    background: rgba(15, 118, 110, 0.08);
-    border: 1px solid rgba(15, 118, 110, 0.3);
+    background: rgba(0, 51, 51, 0.08);
+    border: 1px solid rgba(0, 51, 51, 0.3);
 }
 
 .quick-access-item.active strong,
 .quick-access-item.current-subsystem strong {
-    color: var(--sidebar-accent, #0f766e);
+    color: var(--sidebar-accent, #003333);
 }
 
 .quick-access-item .qa-status-badge {
@@ -85,8 +85,8 @@
     font-weight: 700;
     padding: 3px 7px;
     border-radius: 6px;
-    background: rgba(15, 118, 110, 0.15);
-    color: var(--sidebar-accent, #0f766e);
+    background: rgba(0, 51, 51, 0.15);
+    color: var(--sidebar-accent, #003333);
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
@@ -189,7 +189,7 @@
 
 .global-search-suggestion:hover,
 .global-search-suggestion:focus-visible {
-   background: rgba(15, 118, 110, 0.04);
+   background: rgba(0, 51, 51, 0.04);
    outline: none;
 }
 
@@ -208,7 +208,7 @@
    justify-content: center;
    flex-shrink: 0;
    border-radius: 0.7rem;
-   background: rgba(15, 118, 110, 0.08);
+   background: rgba(0, 51, 51, 0.08);
    color: var(--sidebar-accent);
    font-size: 0.85rem;
 }
@@ -320,7 +320,7 @@
 }
 
 .search-result-item:hover {
-   background: rgba(15, 118, 110, 0.03);
+   background: rgba(0, 51, 51, 0.03);
    text-decoration: none;
 }
 
@@ -331,7 +331,7 @@
    align-items: center;
    justify-content: center;
    border-radius: 0.8rem;
-   background: rgba(15, 118, 110, 0.08);
+   background: rgba(0, 51, 51, 0.08);
    color: var(--sidebar-accent);
 }
 
@@ -377,13 +377,13 @@
 }
 
 .qa-hr {
-    color: var(--accent-hr, #0f766e);
-    background: rgba(15, 118, 110, 0.12);
+    color: var(--accent-hr, #003333);
+    background: rgba(0, 51, 51, 0.12);
 }
 
 .qa-garcis {
-    color: var(--accent-garcis, #0d6efd);
-    background: rgba(13, 110, 253, 0.12);
+    color: var(--accent-garcis, #003333);
+    background: rgba(0, 51, 51, 0.12);
 }
 
 .qa-me {
@@ -397,8 +397,8 @@
 }
 
 .qa-assets {
-    color: var(--accent-assets, #0f766e);
-    background: rgba(15, 118, 110, 0.12);
+    color: var(--accent-assets, #003333);
+    background: rgba(0, 51, 51, 0.12);
 }
 
 .qa-procurement {
@@ -516,8 +516,8 @@ textarea {
 .form-select:focus,
 .form-check-input:focus,
 textarea:focus {
-    border-color: rgba(15, 118, 110, 0.7);
-    box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.12);
+    border-color: rgba(0, 51, 51, 0.7);
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 51, 0.12);
 }
 
 .form-control::placeholder,
@@ -561,8 +561,8 @@ textarea::placeholder {
     gap: 0.75rem;
     margin: 0 0 1.5rem;
     padding: 1rem;
-    background: rgba(15, 118, 110, 0.04);
-    border: 1px solid rgba(15, 118, 110, 0.12);
+    background: rgba(0, 51, 51, 0.04);
+    border: 1px solid rgba(0, 51, 51, 0.12);
     border-radius: 1rem;
 }
 
@@ -584,9 +584,9 @@ textarea::placeholder {
 
 .process-step:hover,
 .process-step:focus-visible {
-    border-color: rgba(15, 118, 110, 0.35);
-    background: rgba(15, 118, 110, 0.04);
-    box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.08);
+    border-color: rgba(0, 51, 51, 0.35);
+    background: rgba(0, 51, 51, 0.04);
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 51, 0.08);
     outline: none;
 }
 
@@ -635,8 +635,8 @@ textarea::placeholder {
 }
 
 .process-step.is-active {
-    background: rgba(15, 118, 110, 0.08);
-    border-color: rgba(15, 118, 110, 0.28);
+    background: rgba(0, 51, 51, 0.08);
+    border-color: rgba(0, 51, 51, 0.28);
 }
 
 .process-step.is-active .step-number {
@@ -645,8 +645,8 @@ textarea::placeholder {
 }
 
 .process-step.is-complete {
-    background: rgba(15, 118, 110, 0.08);
-    border-color: rgba(15, 118, 110, 0.18);
+    background: rgba(0, 51, 51, 0.08);
+    border-color: rgba(0, 51, 51, 0.18);
 }
 
 .process-step.is-complete .step-number {
@@ -804,8 +804,8 @@ textarea.is-invalid {
     justify-content: center;
     margin-bottom: 0.75rem;
     border-radius: 50%;
-    background: rgba(15, 118, 110, 0.1);
-    color: var(--sidebar-accent, #0f766e);
+    background: rgba(0, 51, 51, 0.1);
+    color: var(--sidebar-accent, #003333);
     font-size: 1.5rem;
 }
 
@@ -917,10 +917,10 @@ textarea.is-invalid {
     justify-content: flex-start;
     padding: 8px 14px;
     gap: 12px;
-    color: var(--sidebar-accent, #0f766e);
+    color: var(--sidebar-accent, #003333);
     transform: translateY(-2px);
-    box-shadow: 0 14px 35px rgba(15, 118, 110, 0.18);
-    border-color: var(--sidebar-accent, #0f766e);
+    box-shadow: 0 14px 35px rgba(0, 51, 51, 0.18);
+    border-color: var(--sidebar-accent, #003333);
 }
 
 .forum-icon {
@@ -929,7 +929,7 @@ textarea.is-invalid {
     position: relative;
     flex-shrink: 0;
     border-radius: 50%;
-    background: var(--sidebar-accent, #0f766e);
+    background: var(--sidebar-accent, #003333);
     color: white;
     display: flex;
     align-items: center;

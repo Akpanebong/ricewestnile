@@ -67,7 +67,7 @@
                     {% for so in sos %}
                     <li class="list-group-item p-2">
                         <button class="btn btn-so w-100 text-start" data-so-id="{{ so.id }}"
-                                style="background-color: {{ so.color|default:'#3b82f6' }}; color:white;">
+                                style="background-color: {{ so.color|default:'#003333' }}; color:white;">
                             {{ so.code }} — {{ so.title }}
                             <span class="badge bg-light text-dark float-end">{{ so.outputs.count|default:0 }}</span>
                         </button>
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function(){
                             a.href = '#';
                             a.textContent = `${ind.code} — ${ind.name}`;
                             a.dataset.indId = ind.id;
-                            a.style.color = '#3b82f6';
+                            a.style.color = '#003333';
 
                             a.addEventListener('click', async (ev) => {
                                 ev.preventDefault();

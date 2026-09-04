@@ -154,7 +154,7 @@ body.sidebar-collapsed .app-main {
 }
 
 .breadcrumb-item a {
-    color: var(--sidebar-accent, #0f766e);
+    color: var(--sidebar-accent, #003333);
     text-decoration: none;
     font-weight: 500;
     display: inline-flex;

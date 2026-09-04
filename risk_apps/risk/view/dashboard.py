@@ -91,7 +91,7 @@ class Dashboard(TemplateView):
         category_labels = []
         category_counts = []
         category_palette = [
-            "#0d6efd",
+            "#003333",
             "#198754",
             "#f59f00",
             "#dc3545",

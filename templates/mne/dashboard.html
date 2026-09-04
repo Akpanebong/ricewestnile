@@ -24,11 +24,11 @@
   .dashboard-toolbar { padding: 14px; }
   .filter-panel { padding: 16px; }
   .filter-panel label { font-size: 12px; color: #475569; text-transform: uppercase; font-weight: 800; }
-  .metric-card { height: 100%; padding: 18px; border-left: 4px solid var(--metric-accent, #0f766e); }
+  .metric-card { height: 100%; padding: 18px; border-left: 4px solid var(--metric-accent, #003333); }
   .metric-icon {
     width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 8px; background: color-mix(in srgb, var(--metric-accent, #0f766e) 14%, #fff);
-    color: var(--metric-accent, #0f766e);
+    border-radius: 8px; background: color-mix(in srgb, var(--metric-accent, #003333) 14%, #fff);
+    color: var(--metric-accent, #003333);
   }
   .metric-label { color: #64748b; font-size: 12px; text-transform: uppercase; font-weight: 800; margin-top: 14px; }
   .metric-value { color: #0f172a; font-size: 30px; line-height: 1.1; font-weight: 800; }
@@ -140,7 +140,7 @@
 
   <section class="row g-3 mb-3">
     <div class="col-sm-6 col-xl-3">
-      <div class="metric-card" style="--metric-accent:#2563eb">
+      <div class="metric-card" style="--metric-accent:#003333">
         <span class="metric-icon"><i class="fa fa-mars"></i></span>
         <div class="metric-label">Refugee Male</div>
         <div class="metric-value counter" data-kpi="refugee_male" data-target="{{ refugee_male }}">0</div>
@@ -175,7 +175,7 @@
       </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-      <div class="metric-card" style="--metric-accent:#0f766e">
+      <div class="metric-card" style="--metric-accent:#0d9488">
         <span class="metric-icon"><i class="fa fa-flag"></i></span>
         <div class="metric-label">PWD Nationals</div>
         <div class="metric-value counter" data-kpi="pwd_nationals" data-target="{{ pwd_nationals }}">0</div>
@@ -374,7 +374,7 @@ async function renderSingleDatasetChart(type, canvasId, label, colors, chartType
       datasets: [{
         label,
         data: data.values,
-        backgroundColor: chartType === 'line' ? 'rgba(37, 99, 235, .18)' : colors.slice(0, data.values.length),
+        backgroundColor: chartType === 'line' ? 'rgba(0, 51, 51, .18)' : colors.slice(0, data.values.length),
         borderColor: chartType === 'line' ? colors[0] : colors.slice(0, data.values.length),
         borderWidth: 2,
         fill: chartType === 'line',
@@ -434,17 +434,17 @@ async function renderEnterpriseChart(){
 }
 
 async function renderProjectGroupsChart(){
-  await renderSingleDatasetChart('project_groups', 'projectChart', 'Groups Reached', ['#4f46e5', '#0f766e', '#f97316'], 'bar')
+  await renderSingleDatasetChart('project_groups', 'projectChart', 'Groups Reached', ['#4f46e5', '#003333', '#f97316'], 'bar')
 }
 
 async function updateAllCharts(){
   await Promise.all([
     updateSummaryCards(),
-    renderSingleDatasetChart('sex', 'sexChart', 'Sex Distribution', ['#2563eb', '#16a34a', '#dc2626', '#f59e0b'], 'bar'),
+    renderSingleDatasetChart('sex', 'sexChart', 'Sex Distribution', ['#003333', '#16a34a', '#dc2626', '#f59e0b'], 'bar'),
     renderSingleDatasetChart('status', 'statusChart', 'Status', ['#16a34a', '#dc2626'], 'pie'),
     renderSingleDatasetChart('pwd', 'pwdChart', 'PWD Distribution', ['#334155', '#94a3b8'], 'doughnut'),
-    renderSingleDatasetChart('location', 'locationChart', 'Location Distribution', ['#0f766e', '#2563eb', '#f97316', '#7c3aed'], 'bar'),
-    renderSingleDatasetChart('yearly_trend', 'yearlyTrendChart', 'Participants Trend', ['#2563eb'], 'line'),
+    renderSingleDatasetChart('location', 'locationChart', 'Location Distribution', ['#003333', '#64748b', '#f97316', '#7c3aed'], 'bar'),
+    renderSingleDatasetChart('yearly_trend', 'yearlyTrendChart', 'Participants Trend', ['#003333'], 'line'),
     renderEnterpriseChart(),
     renderProjectGroupsChart()
   ])

@@ -7,7 +7,7 @@
 <style>
     .hr-dashboard .metric-card {
         border: 1px solid #e9ecef;
-        border-left: 4px solid #0f766e;
+        border-left: 4px solid #003333;
         border-radius: 8px;
         background: #fff;
         min-height: 118px;
@@ -16,7 +16,7 @@
     .hr-dashboard .metric-card.warning { border-left-color: #f59f00; }
     .hr-dashboard .metric-card.info { border-left-color: #0dcaf0; }
     .hr-dashboard .metric-card.danger { border-left-color: #dc3545; }
-    .hr-dashboard .metric-card.primary { border-left-color: #0d6efd; }
+    .hr-dashboard .metric-card.primary { border-left-color: #003333; }
     .hr-dashboard .metric-label {
         color: #6c757d;
         font-size: .76rem;
@@ -292,13 +292,13 @@
 <script>
     const readJson = (id) => JSON.parse(document.getElementById(id).textContent);
     const baseOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } };
-    const colors = ["#0f766e", "#0d6efd", "#f59f00", "#dc3545", "#0dcaf0", "#6f42c1", "#6c757d"];
+    const colors = ["#003333", "#0d9488", "#f59f00", "#dc3545", "#7c9a92", "#6f42c1", "#6c757d"];
 
     new Chart(document.getElementById("departmentChart"), {
         type: "bar",
         data: {
             labels: readJson("department-labels"),
-            datasets: [{ label: "Employees", data: readJson("department-data"), backgroundColor: "#0f766e" }]
+            datasets: [{ label: "Employees", data: readJson("department-data"), backgroundColor: "#003333" }]
         },
         options: baseOptions
     });
@@ -307,7 +307,7 @@
         type: "line",
         data: {
             labels: readJson("attendance-labels"),
-            datasets: [{ label: "Present", data: readJson("attendance-data"), borderColor: "#0d6efd", backgroundColor: "rgba(13,110,253,.12)", fill: true, tension: .35 }]
+            datasets: [{ label: "Present", data: readJson("attendance-data"), borderColor: "#003333", backgroundColor: "rgba(0, 51, 51,.12)", fill: true, tension: .35 }]
         },
         options: baseOptions
     });
