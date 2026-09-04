@@ -15,36 +15,40 @@
         </a>
         {% endif %}
 
-        <div class="input-group shadow-sm" style="max-width: 320px;">
-            <span class="input-group-text bg-white border-end-0">
-                <i class="fa fa-search text-muted"></i>
-            </span>
-            <input type="text" id="profileSearch" class="form-control border-start-0" placeholder="Search profiles...">
-        </div>
+        <form method="get" class="d-flex align-items-center gap-2" role="search">
+           <input type="hidden" name="type" value="{{ data_type }}">
+           <div class="input-group shadow-sm" style="max-width: 320px;">
+               <span class="input-group-text bg-white border-end-0">
+                   <i class="fa fa-search text-muted"></i>
+               </span>
+               <input type="text" name="q" value="{{ search_query }}" id="profileSearch" class="form-control border-start-0" placeholder="Search profiles..." aria-label="Search profiles">
+           </div>
+           <button type="submit" class="btn btn-success btn-sm px-3">Search</button>
+        </form>
     </div>
 
     <!-- FILTER BUTTONS -->
     {% if request.user|has_group:"HR" or request.user.is_superuser %}
     <div class="mb-4 d-flex flex-wrap gap-2">
         {% for key, name in filter_types %}
-        <a href="?type={{ key }}"
+        <a href="?type={{ key }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
            class="btn btn-sm px-3 {% if data_type == key %}btn-success shadow-sm{% else %}btn-outline-success{% endif %}">
-            {{ name }}
+           {{ name }}
         </a>
         {% endfor %}
     </div>
     {% endif %}
 
     <!-- TABLE -->
-    <div class="card border-0 shadow-sm rounded-3">
+    <div class="card border-0 shadow-sm rounded-3 data-table-shell">
         <div class="card-body p-0">
 
-            <div class="table-responsive" id="profileTable">
+           <div class="table-responsive" id="profileTable">
 
-                <table class="table align-middle mb-0 table-hover">
+               <table class="table align-middle mb-0 table-hover data-table">
 
-                    <!-- HEAD -->
-                    <thead class="table-light sticky-top">
+                   <!-- HEAD -->
+                   <thead class="table-light">
                         <tr class="text-uppercase small text-muted">
                             <th style="width:50px;">#</th>
 
@@ -82,14 +86,14 @@
                         {% for obj in page_obj %}
                         <tr>
 
-                            <td class="text-muted fw-semibold">
+                            <td class="text-muted fw-semibold" data-label="#">
                                 {{ forloop.counter }}
                             </td>
 
                             {% if data_type == 'profiles' or data_type == 'employee' %}
 
                             <!-- NAME -->
-                            <td class="fw-semibold">
+                            <td class="fw-semibold" data-label="Full Name">
                                 {% if request.user.employee == obj.supervised_by %}
                                 <a href="{% url 'create_appraisal' obj.pk %}" class="text-decoration-none text-dark">
                                     {{ obj }}
@@ -101,7 +105,7 @@
                             </td>
 
                             <!-- DEPARTMENT -->
-                            <td>
+                            <td data-label="Department">
                                 <span class="badge bg-light text-dark border">
                                     {% if data_type == 'profiles' %}
                                         {{ obj.department }}
@@ -112,7 +116,7 @@
                             </td>
 
                             <!-- EMAIL -->
-                            <td class="text-truncate" style="max-width:220px;">
+                            <td class="text-truncate" style="max-width:220px;" data-label="Email">
                                 {% if data_type == 'profiles' %}
                                     {{ obj.email }}
                                 {% else %}
@@ -121,11 +125,11 @@
                             </td>
 
                             <!-- PHONE -->
-                            <td>{{ obj.phone }}</td>
+                            <td data-label="Phone">{{ obj.phone }}</td>
 
                             <!-- CATEGORY -->
                             {% if data_type == 'profiles' %}
-                            <td>
+                            <td data-label="Category">
                                 <span class="badge bg-info-subtle text-info fw-semibold">
                                     {{ obj.profile_type }}
                                 </span>
@@ -133,7 +137,7 @@
                             {% endif %}
 
                             <!-- STATUS -->
-                            <td>
+                            <td data-label="Status">
                                 <span class="badge px-3 py-1
                                     {% if data_type == 'profiles' %}
                                         {% if 'active' in obj.status|lower %}bg-success{% else %}bg-secondary{% endif %}
@@ -152,7 +156,7 @@
                             <!-- ACTION -->
                             {% if request.user|has_group:"HR" or request.user.is_superuser %}
                                 {% if data_type == 'employee' %}
-                                <td class="text-center">
+                                <td class="text-center table-action-col" data-label="Action">
                                     <a href="{% url 'profile_update' obj.pk obj.slug %}"
                                        class="btn btn-sm btn-light border shadow-sm">
                                         <i class="fa fa-pen text-primary"></i>
@@ -164,7 +168,7 @@
                             {% else %}
 
                             <!-- INTERNSHIP / OTHERS -->
-                            <td class="fw-semibold">
+                            <td class="fw-semibold" data-label="Name">
                             {% if request.user.employee == obj.supervised_by %}
                                 <a href="{% url 'create_appraisal' obj.pk %}" class="text-decoration-none text-dark">
                                     {{ obj }}
@@ -176,21 +180,21 @@
 
                             </td>
 
-                            <td>
+                            <td data-label="Department">
                                 <span class="badge bg-light text-dark border">
                                     {{ obj.user.department }}
                                 </span>
                             </td>
 
-                            <td class="text-truncate" style="max-width:220px;">
+                            <td class="text-truncate" style="max-width:220px;" data-label="Email">
                                 {{ obj.user.email }}
                             </td>
 
-                            <td>{{ obj.user.phone }}</td>
+                            <td data-label="Phone">{{ obj.user.phone }}</td>
 
-                            <td>{{ obj.date_joined|date:"M d, Y" }}</td>
+                            <td data-label="Date Joined">{{ obj.date_joined|date:"M d, Y" }}</td>
 
-                            <td>
+                            <td data-label="Status">
                                 <span class="badge bg-secondary">
                                     {{ obj.user.status }}
                                 </span>
@@ -202,8 +206,19 @@
 
                         {% empty %}
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">
-                                No records found
+                            <td colspan="8" class="text-center py-5">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </div>
+                                    <h6 class="mb-1">No matching records</h6>
+                                    <p class="mb-3 text-muted">Try a different search term or create a new profile.</p>
+                                    {% if request.user|has_group:"HR" or request.user.is_superuser %}
+                                        <a href="{% url 'profile_create' %}" class="btn btn-success btn-sm">
+                                            <i class="fa fa-plus me-1"></i> Create profile
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -217,14 +232,14 @@
 
                 <div class="d-flex gap-2">
                     {% if page_obj.has_previous %}
-                        <a href="?type={{ data_type }}&page={{ page_obj.previous_page_number }}"
+                        <a href="?type={{ data_type }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}&page={{ page_obj.previous_page_number }}"
                            class="btn btn-sm btn-outline-secondary">
                            Prev
                         </a>
                     {% endif %}
 
                     {% if page_obj.has_next %}
-                        <a href="?type={{ data_type }}&page={{ page_obj.next_page_number }}"
+                        <a href="?type={{ data_type }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}&page={{ page_obj.next_page_number }}"
                            class="btn btn-sm btn-outline-secondary">
                            Next
                         </a>

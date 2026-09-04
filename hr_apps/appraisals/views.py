@@ -28,7 +28,7 @@ def get_appraisal_filename():
 
 @login_required
 def appraisal_dashboard(request):
-    if not (is_hr(request.user) or is_supervisor(request.user) or getattr(request.user, "is_CMT", False)):
+    if not (request.user.is_superuser or is_hr(request.user) or is_supervisor(request.user) or getattr(request.user, "is_CMT", False)):
         return HttpResponseForbidden("Access denied.")
 
     qs = Appraisal.objects.all()

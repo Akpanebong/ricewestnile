@@ -9,7 +9,7 @@
   margin: 0 auto 2rem;
 }
 .dash-hero {
-  background: linear-gradient(135deg, #10261f 0%, #0a6b3a 58%, #f2b705 100%);
+  background: var(--sidebar-bg);
   color: #fff;
   border-radius: 8px;
   padding: 1.4rem;
@@ -433,7 +433,7 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const palette = ['#0a6b3a', '#f2b705', '#0d6efd', '#dc3545', '#6f42c1', '#20c997'];
+  const palette = ['#0f766e', '#cbd5e1', '#0d6efd', '#dc3545', '#6f42c1', '#0f766e'];
   const procurementLabels = JSON.parse(document.getElementById('procurement-status-labels').textContent);
   const procurementValues = JSON.parse(document.getElementById('procurement-status-values').textContent);
   const rfqLabels = JSON.parse(document.getElementById('rfq-status-labels').textContent);

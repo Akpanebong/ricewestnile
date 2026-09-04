@@ -11,7 +11,7 @@
         <td align="center">
           <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.08);">
             <tr>
-              <td style="background:#0a6b3a;padding:18px 22px;color:#fff;">
+              <td style="background:#0f766e;padding:18px 22px;color:#fff;">
                 <div style="font-size:16px;font-weight:700;letter-spacing:.2px;">RICE WN • Orientation Request</div>
                 <div style="opacity:.85;font-size:13px;margin-top:4px;">Department scheduling action required</div>
               </td>
@@ -25,7 +25,7 @@
                   HR has requested that your department (<strong>{{ department.name }}</strong>) conducts an orientation for:
                 </p>
                 <div style="background:#f6fff9;border:1px solid #d7f2e4;border-radius:12px;padding:14px;">
-                  <div style="font-weight:700;color:#0a6b3a;font-size:15px;">{{ staff.get_full_name|default:staff.username }}</div>
+                  <div style="font-weight:700;color:#0f766e;font-size:15px;">{{ staff.get_full_name|default:staff.username }}</div>
                   <div style="color:#6b7280;font-size:13px;margin-top:2px;">{{ staff.email|default:"No email on file" }}</div>
                 </div>
                 <p style="margin:16px 0 0;color:#333;font-size:14px;line-height:1.55;">
@@ -33,7 +33,7 @@
                 </p>
 
                 <div style="margin-top:18px;">
-                  <a href="{{ action_url }}" style="display:inline-block;background:#1ea36d;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;">
+                  <a href="{{ action_url }}" style="display:inline-block;background:#0f766e;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;">
                     Schedule Orientation
                   </a>
                 </div>

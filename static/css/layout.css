@@ -1,0 +1,201 @@
+/* =========================================================
+   GLOBAL & LAYOUT STRUCTURE
+   ========================================================= */
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-size: var(--font-size-root);
+}
+
+body {
+    background: var(--body-bg);
+    font-family: var(--font-primary, 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    color: var(--text-primary);
+    line-height: var(--line-height-base);
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+    font-size: var(--font-size-md);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    margin-top: 0;
+    font-family: var(--font-primary);
+    font-weight: 700;
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.125rem; }
+h6 { font-size: 1rem; }
+
+p { margin-bottom: var(--space-4); }
+
+small, .small { font-size: var(--font-size-sm); }
+
+a {
+    text-decoration: none;
+    color: var(--sidebar-accent);
+}
+
+a:hover { text-decoration: underline; }
+
+label, .form-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+.container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* =========================================================
+   APPLICATION HEADER
+   ========================================================= */
+
+.app-header {
+    height: var(--header-height, 64px);
+    background: var(--header-bg);
+    color: #fff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+/* =========================================================
+   MAIN CONTENT AREA
+   ========================================================= */
+
+.app-main {
+    margin-left: var(--sidebar-width);
+    padding-top: 90px;
+    min-height: 100vh;
+    transition: margin-left var(--transition);
+}
+
+body.sidebar-collapsed .app-main {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* =========================================================
+   BREADCRUMBS & FLASH ALERTS
+   ========================================================= */
+
+.breadcrumb-block {
+    margin-bottom: 1.25rem;
+}
+
+.breadcrumb-card {
+    background: #ffffff;
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--radius-md, 10px);
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    .breadcrumb-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.breadcrumb {
+    margin-bottom: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    font-size: 0.84rem;
+    padding: 0;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    color: #6c757d;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "\f285"; /* bootstrap-icons chevron-right or font-awesome */
+    font-family: "bootstrap-icons", -apple-system, sans-serif;
+    font-size: 0.65rem;
+    padding: 0 0.5rem;
+    color: #adb5bd;
+}
+
+.breadcrumb-item a {
+    color: var(--sidebar-accent, #0f766e);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color var(--transition-fast);
+}
+
+.breadcrumb-item a:hover {
+    color: #0e5b3c;
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: #495057;
+    font-weight: 600;
+}
+
+.flash-messages {
+    z-index: 1200;
+}
+
+/* =========================================================
+   MOBILE OVERLAY & RESPONSIVE LAYOUT
+   ========================================================= */
+
+#mobileOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1050;
+}
+
+#mobileOverlay.show {
+    display: block;
+}
+
+@media (max-width: 991.98px) {
+    .app-main {
+        margin-left: 0 !important;
+        padding-top: 100px;
+    }
+}

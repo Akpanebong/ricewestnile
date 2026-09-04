@@ -16,7 +16,7 @@
     }
 
     .enterprise-header{
-        background:linear-gradient(135deg,#198754,#157347);
+        background: var(--sidebar-accent, #0f766e);
         color:#fff;
         padding:24px;
     }
@@ -91,20 +91,20 @@
 
     .item-number{
         font-weight:700;
-        color:#198754;
+        color: var(--sidebar-accent, #0f766e);
     }
 
     .line-total{
         font-size:1.1rem;
         font-weight:700;
-        color:#198754;
+        color: var(--sidebar-accent, #0f766e);
     }
 
     .sticky-summary{
         position:sticky;
         bottom:0;
         background:#fff;
-        border-top:3px solid #198754;
+        border-top:3px solid var(--sidebar-accent, #0f766e);
         padding:18px 25px;
         z-index:100;
         box-shadow:0 -4px 12px rgba(0,0,0,.05);
@@ -231,13 +231,37 @@
     </div>
     {% endif %}
 
+    <div class="process-stepper" aria-label="Procurement process steps">
+        <button type="button" class="process-step is-complete" data-step-target="#procurement-details">
+            <span class="step-number">1</span>
+            <span class="step-copy">
+                <span class="step-label">Step</span>
+                <span class="step-title">Request Details</span>
+            </span>
+        </button>
+        <button type="button" class="process-step is-active" data-step-target="#procurement-items">
+            <span class="step-number">2</span>
+            <span class="step-copy">
+                <span class="step-label">Step</span>
+                <span class="step-title">Items &amp; Budget</span>
+            </span>
+        </button>
+        <button type="button" class="process-step" data-step-target="#procurement-review">
+            <span class="step-number">3</span>
+            <span class="step-copy">
+                <span class="step-label">Step</span>
+                <span class="step-title">Review &amp; Submit</span>
+            </span>
+        </button>
+    </div>
+
     <form method="post" id="poForm">
 
         {% csrf_token %}
 
         <!-- PROCUREMENT DETAILS -->
 
-        <div class="section-card mb-4">
+        <div class="section-card mb-4" id="procurement-details">
 
             <div class="section-header">
                 Procurement Plan Details
@@ -255,7 +279,7 @@
 
         <!-- ITEMS -->
 
-        <div class="section-card mb-4">
+        <div class="section-card mb-4" id="procurement-items">
 
             <div class="section-header d-flex justify-content-between align-items-center">
 
@@ -358,7 +382,7 @@
 
         </div>
 
-        <div class="sticky-summary">
+        <div class="sticky-summary" id="procurement-review">
 
             <div class="d-flex justify-content-between align-items-center">
 
@@ -414,6 +438,21 @@
 </main>
 
 <script>
+
+const stepperButtons = document.querySelectorAll('.process-step');
+stepperButtons.forEach((button) => {
+    button.addEventListener('click', function () {
+        const target = document.querySelector(this.dataset.stepTarget);
+        if (!target) return;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const steps = [...stepperButtons];
+        const clickedIndex = steps.indexOf(button);
+        steps.forEach((step, index) => {
+            step.classList.toggle('is-active', index === clickedIndex);
+            step.classList.toggle('is-complete', index < clickedIndex);
+        });
+    });
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     const displayCurrency = '{{ display_currency }}';

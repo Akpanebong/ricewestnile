@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from account.models import Project, ProjectBudget
+from core.project_models import Project, ProjectBudget
 from .models import ProcurementPlan, Supplier, Requisition, RFQ, RFQSendLog, PurchaseOrder
 
 

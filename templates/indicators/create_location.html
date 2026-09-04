@@ -13,7 +13,7 @@
        ========================================================= */
 
     .location-form-page {
-        --lf-primary: #198754;
+        --lf-primary: #0f766e;
         --lf-primary-dark: #146c43;
         --lf-primary-soft: #eaf7f0;
         --lf-border: #e1e7e3;
@@ -48,11 +48,7 @@
        ========================================================= */
 
     .lf-page-header {
-        background: linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #f3faf6 100%
-        );
+        background: var(--surface);
         border: 1px solid var(--lf-border);
         border-radius: 16px;
         padding: 20px 22px;
@@ -150,7 +146,7 @@
     .lf-form-body select:focus,
     .lf-form-body textarea:focus {
         border-color: #83c5a1;
-        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
     }
 
     .lf-form-body label {
@@ -198,7 +194,7 @@
         background: var(--lf-primary);
         color: #fff;
         border: 1px solid var(--lf-primary);
-        box-shadow: 0 3px 8px rgba(25, 135, 84, .15);
+        box-shadow: 0 3px 8px rgba(15, 118, 110, 0.12);
     }
 
     .lf-btn-submit:hover {

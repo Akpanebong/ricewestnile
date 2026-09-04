@@ -11,7 +11,7 @@
         <td align="center">
           <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.08);">
             <tr>
-              <td style="background:#0a6b3a;padding:18px 22px;color:#fff;">
+              <td style="background:#0f766e;padding:18px 22px;color:#fff;">
                 <div style="font-size:16px;font-weight:700;">RICE WN • Orientation Update</div>
                 <div style="opacity:.85;font-size:13px;margin-top:4px;">Scheduled session notification</div>
               </td>
@@ -25,13 +25,13 @@
                   A department orientation session has been scheduled for:
                 </p>
                 <div style="background:#f6fff9;border:1px solid #d7f2e4;border-radius:12px;padding:14px;">
-                  <div style="font-weight:700;color:#0a6b3a;font-size:15px;">{{ staff.get_full_name|default:staff.username }}</div>
+                  <div style="font-weight:700;color:#0f766e;font-size:15px;">{{ staff.get_full_name|default:staff.username }}</div>
                   <div style="color:#111;font-size:14px;margin-top:6px;">
                     {{ department.name }} • {{ session.scheduled_start|date:"M d, Y H:i" }} – {{ session.scheduled_end|date:"H:i" }}
                   </div>
                 </div>
                 <div style="margin-top:18px;">
-                  <a href="{{ plan_url }}" style="display:inline-block;background:#1ea36d;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;">
+                  <a href="{{ plan_url }}" style="display:inline-block;background:#0f766e;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;">
                     View Plan
                   </a>
                 </div>

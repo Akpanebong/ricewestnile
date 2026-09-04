@@ -176,7 +176,7 @@
     width:64px;
     height:64px;
     border-radius:16px;
-    background:linear-gradient(135deg,#198754,#157347);
+    background: var(--sidebar-accent, #0f766e);
     color:#fff;
     display:flex;
     align-items:center;
@@ -193,8 +193,8 @@
 
 .form-control:focus,
 .form-select:focus{
-    border-color:#198754;
-    box-shadow:0 0 0 .18rem rgba(25,135,84,.15);
+    border-color: var(--sidebar-accent, #0f766e);
+    box-shadow: 0 0 0 .18rem rgba(15,118,110,.12);
 }
 
 textarea.form-control{
@@ -211,8 +211,8 @@ textarea.form-control{
 }
 
 .upload-box:hover{
-    border-color:#198754;
-    background:#f6fffa;
+    border-color: var(--sidebar-accent, #0f766e);
+    background: rgba(15, 118, 110, 0.03);
 }
 
 .card{

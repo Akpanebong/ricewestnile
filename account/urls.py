@@ -30,6 +30,9 @@ urlpatterns = [
     path('departments/units/', views.units_for_department, name='units_for_department'),
     path('units/projects/', views.projects_for_unit, name='projects_for_unit'),
 
+    # Search
+    path('search/', views.global_search, name='global_search'),
+
     # Profile URLs
     path('update_profile/<slug:slug>/', views.update_profile, name='update_employee'),
     path('profiles/', views.profile_list, name='profile_list'),

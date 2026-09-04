@@ -52,7 +52,10 @@ def _send_recruitment_email(*, subject, recipients, request_obj, message, action
 @login_required(login_url="login")
 def recruitment_request_create(request):
 
-    units = Unit.objects.filter(head=request.user)
+    if request.user.is_superuser:
+        units = Unit.objects.all()
+    else:
+        units = Unit.objects.filter(head=request.user)
 
     if not units.exists():
         messages.error(

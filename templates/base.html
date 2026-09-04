@@ -42,1955 +42,20 @@
 >
 
 
+<!-- =====================================================
+     DESIGN SYSTEM & MODULAR STYLESHEETS
+===================================================== -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/variables.css' %}">
+<link rel="stylesheet" href="{% static 'css/layout.css' %}">
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/components.css' %}">
+
+<!-- Dynamic Subsystem Theme Override -->
 <style>
-
-/* =========================================================
-   GLOBAL VARIABLES
-========================================================= */
-
 :root {
-
-    --sidebar-width: 260px;
-
-    --sidebar-collapsed-width: 76px;
-
-    --sidebar-bg: #171722;
-
-    --sidebar-color: #cfd3df;
-
-    --sidebar-hover: rgba(255,255,255,.055);
-
-    --sidebar-active: rgba(30,163,109,.10);
-
-    --sidebar-active-border: rgba(30,163,109,.55);
-
-    --sidebar-accent:
-        {% block system_accent %}#1ea36d{% endblock %};
-
-    --header-bg: #0a6b3a;
-
-    --body-bg: #f5f6fb;
-
-    --radius: .6rem;
-
-    --transition: .25s ease;
-
+    --sidebar-accent: {% block system_accent %}#0f766e{% endblock %};
 }
-
-
-/* =========================================================
-   GLOBAL
-========================================================= */
-
-html,
-body {
-
-    margin: 0;
-
-    padding: 0;
-
-    min-height: 100%;
-
-}
-
-body {
-
-    background: var(--body-bg);
-
-    font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-}
-
-a {
-
-    text-decoration: none;
-
-}
-
-
-/* =========================================================
-   HEADER
-========================================================= */
-
-.app-header {
-
-    height: 64px;
-
-    background: var(--header-bg);
-
-    color: #fff;
-
-    position: fixed;
-
-    top: 0;
-
-    left: 0;
-
-    right: 0;
-
-    z-index: 1100;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    padding: 0 1rem;
-
-    box-shadow:
-        0 2px 6px rgba(0,0,0,.15);
-
-}
-
-
-/* =========================================================
-   DESKTOP SIDEBAR
-========================================================= */
-
-.app-sidebar {
-
-    position: fixed;
-
-    top: 64px;
-
-    bottom: 0;
-
-    left: 0;
-
-    width: var(--sidebar-width);
-
-    background:
-        linear-gradient(
-            180deg,
-            #171722 0%,
-            #13131c 100%
-        );
-
-    color: var(--sidebar-color);
-
-    padding:
-        16px
-        12px
-        28px;
-
-    overflow-x: hidden;
-
-    overflow-y: auto;
-
-    transition:
-        width .25s ease,
-        transform .25s ease;
-
-    z-index: 1090;
-
-}
-
-
-/* =========================================================
-   DESKTOP SIDEBAR COLLAPSED
-========================================================= */
-
-body.sidebar-collapsed .app-sidebar {
-
-    width:
-        var(--sidebar-collapsed-width);
-
-}
-
-
-/* =========================================================
-   MAIN CONTENT
-========================================================= */
-
-.app-main {
-
-    margin-left:
-        var(--sidebar-width);
-
-    padding-top: 90px;
-
-    transition:
-        margin-left .25s ease;
-
-}
-
-
-/* =========================================================
-   MAIN CONTENT WHEN SIDEBAR COLLAPSED
-========================================================= */
-
-body.sidebar-collapsed .app-main {
-
-    margin-left:
-        var(--sidebar-collapsed-width);
-
-}
-
-
-/* =========================================================
-   SIDEBAR HEADER
-========================================================= */
-
-.sidebar-header {
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    min-height: 40px;
-
-    margin-bottom: 8px;
-
-    padding:
-        0 8px;
-
-    color:
-        rgba(255,255,255,.75);
-
-    font-size: .78rem;
-
-    font-weight: 700;
-
-    letter-spacing: .05em;
-
-    text-transform: uppercase;
-
-}
-
-
-/* =========================================================
-   SIDEBAR DASHBOARD / NORMAL LINK
-========================================================= */
-
-.sidebar-dashboard {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    width: 100%;
-
-    min-height: 48px;
-
-    margin-bottom: 5px;
-
-    padding: 0 12px;
-
-    border-radius: 10px;
-
-    color:
-        rgba(231,233,240,.88) !important;
-
-    font-size: .90rem;
-
-    font-weight: 500;
-
-    transition:
-        background .2s ease,
-        color .2s ease,
-        border .2s ease;
-
-}
-
-
-/* Hover */
-
-.sidebar-dashboard:hover {
-
-    background:
-        rgba(255,255,255,.055);
-
-    color:
-        #ffffff !important;
-
-}
-
-
-/* =========================================================
-   SUBTLE ACTIVE LINK
-========================================================= */
-
-.sidebar-dashboard.active {
-
-    color:
-        #ffffff !important;
-
-    background:
-        var(--sidebar-active);
-
-    box-shadow:
-        inset 3px 0 0
-        var(--sidebar-active-border);
-
-}
-
-
-/* Active icon */
-
-.sidebar-dashboard.active
-.sidebar-nav-icon {
-
-    color:
-        var(--sidebar-accent);
-
-    background:
-        rgba(30,163,109,.12);
-
-}
-
-
-/* =========================================================
-   NAVIGATION ICON
-========================================================= */
-
-.sidebar-nav-icon {
-
-    width: 32px;
-
-    height: 32px;
-
-    min-width: 32px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border-radius: 8px;
-
-    background:
-        rgba(255,255,255,.055);
-
-    color:
-        #b8becb;
-
-    font-size: .85rem;
-
-    transition:
-        all .2s ease;
-
-}
-
-
-/* =========================================================
-   SECTION TITLE
-========================================================= */
-
-.sidebar-section {
-
-    display: flex;
-
-    align-items: center;
-
-    margin:
-        22px 8px
-        8px;
-
-    color:
-        rgba(207,211,223,.42);
-
-    font-size: .64rem;
-
-    font-weight: 700;
-
-    letter-spacing: .12em;
-
-    white-space: nowrap;
-
-}
-
-.sidebar-section::after {
-
-    content: "";
-
-    flex: 1;
-
-    height: 1px;
-
-    margin-left: 10px;
-
-    background:
-        rgba(255,255,255,.055);
-
-}
-
-
-/* =========================================================
-   MODULE
-========================================================= */
-
-.sidebar-module {
-
-    margin-bottom: 3px;
-
-}
-
-
-/* =========================================================
-   MODULE TOGGLE
-========================================================= */
-
-.sidebar-module-toggle {
-
-    width: 100%;
-
-    min-height: 48px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    padding:
-        0 12px;
-
-    color:
-        #cfd3df;
-
-    background:
-        transparent;
-
-    border: none;
-
-    border-radius: 10px;
-
-    font-family: inherit;
-
-    font-size: .90rem;
-
-    text-align: left;
-
-    cursor: pointer;
-
-    transition:
-        background .2s ease,
-        color .2s ease;
-
-}
-
-
-/* Hover */
-
-.sidebar-module-toggle:hover {
-
-    background:
-        rgba(255,255,255,.055);
-
-    color:
-        #ffffff;
-
-}
-
-
-/* Open module */
-
-.sidebar-module.module-open
-.sidebar-module-toggle {
-
-    color:
-        #ffffff;
-
-    background:
-        rgba(255,255,255,.025);
-
-}
-
-
-/* =========================================================
-   MODULE LEFT SIDE
-========================================================= */
-
-.sidebar-module-left {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    min-width: 0;
-
-}
-
-
-/* =========================================================
-   MODULE TITLE
-========================================================= */
-
-.sidebar-module-title {
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-
-    font-weight: 500;
-
-}
-
-
-/* =========================================================
-   MODULE ICON
-========================================================= */
-
-.sidebar-module-icon {
-
-    width: 34px;
-
-    height: 34px;
-
-    min-width: 34px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border-radius: 9px;
-
-    color:
-        #b8becb;
-
-    background:
-        rgba(255,255,255,.055);
-
-    font-size: .85rem;
-
-    transition:
-        all .2s ease;
-
-}
-
-
-/* Module hover/open icon */
-
-.sidebar-module-toggle:hover
-.sidebar-module-icon,
-
-.sidebar-module.module-open
-.sidebar-module-icon {
-
-    color:
-        var(--sidebar-accent);
-
-    background:
-        rgba(30,163,109,.10);
-
-}
-
-
-/* =========================================================
-   MODULE ARROW
-========================================================= */
-
-.sidebar-module-arrow {
-
-    flex-shrink: 0;
-
-    font-size: .65rem;
-
-    color:
-        rgba(207,211,223,.38);
-
-    transition:
-        transform .25s ease,
-        color .2s ease;
-
-}
-
-
-/* Arrow when open */
-
-.sidebar-module-toggle[aria-expanded="true"]
-.sidebar-module-arrow {
-
-    transform:
-        rotate(90deg);
-
-    color:
-        var(--sidebar-accent);
-
-}
-
-
-/* =========================================================
-   SUBMENU
-========================================================= */
-
-.sidebar-submenu {
-
-    position: relative;
-
-    margin:
-        2px 0
-        8px
-        28px;
-
-    padding-left: 18px;
-
-    border-left:
-        1px solid
-        rgba(255,255,255,.07);
-
-}
-
-
-/* =========================================================
-   SUBMENU LINK
-========================================================= */
-
-.sidebar-submenu a {
-
-    position: relative;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
-
-    min-height: 38px;
-
-    padding:
-        7px 10px;
-
-    color:
-        rgba(207,211,223,.72);
-
-    border-radius: 8px;
-
-    font-size: .82rem;
-
-    text-decoration: none;
-
-    transition:
-        background .2s ease,
-        color .2s ease,
-        transform .2s ease;
-
-}
-
-
-/* submenu icon */
-
-.sidebar-submenu a i {
-
-    width: 18px;
-
-    min-width: 18px;
-
-    color:
-        rgba(207,211,223,.48);
-
-    font-size: .72rem;
-
-    text-align: center;
-
-}
-
-
-/* submenu hover */
-
-.sidebar-submenu a:hover {
-
-    color:
-        #ffffff;
-
-    background:
-        rgba(255,255,255,.045);
-
-    transform:
-        translateX(2px);
-
-}
-
-.sidebar-submenu a:hover i {
-
-    color:
-        var(--sidebar-accent);
-
-}
-
-
-/* =========================================================
-   ACTIVE SUBMENU
-========================================================= */
-
-.sidebar-submenu a.active {
-
-    color:
-        #ffffff;
-
-    font-weight: 600;
-
-    background:
-        rgba(30,163,109,.09);
-
-}
-
-
-/* subtle left marker */
-
-.sidebar-submenu a.active::before {
-
-    content: "";
-
-    position: absolute;
-
-    left: -19px;
-
-    top: 50%;
-
-    transform:
-        translateY(-50%);
-
-    width: 3px;
-
-    height: 20px;
-
-    border-radius:
-        0 3px 3px 0;
-
-    background:
-        var(--sidebar-accent);
-
-}
-
-.sidebar-submenu a.active i {
-
-    color:
-        var(--sidebar-accent);
-
-}
-
-
-/* =========================================================
-   SUPPORT LINKS
-========================================================= */
-
-.sidebar-support-link {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 12px;
-
-    min-height: 48px;
-
-    padding:
-        0 12px;
-
-    color:
-        rgba(207,211,223,.80);
-
-    border-radius: 10px;
-
-    font-size: .88rem;
-
-    transition:
-        all .2s ease;
-
-}
-
-.sidebar-support-link:hover {
-
-    color:
-        #ffffff;
-
-    background:
-        rgba(255,255,255,.055);
-
-}
-
-
-/* =========================================================
-   COLLAPSED SIDEBAR
-========================================================= */
-
-body.sidebar-collapsed
-.sidebar-nav-text,
-
-body.sidebar-collapsed
-.sidebar-module-title,
-
-body.sidebar-collapsed
-.sidebar-section,
-
-body.sidebar-collapsed
-.sidebar-header > span,
-
-body.sidebar-collapsed
-.sidebar-support-link > span:not(.sidebar-nav-icon) {
-
-    display: none;
-
-}
-
-
-/* Center dashboard */
-
-body.sidebar-collapsed
-.sidebar-dashboard {
-
-    justify-content: center;
-
-    padding:
-        0;
-
-}
-
-
-/* Center module */
-
-body.sidebar-collapsed
-.sidebar-module-toggle {
-
-    justify-content: center;
-
-    padding:
-        0;
-
-}
-
-
-/* Hide module arrow */
-
-body.sidebar-collapsed
-.sidebar-module-arrow {
-
-    display: none;
-
-}
-
-
-/* Center module left */
-
-body.sidebar-collapsed
-.sidebar-module-left {
-
-    justify-content: center;
-
-}
-
-
-/* Hide submenu completely */
-
-body.sidebar-collapsed
-.sidebar-submenu {
-
-    display: none !important;
-
-}
-
-
-/* Center support */
-
-body.sidebar-collapsed
-.sidebar-support-link {
-
-    justify-content: center;
-
-    padding:
-        0;
-
-}
-
-
-/* Remove active left border when collapsed */
-
-body.sidebar-collapsed
-.sidebar-dashboard.active {
-
-    box-shadow:
-        none;
-
-}
-
-
-/* =========================================================
-   SIDEBAR COLLAPSE BUTTON
-========================================================= */
-
-.sidebar-collapse-btn {
-
-    width: 32px;
-
-    height: 32px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    padding: 0;
-
-    color:
-        rgba(255,255,255,.65);
-
-    background:
-        rgba(255,255,255,.06);
-
-    border:
-        1px solid
-        rgba(255,255,255,.08);
-
-    border-radius: 8px;
-
-    transition:
-        all .2s ease;
-
-}
-
-.sidebar-collapse-btn:hover {
-
-    color:
-        #ffffff;
-
-    background:
-        rgba(255,255,255,.12);
-
-}
-
-
-/* =========================================================
-   TOOLTIP FOR COLLAPSED SIDEBAR
-========================================================= */
-
-.sidebar-tooltip {
-
-    position: fixed;
-
-    z-index: 5000;
-
-    display: none;
-
-    padding:
-        7px 10px;
-
-    color:
-        #ffffff;
-
-    background:
-        #22232d;
-
-    border:
-        1px solid
-        rgba(255,255,255,.08);
-
-    border-radius: 7px;
-
-    font-size: .78rem;
-
-    white-space: nowrap;
-
-    box-shadow:
-        0 8px 25px rgba(0,0,0,.25);
-
-    pointer-events: none;
-
-}
-
-
-/* =========================================================
-   QUICK ACCESS
-========================================================= */
-
-.quick-access-dropdown {
-
-    position: relative;
-
-}
-
-.quick-access-btn {
-
-    display: flex;
-
-    align-items: center;
-
-    min-height: 38px;
-
-    padding:
-        7px 12px;
-
-    color:
-        #ffffff;
-
-    background:
-        rgba(255,255,255,.12);
-
-    border:
-        1px solid
-        rgba(255,255,255,.18);
-
-    border-radius: 9px;
-
-    font-size: .88rem;
-
-    font-weight: 500;
-
-    transition:
-        all .2s ease;
-
-}
-
-.quick-access-btn:hover,
-.quick-access-btn:focus {
-
-    color:
-        #ffffff;
-
-    background:
-        rgba(255,255,255,.18);
-
-    border-color:
-        rgba(255,255,255,.28);
-
-    box-shadow:
-        none;
-
-}
-
-
-/* =========================================================
-   QUICK ACCESS MENU
-========================================================= */
-
-.quick-access-menu {
-
-    width: 320px;
-
-    margin-top:
-        12px !important;
-
-    padding:
-        8px;
-
-    border:
-        none;
-
-    border-radius:
-        14px;
-
-    background:
-        #ffffff;
-
-    box-shadow:
-        0 12px 40px rgba(0,0,0,.18) !important;
-
-}
-
-
-/* =========================================================
-   QUICK ACCESS HEADER
-========================================================= */
-
-.quick-access-header {
-
-    padding:
-        10px 12px 12px;
-
-    color:
-        #6c757d;
-
-    font-size: .7rem;
-
-    font-weight: 700;
-
-    letter-spacing: .08em;
-
-    border-bottom:
-        1px solid #edf0f2;
-
-    margin-bottom:
-        5px;
-
-}
-
-
-/* =========================================================
-   QUICK ACCESS ITEMS
-========================================================= */
-
-.quick-access-item {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 13px;
-
-    padding:
-        11px 12px;
-
-    border-radius:
-        10px;
-
-    white-space:
-        normal;
-
-    transition:
-        all .2s ease;
-
-}
-
-.quick-access-item:hover {
-
-    background:
-        #f5f8f7;
-
-    transform:
-        translateX(3px);
-
-}
-
-.quick-access-item strong {
-
-    display: block;
-
-    color:
-        #2f3640;
-
-    font-size:
-        .86rem;
-
-    font-weight:
-        700;
-
-}
-
-.quick-access-item small {
-
-    display: block;
-
-    margin-top:
-        2px;
-
-    color:
-        #8b939c;
-
-    font-size:
-        .72rem;
-
-}
-
-
-/* =========================================================
-   QUICK ACCESS ICON
-========================================================= */
-
-.quick-access-icon {
-
-    width: 42px;
-
-    height: 42px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    border-radius:
-        10px;
-
-    font-size:
-        1rem;
-
-}
-
-.qa-hr {
-
-    color: #198754;
-
-    background:
-        rgba(25,135,84,.12);
-
-}
-
-.qa-garcis {
-
-    color: #0d6efd;
-
-    background:
-        rgba(13,110,253,.12);
-
-}
-
-.qa-me {
-
-    color: #6f42c1;
-
-    background:
-        rgba(111,66,193,.12);
-
-}
-
-.qa-communication {
-
-    color: #fd7e14;
-
-    background:
-        rgba(253,126,20,.12);
-
-}
-
-.qa-assets {
-
-    color: #20c997;
-
-    background:
-        rgba(32,201,151,.12);
-
-}
-
-.qa-procurement {
-
-    color: #dc3545;
-
-    background:
-        rgba(220,53,69,.12);
-
-}
-
-
-/* =========================================================
-   CARDS / FORMS / BUTTONS
-========================================================= */
-
-.card {
-
-    border-radius:
-        16px;
-
-    border:
-        none;
-
-}
-
-.card-header {
-
-    border-bottom:
-        none;
-
-}
-
-.btn {
-
-    border-radius:
-        10px;
-
-}
-
-.form-control,
-.form-select {
-
-    border-radius:
-        10px;
-
-}
-
-.table-hover tbody tr {
-
-    transition:
-        .2s;
-
-}
-
-.badge {
-
-    padding:
-        .55rem .75rem;
-
-    font-size:
-        .78rem;
-
-}
-
-.shadow-sm {
-
-    box-shadow:
-        0 .125rem .35rem
-        rgba(0,0,0,.08) !important;
-
-}
-
-
-/* =========================================================
-   BODY / MAIN
-========================================================= */
-
-.breadcrumb-block {
-
-    margin-bottom:
-        1rem;
-
-}
-
-.flash-messages {
-
-    z-index:
-        1200;
-
-}
-
-
-/* =========================================================
-   MOBILE SIDEBAR
-========================================================= */
-
-#mobileSidebar {
-
-    transform:
-        translateX(-100%);
-
-    position:
-        fixed;
-
-    z-index:
-        1100;
-
-}
-
-#mobileSidebar.show {
-
-    transform:
-        translateX(0);
-
-}
-
-#mobileOverlay {
-
-    display:
-        none;
-
-    position:
-        fixed;
-
-    inset:
-        0;
-
-    background:
-        rgba(0,0,0,.35);
-
-    z-index:
-        1050;
-
-}
-
-#mobileOverlay.show {
-
-    display:
-        block;
-
-}
-
-
-/* =========================================================
-   FORUM FAB
-========================================================= */
-
-/* =========================================================
-   FORUM FAB
-   Compact icon by default, expands on hover
-========================================================= */
-
-.forum-fab-container {
-
-    position:
-        fixed;
-
-    right:
-        30px;
-
-    bottom:
-        25px;
-
-    z-index:
-        9999;
-
-}
-
-
-/* =========================================================
-   FORUM BUTTON
-========================================================= */
-
-.forum-fab {
-
-    position:
-        relative;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    width:
-        62px;
-
-    height:
-        62px;
-
-    padding:
-        0;
-
-    background:
-        #ffffff;
-
-    border-radius:
-        50%;
-
-    color:
-        #343a40;
-
-    border:
-        1px solid #e8ecef;
-
-    box-shadow:
-        0 10px 30px rgba(0,0,0,.10);
-
-    overflow:
-        visible;
-
-    transition:
-        width .25s ease,
-        height .25s ease,
-        border-radius .25s ease,
-        transform .25s ease,
-        box-shadow .25s ease,
-        border-color .25s ease;
-
-}
-
-
-/* =========================================================
-   HOVER — EXPAND BUTTON
-========================================================= */
-
-.forum-fab:hover {
-
-    width:
-        220px;
-
-    height:
-        76px;
-
-    border-radius:
-        18px;
-
-    justify-content:
-        flex-start;
-
-    padding:
-        10px 16px;
-
-    gap:
-        14px;
-
-    color:
-        #198754;
-
-    transform:
-        translateY(-3px);
-
-    box-shadow:
-        0 18px 45px rgba(25,135,84,.20);
-
-    border-color:
-        #198754;
-
-}
-
-
-/* =========================================================
-   FORUM ICON
-========================================================= */
-
-.forum-icon {
-
-    width:
-        52px;
-
-    height:
-        52px;
-
-    position:
-        relative;
-
-    flex-shrink:
-        0;
-
-    border-radius:
-        50%;
-
-    background:
-        linear-gradient(
-            135deg,
-            #198754,
-            #20c997
-        );
-
-    color:
-        white;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    font-size:
-        22px;
-
-    transition:
-        width .25s ease,
-        height .25s ease,
-        font-size .25s ease;
-
-}
-
-
-/* Slightly enlarge icon on hover */
-
-.forum-fab:hover .forum-icon {
-
-    width:
-        52px;
-
-    height:
-        52px;
-
-    font-size:
-        22px;
-
-}
-
-
-/* =========================================================
-   FORUM CONTENT
-   Hidden until hover
-========================================================= */
-
-.forum-content {
-
-    display:
-        flex;
-
-    flex-direction:
-        column;
-
-    justify-content:
-        center;
-
-    min-width:
-        0;
-
-    opacity:
-        0;
-
-    visibility:
-        hidden;
-
-    width:
-        0;
-
-    overflow:
-        hidden;
-
-    white-space:
-        nowrap;
-
-    transform:
-        translateX(-8px);
-
-    transition:
-        opacity .18s ease,
-        transform .22s ease,
-        width .25s ease,
-        visibility .25s ease;
-
-}
-
-
-/* Show content when hovered */
-
-.forum-fab:hover .forum-content {
-
-    opacity:
-        1;
-
-    visibility:
-        visible;
-
-    width:
-        auto;
-
-    transform:
-        translateX(0);
-
-}
-
-
-/* =========================================================
-   FORUM TITLE
-========================================================= */
-
-.forum-title {
-
-    display:
-        block;
-
-    font-size:
-        16px;
-
-    font-weight:
-        700;
-
-    line-height:
-        1.2;
-
-}
-
-
-/* =========================================================
-   FORUM SUBTITLE
-========================================================= */
-
-.forum-subtitle {
-
-    display:
-        block;
-
-    margin-top:
-        3px;
-
-    color:
-        #6c757d;
-
-    font-size:
-        12px;
-
-    line-height:
-        1.2;
-
-}
-
-
-/* =========================================================
-   UNREAD BADGE
-========================================================= */
-
-.forum-badge {
-
-    position:
-        absolute;
-
-    top:
-        -5px;
-
-    right:
-        -5px;
-
-    min-width:
-        23px;
-
-    height:
-        23px;
-
-    padding:
-        0 5px;
-
-    border-radius:
-        50%;
-
-    background:
-        #dc3545;
-
-    color:
-        white;
-
-    font-size:
-        11px;
-
-    font-weight:
-        700;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    border:
-        3px solid white;
-
-    z-index:
-        2;
-
-}
-
-
-/* =========================================================
-   MOBILE
-   Keep it compact on phones
-========================================================= */
-
-@media (max-width: 767.98px) {
-
-    .forum-fab-container {
-
-        right:
-            18px;
-
-        bottom:
-            18px;
-
-    }
-
-
-    .forum-fab {
-
-        width:
-            60px;
-
-        height:
-            60px;
-
-        padding:
-            0;
-
-        border-radius:
-            50%;
-
-    }
-
-
-    /* On mobile, keep icon-only */
-
-    .forum-fab:hover {
-
-        width:
-            60px;
-
-        height:
-            60px;
-
-        padding:
-            0;
-
-        border-radius:
-            50%;
-
-        justify-content:
-            center;
-
-        gap:
-            0;
-
-    }
-
-
-    .forum-content {
-
-        display:
-            none !important;
-
-    }
-
-
-    .forum-icon {
-
-        width:
-            50px;
-
-        height:
-            50px;
-
-        font-size:
-            21px;
-
-    }
-
-
-    .forum-fab:hover .forum-icon {
-
-        width:
-            50px;
-
-        height:
-            50px;
-
-        font-size:
-            21px;
-
-    }
-
-}
-
-
-/* =========================================================
-   MOBILE RESPONSIVE
-========================================================= */
-
-@media (max-width: 991.98px) {
-
-    .app-main {
-
-        margin-left:
-            0 !important;
-
-        padding-top:
-            100px;
-
-    }
-
-    .app-sidebar {
-
-        width:
-            min(300px, 88vw);
-
-        box-shadow:
-            12px 0
-            40px
-            rgba(0,0,0,.25);
-
-    }
-
-    body.sidebar-collapsed .app-sidebar {
-
-        width:
-            min(300px, 88vw);
-
-    }
-
-    body.sidebar-collapsed
-    .sidebar-nav-text,
-
-    body.sidebar-collapsed
-    .sidebar-module-title,
-
-    body.sidebar-collapsed
-    .sidebar-section,
-
-    body.sidebar-collapsed
-    .sidebar-module-arrow,
-
-    body.sidebar-collapsed
-    .sidebar-header > span {
-
-        display:
-            inline;
-
-    }
-
-    body.sidebar-collapsed
-    .sidebar-dashboard,
-    body.sidebar-collapsed
-    .sidebar-module-toggle {
-
-        justify-content:
-            space-between;
-
-        padding:
-            0 12px;
-
-    }
-
-    body.sidebar-collapsed
-    .sidebar-submenu {
-
-        display:
-            block !important;
-
-    }
-
-}
-
-
-@media (max-width: 767.98px) {
-
-    .quick-access-btn {
-
-        width:
-            38px;
-
-        height:
-            38px;
-
-        justify-content:
-            center;
-
-        padding:
-            0;
-
-    }
-
-    .quick-access-menu {
-
-        width:
-            min(320px, calc(100vw - 24px));
-
-    }
-
-    .forum-fab {
-
-        min-width:
-            65px;
-
-        width:
-            65px;
-
-        height:
-            65px;
-
-        border-radius:
-            50%;
-
-        padding:
-            0;
-
-        justify-content:
-            center;
-
-    }
-
-    .forum-content {
-
-        display:
-            none;
-
-    }
-
-}
-
 </style>
 
 {% block extra_head %}{% endblock %}
@@ -2098,7 +163,7 @@ body.sidebar-collapsed
 
                 <li>
                     <a
-                        class="dropdown-item quick-access-item"
+                        class="dropdown-item quick-access-item{% if '/garcis/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/assets/' not in request.path and '/procurement/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %} current-subsystem{% endif %}"
                         href="{% url 'dashboard' %}"
                     >
 
@@ -2111,13 +176,17 @@ body.sidebar-collapsed
                             <small>Human Resources</small>
                         </span>
 
+                        {% if '/garcis/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/assets/' not in request.path and '/procurement/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %}
+                        <span class="qa-status-badge">Active</span>
+                        {% endif %}
+
                     </a>
                 </li>
 
 
                 <li>
                     <a
-                        class="dropdown-item quick-access-item"
+                        class="dropdown-item quick-access-item{% if '/garcis/' in request.path %} current-subsystem{% endif %}"
                         href="{% url 'garcis:dashboard' %}"
                     >
 
@@ -2132,13 +201,17 @@ body.sidebar-collapsed
                             </small>
                         </span>
 
+                        {% if '/garcis/' in request.path %}
+                        <span class="qa-status-badge">Active</span>
+                        {% endif %}
+
                     </a>
                 </li>
 
 
                 <li>
                     <a
-                        class="dropdown-item quick-access-item"
+                        class="dropdown-item quick-access-item{% if '/monitoring/' in request.path %} current-subsystem{% endif %}"
                         href="{% url 'monitoring:dashboard' %}"
                     >
 
@@ -2151,13 +224,17 @@ body.sidebar-collapsed
                             <small>Monitoring &amp; Evaluation</small>
                         </span>
 
+                        {% if '/monitoring/' in request.path %}
+                        <span class="qa-status-badge">Active</span>
+                        {% endif %}
+
                     </a>
                 </li>
 
 
                 <li>
                     <a
-                        class="dropdown-item quick-access-item"
+                        class="dropdown-item quick-access-item{% if '/communication/' in request.path %} current-subsystem{% endif %}"
                         href="{% url 'comm:dashboard' %}"
                     >
 
@@ -2170,13 +247,17 @@ body.sidebar-collapsed
                             <small>Communication Management</small>
                         </span>
 
+                        {% if '/communication/' in request.path %}
+                        <span class="qa-status-badge">Active</span>
+                        {% endif %}
+
                     </a>
                 </li>
 
 
                 <li>
                     <a
-                        class="dropdown-item quick-access-item"
+                        class="dropdown-item quick-access-item{% if '/assets/' in request.path %} current-subsystem{% endif %}"
                         href="{% url 'asset:dashboard' %}"
                     >
 
@@ -2189,13 +270,17 @@ body.sidebar-collapsed
                             <small>Asset Management</small>
                         </span>
 
+                        {% if '/assets/' in request.path %}
+                        <span class="qa-status-badge">Active</span>
+                        {% endif %}
+
                     </a>
                 </li>
 
 
                 <li>
                     <a
-                        class="dropdown-item quick-access-item"
+                        class="dropdown-item quick-access-item{% if '/procurement/' in request.path %} current-subsystem{% endif %}"
                         href="{% url 'procurement' %}"
                     >
 
@@ -2208,12 +293,16 @@ body.sidebar-collapsed
                             <small>Procurement Management</small>
                         </span>
 
+                        {% if '/procurement/' in request.path %}
+                        <span class="qa-status-badge">Active</span>
+                        {% endif %}
+
                     </a>
                 </li>
 
                   <li>
                     <a
-                        class="dropdown-item quick-access-item"
+                        class="dropdown-item quick-access-item{% if '/system-home/' in request.path %} current-subsystem{% endif %}"
                         href="{% url 'system_home' %}"
                     >
 
@@ -2225,6 +314,10 @@ body.sidebar-collapsed
                             <strong>All Apps</strong>
                             <small>Access All Applications</small>
                         </span>
+
+                        {% if '/system-home/' in request.path %}
+                        <span class="qa-status-badge">Active</span>
+                        {% endif %}
 
                     </a>
                 </li>
@@ -2240,8 +333,26 @@ body.sidebar-collapsed
          RIGHT SIDE
     ================================================== -->
 
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end">
 
+        <div class="global-search-shell">
+            <form class="global-search-form" action="{% url 'global_search' %}" method="get" autocomplete="off">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ request.GET.q|default:'' }}"
+                    placeholder="Search people, projects, departments..."
+                    aria-label="Global search"
+                    aria-expanded="false"
+                    aria-controls="global-search-results"
+                >
+                <button type="submit" class="global-search-submit d-none d-sm-inline-flex">
+                    Search
+                </button>
+            </form>
+            <div id="global-search-results" class="global-search-dropdown" role="listbox" aria-live="polite" hidden></div>
+        </div>
 
         <!-- NOTIFICATIONS -->
 
@@ -2446,28 +557,18 @@ body.sidebar-collapsed
         {% endblock %}
 
 
-        <!-- FLASH MESSAGES -->
-
-        <div class="flash-messages">
-
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1200;">
             {% for message in messages %}
-
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-
-                {{ message }}
-
-                <button
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    type="button"
-                ></button>
-
+            <div class="toast align-items-center border-0 show{% if message.tags == 'success' %} text-bg-success{% elif message.tags == 'error' or message.tags == 'danger' %} text-bg-danger{% elif message.tags == 'warning' %} text-bg-warning{% elif message.tags == 'info' %} text-bg-info{% else %} text-bg-dark{% endif %}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4500">
+                <div class="d-flex">
+                    <div class="toast-body text-white">
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
             </div>
-
             {% endfor %}
-
         </div>
-
 
         {% block content %}
         {% endblock %}
@@ -2543,8 +644,13 @@ body.sidebar-collapsed
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    const body =
-        document.body;
+    document.querySelectorAll('.toast').forEach(function (toastEl) {
+        const toastInstance = new bootstrap.Toast(toastEl, { delay: Number(toastEl.dataset.bsDelay || 4500) });
+        toastInstance.show();
+    });
+
+const body =
+    document.body;
 
     const desktopToggle =
         document.getElementById(
@@ -2920,6 +1026,169 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
+
+    /* =====================================================
+       FORM UX: LOADING STATE + DOUBLE-SUBMIT GUARD
+    ===================================================== */
+
+    document.querySelectorAll("form").forEach(function (form) {
+        form.addEventListener("submit", function (event) {
+            if (form.dataset.submitting === "true") {
+                event.preventDefault();
+                return;
+            }
+
+            const submitButtons = form.querySelectorAll(
+                "button[type='submit'], input[type='submit']"
+            );
+
+            if (!submitButtons.length) {
+                return;
+            }
+
+            form.dataset.submitting = "true";
+
+            submitButtons.forEach(function (button) {
+                if (button.dataset.originalText) {
+                    return;
+                }
+
+                button.dataset.originalText = button.innerHTML;
+            });
+
+            submitButtons.forEach(function (button) {
+                if (button.disabled) {
+                    return;
+                }
+
+                button.disabled = true;
+                button.classList.add("btn-submit-loading");
+                button.setAttribute("aria-busy", "true");
+
+                const label = button.innerText.trim() || "Save";
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span><span>' + label + '</span>';
+            });
+
+            const firstInvalidField = form.querySelector(
+                ".is-invalid, input:invalid, select:invalid, textarea:invalid"
+            );
+
+            if (firstInvalidField) {
+                firstInvalidField.focus();
+                firstInvalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        });
+    });
+
+    const globalSearchInput = document.querySelector('.global-search-form input[name="q"]');
+    const globalSearchDropdown = document.getElementById('global-search-results');
+    const globalSearchForm = document.querySelector('.global-search-form');
+    const globalSearchShell = globalSearchForm ? globalSearchForm.closest('.global-search-shell') : null;
+
+    if (globalSearchInput && globalSearchDropdown && globalSearchForm) {
+        let searchTimer = null;
+
+        function hideSearchResults() {
+            globalSearchDropdown.innerHTML = '';
+            globalSearchDropdown.setAttribute('hidden', 'hidden');
+            globalSearchInput.setAttribute('aria-expanded', 'false');
+        }
+
+        function renderSearchResults(results) {
+            if (!results.length) {
+                hideSearchResults();
+                return;
+            }
+
+            globalSearchDropdown.innerHTML = results.map(function (item) {
+                const icon = item.group === 'Projects' ? 'fa-diagram-project' : item.group === 'Employees' ? 'fa-id-card' : item.group === 'Departments' ? 'fa-building-user' : item.group === 'Units' ? 'fa-people-group' : 'fa-user';
+                return `
+                    <button type="button" class="global-search-suggestion" data-url="${item.url}">
+                        <span class="global-search-suggestion-main">
+                            <span class="global-search-suggestion-icon"><i class="fa-solid ${icon}"></i></span>
+                            <span class="global-search-suggestion-copy">
+                                <strong>${(item.label || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong>
+                                <small>${(item.meta || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</small>
+                            </span>
+                        </span>
+                        <span class="global-search-suggestion-group">${(item.group || 'Item').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
+                    </button>
+                `;
+            }).join('');
+
+            globalSearchDropdown.removeAttribute('hidden');
+            globalSearchInput.setAttribute('aria-expanded', 'true');
+
+            globalSearchDropdown.querySelectorAll('.global-search-suggestion').forEach(function (suggestionButton) {
+                suggestionButton.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const targetUrl = suggestionButton.dataset.url;
+                    if (targetUrl) {
+                        window.location.href = targetUrl;
+                    }
+                });
+            });
+        }
+
+        const fetchSuggestions = function (term) {
+            const trimmed = term.trim();
+            if (!trimmed) {
+                hideSearchResults();
+                return;
+            }
+
+            fetch("{% url 'global_search' %}?q=" + encodeURIComponent(trimmed) + "&format=json", {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Search failed');
+                }
+                return response.json();
+            })
+            .then(function (payload) {
+                renderSearchResults(payload.results || []);
+            })
+            .catch(function () {
+                hideSearchResults();
+            });
+        };
+
+        const triggerSearch = function () {
+            const value = globalSearchInput.value;
+            window.clearTimeout(searchTimer);
+            if (!value.trim()) {
+                hideSearchResults();
+                return;
+            }
+            searchTimer = window.setTimeout(function () {
+                fetchSuggestions(value);
+            }, 200);
+        };
+
+        globalSearchInput.addEventListener('input', triggerSearch);
+        globalSearchInput.addEventListener('keyup', triggerSearch);
+        globalSearchInput.addEventListener('focus', function () {
+            if (globalSearchInput.value.trim()) {
+                triggerSearch();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!globalSearchShell) {
+                return;
+            }
+            if (!globalSearchShell.contains(event.target)) {
+                hideSearchResults();
+            }
+        });
+
+        globalSearchForm.addEventListener('submit', function (event) {
+            if (!globalSearchInput.value.trim()) {
+                event.preventDefault();
+            }
+        });
+    }
 
 });
 

@@ -11,7 +11,7 @@
        ========================================================= */
 
     .indicator-page {
-        --ind-primary: #198754;
+        --ind-primary: #0f766e;
         --ind-primary-dark: #146c43;
         --ind-primary-soft: #eaf7f0;
         --ind-border: #e2e8e4;
@@ -48,11 +48,7 @@
        ========================================================= */
 
     .ind-context {
-        background: linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #f4faf7 100%
-        );
+        background: var(--surface);
         border: 1px solid var(--ind-border);
         border-radius: 16px;
         padding: 22px 24px;
@@ -238,7 +234,7 @@
 
     .ind-search input:focus {
         border-color: #83c5a1;
-        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
     }
 
     .ind-search-clear {

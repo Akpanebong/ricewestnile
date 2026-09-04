@@ -448,11 +448,7 @@
     align-items: center;
     justify-content: space-between;
 
-    background: linear-gradient(
-        135deg,
-        #198754 0%,
-        #157347 100%
-    );
+    background: var(--surface);
 
     color: #ffffff;
 
@@ -583,9 +579,9 @@
 
 #programPerformanceModal .kpi-success .kpi-icon {
 
-    background: rgba(25, 135, 84, .10);
+    background: rgba(15, 118, 110, 0.10);
 
-    color: #198754;
+    color: var(--text-primary);
 }
 
 
@@ -593,7 +589,7 @@
 
     background: rgba(13, 110, 253, .10);
 
-    color: #0d6efd;
+    color: var(--text-secondary);
 }
 
 
@@ -932,7 +928,7 @@
     .program-card:hover,
     .program-card:focus {
         transform: translateY(-5px);
-        border-color: rgba(25, 135, 84, .25);
+        border-color: rgba(15, 118, 110, 0.25);
         box-shadow: 0 15px 35px rgba(0, 0, 0, .09);
         outline: none;
     }
@@ -951,8 +947,8 @@
         align-items: center;
         justify-content: center;
         border-radius: 14px;
-        background: rgba(25, 135, 84, .10);
-        color: #198754;
+        background: rgba(15, 118, 110, 0.10);
+        color: var(--text-primary);
         font-size: 21px;
     }
 
@@ -969,7 +965,7 @@
     }
 
     .program-card:hover .program-arrow {
-        background: #198754;
+        background: var(--sidebar-accent, #0f766e);
         color: #ffffff;
         transform: translateX(3px);
     }
@@ -998,7 +994,7 @@
         justify-content: space-between;
         padding: 14px 22px;
         border-top: 1px solid #f0f0f0;
-        color: #198754;
+        color: var(--text-primary);
         font-size: .85rem;
         font-weight: 600;
         background: #fcfcfc;
@@ -1028,11 +1024,7 @@
 
     .program-modal-header {
         padding: 22px 28px;
-        background: linear-gradient(
-            135deg,
-            #198754 0%,
-            #157347 100%
-        );
+        background: var(--surface);
         color: #ffffff;
     }
 
@@ -1060,13 +1052,13 @@
     }
 
     .kpi-success .kpi-icon {
-        background: rgba(25, 135, 84, .10);
-        color: #198754;
+        background: rgba(15, 118, 110, 0.10);
+        color: var(--text-primary);
     }
 
     .kpi-primary .kpi-icon {
         background: rgba(13, 110, 253, .10);
-        color: #0d6efd;
+        color: var(--text-secondary);
     }
 
     .kpi-warning .kpi-icon {

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Global Search{% endblock %}
+
+{% block content %}
+<main class="ttr-wrapper">
+    <div class="container-fluid py-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <div>
+                        <h3 class="mb-1">Global Search</h3>
+                        <p class="text-muted mb-0">
+                            {% if query %}
+                                Showing results for “{{ query }}”
+                            {% else %}
+                                Search across people, projects, departments and units.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <form method="get" action="{% url 'global_search' %}" class="global-search-form global-search-form--page">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="search" name="q" value="{{ query }}" placeholder="Search the platform..." aria-label="Search the platform">
+                        <button type="submit" class="global-search-submit">Search</button>
+                    </form>
+                </div>
+
+                {% if not has_results %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <h5 class="mb-2">No matching records found</h5>
+                        <p class="text-muted mb-0">Try another keyword or check whether you have access to that record.</p>
+                    </div>
+                {% else %}
+                    {% for group in result_groups %}
+                        <div class="search-result-group mb-4">
+                            <div class="search-result-header">
+                                <i class="fa-solid {{ group.icon }}"></i>
+                                {{ group.label }}
+                            </div>
+
+                            <div class="list-group list-group-flush">
+                                {% for item in group.items %}
+                                    <a href="{{ item.url }}" class="list-group-item list-group-item-action search-result-item">
+                                        <div class="search-result-icon"><i class="fa-solid {{ group.icon }}"></i></div>
+                                        <div class="search-result-copy">
+                                            <strong>{{ item.label }}</strong>
+                                            <small>{{ item.meta }}</small>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

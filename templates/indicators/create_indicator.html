@@ -14,7 +14,7 @@
        ========================================================= */
 
     .indicator-form-page {
-        --if-primary: #198754;
+        --if-primary: #0f766e;
         --if-primary-dark: #146c43;
         --if-primary-soft: #eaf7f0;
         --if-border: #e1e7e3;
@@ -49,11 +49,7 @@
        ========================================================= */
 
     .if-header {
-        background: linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #f4faf7 100%
-        );
+        background: var(--surface);
         border: 1px solid var(--if-border);
         border-radius: 16px;
         padding: 22px 24px;
@@ -272,7 +268,7 @@
     .if-field select:focus {
         outline: none;
         border-color: #83c5a1;
-        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
     }
 
     .if-field input::placeholder,

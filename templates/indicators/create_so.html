@@ -15,7 +15,7 @@
        ========================================================= */
 
     .so-page {
-        --so-primary: #198754;
+        --so-primary: #0f766e;
         --so-primary-dark: #146c43;
         --so-primary-soft: #eaf7f0;
         --so-border: #e3e8e5;
@@ -45,11 +45,7 @@
 
     /* Page header */
     .so-header {
-        background: linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #f5faf7 100%
-        );
+        background: var(--surface);
         border: 1px solid var(--so-border);
         border-radius: 16px;
         padding: 22px 24px;
@@ -182,7 +178,7 @@
     .so-field select:focus {
         outline: none;
         border-color: #83c5a1;
-        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
     }
 
     .so-field input::placeholder,

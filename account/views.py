@@ -8,6 +8,7 @@ from core.project_models import Project
 from hr_apps.HRapp.models import Employee
 from hr_apps.HRapp.templatetags.group_tags import has_group
 from django.db import transaction
+from django.db.models import Q
 from hr_apps.HRapp.views import is_supervisor
 from hr_apps.HRapp.utils import employee_leave_balances
 from .models import Department, Profile, ExitProcess, ExitStepType, ExitStepStatus, Unit
@@ -77,6 +78,165 @@ def department_delete(request, pk):
 
 # -------------------- PROFILE --------------------
 @login_required
+def global_search(request):
+    query = (request.GET.get('q') or '').strip()
+    user = request.user
+    has_full_access = user.is_superuser or has_group(user, 'HR')
+
+    search_terms = [term for term in query.split() if term]
+    if not search_terms:
+        return render(request, 'account/global_search.html', {
+            'query': '',
+            'result_groups': [],
+            'has_results': False,
+        })
+
+    def build_result(label, items, icon):
+        return {
+            'label': label,
+            'icon': icon,
+            'items': items,
+        }
+
+    def department_filtered(queryset):
+        if has_full_access or not user.department_id:
+            return queryset
+        return queryset.filter(pk=user.department_id)
+
+    def unit_filtered(queryset):
+        if has_full_access or not user.department_id:
+            return queryset
+        return queryset.filter(department=user.department)
+
+    def project_filtered(queryset):
+        if has_full_access:
+            return queryset
+        if user.department_id:
+            return queryset.filter(unit__department=user.department)
+        return queryset.none()
+
+    profiles_qs = Profile.objects.select_related('department', 'unit', 'project').order_by('first_name', 'last_name')
+    if not has_full_access:
+        profiles_qs = profiles_qs.filter(department=user.department) if user.department_id else profiles_qs.none()
+
+    profile_filter = Q()
+    for term in search_terms:
+        profile_filter |= (
+            Q(first_name__icontains=term) |
+            Q(last_name__icontains=term) |
+            Q(username__icontains=term) |
+            Q(email__icontains=term) |
+            Q(phone__icontains=term) |
+            Q(title__icontains=term) |
+            Q(designation__icontains=term) |
+            Q(department__name__icontains=term) |
+            Q(unit__name__icontains=term) |
+            Q(project__name__icontains=term)
+        )
+    profiles = profiles_qs.filter(profile_filter)[:8]
+
+    employee_qs = Employee.objects.select_related('user', 'department').order_by('user__first_name', 'user__last_name')
+    if not has_full_access:
+        employee_qs = employee_qs.filter(department=user.department) if user.department_id else employee_qs.none()
+
+    employee_filter = Q()
+    for term in search_terms:
+        employee_filter |= (
+            Q(staff_id__icontains=term) |
+            Q(job_title__icontains=term) |
+            Q(category__icontains=term) |
+            Q(department__name__icontains=term) |
+            Q(user__first_name__icontains=term) |
+            Q(user__last_name__icontains=term) |
+            Q(user__username__icontains=term) |
+            Q(user__email__icontains=term)
+        )
+    employees = employee_qs.filter(employee_filter)[:8]
+
+    departments_qs = Department.objects.select_related('head').order_by('name')
+    departments_qs = department_filtered(departments_qs)
+    department_filter = Q()
+    for term in search_terms:
+        department_filter |= (
+            Q(name__icontains=term) |
+            Q(head__first_name__icontains=term) |
+            Q(head__last_name__icontains=term) |
+            Q(head__username__icontains=term)
+        )
+    departments = departments_qs.filter(department_filter)[:8]
+
+    units_qs = Unit.objects.select_related('department', 'head').order_by('department__name', 'name')
+    units_qs = unit_filtered(units_qs)
+    unit_filter = Q()
+    for term in search_terms:
+        unit_filter |= (
+            Q(name__icontains=term) |
+            Q(department__name__icontains=term) |
+            Q(head__first_name__icontains=term) |
+            Q(head__last_name__icontains=term)
+        )
+    units = units_qs.filter(unit_filter)[:8]
+
+    projects_qs = Project.objects.select_related('unit__department', 'project_head', 'project_officer').order_by('name')
+    projects_qs = project_filtered(projects_qs)
+    project_filter = Q()
+    for term in search_terms:
+        project_filter |= (
+            Q(name__icontains=term) |
+            Q(code__icontains=term) |
+            Q(donor__icontains=term) |
+            Q(unit__name__icontains=term) |
+            Q(unit__department__name__icontains=term) |
+            Q(project_head__first_name__icontains=term) |
+            Q(project_head__last_name__icontains=term)
+        )
+    projects = projects_qs.filter(project_filter)[:8]
+
+    result_groups = [
+        build_result('People', [
+            {'label': p.get_full_name() or p.username, 'meta': p.department.name if p.department else 'No department', 'url': reverse('update_employee', args=[p.slug]) if p.slug else reverse('profile_list')}
+            for p in profiles
+        ], 'fa-user'),
+        build_result('Employees', [
+            {'label': str(emp), 'meta': emp.staff_id if emp.staff_id else (emp.department.name if emp.department else 'Employee'), 'url': reverse('edit_employee', args=[emp.pk, emp.slug]) if getattr(emp, 'slug', None) else reverse('employee_list')}
+            for emp in employees
+        ], 'fa-id-card'),
+        build_result('Projects', [
+            {'label': project.name, 'meta': project.unit.name if project.unit else 'No unit', 'url': reverse('core:project_update', args=[project.pk, project.slug]) if project.slug else reverse('core:project_list')}
+            for project in projects
+        ], 'fa-diagram-project'),
+        build_result('Departments', [
+            {'label': department.name, 'meta': department.head.get_full_name() if department.head else 'No department head', 'url': reverse('department_list')}
+            for department in departments
+        ], 'fa-building-user'),
+        build_result('Units', [
+            {'label': unit.name, 'meta': unit.department.name if unit.department else 'No department', 'url': reverse('department_list')}
+            for unit in units
+        ], 'fa-people-group'),
+    ]
+
+    result_groups = [group for group in result_groups if group['items']]
+
+    if request.GET.get('format') == 'json':
+        flat_results = []
+        for group in result_groups:
+            for item in group['items']:
+                flat_results.append({
+                    'label': item['label'],
+                    'meta': item['meta'],
+                    'url': item['url'],
+                    'group': group['label'],
+                })
+        return JsonResponse({'results': flat_results})
+
+    return render(request, 'account/global_search.html', {
+        'query': query,
+        'result_groups': result_groups,
+        'has_results': bool(result_groups),
+    })
+
+
+@login_required
 def profile_list(request):
     user = request.user
     data_type = request.GET.get('type', 'profiles')
@@ -128,6 +288,37 @@ def profile_list(request):
     }
 
     queryset = queryset_map.get(data_type, profiles_qs)
+    search_query = request.GET.get('q', '').strip()
+
+    if search_query:
+        search_terms = [term for term in search_query.split() if term]
+        if search_terms:
+            search_filter = Q()
+            for term in search_terms:
+                if data_type == 'profiles':
+                    search_filter |= (
+                        Q(first_name__icontains=term) |
+                        Q(last_name__icontains=term) |
+                        Q(username__icontains=term) |
+                        Q(email__icontains=term) |
+                        Q(phone__icontains=term) |
+                        Q(status__icontains=term) |
+                        Q(profile_type__icontains=term) |
+                        Q(department__name__icontains=term)
+                    )
+                else:
+                    search_filter |= (
+                        Q(user__first_name__icontains=term) |
+                        Q(user__last_name__icontains=term) |
+                        Q(user__username__icontains=term) |
+                        Q(user__email__icontains=term) |
+                        Q(user__phone__icontains=term) |
+                        Q(user__status__icontains=term) |
+                        Q(user__profile_type__icontains=term) |
+                        Q(user__department__name__icontains=term) |
+                        Q(staff_id__icontains=term)
+                    )
+            queryset = queryset.filter(search_filter)
 
     # ✅ PAGINATION
     paginator = Paginator(queryset, 10)
@@ -137,6 +328,7 @@ def profile_list(request):
         'page_obj': page_obj,
         'data_type': data_type,
         'filter_types': filter_types,
+        'search_query': search_query,
     })
 
 
@@ -159,7 +351,7 @@ def projects_for_unit(request):
 def profile_create(request):
     current_user = request.user
 
-    if not has_group(current_user, 'HR'):
+    if not (current_user.is_superuser or has_group(current_user, 'HR')):
         logout(request)
         messages.warning(request, 'Oops!!! Access Denied')
         return redirect(reverse('logout'))
@@ -242,6 +434,10 @@ def update_profile(request, slug):
         "supervised_by",
         "employment_status",
     }
+
+    if user.is_superuser:
+        readonly_profile_fields = set()
+        readonly_employee_fields = set()
 
     employee = (
         Employee.objects

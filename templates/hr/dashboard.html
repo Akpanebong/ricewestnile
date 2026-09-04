@@ -7,7 +7,7 @@
 <style>
     .hr-dashboard .metric-card {
         border: 1px solid #e9ecef;
-        border-left: 4px solid #198754;
+        border-left: 4px solid #0f766e;
         border-radius: 8px;
         background: #fff;
         min-height: 118px;
@@ -292,13 +292,13 @@
 <script>
     const readJson = (id) => JSON.parse(document.getElementById(id).textContent);
     const baseOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } };
-    const colors = ["#198754", "#0d6efd", "#f59f00", "#dc3545", "#0dcaf0", "#6f42c1", "#6c757d"];
+    const colors = ["#0f766e", "#0d6efd", "#f59f00", "#dc3545", "#0dcaf0", "#6f42c1", "#6c757d"];
 
     new Chart(document.getElementById("departmentChart"), {
         type: "bar",
         data: {
             labels: readJson("department-labels"),
-            datasets: [{ label: "Employees", data: readJson("department-data"), backgroundColor: "#198754" }]
+            datasets: [{ label: "Employees", data: readJson("department-data"), backgroundColor: "#0f766e" }]
         },
         options: baseOptions
     });

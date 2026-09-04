@@ -15,7 +15,7 @@ Data Entry | {{ indicator.code }}
        ========================================================= */
 
     .data-entry-form {
-        --de-primary: #198754;
+        --de-primary: #0f766e;
         --de-primary-dark: #146c43;
         --de-primary-soft: #eaf7f0;
         --de-border: #dfe6e2;
@@ -29,11 +29,7 @@ Data Entry | {{ indicator.code }}
        ========================================================= */
 
     .def-hero {
-        background: linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #f0faf5 100%
-        );
+        background: var(--surface);
         border: 1px solid var(--de-border);
         border-radius: 16px;
         padding: 21px 23px;
@@ -210,7 +206,7 @@ Data Entry | {{ indicator.code }}
     .def-field select:focus,
     .def-field textarea:focus {
         border-color: #82c5a0;
-        box-shadow: 0 0 0 3px rgba(25, 135, 84, .08);
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
         outline: none;
     }
 
@@ -323,7 +319,7 @@ Data Entry | {{ indicator.code }}
         color: #fff;
         background: var(--de-primary);
         border: 1px solid var(--de-primary);
-        box-shadow: 0 3px 9px rgba(25, 135, 84, .15);
+        box-shadow: 0 3px 9px rgba(15, 118, 110, 0.12);
     }
 
     .def-btn-save:hover {

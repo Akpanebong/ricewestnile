@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 # helper access checks (customize to your groups/permissions)
 def is_supervisor(user):
-    return bool(user and (user.groups.filter(name="Supervisor").exists() or user.is_staff))
+    return bool(user and (user.is_superuser or user.groups.filter(name="Supervisor").exists() or user.is_staff))
 
 
 # def is_hr(user):
@@ -70,7 +70,7 @@ def is_cmt(user):
 
 
 def is_unit_head(user):
-    return bool(user and Unit.objects.filter(head=user).exists())
+    return bool(user and (user.is_superuser or Unit.objects.filter(head=user).exists()))
 
 
 @login_required(login_url="login")
@@ -240,7 +240,7 @@ def employee_list(request):
 @login_required(login_url='login')
 def admin_edit_employee(request, pk, slug):
     employee = get_object_or_404(Employee, pk=pk, slug=slug)
-    if not (is_supervisor(user=request.user) or is_hr(request.user)):
+    if not (request.user.is_superuser or is_supervisor(user=request.user) or is_hr(request.user)):
         messages.error(request, 'Access Denied.')
         return redirect('logout')
 
@@ -260,7 +260,7 @@ def admin_edit_employee(request, pk, slug):
 def delete_employee(request, pk, slug):
     employee = get_object_or_404(Employee, pk=pk, slug=slug)
 
-    if not (is_supervisor(user=request.user) or is_hr(request.user)):
+    if not (request.user.is_superuser or is_supervisor(user=request.user) or is_hr(request.user)):
         messages.error(request, 'Access Denied.')
         return redirect('logout')
 
@@ -275,7 +275,7 @@ def delete_employee(request, pk, slug):
 # Add Employee
 @login_required(login_url='login')
 def add_employee(request):
-    if not (is_supervisor(user=request.user) or is_hr(request.user)):
+    if not (request.user.is_superuser or is_supervisor(user=request.user) or is_hr(request.user)):
         messages.error(request, 'Access Denied.')
         return redirect('logout')
 

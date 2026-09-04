@@ -17,13 +17,44 @@
         </a>
     </div>
 
+    <div class="process-stepper" aria-label="Administrative expense process steps">
+        <button type="button" class="process-step is-complete" data-step-target="#basic-info-section">
+            <span class="step-number">1</span>
+            <span class="step-copy">
+                <span class="step-label">Step</span>
+                <span class="step-title">Basic Info</span>
+            </span>
+        </button>
+        <button type="button" class="process-step is-active" data-step-target="#purpose-section">
+            <span class="step-number">2</span>
+            <span class="step-copy">
+                <span class="step-label">Step</span>
+                <span class="step-title">Purpose &amp; Workplan</span>
+            </span>
+        </button>
+        <button type="button" class="process-step" data-step-target="#financial-section">
+            <span class="step-number">3</span>
+            <span class="step-copy">
+                <span class="step-label">Step</span>
+                <span class="step-title">Financials</span>
+            </span>
+        </button>
+        <button type="button" class="process-step" data-step-target="#submit-section">
+            <span class="step-number">4</span>
+            <span class="step-copy">
+                <span class="step-label">Step</span>
+                <span class="step-title">Review &amp; Submit</span>
+            </span>
+        </button>
+    </div>
+
     <form method="POST" class="card shadow-sm border-0">
         {% csrf_token %}
 
         <div class="card-body">
 
             <!-- BASIC INFO -->
-            <h5 class="fw-bold border-bottom pb-2">Basic Information</h5>
+            <h5 class="fw-bold border-bottom pb-2" id="basic-info-section">Basic Information</h5>
 
             <div class="row g-3 mt-2 mb-4">
 
@@ -58,7 +89,7 @@
 
 
             <!-- PURPOSE -->
-            <h5 class="fw-bold border-bottom pb-2">Purpose</h5>
+            <h5 class="fw-bold border-bottom pb-2" id="purpose-section">Purpose</h5>
             <div class="mb-4 mt-2">
                 <textarea name="purpose" class="form-control" rows="3" required>{{cash_req.purpose}}</textarea>
             </div>
@@ -97,7 +128,7 @@
 
 
             <!-- FINANCIAL -->
-            <h5 class="fw-bold border-bottom pb-2">Financials</h5>
+            <h5 class="fw-bold border-bottom pb-2" id="financial-section">Financials</h5>
 
             <div class="row g-3 mt-2 mb-4">
 
@@ -117,7 +148,7 @@
         </div>
 
         <!-- ACTIONS -->
-        <div class="card-footer d-flex justify-content-between">
+        <div class="card-footer d-flex justify-content-between" id="submit-section">
 
             <a href="{% url 'finance:dashboard' %}" class="btn btn-outline-secondary">
                 Cancel
@@ -143,14 +174,33 @@
 
 <!-- ================= UX ENHANCEMENTS ================= -->
 <script>
+    const stepperButtons = document.querySelectorAll('.process-step');
+    stepperButtons.forEach((button) => {
+        button.addEventListener('click', function () {
+            const target = document.querySelector(this.dataset.stepTarget);
+            if (!target) return;
+
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            const steps = [...stepperButtons];
+            const clickedIndex = steps.indexOf(button);
+            steps.forEach((step, index) => {
+                step.classList.toggle('is-active', index === clickedIndex);
+                step.classList.toggle('is-complete', index < clickedIndex);
+            });
+        });
+    });
+
     // Prevent invalid timeframe selection
     document.addEventListener("DOMContentLoaded", function () {
         const fromDate = document.querySelector('[name="timeframe_from"]');
         const toDate = document.querySelector('[name="timeframe_to"]');
 
-        fromDate.addEventListener("change", function () {
-            toDate.min = this.value;
-        });
+        if (fromDate && toDate) {
+            fromDate.addEventListener("change", function () {
+                toDate.min = this.value;
+            });
+        }
     });
 </script>
 
