@@ -12,19 +12,19 @@
     <div class="d-flex gap-2">
 
         {% if obj.status == "submitted" %}
-            <a href="{% url 'approve_requisition' obj.id %}" class="btn btn-warning">
+            <a href="{% url 'finance:approve_cash_req' pk=obj.id slug=obj.slug %}" class="btn btn-warning">
                 Finance Approve
             </a>
         {% endif %}
 
         {% if obj.status == "finance_review" %}
-            <a href="{% url 'approve_requisition' obj.id %}" class="btn btn-info">
+            <a href="{% url 'finance:approve_cash_req' pk=obj.id slug=obj.slug %}" class="btn btn-info">
                 Operations Approve
             </a>
         {% endif %}
 
         {% if obj.status == "operations_review" %}
-            <a href="{% url 'approve_requisition' obj.id %}" class="btn btn-success">
+            <a href="{% url 'finance:approve_cash_req' pk=obj.id slug=obj.slug %}" class="btn btn-success">
                 ED Approve
             </a>
         {% endif %}
@@ -32,7 +32,7 @@
     </div>
 
     {% if obj.status == "approved" %}
-        <a href="{% url 'requisition_pdf' obj.id %}" class="btn btn-dark mt-3">
+        <a href="{% url 'finance:cash_req_pdf' pk=obj.id slug=obj.slug %}" class="btn btn-dark mt-3">
             Download PDF
         </a>
     {% endif %}

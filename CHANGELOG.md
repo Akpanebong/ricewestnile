@@ -4,6 +4,50 @@ This documents the audit-and-fix engagement covering security, multicurrency
 accounting, navigation, and UI/UX across the RICE West Nile enterprise system
 (HR, Procurement, Finance/Accounting, M&E, GARCIS, Communication, Assets).
 
+## Site-wide Crash Fixes
+
+A systematic crawl of every registered URL (parameterless routes hit directly,
+parameterized ones filled from real DB rows or synthetic IDs where no row
+existed) plus static template sweeps (broken `{% url %}` names, missing
+`template_name`/`render()` targets, and unsafe `{{ x|default:y }}` fallbacks)
+turned up the following live 500s, all fixed:
+
+- **`/notification/dashboard/`** — `NotificationDashboardView` pointed at a
+  template that never existed. Added `templates/notifications/dashboard.html`.
+- **`/garcis/compliance/documents/`** — the "Upload" button linked to a URL
+  name with no view behind it at all. Added `ComplianceDocumentCreateView` +
+  route, and fixed `ComplianceDocumentUpdateView` (also pointed at a
+  non-existent template) — both now use the shared `compliance/form.html`,
+  which now sets `enctype="multipart/form-data"` so the file field actually
+  uploads.
+- **M&E PDF exports** — `{{ now|default:today }}` in `reports/data_pdf.html`
+  crashed because `today` was never a real context variable (Django doesn't
+  silently swallow a failed `default` *argument*, only a failed main value).
+  Also discovered `mne/monitoring/utils.py` was the only PDF export in the
+  app built on `pdfkit`/`wkhtmltopdf` (an external binary) while every other
+  module uses pure-Python `xhtml2pdf` — switched it to match, removing an
+  environment dependency along with the bug. Dropped `pdfkit` from
+  `requirements.txt`.
+- **Assets "Add Maintenance" modal** — wrong URL namespace (`add_maintenance`
+  instead of `asset:add_maintenance`), and the view's own error/GET path
+  rendered a template that doesn't exist (it's modal-only, no standalone
+  page) — both now redirect back to the asset detail page.
+- **`hr/recruitment/jobs/<pk>/modal/`** — used `.get(pk=pk)` instead of
+  `get_object_or_404`, so a stale/deleted job ID crashed instead of 404ing.
+- **Procurement requisition detail** — `{{ po.reviewed_by.get_full_name|default:po.reviewed_by.username }}`
+  (and the same for `checked_by`/`approved_by`) crashed whenever that field
+  was still null, i.e. before that approval step happens — a normal state,
+  not an edge case. Guarded all three in `templates/procurement/req_detail.html`.
+- **Finance's `approval_flow.html`** referenced two URL names that don't
+  exist (`approve_requisition`, `requisition_pdf` instead of the real
+  `finance:approve_cash_req`/`finance:cash_req_pdf`) — not currently wired to
+  any view, but fixed for correctness.
+
+Also identified two dead, unreachable templates with the same class of stale
+URL reference (`hr/device_list.html`, `com_app/communication/templates/communication/notifications.html`)
+— neither is rendered by any view, so left as-is rather than building out
+the missing functionality unprompted.
+
 ## Security & Infrastructure
 
 - **Unauthenticated access to entire subsystems fixed.** Added

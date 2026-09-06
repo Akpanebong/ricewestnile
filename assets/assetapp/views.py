@@ -115,7 +115,7 @@ def add_maintenance(request, pk, slug):
 
         if not maintenance_date or not maintenance_type:
             messages.error(request, "Maintenance date and type are required.")
-            return redirect(reverse_lazy("asset:add_maintenance", kwargs={'pk': asset.id, 'slug': asset.slug}))
+            return redirect(reverse_lazy("asset:asset_detail", kwargs={'pk': asset.id, 'slug': asset.slug}))
 
         maintenance = AssetMaintenance.objects.create(
             asset=asset,
@@ -139,8 +139,8 @@ def add_maintenance(request, pk, slug):
         messages.success(request, "Maintenance record added successfully.")
         return redirect(reverse_lazy("asset:asset_detail", kwargs={'pk': asset.id, 'slug': asset.slug}))
 
-    return render(
-        request,
-        "asset/add_maintenance.html",
-        {"asset": asset},
-    )
+    # This form is only ever presented as a modal on the asset detail page
+    # (see assets/asset_detail.html) — there's no standalone page for it, so
+    # a direct GET just sends the user back there instead of 500ing on a
+    # template that doesn't exist.
+    return redirect(reverse_lazy("asset:asset_detail", kwargs={'pk': asset.id, 'slug': asset.slug}))

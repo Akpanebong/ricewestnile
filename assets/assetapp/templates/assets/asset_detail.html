@@ -75,7 +75,7 @@
 <!-- MAINTENANCE MODAL -->
 <div class="modal fade" id="maintenanceModal">
     <div class="modal-dialog">
-        <form method="post" action="{% url 'add_maintenance' asset.id asset.slug %}" class="modal-content">
+        <form method="post" action="{% url 'asset:add_maintenance' asset.id asset.slug %}" class="modal-content">
             {% csrf_token %}
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title">Add Maintenance</h5>

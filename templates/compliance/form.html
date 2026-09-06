@@ -11,7 +11,7 @@
     {{ view.object|yesno:"Update Record,Create Record" }}
 </h4>
 
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     {% csrf_token %}
 
     <div class="row">

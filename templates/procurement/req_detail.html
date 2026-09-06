@@ -49,7 +49,7 @@
 
             {% if po.reviewed_by and po.status == 'Reviewed' or po.status == 'Approved' %}
                 <small class="text-muted">
-                    By {{ po.reviewed_by.get_full_name|default:po.reviewed_by.username }}
+                    By {% if po.reviewed_by %}{{ po.reviewed_by.get_full_name|default:po.reviewed_by.username }}{% else %}Unknown{% endif %}
                     {% if po.reviewed_at %}
                         on {{ po.reviewed_at|date:"d M Y H:i" }}
                     {% endif %}
@@ -83,7 +83,7 @@
 
             {% if po.checked_by and po.status == 'Checked' or po.status == 'Approved'  %}
                 <small class="text-muted">
-                    By {{ po.checked_by.get_full_name|default:po.checked_by.username }}
+                    By {% if po.checked_by %}{{ po.checked_by.get_full_name|default:po.checked_by.username }}{% else %}Unknown{% endif %}
                     {% if po.checked_at %}
                         on {{ po.checked_at|date:"d M Y H:i" }}
                     {% endif %}
@@ -117,7 +117,7 @@
 
             {% if po.approved_by and po.status == 'Approved' %}
                 <small class="text-muted">
-                    By {{ po.approved_by.get_full_name|default:po.approved_by.username }}
+                    By {% if po.approved_by %}{{ po.approved_by.get_full_name|default:po.approved_by.username }}{% else %}Unknown{% endif %}
                     {% if po.approved_at and po.status == 'Approved' %}
                         on {{ po.approved_at|date:"d M Y H:i" }}
                     {% endif %}

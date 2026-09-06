@@ -313,9 +313,10 @@ def job_list(request):
 
 
 def job_detail_modal(request, pk):
-    job = JobOpening.objects.annotate(
-        applicant_count=Count("applicants")
-    ).get(pk=pk)
+    job = get_object_or_404(
+        JobOpening.objects.annotate(applicant_count=Count("applicants")),
+        pk=pk,
+    )
 
     html = render_to_string(
         "vacancy/partials/job_detail_modal.html",

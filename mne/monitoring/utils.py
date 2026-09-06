@@ -1,8 +1,9 @@
 import io
-import pdfkit
 import pandas as pd
+from xhtml2pdf import pisa
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from procurement.procureapp.utils import link_callback
 
 
 def apply_filters(qs, params):
@@ -83,18 +84,21 @@ def generate_excel_from_queryset(qs, filename='data_export.xlsx'):
 
 
 def generate_pdf_from_queryset(qs, filename='data_export.pdf', template='reports/data_pdf.html', context_extra=None):
-    """Generate PDF using wkhtmltopdf (pdfkit)."""
+    """Generate PDF using xhtml2pdf — pure Python, no external binary required
+    (matches the approach used by every other module's PDF export, unlike the
+    previous wkhtmltopdf/pdfkit dependency which isn't installed in every
+    environment)."""
     context = {'entries': qs}
     if context_extra:
         context.update(context_extra)
 
     html = render_to_string(template, context)
-    # pdfkit requires wkhtmltopdf installed and in PATH
-    options = {
-        'enable-local-file-access': None,
-        'quiet': ''
-    }
-    pdf = pdfkit.from_string(html, False, options=options)
-    response = HttpResponse(pdf, content_type='application/pdf')
+    result = io.BytesIO()
+    pisa_status = pisa.CreatePDF(src=html, dest=result, encoding='utf-8', link_callback=link_callback)
+
+    if pisa_status.err:
+        return HttpResponse("Error generating PDF", status=500)
+
+    response = HttpResponse(result.getvalue(), content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename={filename}'
     return response
