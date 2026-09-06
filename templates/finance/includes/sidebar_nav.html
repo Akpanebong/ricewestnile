@@ -57,6 +57,59 @@
 
 
 <!-- =====================================================
+     LEDGER & REPORTING
+===================================================== -->
+
+<div class="sidebar-section">
+    <span>LEDGER &amp; REPORTING</span>
+</div>
+
+<a href="{% url 'finance:ledger' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'ledger' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-scale-balanced"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Financial Ledger
+    </span>
+
+    <span class="sidebar-tag sidebar-tag--new">New</span>
+
+</a>
+
+<a href="{% url 'finance:record_transaction' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'record_transaction' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-circle-plus"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Record Transaction
+    </span>
+
+</a>
+
+<a href="{% url 'finance:chart_of_accounts' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'chart_of_accounts' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-sitemap"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Chart of Accounts
+    </span>
+
+</a>
+
+
+<!-- =====================================================
      SETTINGS
 ===================================================== -->
 
@@ -64,7 +117,7 @@
     <span>SETTINGS</span>
 </div>
 
-<a href="{% url 'core:currency_settings' %}"
+<a href="{% url 'currency_settings' %}"
    class="sidebar-dashboard
    {% if current_url == 'currency_settings' %}active{% endif %}">
 
@@ -73,7 +126,7 @@
     </span>
 
     <span class="sidebar-nav-text">
-        Currency Settings
+        Currency &amp; Region
     </span>
 
 </a>

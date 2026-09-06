@@ -19,6 +19,8 @@ from django.conf import settings
 from .permissions import is_hr, is_cmt
 from .utils import generate_strong_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib import messages
@@ -821,7 +823,13 @@ def reset_password(request, uidb64, token):
             messages.error(request, "Passwords do not match.")
             return redirect(request.path)
 
-        # You can add password validators here if required
+        try:
+            validate_password(password1, user=user)
+        except ValidationError as error:
+            for message in error.messages:
+                messages.error(request, message)
+            return redirect(request.path)
+
         user.set_password(password1)
         user.save()
         messages.success(request, "Your password has been reset successfully. You can now log in.")

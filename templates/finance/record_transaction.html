@@ -1,0 +1,122 @@
+{% extends "finance/base.html" %}
+{% block title %}Record Transaction{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h3 class="fw-bold">Record Transaction</h3>
+        <p class="text-muted mb-0">Log an ad-hoc income, expense, or transfer against the financial ledger</p>
+    </div>
+
+    <div class="card" style="max-width: 780px;">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Type</label>
+                        <select name="transaction_type" class="form-select" required>
+                            {% for value, label in transaction_types %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select" required>
+                            {% for c in categories %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="date" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Currency</label>
+                        <select name="currency" class="form-select" required>
+                            {% for option in currency_options %}
+                            <option value="{{ option.code }}" {% if option.code == "UGX" %}selected{% endif %}>{{ option.code }} — {{ option.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Amount</label>
+                        <input type="text" inputmode="decimal" data-currency-input name="amount" class="form-control" required>
+                        <div class="form-text">The amount actually received/spent, in the currency selected above — it'll be converted to UGX automatically using the current exchange rate.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Donor Code</label>
+                        <input type="text" name="donor_code" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Project</label>
+                        <select name="project" class="form-select">
+                            <option value="">— None —</option>
+                            {% for p in projects %}
+                            <option value="{{ p.id }}">{{ p }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Department</label>
+                        <select name="department" class="form-select">
+                            <option value="">— None —</option>
+                            {% for d in departments %}
+                            <option value="{{ d.id }}">{{ d }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <hr>
+                        <div class="text-muted small mb-2">Optionally attach this transaction to an existing record for traceability:</div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Purchase Order</label>
+                        <select name="purchase_order" class="form-select">
+                            <option value="">— None —</option>
+                            {% for po in purchase_orders %}
+                            <option value="{{ po.id }}">PO-{{ po.id }} — {{ po.po_number|default:"unnumbered" }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Asset</label>
+                        <select name="asset" class="form-select">
+                            <option value="">— None —</option>
+                            {% for a in assets %}
+                            <option value="{{ a.id }}">{{ a }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Asset Maintenance</label>
+                        <select name="asset_maintenance" class="form-select">
+                            <option value="">— None —</option>
+                            {% for m in asset_maintenances %}
+                            <option value="{{ m.id }}">{{ m.asset }} — {{ m.maintenance_date|date:"M Y" }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Record Transaction</button>
+                    <a href="{% url 'finance:ledger' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

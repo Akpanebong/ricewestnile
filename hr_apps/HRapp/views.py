@@ -307,7 +307,7 @@ def leave_list(request):
     # Supervisor
     elif is_supervisor(user):
         if employee is None:
-            messages.error(request, "Supervisor employee record not found.")
+            messages.error(request, "Your account isn't linked to an employee record yet — contact HR to finish setting up your account before you can review leave requests.")
             return redirect("dashboard")
 
         leaves_qs = Leave.objects.filter(
@@ -317,7 +317,7 @@ def leave_list(request):
     # Employee
     else:
         if employee is None:
-            messages.error(request, "Employee profile not found.")
+            messages.error(request, "Your account isn't linked to an employee record yet — contact HR to finish setting up your account before you can apply for leave.")
             return redirect("dashboard")
 
         leaves_qs = Leave.objects.filter(

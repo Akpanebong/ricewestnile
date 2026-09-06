@@ -59,12 +59,13 @@
 
 {% block content %}
 <div class="container-fluid hr-dashboard">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="page-header">
         <div>
-            <h4 class="fw-bold mb-1 text-success">HR Dashboard</h4>
-            <small class="text-muted">Workforce, leave, recruitment, and performance overview for {{ current_year }}</small>
+            <span class="page-header-eyebrow">Human Resources</span>
+            <h1 class="page-header-title">HR Dashboard</h1>
+            <p class="page-header-subtitle">Workforce, leave, recruitment, and performance overview for {{ current_year }}</p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="page-header-actions">
             <a href="{% url 'leave_list' %}" class="btn btn-outline-success btn-sm">
                 <i class="fa fa-calendar-check me-1"></i> Leave
             </a>

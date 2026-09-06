@@ -19,11 +19,12 @@ from account.utils import MealTeamAccessMixin, meal_team_required, superuser_req
 from mne.monitoring.models import Indicator, Location, Output, Project, StrategicObjective
 
 from .forms import LocationForm, ProjectForm, ResourceForm
-from .models import CurrencyRate, Resource, SystemActivity
+from .models import CurrencyRate, OrganizationSettings, Resource, SystemActivity
 from .services import (
     CURRENCY_LABELS,
     SUPPORTED_CURRENCIES,
     build_currency_matrix,
+    get_base_currency,
     get_latest_usd_rates,
     normalize_currency,
     save_manual_usd_rates,
@@ -84,16 +85,47 @@ def can_manage_currency(user):
 @login_required
 def currency_settings(request):
     if request.method == "POST":
-        action = request.POST.get("action")
+        # Named "settings_action" rather than "action" — an <input name="action">
+        # inside a <form> shadows the form element's own .action DOM property,
+        # which can break any JS that legitimately reads it.
+        action = request.POST.get("settings_action")
         if action == "display_currency":
-            request.session["display_currency"] = normalize_currency(request.POST.get("currency"))
+            currency = normalize_currency(request.POST.get("currency"))
+            # Persisted on the user's own profile so the preference survives
+            # across sessions and devices, instead of living only in the
+            # session (which is what "display_currency" used to mean).
+            request.user.display_currency = currency
+            request.user.save(update_fields=["display_currency"])
+            request.session["display_currency"] = currency
             messages.success(request, "Display currency updated.")
-            return redirect(_core_route(request, "currency_settings"))
+            return redirect(reverse("currency_settings"))
+
+        if action == "base_currency":
+            if not request.user.is_superuser:
+                messages.error(request, "Only a system administrator can change the organization's base currency.")
+                return redirect(reverse("currency_settings"))
+
+            org_settings = OrganizationSettings.load()
+            if OrganizationSettings.has_existing_financial_data():
+                messages.error(
+                    request,
+                    "The base currency can't be changed anymore — financial records already exist "
+                    "against the current base currency, and changing it now would mix currencies in "
+                    "every report. This is a one-time setup choice.",
+                )
+                return redirect(reverse("currency_settings"))
+
+            new_currency = normalize_currency(request.POST.get("base_currency"))
+            org_settings.base_currency = new_currency
+            org_settings.updated_by = request.user
+            org_settings.save()
+            messages.success(request, f"Base currency set to {new_currency}.")
+            return redirect(reverse("currency_settings"))
 
         if action == "manual_rates":
             if not can_manage_currency(request.user):
                 messages.error(request, "You do not have permission to update exchange rates.")
-                return redirect(_core_route(request, "currency_settings"))
+                return redirect(reverse("currency_settings"))
             try:
                 rate_date = request.POST.get("rate_date")
                 rate_date = datetime.strptime(rate_date, "%Y-%m-%d").date() if rate_date else date.today()
@@ -103,7 +135,7 @@ def currency_settings(request):
                 messages.error(request, f"Exchange rates were not saved: {error}")
             else:
                 messages.success(request, f"Exchange rates saved for {rate_date:%Y-%m-%d}.")
-            return redirect(_core_route(request, "currency_settings"))
+            return redirect(reverse("currency_settings"))
 
     rates = get_latest_usd_rates()
     context = {
@@ -112,6 +144,8 @@ def currency_settings(request):
         "active_rates": [{"currency": currency, "label": CURRENCY_LABELS[currency], "rate": rates[currency]} for currency in SUPPORTED_CURRENCIES],
         "currency_matrix": build_currency_matrix(rates),
         "today": date.today(),
+        "base_currency": get_base_currency(),
+        "base_currency_locked": OrganizationSettings.has_existing_financial_data(),
     }
     return render(request, "core/currency_settings.html", context)
 
@@ -119,7 +153,10 @@ def currency_settings(request):
 @login_required
 def set_currency(request):
     if request.method == "POST":
-        request.session["display_currency"] = normalize_currency(request.POST.get("currency"))
+        currency = normalize_currency(request.POST.get("currency"))
+        request.user.display_currency = currency
+        request.user.save(update_fields=["display_currency"])
+        request.session["display_currency"] = currency
         messages.success(request, "Display currency changed.")
     return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("system_home"))
 

@@ -4,6 +4,14 @@
 {% load form_tags %}
 
 {% block title %}{{ title|default:"Update Employee Profile" }}{% endblock %}
+{% block system_name %}My Account{% endblock %}
+{% block header_home_url %}{% url 'system_home' %}{% endblock %}
+{% block sidebar_desktop %}
+{% include "account/includes/account_sidebar.html" %}
+{% endblock %}
+{% block sidebar_mobile %}
+{% include "account/includes/account_sidebar.html" %}
+{% endblock %}
 
 {% block content %}
 <div class="employee-self-service">

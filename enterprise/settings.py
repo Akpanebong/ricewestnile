@@ -1,12 +1,41 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-enterprise-local")
-DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",") if host.strip()]
+# DEBUG now defaults to False. A deployment that forgets to set DJANGO_DEBUG
+# used to default to True — showing full stack traces (source, settings,
+# local variables) to any visitor. It now fails closed instead; local
+# development sets DJANGO_DEBUG=True explicitly via .env (see .env.example).
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
+
+# No insecure hardcoded fallback. A deployment that forgets DJANGO_SECRET_KEY
+# now refuses to start with DEBUG=False, rather than silently signing every
+# session/CSRF token with a key that ships in every clone of this repo.
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-local-dev-only-do-not-deploy"
+    else:
+        raise RuntimeError(
+            "DJANGO_SECRET_KEY is not set. Refusing to start with DEBUG=False "
+            "and no secret key configured — set it in the environment or .env."
+        )
+
+# ALLOWED_HOSTS defaults to nothing in production, forcing an explicit
+# decision rather than accepting any Host header. DEBUG mode keeps the
+# permissive "*" default since it's only ever run against localhost.
+_allowed_hosts_env = os.getenv("DJANGO_ALLOWED_HOSTS")
+if _allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_env.split(",") if host.strip()]
+elif DEBUG:
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -40,6 +69,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.RequireLoginForModulesMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "account.middleware.BlockExitedUserMiddleware",

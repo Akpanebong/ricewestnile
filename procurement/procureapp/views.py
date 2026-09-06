@@ -10,6 +10,7 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from datetime import datetime, timedelta
 import openpyxl
 from openpyxl.drawing.image import Image
@@ -262,7 +263,7 @@ def dashboard(request):
             {'name': 'Notifications', 'count': NotificationRecipient.objects.count(), 'url': reverse('notifications:list')},
             {'name': 'Unread Notifications', 'count': NotificationRecipient.objects.filter(is_read=False, is_deleted=False).count(), 'url': reverse('notifications:list')},
             {'name': 'Audit Logs', 'count': AuditLog.objects.count(), 'url': reverse('notifications:list')},
-            {'name': 'Currency Rates', 'count': CurrencyRate.objects.count(), 'url': reverse('core:currency_settings')},
+            {'name': 'Currency Rates', 'count': CurrencyRate.objects.count(), 'url': reverse('currency_settings')},
         ]},
     ]
 
@@ -308,8 +309,11 @@ def dashboard(request):
 @login_required(login_url='login')
 def supplier_list(request):
     suppliers = Supplier.objects.all().order_by('full_name', 'organisation_name', 'title')
+    paginator = Paginator(suppliers, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
     return render(request, 'procurement/supplier_list.html', {
         'object_list': suppliers,
+        'page_obj': page_obj,
         'active_count': suppliers.filter(active=True).count(),
     })
 

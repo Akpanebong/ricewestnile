@@ -28,6 +28,7 @@ class CashRequisitionAdmin(admin.ModelAdmin):
         "id",
         "donor_code",
         "status",
+        "currency",
         "created_by",
         "approved_by",
         "created_at",
@@ -118,6 +119,7 @@ class CashRequisitionItemAdmin(admin.ModelAdmin):
         "program_code",
         "quantity",
         "unit_cost",
+        "original_unit_cost",
         "total_cost",
     )
 
@@ -141,6 +143,7 @@ class AccountingFormAdmin(admin.ModelAdmin):
         "id",
         # "reference",
         "requisition",
+        "currency",
         "created_at",
     )
 
@@ -161,6 +164,7 @@ class AccountingItemAdmin(admin.ModelAdmin):
         "details",
         "amount_received",
         "amount_spent",
+        "original_amount_spent",
     )
 
     search_fields = ("description",)
@@ -189,9 +193,57 @@ class AdminExpenseNoteAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "created_by",
+        "currency",
+        "proposed_budget",
         "created_at",
     )
 
     list_filter = ("created_at",)
 
     search_fields = ("created_by__username",)
+
+
+# 🔹 Financial Categories
+@admin.register(models.FinancialCategory)
+class FinancialCategoryAdmin(admin.ModelAdmin):
+
+    list_display = ("code", "name", "category_type")
+    list_filter = ("category_type",)
+    search_fields = ("code", "name")
+
+
+# 🔹 Financial Transactions (Ledger)
+@admin.register(models.FinancialTransaction)
+class FinancialTransactionAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "reference",
+        "transaction_type",
+        "category",
+        "currency",
+        "original_amount",
+        "amount",
+        "date",
+        "project",
+        "department",
+        "created_by",
+    )
+
+    list_filter = (
+        "transaction_type",
+        "category",
+        "currency",
+        "date",
+        "project",
+        "department",
+    )
+
+    search_fields = (
+        "reference",
+        "donor_code",
+        "description",
+    )
+
+    readonly_fields = ("reference", "created_at")
+
+    ordering = ("-date",)

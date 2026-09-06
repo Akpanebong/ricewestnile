@@ -20,6 +20,16 @@ STATUS_CHOICES = [
     ("Probation", "Probation"),
 ]
 
+# Kept as a plain literal (not imported from core.models.CurrencyRate) to
+# avoid a circular import — core/models.py already imports from account.models.
+DISPLAY_CURRENCY_CHOICES = [
+    ("UGX", "Ugandan Shilling"),
+    ("KES", "Kenyan Shilling"),
+    ("NGN", "Nigerian Naira"),
+    ("SSP", "South Sudanese Pound"),
+    ("USD", "US Dollar"),
+]
+
 PROFILE_TYPE = [
     ("Staff", "Staff"),
     ("Volunteer", "Volunteer"),
@@ -78,6 +88,12 @@ class Profile(AbstractUser):
     probation_ends = models.DateField(null=True, blank=True)
     is_CMT = models.BooleanField(default=False)
     can_review = models.BooleanField(default=False)
+    display_currency = models.CharField(
+        max_length=3,
+        choices=DISPLAY_CURRENCY_CHOICES,
+        default="UGX",
+        help_text="Preferred currency for viewing monetary amounts across the system.",
+    )
 
     class Meta:
         verbose_name = "Profile"

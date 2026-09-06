@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
+from django.core.paginator import Paginator
 
 from .models import Asset
 from .forms import AssetForm
@@ -71,7 +72,7 @@ def dashboard(request):
 
 
 def asset_list(request):
-    assets = Asset.objects.all()
+    assets = Asset.objects.all().order_by('-date_of_entry')
 
     start = request.GET.get('start')
     end = request.GET.get('end')
@@ -82,7 +83,10 @@ def asset_list(request):
     if 'export' in request.GET:
         return export_assets_to_excel(assets)
 
-    return render(request, 'assets/asset_list.html', {'assets': assets})
+    paginator = Paginator(assets, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    return render(request, 'assets/asset_list.html', {'assets': page_obj, 'page_obj': page_obj})
 
 
 def asset_create(request):

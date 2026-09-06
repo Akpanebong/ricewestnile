@@ -6,8 +6,9 @@ from . import views
 app_name = "core"
 
 urlpatterns = [
-    path("currency/", views.currency_settings, name="currency_settings"),
-    path("currency/set/", views.set_currency, name="set_currency"),
+    # Currency settings lives at the single canonical route registered in
+    # enterprise/urls.py (name="currency_settings") — not duplicated here
+    # under this urls.py's two namespace mounts (procurement_core/mne_core).
 
     path("location/", views.LocationListView.as_view(), name="location_list"),
     path("trash/<int:pk>/<str:sub_county>/location/", views.trash_location, name="trash_location"),

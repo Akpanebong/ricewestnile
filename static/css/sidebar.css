@@ -39,7 +39,7 @@
     min-height: 44px;
     padding: 0 12px;
     border-radius: var(--radius-md, 10px);
-    color: #f1f5f9 !important;
+    color: #cbd5e1 !important;
     font-size: 0.92rem;
     font-weight: 500;
     transition: background var(--transition-fast), color var(--transition-fast), border var(--transition-fast);
@@ -50,30 +50,33 @@
     color: #ffffff !important;
 }
 
+.sidebar-dashboard:hover .sidebar-nav-icon {
+    color: #ffffff;
+}
+
 .sidebar-dashboard.active {
     color: #ffffff !important;
+    font-weight: 700;
     background: var(--sidebar-active);
     box-shadow: inset 3px 0 0 var(--sidebar-active-border);
 }
 
 .sidebar-dashboard.active .sidebar-nav-icon {
     color: var(--sidebar-accent-on-dark);
-    background: rgba(45, 212, 191, 0.18);
 }
 
-/* Navigation Icon */
+/* Navigation Icon — a bare glyph (no boxed background), matching the
+   reference's flat icon treatment: muted by default, brightening on
+   hover/active so the icon and its label always read as one unit. */
 .sidebar-nav-icon {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
+    width: 20px;
+    min-width: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: #cbd5e1;
-    font-size: 0.88rem;
-    transition: all var(--transition-fast);
+    color: #94a3b8;
+    font-size: 1rem;
+    transition: color var(--transition-fast);
 }
 
 /* Section Title */
@@ -104,7 +107,7 @@
     background: transparent;
     border: none;
     border-radius: var(--radius-md, 10px);
-    color: #f1f5f9;
+    color: #cbd5e1;
     font-size: 0.92rem;
     font-weight: 500;
     cursor: pointer;
@@ -116,14 +119,18 @@
     color: #ffffff;
 }
 
+.sidebar-module-toggle:hover .sidebar-module-icon {
+    color: #ffffff;
+}
+
 .sidebar-module-toggle[aria-expanded="true"] {
     color: #ffffff;
+    font-weight: 700;
     background: var(--sidebar-active);
 }
 
 .sidebar-module-toggle[aria-expanded="true"] .sidebar-module-icon {
     color: var(--sidebar-accent-on-dark);
-    background: rgba(45, 212, 191, 0.18);
 }
 
 .sidebar-module-left {
@@ -132,18 +139,16 @@
     gap: 12px;
 }
 
+/* Bare glyph, same flat treatment as .sidebar-nav-icon above. */
 .sidebar-module-icon {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
+    width: 20px;
+    min-width: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: #cbd5e1;
-    font-size: 0.88rem;
-    transition: all var(--transition-fast);
+    color: #94a3b8;
+    font-size: 1rem;
+    transition: color var(--transition-fast);
 }
 
 .sidebar-module-title {
@@ -162,12 +167,13 @@
     color: var(--sidebar-accent-on-dark);
 }
 
-/* Submenu */
+/* Submenu — indented, no persistent rail; only the active row gets a
+   tick mark, so an expanded group reads as calm/flat until you spot the
+   one item that's actually open (matches the reference's minimal look). */
 .sidebar-submenu {
     position: relative;
-    margin: 2px 0 8px 28px;
+    margin: 2px 0 8px 20px;
     padding-left: 18px;
-    border-left: 2px solid rgba(255, 255, 255, 0.12);
 }
 
 .sidebar-submenu a {
@@ -177,7 +183,7 @@
     gap: 10px;
     min-height: 38px;
     padding: 7px 10px;
-    color: #cbd5e1;
+    color: #94a3b8;
     border-radius: 8px;
     font-size: 0.86rem;
     font-weight: 500;
@@ -186,11 +192,12 @@
 }
 
 .sidebar-submenu a i {
-    width: 18px;
-    min-width: 18px;
+    width: 16px;
+    min-width: 16px;
     color: #94a3b8;
     font-size: 0.78rem;
     text-align: center;
+    transition: color var(--transition-fast);
 }
 
 .sidebar-submenu a:hover {
@@ -200,12 +207,12 @@
 }
 
 .sidebar-submenu a:hover i {
-    color: var(--sidebar-accent-on-dark);
+    color: #ffffff;
 }
 
 .sidebar-submenu a.active {
     color: #ffffff;
-    font-weight: 600;
+    font-weight: 700;
     background: rgba(45, 212, 191, 0.16);
 }
 

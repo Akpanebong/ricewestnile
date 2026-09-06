@@ -1,0 +1,101 @@
+{% extends "finance/base.html" %}
+{% load currency_tags %}
+{% block title %}Chart of Accounts{% endblock %}
+
+{% block extra_head %}
+<style>
+    .coa-type-header {
+        background: var(--surface-muted);
+        padding: 0.6rem 1rem;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Chart of Accounts</h3>
+            <p class="text-muted mb-0">The categories every financial transaction is classified against — {{ total_accounts }} accounts</p>
+        </div>
+        <a href="{% url 'finance:ledger' %}" class="btn btn-outline-dark shadow-sm">
+            <i class="fa fa-scale-balanced me-1"></i> View Ledger
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="card">
+                {% for type_value, type_label, accounts in grouped_categories %}
+                <div class="coa-type-header">{{ type_label }} Accounts</div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th class="text-end">Transactions</th>
+                                <th class="text-end">Total Recorded</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in accounts %}
+                            <tr>
+                                <td><code>{{ category.code }}</code></td>
+                                <td>{{ category.name }}</td>
+                                <td class="text-end">{{ category.transaction_count }}</td>
+                                <td class="text-end fw-bold">{{ category.total_amount|money:request }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No accounts of this type yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header bg-white fw-bold">Add Account</div>
+                <div class="card-body">
+                    {% if can_manage %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Code</label>
+                            <input type="text" name="code" class="form-control" placeholder="e.g. TRAVEL-EXP" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Travel & Transport" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <select name="category_type" class="form-select" required>
+                                {% for value, label in category_types %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Account</button>
+                    </form>
+                    {% else %}
+                    <p class="text-muted mb-0">Only Finance staff can add new accounts to the chart of accounts.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

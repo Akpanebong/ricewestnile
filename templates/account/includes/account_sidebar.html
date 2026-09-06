@@ -1,0 +1,101 @@
+{% with current_url=request.resolver_match.url_name %}
+
+<a href="{% url 'system_home' %}" class="sidebar-dashboard">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-house"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        RICE WN Hub
+    </span>
+</a>
+
+<div class="sidebar-section">
+    <span>MY ACCOUNT</span>
+</div>
+
+<a href="{% url 'update_employee' request.user.slug %}"
+   class="sidebar-dashboard
+   {% if current_url == 'update_employee' %}active{% endif %}">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-id-badge"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        My Profile
+    </span>
+</a>
+
+<div class="sidebar-section">
+    <span>HR SELF SERVICE</span>
+</div>
+
+<a href="{% url 'leave_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'leave_list' %}active{% endif %}">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-calendar-check"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        My Leave
+    </span>
+</a>
+
+<a href="{% url 'attendance_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'attendance_list' %}active{% endif %}">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-clock"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        My Attendance
+    </span>
+</a>
+
+<a href="{% url 'training_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'training_list' %}active{% endif %}">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-chalkboard-user"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        Training
+    </span>
+</a>
+
+<a href="{% url 'vacancy:job_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'job_list' %}active{% endif %}">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-briefcase"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        Job Vacancies
+    </span>
+</a>
+
+<div class="sidebar-section sidebar-support-title">
+    <span>SUPPORT</span>
+</div>
+
+<a href="{% url 'notifications:list' %}"
+   class="sidebar-dashboard
+   {% if request.resolver_match.namespace == 'notifications' %}active{% endif %}">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-bell"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        Notifications
+    </span>
+</a>
+
+<a href="{% url 'forum_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'forum_list' %}active{% endif %}">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-comments"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        Team Forum
+    </span>
+</a>
+
+{% endwith %}

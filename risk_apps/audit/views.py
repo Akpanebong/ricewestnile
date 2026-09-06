@@ -35,6 +35,7 @@ class AuditLogListView(ListView):
     model = AuditLog
     template_name = "audit/audit_list.html"
     context_object_name = "audits"
+    paginate_by = 25
 
 
 class AuditLogCreateView(AuditFormsetMixin, CreateView):
@@ -139,6 +140,7 @@ class AuditFindingListView(ListView):
     model = AuditFinding
     template_name = "audit/finding_list.html"
     context_object_name = "findings"
+    paginate_by = 25
 
 
 class AuditFindingUpdateView(UpdateView):
@@ -174,6 +176,7 @@ class AuditEvidenceListView(ListView):
     model = AuditEvidence
     template_name = "audit/evidence_list.html"
     context_object_name = "evidence_items"
+    paginate_by = 25
 
 
 class AuditEvidenceUpdateView(UpdateView):
@@ -223,6 +226,7 @@ class ExternalAuditEngagementListView(ListView):
     model = ExternalAuditEngagement
     template_name = "audit/external_engagement_list.html"
     context_object_name = "engagements"
+    paginate_by = 25
 
 
 class ExternalAuditEngagementDetailView(DetailView):
@@ -259,6 +263,7 @@ class ExternalAuditFindingListView(ListView):
     model = ExternalAuditFinding
     template_name = "audit/external_finding_list.html"
     context_object_name = "findings"
+    paginate_by = 25
 
 
 class ExternalAuditCreateView(CreateView):

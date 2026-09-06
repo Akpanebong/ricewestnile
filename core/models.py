@@ -113,3 +113,65 @@ class CurrencyRate(models.Model):
 
     def __str__(self):
         return f"1 {self.base_currency} = {self.rate} {self.quote_currency}"
+
+
+class OrganizationSettings(models.Model):
+    """
+    Organization-wide configuration — a singleton (always pk=1). Distinct
+    from a user's own display-currency preference: `base_currency` here is
+    the currency every financial figure is normalized to internally (what
+    FinancialTransaction.amount is stored in), so it reflects the region
+    the deployment actually operates in rather than being hardcoded to UGX.
+
+    Deliberately not freely re-editable once real financial data exists —
+    see can_change_base_currency() — because every historical amount was
+    normalized against whatever base was configured when it was recorded;
+    changing the base without reconverting that history would silently mix
+    currencies in every report.
+    """
+
+    base_currency = models.CharField(
+        max_length=3,
+        default=CurrencyRate.UGX,
+        help_text="The currency financial figures are normalized to across the whole system.",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
+    )
+
+    class Meta:
+        verbose_name = "Organization Settings"
+        verbose_name_plural = "Organization Settings"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @staticmethod
+    def has_existing_financial_data():
+        """
+        Whether changing the base currency now would leave historical
+        records inconsistent. Checked across every app that stores a
+        money amount normalized to the base currency.
+        """
+        from finance_app.finance.models import FinancialTransaction
+        from procurement.procureapp.models import ProcurementPlan
+        from assets.assetapp.models import Asset
+
+        return (
+            FinancialTransaction.objects.exists()
+            or ProcurementPlan.objects.exists()
+            or Asset.objects.exists()
+        )
+
+    def __str__(self):
+        return f"Organization Settings (base currency: {self.base_currency})"

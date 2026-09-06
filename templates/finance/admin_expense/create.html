@@ -133,10 +133,19 @@
 
             <div class="row g-3 mt-2 mb-4">
 
-                <div class="col-md-6">
-                    <label>Proposed Budget ({{ display_currency }})</label>
+                <div class="col-md-3">
+                    <label>Currency</label>
+                    <select name="currency" class="form-select" required>
+                        {% for option in currency_options %}
+                        <option value="{{ option.code }}" {% if option.code == display_currency %}selected{% endif %}>{{ option.code }} — {{ option.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Proposed Budget</label>
                     <input type="text" inputmode="decimal" data-currency-input value="{{ cash_req.total_amount|display_amount:request }}" name="proposed_budget" class="form-control" required>
-                    <div class="form-text">Summary of the sum on the requisition form.</div>
+                    <div class="form-text">Summary of the sum on the requisition form, in the currency selected above.</div>
                 </div>
 
                 <div class="col-md-6">

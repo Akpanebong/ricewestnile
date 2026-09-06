@@ -4,7 +4,7 @@ from django import template
 from num2words import num2words
 
 from core.models import CurrencyRate
-from core.services import convert_amount, format_money, get_user_currency
+from core.services import convert_amount, format_money, get_base_currency, get_user_currency
 
 register = template.Library()
 
@@ -43,7 +43,7 @@ def num_to_words(value, request=None):
     try:
         if request:
             currency = get_user_currency(request)
-            amount = convert_amount(value, CurrencyRate.UGX, currency)
+            amount = convert_amount(value, get_base_currency(), currency)
             return money_to_words(amount, currency)
         return num2words(value).capitalize()
     except Exception:
@@ -56,7 +56,7 @@ def money_to_words(value, currency):
     minor_amount = int((abs(amount) - Decimal(major_amount)) * 100)
     singular, plural, minor_singular, minor_plural = CURRENCY_WORDS.get(
         currency,
-        CURRENCY_WORDS[CurrencyRate.UGX],
+        CURRENCY_WORDS.get(get_base_currency(), CURRENCY_WORDS[CurrencyRate.UGX]),
     )
 
     major_unit = singular if major_amount == 1 else plural

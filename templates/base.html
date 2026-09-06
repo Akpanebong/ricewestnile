@@ -153,7 +153,7 @@
 
                 <li>
                     <a
-                        class="dropdown-item quick-access-item{% if '/garcis/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/assets/' not in request.path and '/procurement/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %} current-subsystem{% endif %}"
+                        class="dropdown-item quick-access-item{% if '/garcis/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/assets/' not in request.path and '/procurement/' not in request.path and '/finance_app/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %} current-subsystem{% endif %}"
                         href="{% url 'dashboard' %}"
                     >
 
@@ -166,7 +166,7 @@
                             <small>Human Resources</small>
                         </span>
 
-                        {% if '/garcis/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/assets/' not in request.path and '/procurement/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %}
+                        {% if '/garcis/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/assets/' not in request.path and '/procurement/' not in request.path and '/finance_app/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %}
                         <span class="qa-status-badge">Active</span>
                         {% endif %}
 
@@ -284,6 +284,28 @@
                         </span>
 
                         {% if '/procurement/' in request.path %}
+                        <span class="qa-status-badge">Active</span>
+                        {% endif %}
+
+                    </a>
+                </li>
+
+                <li>
+                    <a
+                        class="dropdown-item quick-access-item{% if '/finance_app/' in request.path %} current-subsystem{% endif %}"
+                        href="{% url 'finance:dashboard' %}"
+                    >
+
+                        <span class="quick-access-icon qa-accounting">
+                            <i class="fa-solid fa-coins"></i>
+                        </span>
+
+                        <span>
+                            <strong>ACCOUNTING</strong>
+                            <small>Financial Ledger &amp; Reporting</small>
+                        </span>
+
+                        {% if '/finance_app/' in request.path %}
                         <span class="qa-status-badge">Active</span>
                         {% endif %}
 
@@ -1170,13 +1192,16 @@ const body =
             { label: 'RICE WN Hub', meta: 'All subsystems', url: "{% url 'system_home' %}", icon: 'fa-house' },
             { label: 'HR', meta: 'Human Resources dashboard', url: "{% url 'dashboard' %}", icon: 'fa-users-gear' },
             { label: 'Procurement', meta: 'Procurement dashboard', url: "{% url 'procurement' %}", icon: 'fa-cart-shopping' },
-            { label: 'Finance', meta: 'Finance dashboard', url: "{% url 'finance:dashboard' %}", icon: 'fa-coins' },
+            { label: 'Accounting', meta: 'Accounting dashboard', url: "{% url 'finance:dashboard' %}", icon: 'fa-coins' },
             { label: 'M&E', meta: 'Monitoring & Evaluation dashboard', url: "{% url 'monitoring:dashboard' %}", icon: 'fa-chart-line' },
             { label: 'GARCIS', meta: 'Governance, Audit, Risk & Compliance', url: "{% url 'garcis:dashboard' %}", icon: 'fa-shield-halved' },
             { label: 'Communication', meta: 'Communication dashboard', url: "{% url 'comm:dashboard' %}", icon: 'fa-comments' },
             { label: 'Assets', meta: 'Asset Management dashboard', url: "{% url 'asset:dashboard' %}", icon: 'fa-boxes-stacked' },
-            { label: 'New Fund Requisition', meta: 'Finance · Create', url: "{% url 'finance:create_cash_req' %}", icon: 'fa-money-bill-wave' },
-            { label: 'Currency Settings', meta: 'Organization setting', url: "{% url 'core:currency_settings' %}", icon: 'fa-wallet' },
+            { label: 'New Fund Requisition', meta: 'Accounting · Create', url: "{% url 'finance:create_cash_req' %}", icon: 'fa-money-bill-wave' },
+            { label: 'Financial Ledger', meta: 'Accounting · Income, expense & transfer report', url: "{% url 'finance:ledger' %}", icon: 'fa-scale-balanced' },
+            { label: 'Record Transaction', meta: 'Accounting · Create', url: "{% url 'finance:record_transaction' %}", icon: 'fa-circle-plus' },
+            { label: 'Chart of Accounts', meta: 'Accounting · Manage account categories', url: "{% url 'finance:chart_of_accounts' %}", icon: 'fa-sitemap' },
+            { label: 'Currency & Region', meta: 'Base currency, display currency, and exchange rates', url: "{% url 'currency_settings' %}", icon: 'fa-earth-africa' },
             { label: 'Notifications', meta: 'View all notifications', url: "{% url 'notifications:list' %}", icon: 'fa-bell' },
         ];
 

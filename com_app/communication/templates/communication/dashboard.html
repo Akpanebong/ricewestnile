@@ -2,9 +2,18 @@
 {% block title %}Communication Dashboard{% endblock %}
 {% block content %}
 
-<h3 class="mb-4 fw-bold">
-  <i class="bi bi-speedometer2 text-success"></i> Communication Dashboard
-</h3>
+<div class="page-header">
+    <div>
+        <span class="page-header-eyebrow">Communication</span>
+        <h1 class="page-header-title">Communication Dashboard</h1>
+        <p class="page-header-subtitle">Presentations, reports, and review queue at a glance</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="{% url 'comm:review_queue' %}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-clipboard-check me-1"></i> Review Queue
+        </a>
+    </div>
+</div>
 
 <!-- Stats Cards -->
 <div class="row g-4 mb-4 stagger-grid">

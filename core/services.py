@@ -39,10 +39,39 @@ def normalize_currency(currency):
     return currency if currency in SUPPORTED_CURRENCIES else CurrencyRate.UGX
 
 
+def get_base_currency():
+    """
+    The organization's configured base currency — every financial figure
+    across the system (FinancialTransaction.amount, requisition items,
+    asset values, etc.) is normalized to this, instead of the old hardcoded
+    assumption that everything is UGX. Deployments outside Uganda set this
+    once (Settings → Currency & Region) to match the region they operate in.
+    """
+    from .models import OrganizationSettings
+
+    try:
+        return normalize_currency(OrganizationSettings.load().base_currency)
+    except Exception:
+        # Table not migrated yet, DB unreachable, etc. — fail back to the
+        # historical default rather than breaking every page that prices
+        # something.
+        return CurrencyRate.UGX
+
+
 def get_user_currency(request):
-    currency = getattr(settings, 'DEFAULT_DISPLAY_CURRENCY', CurrencyRate.UGX)
+    """
+    Resolve the currency to display amounts in. The user's own persisted
+    preference (Profile.display_currency) is the single source of truth for
+    anyone logged in; the session key is kept only as a fallback for
+    anonymous/no-request contexts so this still degrades gracefully.
+    """
+    currency = getattr(settings, 'DEFAULT_DISPLAY_CURRENCY', None) or get_base_currency()
     if request:
-        currency = request.session.get('display_currency', currency)
+        user = getattr(request, "user", None)
+        if user is not None and user.is_authenticated and getattr(user, "display_currency", None):
+            currency = user.display_currency
+        else:
+            currency = request.session.get('display_currency', currency)
     return normalize_currency(currency)
 
 
@@ -217,6 +246,11 @@ def convert_amount(amount, from_currency, to_currency, rate_obj=None, rates=None
 
     if amount in (None, ''):
         amount = Decimal('0.00')
+    # Strip thousands-separator commas so amounts typed with live formatting
+    # (e.g. "1,000,000.00" from a data-currency-input field) parse correctly
+    # even if the client-side comma-stripping JS didn't run for some reason.
+    if isinstance(amount, str):
+        amount = amount.replace(',', '').strip()
     amount = Decimal(str(amount))
 
     if from_currency == to_currency:
@@ -237,7 +271,13 @@ def quantize_money(amount):
     return Decimal(amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
-def format_money(amount, request=None, source_currency=CurrencyRate.UGX, include_equivalent=False):
+def format_money(amount, request=None, source_currency=None, include_equivalent=False):
+    # source_currency can't default to get_base_currency() in the signature
+    # (defaults are evaluated once at import time, before settings exist) —
+    # resolved here instead so a later base-currency change takes effect
+    # immediately rather than needing a process restart.
+    if source_currency is None:
+        source_currency = get_base_currency()
     display_currency = get_user_currency(request)
     rates = get_latest_usd_rates()
     display_amount = convert_amount(amount, source_currency, display_currency, rates=rates)
@@ -246,14 +286,26 @@ def format_money(amount, request=None, source_currency=CurrencyRate.UGX, include
     if not include_equivalent:
         return primary
 
-    equivalent_currency = CurrencyRate.USD if display_currency != CurrencyRate.USD else CurrencyRate.UGX
+    base_currency = get_base_currency()
+    equivalent_currency = CurrencyRate.USD if display_currency != CurrencyRate.USD else base_currency
     equivalent_amount = convert_amount(amount, source_currency, equivalent_currency, rates=rates)
     return f'{primary} ({equivalent_currency} {equivalent_amount:,.2f})'
 
 
 def display_amount_from_ugx(amount, request=None):
-    return convert_amount(amount, CurrencyRate.UGX, get_user_currency(request))
+    """
+    Despite the name (kept for backward compatibility — it's imported by
+    several other apps), this converts from the org's configured base
+    currency, not literally UGX, to the viewer's display currency.
+    """
+    return convert_amount(amount, get_base_currency(), get_user_currency(request))
 
 
 def user_amount_to_ugx(amount, request=None):
-    return convert_amount(amount, get_user_currency(request), CurrencyRate.UGX)
+    """
+    Despite the name (kept for backward compatibility — it's imported by
+    several other apps), this converts to the org's configured base
+    currency, not literally UGX, from whatever the viewer's own display
+    currency is.
+    """
+    return convert_amount(amount, get_user_currency(request), get_base_currency())

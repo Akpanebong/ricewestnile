@@ -26,14 +26,24 @@
 
         <!-- Top Fields -->
         <div class="row g-3 mb-3">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label fw-semibold">Donor Code</label>
             <input type="text" name="donor_code" class="form-control" placeholder="Enter donor code" value="{% if procurement_req and procurement_req.procurement %}{{ procurement_req.procurement.donor }}{% endif %}">
           </div>
 
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label fw-semibold">Date</label>
             <input type="date" name="date" class="form-control" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Currency</label>
+            <select name="currency" id="req-currency" class="form-control" required>
+              {% for option in currency_options %}
+              <option value="{{ option.code }}" {% if option.code == display_currency %}selected{% endif %}>{{ option.code }} — {{ option.label }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">The currency this requisition's items are priced in.</div>
           </div>
         </div>
 
@@ -96,7 +106,7 @@
           </button>
 
           <div class="text-end">
-            <h5 class="mb-0">Total ({{ display_currency }}):
+            <h5 class="mb-0">Total (<span id="grand-total-currency">{{ display_currency }}</span>):
               <span class="text-success fw-bold" id="grand-total">0.00</span>
             </h5>
           </div>
@@ -169,6 +179,10 @@ $(function () {
 
     // Calculate existing procurement items immediately
     calculateTotals();
+
+    $("#req-currency").on("change", function () {
+        $("#grand-total-currency").text($(this).val());
+    }).trigger("change");
 
     $("#add-row").click(function () {
 

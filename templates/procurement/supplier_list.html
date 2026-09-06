@@ -234,7 +234,7 @@
 
                     <tbody id="profileTable">
 
-                        {% for s in object_list %}
+                        {% for s in page_obj %}
 
                         <tr>
 
@@ -251,7 +251,7 @@
                                 <div class="d-flex align-items-center">
 
                                     <!-- Avatar -->
-                                    <div class="supplier-avatar me-3">
+                                    <div class="avatar-circle size-lg {% cycle 'tone-1' 'tone-2' 'tone-3' 'tone-4' 'tone-5' 'tone-6' %} me-3">
 
                                         {{ s.organisation_name|default:s.full_name|slice:":1"|upper }}
 
@@ -605,20 +605,6 @@
     padding-top:18px;
     padding-bottom:18px;
     border-color:#f1f3f5;
-}
-
-/* Avatar */
-.supplier-avatar{
-    width:48px;
-    height:48px;
-    border-radius:14px;
-    background: var(--sidebar-accent);
-    color:#fff;
-    font-weight:700;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:18px;
 }
 
 /* Badges */

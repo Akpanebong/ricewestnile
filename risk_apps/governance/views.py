@@ -37,6 +37,7 @@ class PolicyListView(ListView):
     model = Policy
     template_name = "governance/policy_list.html"
     context_object_name = "policies"
+    paginate_by = 25
 
 
 class PolicyDetail(DetailView):
@@ -86,6 +87,7 @@ class ControlListView(ListView):
     model = Control
     template_name = "governance/control_list.html"
     context_object_name = "controls"
+    paginate_by = 25
 
 
 class ControlDetail(DetailView):
@@ -130,6 +132,7 @@ class DecisionRecordListView(ListView):
     model = DecisionRecord
     template_name = "governance/decision_list.html"
     context_object_name = "decisions"
+    paginate_by = 25
 
 
 class DecisionRecordDetail(DetailView):
@@ -174,6 +177,7 @@ class StakeholderEngagementListView(ListView):
     model = StakeholderEngagement
     template_name = "governance/engagement_list.html"
     context_object_name = "engagements"
+    paginate_by = 25
 
 
 class StakeholderEngagementDetail(DetailView):

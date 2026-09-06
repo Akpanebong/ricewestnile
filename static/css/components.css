@@ -415,6 +415,7 @@ button.global-search-form {
 .qa-communication,
 .qa-assets,
 .qa-procurement,
+.qa-accounting,
 .qa-system {
     color: var(--sidebar-accent, #0f766e);
     background: var(--enterprise-accent-soft, rgba(15, 118, 110, 0.12));
@@ -437,44 +438,67 @@ button.global-search-form {
 
 .metric-icon-tint.is-success {
     color: var(--status-approved-text);
-    background: var(--status-approved-bg);
+    background: var(--icon-tint-success-bg);
 }
 
 .metric-icon-tint.is-pending {
     color: var(--status-pending-text);
-    background: var(--status-pending-bg);
+    background: var(--icon-tint-pending-bg);
 }
 
 .metric-icon-tint.is-danger {
     color: var(--status-rejected-text);
-    background: var(--status-rejected-bg);
+    background: var(--icon-tint-danger-bg);
 }
 
 .metric-icon-tint.is-info {
     color: var(--status-info-text);
-    background: var(--status-info-bg);
+    background: var(--icon-tint-info-bg);
 }
 
 .metric-icon-tint.is-neutral {
     color: var(--status-draft-text);
-    background: var(--status-draft-bg);
+    background: var(--icon-tint-neutral-bg);
 }
 
-/* Trend indicator (e.g. "+12% vs last month") */
+/* Trend indicator (e.g. "+12% vs last month") — an inline delta badge
+   that sits next to a KPI's headline number. */
 .metric-trend {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.78rem;
+    gap: 3px;
+    padding: 0.1rem 0.45rem;
+    border-radius: var(--radius-pill, 999px);
+    font-size: 0.76rem;
     font-weight: 700;
+    line-height: 1.4;
+}
+
+.metric-trend i {
+    font-size: 0.68rem;
 }
 
 .metric-trend.is-up {
     color: var(--status-approved-text);
+    background: var(--icon-tint-success-bg);
 }
 
 .metric-trend.is-down {
     color: var(--status-rejected-text);
+    background: var(--icon-tint-danger-bg);
+}
+
+.metric-trend.is-flat {
+    color: var(--text-muted);
+    background: var(--icon-tint-neutral-bg);
+}
+
+/* Pairs a headline number with its trend badge on one line. */
+.metric-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 /* =========================================================
@@ -652,6 +676,123 @@ button.global-search-form {
     transform: translateY(-1px);
 }
 
+/* Outline buttons — white surface, hairline border, a soft tint on hover
+   instead of a fully inverted fill (a calmer secondary-action style). */
+.btn-outline-primary,
+.btn-outline-success,
+.btn-outline-secondary,
+.btn-outline-dark {
+    background: var(--surface-1, #fff);
+    color: var(--text-secondary, #334155);
+    border-color: var(--surface-1-border, #e2e8f0);
+}
+
+.btn-outline-primary {
+    color: var(--sidebar-accent);
+}
+
+.btn-outline-success {
+    color: var(--success);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-success:hover,
+.btn-outline-secondary:hover,
+.btn-outline-dark:hover {
+    background: var(--surface-muted, #f1f5f9);
+    border-color: var(--border-strong, #cbd5e1);
+    color: var(--text-primary);
+}
+
+/* Discrete icon-only button for table row actions (view / edit / more) —
+   a lighter-weight alternative to a labeled button per row. */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: var(--radius-md, 10px);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-icon:hover {
+    background: var(--surface-muted);
+    color: var(--text-primary);
+}
+
+.btn-icon.is-danger:hover {
+    background: var(--icon-tint-danger-bg);
+    color: var(--status-rejected-text);
+}
+
+/* =========================================================
+   AVATAR CIRCLES (initials) — for "who" table cells and activity feeds
+   ========================================================= */
+
+.avatar-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #ffffff;
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.avatar-circle.size-lg {
+    width: 44px;
+    height: 44px;
+    font-size: 0.92rem;
+}
+
+/* A small fixed palette so initials get a consistent, distinguishable
+   color per person without needing per-row logic beyond a modulo pick. */
+.avatar-circle.tone-1 { background: #0f766e; }
+.avatar-circle.tone-2 { background: #2563eb; }
+.avatar-circle.tone-3 { background: #7c3aed; }
+.avatar-circle.tone-4 { background: #b45309; }
+.avatar-circle.tone-5 { background: #be185d; }
+.avatar-circle.tone-6 { background: #0369a1; }
+
+.avatar-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* =========================================================
+   OUTLINE BADGES (e.g. plan/tier tags) — a lighter alternative to the
+   filled .status-badge system, for labels that aren't a workflow status
+   ========================================================= */
+
+.badge-outline {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    background: var(--surface-1, #fff);
+    border: 1px solid var(--surface-1-border, #e2e8f0);
+    color: var(--text-secondary);
+}
+
+.form-label {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.45rem;
+}
+
 .form-control,
 .form-select,
 .form-check-input,
@@ -679,6 +820,52 @@ textarea::placeholder {
     color: var(--text-light, #64748b);
 }
 
+.form-control:disabled,
+.form-control[readonly],
+.form-select:disabled {
+    background-color: var(--surface-muted, #f1f5f9);
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+.form-text {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 0.35rem;
+}
+
+/* Checkboxes / switches — tie the checked state to the shared brand
+   accent instead of Bootstrap's default blue. */
+.form-check-input {
+    min-height: 0;
+    box-shadow: none;
+}
+
+.form-check-input:checked {
+    background-color: var(--sidebar-accent, #0f766e);
+    border-color: var(--sidebar-accent, #0f766e);
+}
+
+.form-check-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Input group prefixes/suffixes (e.g. a currency symbol or unit chip
+   riding alongside an amount field) — a quiet tint instead of Bootstrap's
+   flat gray, so it reads as part of the same field, not a separate box. */
+.input-group-text {
+    border: 1px solid var(--border-strong, #cbd5e1);
+    background-color: var(--surface-muted, #f1f5f9);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.input-group:focus-within .form-control,
+.input-group:focus-within .input-group-text {
+    border-color: var(--sidebar-accent, #0f766e);
+}
+
 .table-hover tbody tr {
     transition: background var(--transition-fast);
 }
@@ -688,23 +875,28 @@ textarea::placeholder {
 }
 
 .table thead th {
-    background: #f8fafc;
-    color: var(--text-primary, #0f172a);
-    font-size: 0.78rem;
+    background: var(--surface-muted, #f8fafc);
+    color: var(--text-muted, #475569);
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding-top: 0.95rem;
-    padding-bottom: 0.95rem;
-    border-bottom: 2px solid #cbd5e1;
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--surface-1-border, #e2e8f0);
 }
 
 .table td {
-    padding-top: 0.9rem;
-    padding-bottom: 0.9rem;
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
     vertical-align: middle;
     color: var(--text-primary, #0f172a);
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--border-subtle, #f1f5f9);
+    font-size: 0.88rem;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .badge {
@@ -1539,4 +1731,302 @@ textarea.is-invalid {
 
 body.sidebar-collapsed .sidebar-count-pill {
     display: none;
+}
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+
+.app-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 0 0.25rem;
+}
+
+.app-pagination-summary {
+    color: var(--text-muted);
+    font-size: 0.84rem;
+}
+
+.app-pagination-list {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    list-style: none;
+    margin: 0 0 0 auto;
+    padding: 0;
+    flex-wrap: wrap;
+}
+
+.app-pagination-list a,
+.app-pagination-list span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 0.5rem;
+    border-radius: var(--radius-md, 10px);
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.app-pagination-list a:hover {
+    background: var(--surface-muted);
+    color: var(--text-primary);
+}
+
+.app-pagination-list .is-current {
+    background: var(--sidebar-accent);
+    color: #ffffff;
+}
+
+.app-pagination-list .is-disabled {
+    color: var(--text-disabled, #cbd5e1);
+    cursor: default;
+}
+
+/* =========================================================
+   SIDEBAR NAV TAG BADGES (e.g. "New", "Hot")
+   ========================================================= */
+
+.sidebar-tag {
+    margin-left: auto;
+    flex-shrink: 0;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    line-height: 1.5;
+}
+
+.sidebar-tag--new {
+    background: rgba(45, 212, 191, 0.18);
+    color: var(--sidebar-accent-on-dark, #2dd4bf);
+}
+
+.sidebar-tag--hot {
+    background: rgba(248, 113, 113, 0.2);
+    color: #fca5a5;
+}
+
+body.sidebar-collapsed .sidebar-tag {
+    display: none;
+}
+
+/* =========================================================
+   PAGE HEADER (eyebrow + title + subtitle + actions)
+   ========================================================= */
+
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.page-header-eyebrow {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+}
+
+.page-header-title {
+    font-size: var(--font-size-2xl, 1.75rem);
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.page-header-subtitle {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin: 0.3rem 0 0;
+}
+
+.page-header-actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+/* =========================================================
+   MINIMAL DOT STATUS (lighter-weight alternative to .status-badge
+   for dense tables with many rows — a colored dot + plain text,
+   no pill fill)
+   ========================================================= */
+
+.status-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.status-dot::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.status-dot.is-draft { color: var(--status-draft-text); }
+.status-dot.is-pending { color: var(--status-pending-text); }
+.status-dot.is-approved { color: var(--status-approved-text); }
+.status-dot.is-rejected { color: var(--status-rejected-text); }
+.status-dot.is-info { color: var(--status-info-text); }
+
+/* =========================================================
+   SETTINGS LAYOUT (in-page sub-nav + section cards)
+   ========================================================= */
+
+.settings-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 767.98px) {
+    .settings-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.settings-nav {
+    background: var(--surface-1);
+    border: 1px solid var(--surface-1-border);
+    border-radius: var(--radius-lg, 16px);
+    overflow: hidden;
+    position: sticky;
+    top: 1.5rem;
+}
+
+.settings-nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 1.1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.88rem;
+    border-left: 3px solid transparent;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.settings-nav a i {
+    width: 18px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.settings-nav a:hover {
+    background: var(--surface-muted);
+    color: var(--text-primary);
+}
+
+.settings-nav a.active {
+    background: var(--icon-tint-success-bg);
+    color: var(--sidebar-accent);
+    border-left-color: var(--sidebar-accent);
+}
+
+.settings-nav a.active i {
+    color: var(--sidebar-accent);
+}
+
+.settings-nav a.is-danger {
+    color: var(--status-rejected-text);
+}
+
+.settings-section {
+    background: var(--surface-1);
+    border: 1px solid var(--surface-1-border);
+    border-radius: var(--radius-lg, 16px);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.settings-section-title {
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin-bottom: 0.2rem;
+    color: var(--text-primary);
+}
+
+.settings-section-subtitle {
+    color: var(--text-muted);
+    font-size: 0.86rem;
+    margin-bottom: 1.25rem;
+}
+
+.settings-row {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: flex-start;
+}
+
+.settings-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.settings-row-label {
+    width: 200px;
+    flex-shrink: 0;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    padding-top: 0.4rem;
+}
+
+.settings-row-field {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 420px;
+}
+
+.settings-row-hint {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 0.4rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 575.98px) {
+    .settings-row {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .settings-row-label {
+        width: auto;
+        padding-top: 0;
+    }
+
+    .settings-row-field {
+        max-width: none;
+        width: 100%;
+    }
 }

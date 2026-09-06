@@ -7,241 +7,430 @@
     <title>RICE WN Enterprise Systems</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="{% static 'images/ricewn.png' %}" type="image/x-icon">
     <link rel="stylesheet" href="{% static 'css/variables.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <style>
-        :root {
-            --ink: #182230;
-            --muted: #667085;
-            --line: #d0d5dd;
-            --surface: #ffffff;
-            --bg: #f4f6f8;
-            --accent: var(--sidebar-accent, #0f766e);
-            --accent-dark: color-mix(in srgb, var(--sidebar-accent, #0f766e) 80%, black);
-            --gold: #b7791f;
-        }
         body {
             min-height: 100vh;
-            color: var(--ink);
-            background: var(--bg);
-            font-family: Inter, system-ui, sans-serif;
+            color: var(--text-primary);
+            background: var(--body-bg);
+            font-family: var(--font-primary);
         }
-        .topbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--line);
+
+        /* -----------------------------------------------------
+           TOP BAR
+        ----------------------------------------------------- */
+        .hub-topbar {
+            background: var(--surface-1);
+            border-bottom: 1px solid var(--surface-1-border);
             position: sticky;
             top: 0;
             z-index: 10;
         }
-        .brand-logo { height: 44px; width: auto; }
-        .icon-button {
-            width: 38px;
-            height: 38px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            color: #344054;
-            background: #fff;
+
+        .hub-brand-name {
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--text-primary);
+            line-height: 1.25;
         }
-        .system-card {
-            height: 100%;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: var(--surface);
-            transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+
+        .hub-brand-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
         }
-        .system-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(0, 51, 51,.35);
-            box-shadow: 0 14px 32px rgba(16, 24, 40, .10);
-        }
-        .system-icon {
-            width: 38px;
-            height: 38px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            color: #fff;
-            background: var(--accent);
-        }
-        .system-description {
-            color: var(--muted);
-            font-size: .88rem;
-            min-height: 42px;
-        }
-        .btn-enterprise {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: #fff;
-            border-radius: 8px;
-            font-weight: 700;
-        }
-        .btn-enterprise:hover {
-            background: var(--accent-dark);
-            border-color: var(--accent-dark);
-            color: #fff;
-        }
-        .work-panel {
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: var(--surface);
-            min-height: 250px;
-        }
-        .work-item {
+
+        .hub-user-chip {
             display: flex;
-            gap: .8rem;
-            padding: .9rem 0;
-            border-bottom: 1px solid #eef2f6;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.3rem 0.7rem 0.3rem 0.3rem;
+            border-radius: var(--radius-pill, 999px);
+            border: 1px solid var(--surface-1-border);
+            color: var(--text-secondary);
         }
-        .work-item:last-child { border-bottom: 0; }
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            margin-top: .45rem;
-            background: var(--gold);
-            flex: 0 0 auto;
+
+        .hub-user-chip:hover {
+            background: var(--surface-muted);
+            color: var(--text-primary);
+        }
+
+        .hub-user-chip .name {
+            font-size: 0.84rem;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+
+        .hub-user-chip .role {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        /* -----------------------------------------------------
+           SUBSYSTEM TILES
+        ----------------------------------------------------- */
+        .app-tile {
+            position: relative;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            padding: 1.35rem;
+            background: var(--surface-1);
+            border: 1px solid var(--surface-1-border);
+            border-radius: var(--radius-lg, 16px);
+            box-shadow: var(--surface-1-shadow);
+            text-decoration: none;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+        }
+
+        .app-tile:hover {
+            transform: translateY(-3px);
+            border-color: color-mix(in srgb, var(--sidebar-accent) 35%, var(--surface-1-border));
+            box-shadow: var(--surface-2-shadow);
+        }
+
+        .app-tile-icon {
+            width: 46px;
+            height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md, 10px);
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .app-tile-icon.tone-1 { color: #0f766e; background: color-mix(in srgb, #0f766e 12%, white); }
+        .app-tile-icon.tone-2 { color: #2563eb; background: color-mix(in srgb, #2563eb 12%, white); }
+        .app-tile-icon.tone-3 { color: #7c3aed; background: color-mix(in srgb, #7c3aed 12%, white); }
+        .app-tile-icon.tone-4 { color: #b45309; background: color-mix(in srgb, #b45309 12%, white); }
+        .app-tile-icon.tone-5 { color: #be185d; background: color-mix(in srgb, #be185d 12%, white); }
+        .app-tile-icon.tone-6 { color: #0369a1; background: color-mix(in srgb, #0369a1 12%, white); }
+        .app-tile-icon.tone-7 { color: #4338ca; background: color-mix(in srgb, #4338ca 12%, white); }
+
+        .app-tile-title {
+            font-size: 1.02rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .app-tile-description {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 0;
+            flex: 1 1 auto;
+        }
+
+        .app-tile-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--sidebar-accent);
+        }
+
+        .app-tile-cta i {
+            font-size: 0.72rem;
+            transition: transform var(--transition-fast);
+        }
+
+        .app-tile:hover .app-tile-cta i {
+            transform: translateX(3px);
+        }
+
+        .app-tile-stretch {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+        }
+
+        /* -----------------------------------------------------
+           HUB LIST PANELS (notifications / alerts / account)
+        ----------------------------------------------------- */
+        .hub-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.35rem;
+        }
+
+        .hub-panel-head h3 {
+            font-size: 1.02rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .hub-list-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.85rem 0;
+            border-bottom: 1px solid var(--border-subtle);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .hub-list-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .hub-list-item:first-child {
+            padding-top: 0.75rem;
+        }
+
+        .hub-list-icon {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md, 10px);
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .hub-list-copy {
+            min-width: 0;
+        }
+
+        .hub-list-copy .title {
+            font-weight: 700;
+            font-size: 0.86rem;
+            color: var(--text-primary);
+            margin-bottom: 0.15rem;
+        }
+
+        .hub-list-copy .meta {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        a.hub-list-item:hover .title {
+            color: var(--sidebar-accent);
+        }
+
+        .hub-list-item .chevron {
+            margin-left: auto;
+            align-self: center;
+            color: var(--text-light);
+            font-size: 0.78rem;
+            flex-shrink: 0;
+        }
+
+        .hub-empty-state {
+            padding: 1.1rem 0;
+            color: var(--text-muted);
+            font-size: 0.86rem;
+        }
+
+        .hub-empty-state i {
+            color: var(--status-approved-text);
+            margin-right: 0.4rem;
         }
     </style>
 </head>
 <body>
-<nav class="topbar py-3">
+
+<header class="hub-topbar py-2">
     <div class="container-fluid px-3 px-lg-4 d-flex align-items-center justify-content-between gap-3">
-        <div class="d-flex align-items-center gap-3">
-            <img src="{% static 'images/ricewn.png' %}" class="brand-logo" alt="RICE West Nile">
+        <a href="{% url 'system_home' %}" class="d-flex align-items-center gap-2 text-decoration-none">
+            <img src="{% static 'images/ricewn.png' %}" height="36" alt="RICE West Nile">
             <div>
-                <h1 class="h5 mb-0 fw-bold">Enterprise Management System</h1>
-                <div class="small text-muted">Welcome, {{ request.user.get_full_name|default:request.user.username }}</div>
+                <div class="hub-brand-name">RICE West Nile</div>
+                <div class="hub-brand-sub">Enterprise Management System</div>
             </div>
-        </div>
+        </a>
         <div class="d-flex align-items-center gap-2">
+            {% if request.user.slug %}
+            <a href="{% url 'update_employee' request.user.slug %}" class="hub-user-chip">
+                <span class="avatar-circle tone-1">{{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}</span>
+                <span class="d-none d-sm-block">
+                    <span class="name d-block">{{ request.user.get_full_name|default:request.user.username }}</span>
+                    <span class="role">{{ request.user.profile_type|default:"Staff" }}</span>
+                </span>
+            </a>
+            {% endif %}
             <form action="{% url 'logout' %}" method="post" class="m-0">
                 {% csrf_token %}
-                <button class="btn btn-outline-secondary btn-sm" type="submit">
-                    <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                <button class="btn-icon" type="submit" title="Log out" aria-label="Log out">
+                    <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
             </form>
         </div>
     </div>
-</nav>
+</header>
 
-<main class="container-fluid px-3 px-lg-4 py-4">
-    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+<main class="container-fluid px-3 px-lg-4 py-4" style="max-width: 1440px; margin: 0 auto;">
+
+    <div class="page-header">
         <div>
-            <div class="small text-uppercase fw-bold text-success">Subsystem Access</div>
-            <h2 class="h4 fw-bold mb-0">Choose your workspace</h2>
+            <span class="page-header-eyebrow">Subsystem Access</span>
+            <h1 class="page-header-title">Choose your workspace</h1>
+            <p class="page-header-subtitle">Welcome back, {{ request.user.get_full_name|default:request.user.username }} &middot; {{ systems|length }} enterprise subsystems available</p>
         </div>
-        <div class="text-muted small">{{ systems|length }} enterprise subsystems available</div>
+        <div class="page-header-actions">
+            {% if request.user.slug %}
+            <a href="{% url 'update_employee' request.user.slug %}" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-id-badge me-1"></i> My Profile
+            </a>
+            {% endif %}
+            <a href="{% url 'currency_settings' %}" class="btn btn-outline-primary">
+                <i class="fa-solid fa-earth-africa me-1"></i> Currency &amp; Region
+            </a>
+        </div>
     </div>
 
     <div class="row g-3 mb-4">
         {% for system in systems %}
-            <div class="col-12 col-sm-6 col-lg-4 col-xxl-2">
-                <article class="system-card p-3">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="system-icon"><i class="fa-solid {{ system.icon }}"></i></span>
-                        <h3 class="h6 fw-bold mb-0">{{ system.name }}</h3>
+            <div class="col-12 col-sm-6 col-lg-4 col-xxl-3">
+                <a class="app-tile" href="{{ system.url }}">
+                    <span class="app-tile-icon {% cycle 'tone-1' 'tone-2' 'tone-3' 'tone-4' 'tone-5' 'tone-6' 'tone-7' %}">
+                        <i class="fa-solid {{ system.icon }}"></i>
+                    </span>
+                    <div>
+                        <h3 class="app-tile-title">{{ system.name }}</h3>
+                        <p class="app-tile-description">{{ system.description }}</p>
                     </div>
-                    <p class="system-description mb-3">{{ system.description }}</p>
-                    <a class="btn btn-enterprise btn-sm w-100" href="{{ system.url }}">
-                        Continue <i class="fa-solid fa-arrow-right ms-1"></i>
-                    </a>
-                </article>
+                    <span class="app-tile-cta">
+                        Open workspace <i class="fa-solid fa-arrow-right"></i>
+                    </span>
+                </a>
             </div>
         {% endfor %}
     </div>
 
     <div class="row g-3">
+
+        <!-- NOTIFICATIONS -->
         <div class="col-12 col-lg-4">
-            <section class="work-panel p-3 p-lg-4">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <h3 class="h6 fw-bold mb-0"><i class="fa-solid fa-bell me-2 text-success"></i>Notifications</h3>
-                    <span class="badge text-bg-light">Today</span>
+            <section class="settings-section h-100">
+                <div class="hub-panel-head">
+                    <h3><i class="fa-solid fa-bell me-2" style="color: var(--sidebar-accent);"></i>Notifications</h3>
+                    {% if notification_unread_count %}
+                    <span class="badge-outline">{{ notification_unread_count }} unread</span>
+                    {% endif %}
                 </div>
-                <div class="work-item">
-                    <span class="status-dot"></span>
-                    <div>
-                        <div class="fw-semibold">Review pending approvals across your assigned subsystem.</div>
-                        <div class="small text-muted">Open the relevant workspace to view details.</div>
-                    </div>
+                <p class="settings-section-subtitle mb-0">Recent alerts across your subsystems.</p>
+
+                {% for item in notification_unread|slice:":4" %}
+                <a href="{% url 'notifications:list' %}" class="hub-list-item">
+                    <span class="hub-list-icon
+                        {% if item.notification.category == 'critical' or item.notification.category == 'error' %}metric-icon-tint is-danger
+                        {% elif item.notification.category == 'warning' %}metric-icon-tint is-pending
+                        {% elif item.notification.category == 'success' %}metric-icon-tint is-success
+                        {% else %}metric-icon-tint is-info{% endif %}">
+                        <i class="fa-solid
+                            {% if item.notification.category == 'critical' or item.notification.category == 'error' %}fa-circle-exclamation
+                            {% elif item.notification.category == 'warning' %}fa-triangle-exclamation
+                            {% elif item.notification.category == 'success' %}fa-circle-check
+                            {% else %}fa-circle-info{% endif %}"></i>
+                    </span>
+                    <span class="hub-list-copy">
+                        <span class="title">{{ item.notification.title }}</span>
+                        <span class="meta">{{ item.notification.created_at|timesince }} ago</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right chevron"></i>
+                </a>
+                {% empty %}
+                <div class="hub-empty-state">
+                    <i class="fa-solid fa-circle-check"></i>You're all caught up — no unread notifications.
                 </div>
-                <div class="work-item">
-                    <span class="status-dot bg-success"></span>
-                    <div>
-                        <div class="fw-semibold">Enterprise portal is available for all enabled modules.</div>
-                        <div class="small text-muted">Use the cards above for direct access.</div>
-                    </div>
+                {% endfor %}
+
+                {% if notification_unread_count %}
+                <div class="pt-2">
+                    <a href="{% url 'notifications:list' %}" class="btn btn-outline-secondary btn-sm w-100">View all notifications</a>
                 </div>
+                {% endif %}
             </section>
         </div>
+
+        <!-- COMPLIANCE / RISK SNAPSHOT -->
         <div class="col-12 col-lg-4">
-            <section class="work-panel p-3 p-lg-4">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <h3 class="h6 fw-bold mb-0"><i class="fa-solid fa-list-check me-2 text-success"></i>TODO</h3>
-                    <span class="badge text-bg-light">Open</span>
+            <section class="settings-section h-100">
+                <div class="hub-panel-head">
+                    <h3><i class="fa-solid fa-shield-halved me-2" style="color: var(--sidebar-accent);"></i>Compliance &amp; Risk</h3>
                 </div>
-                <div class="work-item">
-                    <span class="status-dot bg-primary"></span>
-                    <div>
-                        <div class="fw-semibold">Confirm profile and password settings are current.</div>
-                        <div class="small text-muted">Keeps access control clean across subsystems.</div>
-                    </div>
+                <p class="settings-section-subtitle mb-0">Live snapshot from GARCIS.</p>
+
+                {% if total_risks or high_risks or open_findings or overdue_compliance_tasks %}
+                <a href="{% url 'garcis:dashboard' %}" class="hub-list-item">
+                    <span class="hub-list-icon metric-icon-tint is-pending"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                    <span class="hub-list-copy">
+                        <span class="title">{{ open_findings|default:0 }} open audit findings</span>
+                        <span class="meta">Not yet closed</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right chevron"></i>
+                </a>
+                <a href="{% url 'garcis:dashboard' %}" class="hub-list-item">
+                    <span class="hub-list-icon metric-icon-tint is-danger"><i class="fa-solid fa-fire"></i></span>
+                    <span class="hub-list-copy">
+                        <span class="title">{{ high_risks|default:0 }} high / very high risks</span>
+                        <span class="meta">Out of {{ total_risks|default:0 }} tracked risks</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right chevron"></i>
+                </a>
+                <a href="{% url 'garcis:dashboard' %}" class="hub-list-item">
+                    <span class="hub-list-icon metric-icon-tint is-neutral"><i class="fa-solid fa-clipboard-check"></i></span>
+                    <span class="hub-list-copy">
+                        <span class="title">{{ overdue_compliance_tasks|default:0 }} overdue compliance tasks</span>
+                        <span class="meta">Needs action</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right chevron"></i>
+                </a>
+                {% else %}
+                <div class="hub-empty-state">
+                    <i class="fa-solid fa-circle-check"></i>No open compliance or risk alerts.
                 </div>
-                <div class="work-item">
-                    <span class="status-dot bg-danger"></span>
-                    <div>
-                        <div class="fw-semibold">Complete open workflow actions before end of day.</div>
-                        <div class="small text-muted">Start from your department workspace.</div>
-                    </div>
-                </div>
+                {% endif %}
             </section>
         </div>
+
+        <!-- ACCOUNT & SETTINGS -->
         <div class="col-12 col-lg-4">
-            <section class="work-panel p-3 p-lg-4">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <h3 class="h6 fw-bold mb-0"><i class="fa-solid fa-gear me-2 text-success"></i>Settings</h3>
-                    <span class="badge text-bg-light">Account</span>
+            <section class="settings-section h-100">
+                <div class="hub-panel-head">
+                    <h3><i class="fa-solid fa-gear me-2" style="color: var(--sidebar-accent);"></i>Account &amp; Settings</h3>
                 </div>
-                <div class="work-item">
-                    <span class="status-dot bg-success"></span>
-                    <div class="w-100">
-                        <div class="fw-semibold mb-2">Manage account access and profile records.</div>
-                        <div class="dropdown mb-2">
-                            <button class="btn btn-sm btn-outline-success dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
-                                Account
-                            </button>
-                            <ul class="dropdown-menu w-100">
-                                {% if request.user.slug %}
-                                <li><a class="dropdown-item" href="{% url 'update_employee' request.user.slug %}">Account Details</a></li>
-                                {% endif %}
-                                <li><a class="dropdown-item" href="{% url 'password_change' %}">Change Password</a></li>
-                            </ul>
-                        </div>
-                        <div class="dropdown mb-2">
-                            <button class="btn btn-sm btn-outline-success dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
-                                Profile
-                            </button>
-                            <ul class="dropdown-menu w-100">
-                                <li><a class="dropdown-item" href="{% url 'profile_list' %}">Profile List</a></li>
-                                <li><a class="dropdown-item" href="{% url 'profile_create' %}">Create Profile</a></li>
-                            </ul>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-success dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
-                                Other Settings
-                            </button>
-                            <ul class="dropdown-menu w-100">
-                                <li><a class="dropdown-item" href="{% url 'procurement_core:currency_settings' %}">Procurement Currency</a></li>
-                                <li><a class="dropdown-item" href="{% url 'mne_core:currency_settings' %}">M&E Currency</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                <p class="settings-section-subtitle mb-0">Manage your access and organization preferences.</p>
+
+                {% if request.user.slug %}
+                <a href="{% url 'update_employee' request.user.slug %}" class="hub-list-item">
+                    <span class="hub-list-icon metric-icon-tint is-info"><i class="fa-solid fa-id-badge"></i></span>
+                    <span class="hub-list-copy">
+                        <span class="title">My Profile</span>
+                        <span class="meta">Bio data, contacts &amp; documents</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right chevron"></i>
+                </a>
+                {% endif %}
+                <a href="{% url 'password_change' %}" class="hub-list-item">
+                    <span class="hub-list-icon metric-icon-tint is-neutral"><i class="fa-solid fa-key"></i></span>
+                    <span class="hub-list-copy">
+                        <span class="title">Change Password</span>
+                        <span class="meta">Update your login credentials</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right chevron"></i>
+                </a>
+                <a href="{% url 'currency_settings' %}" class="hub-list-item">
+                    <span class="hub-list-icon metric-icon-tint is-success"><i class="fa-solid fa-earth-africa"></i></span>
+                    <span class="hub-list-copy">
+                        <span class="title">Currency &amp; Region</span>
+                        <span class="meta">Base currency, display currency &amp; rates</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right chevron"></i>
+                </a>
             </section>
         </div>
+
     </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

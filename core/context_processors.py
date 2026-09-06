@@ -1,10 +1,12 @@
 def currency_context(request):
     try:
-        from .models import CurrencyRate
-        from .services import CURRENCY_LABELS, SUPPORTED_CURRENCIES, get_latest_usd_rates, get_user_currency
+        from .services import CURRENCY_LABELS, SUPPORTED_CURRENCIES, get_base_currency, get_latest_usd_rates, get_user_currency
 
         rates = get_latest_usd_rates()
-        ugx_rate = rates[CurrencyRate.UGX]
+        # Variable names kept as "ugx" for backward compatibility with the
+        # templates that read them — they now hold the org's configured
+        # base currency's rate, not literally UGX.
+        ugx_rate = rates[get_base_currency()]
         display_currency = get_user_currency(request)
         display_rate = rates[display_currency]
         manual_rates = [rate for rate in rates.values() if rate.is_manual]

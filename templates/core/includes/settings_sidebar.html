@@ -1,0 +1,27 @@
+{% with current_url=request.resolver_match.url_name %}
+
+<a href="{% url 'system_home' %}" class="sidebar-dashboard">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-house"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        RICE WN Hub
+    </span>
+</a>
+
+<div class="sidebar-section">
+    <span>ORGANIZATION SETTINGS</span>
+</div>
+
+<a href="{% url 'currency_settings' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'currency_settings' %}active{% endif %}">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-earth-africa"></i>
+    </span>
+    <span class="sidebar-nav-text">
+        Currency &amp; Region
+    </span>
+</a>
+
+{% endwith %}

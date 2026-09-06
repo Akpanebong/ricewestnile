@@ -319,11 +319,11 @@
 
 
 <!-- =====================================================
-     FINANCE
+     ACCOUNTING
 ===================================================== -->
 
 <div class="sidebar-section">
-    <span>FINANCE</span>
+    <span>ACCOUNTING</span>
 </div>
 
 
@@ -331,7 +331,7 @@
      ACCOUNT / CURRENCY
 ===================================================== -->
 
-<a href="{% url 'core:currency_settings' %}"
+<a href="{% url 'currency_settings' %}"
    class="sidebar-dashboard
    {% if current_url == 'currency_settings' %}active{% endif %}">
 
@@ -341,7 +341,7 @@
 
     <span class="sidebar-nav-text d-flex align-items-center gap-2">
 
-        <span>Currency Settings</span>
+        <span>Currency &amp; Region</span>
 
         {% if display_currency %}
         <span class="badge bg-success">
@@ -377,7 +377,7 @@
             </span>
 
             <span class="sidebar-module-title">
-                Finance
+                Accounting
             </span>
 
         </span>
@@ -408,7 +408,7 @@
 
             <i class="fa-solid fa-gauge-high"></i>
 
-            <span>Finance Dashboard</span>
+            <span>Accounting Dashboard</span>
 
         </a>
 

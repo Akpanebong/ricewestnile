@@ -15,7 +15,7 @@ SYSTEMS = [
     },
 {
         "key": "finance",
-        "name": "Finance",
+        "name": "Accounting",
         "description": "Financial planning, accounting, budgeting, and reporting.",
         "url": "/finance_app/finance/",
         "icon": "fa-coins",

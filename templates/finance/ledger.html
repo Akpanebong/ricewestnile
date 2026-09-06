@@ -1,0 +1,264 @@
+{% extends "finance/base.html" %}
+{% load currency_tags %}
+{% block title %}Financial Ledger{% endblock %}
+
+{% block extra_head %}
+<style>
+    .ledger-filter-card {
+        background: var(--surface-1, #fff);
+        border: 1px solid var(--surface-1-border, #e2e8f0);
+        border-radius: var(--radius-lg, 16px);
+        box-shadow: var(--surface-1-shadow, 0 2px 8px -2px rgba(15,23,42,.05));
+    }
+    .ledger-metric-card {
+        border-left: 4px solid var(--sidebar-accent);
+        min-height: 112px;
+    }
+    .ledger-metric-card.is-expense { border-left-color: #b91c1c; }
+    .ledger-metric-card.is-transfer { border-left-color: #b45309; }
+    .ledger-metric-card.is-net { border-left-color: #047857; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Financial Ledger</h3>
+            <p class="text-muted mb-0">Consolidated income, expense, and transfer records across the organization</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'finance:record_transaction' %}" class="btn btn-primary shadow-sm">
+                <i class="fa fa-plus me-1"></i> Record Transaction
+            </a>
+            <a href="{% url 'finance:ledger_export' %}?{{ request.GET.urlencode }}" class="btn btn-outline-dark shadow-sm">
+                <i class="fa fa-file-excel me-1"></i> Export Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="ledger-filter-card p-3 mb-4">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-sm-6 col-md-2">
+                <label class="form-label small text-muted mb-1">From</label>
+                <input type="date" name="start_date" class="form-control form-control-sm" value="{{ filters.start_date|default:'' }}">
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <label class="form-label small text-muted mb-1">To</label>
+                <input type="date" name="end_date" class="form-control form-control-sm" value="{{ filters.end_date|default:'' }}">
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <label class="form-label small text-muted mb-1">Project</label>
+                <select name="project" class="form-select form-select-sm">
+                    <option value="">All Projects</option>
+                    {% for p in projects %}
+                    <option value="{{ p.id }}" {% if filters.project == p.id|stringformat:"s" %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <label class="form-label small text-muted mb-1">Department</label>
+                <select name="department" class="form-select form-select-sm">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                    <option value="{{ d.id }}" {% if filters.department == d.id|stringformat:"s" %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <label class="form-label small text-muted mb-1">Category</label>
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">All Categories</option>
+                    {% for c in categories %}
+                    <option value="{{ c.id }}" {% if filters.category == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-1">
+                <label class="form-label small text-muted mb-1">Type</label>
+                <select name="type" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    {% for value, label in transaction_types %}
+                    <option value="{{ value }}" {% if filters.type == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-1">
+                <label class="form-label small text-muted mb-1">Currency</label>
+                <select name="currency" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    {% for option in currency_options %}
+                    <option value="{{ option.code }}" {% if filters.currency == option.code %}selected{% endif %}>{{ option.code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-sm btn-dark w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="row g-3 mb-4 stagger-grid">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card interactive-card ledger-metric-card p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Total Income</small>
+                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_income|default:0 }}" data-counter-decimals="2">0</h3>
+                <small class="text-muted">UGX</small>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card interactive-card ledger-metric-card is-expense p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Total Expense</small>
+                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_expense|default:0 }}" data-counter-decimals="2">0</h3>
+                <small class="text-muted">UGX</small>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card interactive-card ledger-metric-card is-transfer p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Fund Transfers</small>
+                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_transfer|default:0 }}" data-counter-decimals="2">0</h3>
+                <small class="text-muted">UGX</small>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card interactive-card ledger-metric-card is-net p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Net Position</small>
+                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ net_position|default:0 }}" data-counter-decimals="2">0</h3>
+                <small class="text-muted">Income − Expense (UGX)</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- CROSS-MODULE SNAPSHOT -->
+    <div class="card mb-4">
+        <div class="card-header bg-white fw-bold">Cross-Module Financial Snapshot</div>
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <tbody>
+                    <tr>
+                        <td class="text-muted">Procurement — Purchase Order Spend</td>
+                        <td class="text-end fw-bold">{{ procurement_total|money:request }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Assets — Total Purchase Value</td>
+                        <td class="text-end fw-bold">{{ asset_totals.purchase_value|money:request }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Assets — Accumulated Depreciation</td>
+                        <td class="text-end fw-bold text-danger">{{ asset_totals.depreciation_accumulated|money:request }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Assets — Maintenance Spend</td>
+                        <td class="text-end fw-bold">{{ maintenance_total|money:request }}</td>
+                    </tr>
+                    {% if project_budget_total is not None %}
+                    <tr>
+                        <td class="text-muted">Selected Project — Approved Budget</td>
+                        <td class="text-end fw-bold">{{ project_budget_total|money:request }}</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Transactions</span>
+                    <span class="text-muted small">{{ transaction_count }} total</span>
+                </div>
+                <div class="table-responsive table-enhanced">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Reference</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Project / Dept</th>
+                                <th class="text-end">Original Amount</th>
+                                <th class="text-end">UGX Equivalent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for txn in transactions %}
+                            <tr>
+                                <td>{{ txn.reference }}</td>
+                                <td>{{ txn.date|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="status-badge
+                                        {% if txn.transaction_type == 'income' %}status-badge--approved
+                                        {% elif txn.transaction_type == 'expense' %}status-badge--rejected
+                                        {% else %}status-badge--pending{% endif %}">
+                                        {{ txn.get_transaction_type_display }}
+                                    </span>
+                                </td>
+                                <td>{{ txn.category.name }}</td>
+                                <td>
+                                    {% if txn.project %}{{ txn.project }}{% endif %}
+                                    {% if txn.department %}<br><small class="text-muted">{{ txn.department }}</small>{% endif %}
+                                </td>
+                                <td class="text-end fw-bold">
+                                    {{ txn.currency }} {{ txn.original_amount|floatformat:2|default:txn.amount|floatformat:2 }}
+                                    {% if txn.currency != "UGX" %}<br><small class="text-muted">@ {{ txn.exchange_rate_used|floatformat:2 }}/unit</small>{% endif %}
+                                </td>
+                                <td class="text-end text-muted">{{ txn.amount|money:request }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <div class="empty-state-icon"><i class="fa fa-receipt"></i></div>
+                                        <div class="empty-state-title">No transactions match these filters</div>
+                                        <div>Approved cash requisitions, retirements, and admin expenses post here automatically.</div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card mb-4">
+                <div class="card-header bg-white fw-bold">By Currency</div>
+                <div>
+                    {% for row in currency_breakdown %}
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                        <span>{{ row.currency }} <small class="text-muted">({{ row.txn_count }})</small></span>
+                        <div class="text-end">
+                            <strong>{{ row.currency }} {{ row.total_original|floatformat:2 }}</strong>
+                            {% if row.currency != "UGX" %}<br><small class="text-muted">≈ {{ row.total_ugx|money:request }}</small>{% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted">No data yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card h-100">
+                <div class="card-header bg-white fw-bold">By Category</div>
+                <div>
+                    {% for row in category_breakdown %}
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                        <span>{{ row.category__name }}</span>
+                        <strong>{{ row.total|money:request }}</strong>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted">No data yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

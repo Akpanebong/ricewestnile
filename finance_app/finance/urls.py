@@ -38,4 +38,12 @@ urlpatterns = [
     path("accounting/<int:pk>/<slug:slug>/", views.accounting_detail, name="accounting_detail"),
     path("accounting/<int:pk>/pdf/<slug:slug>/", views.accounting_pdf, name="accounting_pdf"),
     path("accounting/<int:pk>/approval/<slug:slug>/", views.approve_account_form, name="approve_account_form"),
+
+    # =========================
+    # FINANCIAL LEDGER & REPORTING
+    # =========================
+    path("ledger/", views.financial_ledger, name="ledger"),
+    path("ledger/export/", views.financial_ledger_export, name="ledger_export"),
+    path("ledger/record/", views.record_transaction, name="record_transaction"),
+    path("chart-of-accounts/", views.chart_of_accounts, name="chart_of_accounts"),
 ]

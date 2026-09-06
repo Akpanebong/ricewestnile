@@ -4,12 +4,21 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import include, path
 
+from core import views as core_views
+
 from .views import system_home
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("systems/", system_home, name="system_home"),
+
+    # Single canonical currency settings route — this used to be duplicated
+    # under "procurement_core" and "mne_core" namespaces and presented to
+    # users as if they were two separate settings ("Procurement Currency" /
+    # "M&E Currency"), when both pointed at the exact same view and data.
+    path("settings/currency/", core_views.currency_settings, name="currency_settings"),
+    path("settings/currency/set/", core_views.set_currency, name="set_currency"),
     path("asset/", include("assets.assetapp.urls")),
     path("notification/", include("notification.urls")),
     path("communication/", include("com_app.communication.urls")),

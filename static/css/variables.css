@@ -68,11 +68,23 @@
     --status-info-text: #0369a1;
     --status-info-border: #bae6fd;
 
-    /* Elevation system (Surface 0/1/2) */
+    /* Quieter tints for decorative icon containers — same hues as the
+       status tokens above but ~8% opacity instead of ~12%, so an icon
+       square reads as a soft accent rather than competing with the badges
+       that actually carry status information. */
+    --icon-tint-success-bg: rgba(16, 185, 129, 0.08);
+    --icon-tint-pending-bg: rgba(245, 158, 11, 0.08);
+    --icon-tint-danger-bg: rgba(239, 68, 68, 0.08);
+    --icon-tint-info-bg: rgba(3, 105, 161, 0.08);
+    --icon-tint-neutral-bg: rgba(148, 163, 184, 0.08);
+
+    /* Elevation system (Surface 0/1/2) — a hairline border carries the edge,
+       the shadow only adds a near-invisible lift, so cards read as crisp
+       rather than "floaty." */
     --surface-0: #f8fafc;
     --surface-1: #ffffff;
-    --surface-1-border: rgba(226, 232, 240, 0.8);
-    --surface-1-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05);
+    --surface-1-border: rgba(15, 23, 42, 0.08);
+    --surface-1-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     --surface-2: #ffffff;
     --surface-2-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.12);
 

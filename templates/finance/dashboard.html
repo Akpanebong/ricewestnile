@@ -1,18 +1,19 @@
 {% extends "finance/base.html" %}
 {% load humanize %}
-{% block title %}Finance Dashboard{% endblock %}
+{% block title %}Accounting Dashboard{% endblock %}
 {% block content %}
 <main class="ttr-wrapper">
 <div class="container-fluid py-4">
 
     <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="page-header">
         <div>
-            <h3 class="fw-bold">Finance Dashboard</h3>
-            <p class="text-muted mb-0">Procurement & Expense Workflow Overview</p>
+            <span class="page-header-eyebrow">Accounting</span>
+            <h1 class="page-header-title">Accounting Dashboard</h1>
+            <p class="page-header-subtitle">Procurement &amp; Expense Workflow Overview</p>
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="page-header-actions">
             <a href="{% url 'finance:create_cash_req' %}" class="btn btn-primary shadow-sm">
                 + New Requisition
             </a>
