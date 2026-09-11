@@ -48,6 +48,7 @@ urlpatterns = [
     path('compliance/report/pdf/', compliance_report_pdf, name='compliance_report_pdf'),
 
     path('documents/', ComplianceDocumentListView.as_view(), name='compliance_doc_list'),
+    path('documents/add/', ComplianceDocumentCreateView.as_view(), name='compliance_doc_create'),
     path('documents/<uuid:pk>/update/', ComplianceDocumentUpdateView.as_view(), name='compliance_doc_update'),
     path('documents/<uuid:pk>/delete/', compliance_doc_delete, name='compliance_doc_delete'),
     path('documents/<uuid:pk>/verify/', verify_document, name='verify_document'),

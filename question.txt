@@ -1,0 +1,7 @@
+I am doing a course where I am to talk about our digital systems in RICE West Nile and so tomorrow give me answers to the following questions:
+
+1. What information systems (name) have you developed for us to to track distribution say items to the communities and beneficiary verification. Give one advantage and disadvantage
+2. Same tool for donors in tracking proposals, pledges, reports etc. Same way advantage and disadvantage
+3. How about for Community feedback and complaint, advantage and disadvantage
+4. Same for human resources as above
+5. Do the same for procurement
