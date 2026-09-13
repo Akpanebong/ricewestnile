@@ -1,11 +1,16 @@
 <div class="col-md-3">
-    <div class="card shadow-sm border-{{ color }} interactive-card">
-        <div class="card-body text-center">
-            <i class="bi {{ icon }} fs-1 text-{{ color }}"></i>
-            <h6 class="mt-2">{{ title }}</h6>
-            <h3 class="fw-bold text-{{ color }}"{% if counter %} data-counter="{{ value|default:0 }}"{% endif %}>
-                {{ value|floatformat:2 }}
-            </h3>
+    <div class="kpi-card interactive-card">
+        <div class="kpi-card-top">
+            <span class="metric-icon-tint
+                {% if color == 'success' %}is-success
+                {% elif color == 'danger' %}is-danger
+                {% elif color == 'warning' %}is-pending
+                {% elif color == 'primary' %}is-info
+                {% else %}is-neutral{% endif %}">
+                <i class="bi {{ icon }}"></i>
+            </span>
         </div>
+        <p class="kpi-card-value"{% if counter %} data-counter="{{ value|default:0 }}"{% endif %}>{{ value|floatformat:2 }}</p>
+        <p class="kpi-card-label">{{ title }}</p>
     </div>
 </div>

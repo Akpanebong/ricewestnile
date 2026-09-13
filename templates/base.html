@@ -373,77 +373,62 @@
         <div class="dropdown flex-shrink-0">
 
             <button
-                class="btn text-white position-relative"
+                class="btn-icon header-icon-btn position-relative"
                 data-bs-toggle="dropdown"
                 type="button"
+                aria-label="Notifications"
             >
 
-                <i class="fa fa-bell fa-lg"></i>
+                <i class="fa-solid fa-bell"></i>
 
                 {% if notification_unread_count %}
-
-                <span
-                    class="badge bg-danger position-absolute"
-                    style="top:-6px; right:-6px;"
-                >
-                    {{ notification_unread_count }}
-                </span>
-
+                <span class="header-notif-dot"></span>
                 {% endif %}
 
             </button>
 
 
-            <div
-                class="dropdown-menu dropdown-menu-end shadow p-0"
-                style="min-width:300px;"
-            >
+            <div class="dropdown-menu dropdown-menu-end header-dropdown header-notif-dropdown p-0">
 
-                <div class="p-3 border-bottom d-flex justify-content-between">
-
+                <div class="header-dropdown-head">
                     <strong>Notifications</strong>
-
-                    <a
-                        href="{% url 'notifications:list' %}"
-                        class="small text-decoration-none"
-                    >
-                        View All
-                    </a>
-
+                    {% if notification_unread_count %}
+                    <span class="badge-outline header-dropdown-count">{{ notification_unread_count }} unread</span>
+                    {% endif %}
                 </div>
 
+                <div class="header-notif-list">
 
-                <div style="max-height:300px; overflow:auto;">
-
-                    {% for note in notification_unread %}
-
-                    <div class="px-3 py-2 border-bottom">
-
-                        <small class="text-muted">
-                            {{ note.created_at }}
-                        </small>
-
-                        <div>
-
-                            <a
-                                href="{% url 'notifications:detail' note.notification.pk %}"
-                            >
-                                {{ note.message }}
-                            </a>
-
-                        </div>
-
-                    </div>
-
+                    {% for note in notification_unread|slice:":6" %}
+                    <a href="{% url 'notifications:detail' note.notification.pk %}" class="header-notif-item">
+                        <span class="hub-list-icon
+                            {% if note.notification.category == 'critical' or note.notification.category == 'error' %}metric-icon-tint is-danger
+                            {% elif note.notification.category == 'warning' %}metric-icon-tint is-pending
+                            {% elif note.notification.category == 'success' %}metric-icon-tint is-success
+                            {% else %}metric-icon-tint is-info{% endif %}">
+                            <i class="fa-solid
+                                {% if note.notification.category == 'critical' or note.notification.category == 'error' %}fa-circle-exclamation
+                                {% elif note.notification.category == 'warning' %}fa-triangle-exclamation
+                                {% elif note.notification.category == 'success' %}fa-circle-check
+                                {% else %}fa-circle-info{% endif %}"></i>
+                        </span>
+                        <span class="header-notif-copy">
+                            <span class="title">{{ note.notification.title }}</span>
+                            <span class="meta">{{ note.notification.created_at|timesince }} ago</span>
+                        </span>
+                    </a>
                     {% empty %}
-
-                    <div class="px-3 py-3 text-muted text-center">
-                        No notifications
+                    <div class="header-notif-empty">
+                        <i class="fa-solid fa-circle-check"></i>
+                        You're all caught up
                     </div>
-
                     {% endfor %}
 
                 </div>
+
+                <a href="{% url 'notifications:list' %}" class="header-dropdown-foot">
+                    View all notifications
+                </a>
 
             </div>
 
@@ -454,40 +439,53 @@
 
         <div class="dropdown flex-shrink-0">
 
-            <a
-                href="#"
-                class="text-white text-decoration-none d-flex align-items-center"
+            <button
+                type="button"
+                class="header-profile-trigger"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
             >
+                <span class="avatar-circle header-avatar">{{ request.user.first_name|first|upper|default:request.user.username|first|upper }}{{ request.user.last_name|first|upper }}</span>
+                <i class="fa-solid fa-chevron-down header-profile-caret"></i>
+            </button>
 
-                <i class="fa fa-user-circle fa-2x"></i>
 
-            </a>
+            <ul class="dropdown-menu dropdown-menu-end header-dropdown header-profile-dropdown p-0">
 
+                <li class="header-profile-head">
+                    <span class="avatar-circle header-avatar size-lg">{{ request.user.first_name|first|upper|default:request.user.username|first|upper }}{{ request.user.last_name|first|upper }}</span>
+                    <span class="header-profile-info">
+                        <span class="name">{{ request.user.get_full_name|default:request.user.username }}</span>
+                        <span class="role">{{ request.user.profile_type|default:"Staff" }}</span>
+                    </span>
+                </li>
 
-            <ul class="dropdown-menu dropdown-menu-end">
+                {% if request.user.slug %}
+                <li>
+                    <a class="dropdown-item header-dropdown-item" href="{% url 'update_employee' request.user.slug %}">
+                        <i class="fa-solid fa-id-badge"></i> My Profile
+                    </a>
+                </li>
+                {% endif %}
 
                 <li>
-
-                    <a
-                        class="dropdown-item"
-                        href="{% url 'update_employee' request.user.slug %}"
-                    >
-                        {{ request.user.get_full_name|default:request.user }}
+                    <a class="dropdown-item header-dropdown-item" href="{% url 'password_change' %}">
+                        <i class="fa-solid fa-key"></i> Change Password
                     </a>
-
                 </li>
 
                 <li>
-
-                    <a
-                        class="dropdown-item"
-                        href="{% url 'logout' %}"
-                    >
-                        Logout
+                    <a class="dropdown-item header-dropdown-item" href="{% url 'currency_settings' %}">
+                        <i class="fa-solid fa-earth-africa"></i> Currency &amp; Region
                     </a>
+                </li>
 
+                <li><hr class="dropdown-divider my-1"></li>
+
+                <li>
+                    <a class="dropdown-item header-dropdown-item is-danger" href="{% url 'logout' %}">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                    </a>
                 </li>
 
             </ul>
@@ -1113,6 +1111,61 @@ const body =
             });
 
     }
+
+
+    /* =====================================================
+       COLLAPSIBLE SIDEBAR SECTION GROUPS
+
+       Works for ALL sidebar_nav.html files: clicking a
+       ".sidebar-section" label collapses everything up to
+       the next one, and remembers the choice per label.
+    ===================================================== */
+
+    document.querySelectorAll(".app-sidebar, #mobileSidebar").forEach(function (sidebar) {
+        sidebar.querySelectorAll(".sidebar-section").forEach(function (section) {
+            if (section.dataset.groupInit) {
+                return;
+            }
+            section.dataset.groupInit = "true";
+
+            const members = [];
+            let node = section.nextElementSibling;
+            while (node && !node.classList.contains("sidebar-section")) {
+                members.push(node);
+                node = node.nextElementSibling;
+            }
+
+            if (!members.length) {
+                return;
+            }
+
+            const chevron = document.createElement("i");
+            chevron.className = "fa-solid fa-chevron-down sidebar-group-chevron";
+            section.appendChild(chevron);
+            section.classList.add("is-collapsible");
+
+            const storageKey = "ricewnSidebarGroup:" + section.textContent.trim();
+
+            function applyState(collapsed) {
+                members.forEach(function (el) {
+                    el.style.display = collapsed ? "none" : "";
+                });
+                section.classList.toggle("is-collapsed", collapsed);
+            }
+
+            const hasActiveMember = members.some(function (el) {
+                return el.querySelector(".active") || el.classList.contains("active");
+            });
+
+            applyState(!hasActiveMember && localStorage.getItem(storageKey) === "true");
+
+            section.addEventListener("click", function () {
+                const collapsed = !section.classList.contains("is-collapsed");
+                applyState(collapsed);
+                localStorage.setItem(storageKey, collapsed);
+            });
+        });
+    });
 
 
     /* =====================================================

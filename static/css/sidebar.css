@@ -92,6 +92,32 @@
     white-space: nowrap;
 }
 
+/* Collapsible group headers — added by JS to any .sidebar-section
+   that has items following it, so a long sidebar can be tidied
+   away section by section. */
+.sidebar-section.is-collapsible {
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 6px;
+    padding: 2px 4px;
+    transition: color var(--transition-fast);
+}
+
+.sidebar-section.is-collapsible:hover {
+    color: #cbd5e1;
+}
+
+.sidebar-group-chevron {
+    font-size: 8px;
+    color: #475569;
+    transition: transform 0.15s ease;
+}
+
+.sidebar-section.is-collapsed .sidebar-group-chevron {
+    transform: rotate(-90deg);
+}
+
 /* Sidebar Module Accordion */
 .sidebar-module {
     margin-bottom: 4px;
