@@ -162,20 +162,20 @@ body:has(.procure-dashboard) .app-main {
   <div class="row g-3 mb-4 stagger-grid">
     {% for kpi in kpis %}
     <div class="col-12 col-md-6 col-xl-4">
-      <a href="{{ kpi.url }}" class="text-decoration-none">
-        <div class="elite-card metric-card p-3 h-100">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="metric-label">{{ kpi.label }}</div>
-              <div class="metric-value mt-2" data-counter="{{ kpi.value|default:0 }}">{{ kpi.value|default:0|intcomma }}</div>
-            </div>
-            <span class="metric-icon bg-{{ kpi.tone }} bg-opacity-10 text-{{ kpi.tone }}">
-              <i class="fa {{ kpi.icon }}"></i>
-            </span>
-          </div>
-          <div class="money-line mt-3">{{ kpi.amount|default:0|money:request }}</div>
-<!--          <div class="text-muted small mt-1">Total value represented in this module</div>-->
+      <a href="{{ kpi.url }}" class="kpi-card interactive-card">
+        <div class="kpi-card-top">
+          <span class="metric-icon-tint
+              {% if kpi.tone == 'success' %}is-success
+              {% elif kpi.tone == 'danger' %}is-danger
+              {% elif kpi.tone == 'warning' %}is-pending
+              {% elif kpi.tone == 'info' or kpi.tone == 'primary' %}is-info
+              {% else %}is-neutral{% endif %}">
+            <i class="fa {{ kpi.icon }}"></i>
+          </span>
         </div>
+        <p class="kpi-card-value" data-counter="{{ kpi.value|default:0 }}">{{ kpi.value|default:0|intcomma }}</p>
+        <p class="kpi-card-label">{{ kpi.label }}</p>
+        <div class="money-line mt-2">{{ kpi.amount|default:0|money:request }}</div>
       </a>
     </div>
     {% endfor %}

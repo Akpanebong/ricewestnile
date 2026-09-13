@@ -60,60 +60,9 @@
         padding: 20px;
     }
 
-    .kpi-card {
-        background: #fff;
-        border: 1px solid var(--rd-border);
-        border-radius: 15px;
-        padding: 18px;
-        height: 100%;
-        transition: transform .18s ease,
-                    box-shadow .18s ease;
-    }
-
-    .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0,0,0,.07);
-    }
-
-    .kpi-card {
-        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
-    }
-
-    .kpi-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, .1);
-    }
-
-    .kpi-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 11px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 13px;
-        font-size: 17px;
-    }
-
-    .kpi-success .kpi-icon {
-        background: rgba(0, 51, 51, 0.10);
-        color: #003333;
-    }
-
-    .kpi-danger .kpi-icon {
-        background: rgba(220,53,69,.1);
-        color: #dc3545;
-    }
-
-    .kpi-warning .kpi-icon {
-        background: rgba(255,193,7,.13);
-        color: #b58100;
-    }
-
-    .kpi-primary .kpi-icon {
-        background: rgba(0, 51, 51,.1);
-        color: #003333;
-    }
+    /* .kpi-card now comes from the shared static/css/components.css
+       component (icon-tint square + counter value + label) — this page
+       just adds .kpi-meta as an extra line under it. */
 
     .kpi-label {
         font-size: 12px;
@@ -322,29 +271,24 @@
     <div class="row g-3 mb-4 stagger-grid">
 
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi-card kpi-primary">
-                <div class="kpi-icon">
-                    <i class="fa fa-shield-halved"></i>
+            <div class="kpi-card interactive-card">
+                <div class="kpi-card-top">
+                    <span class="metric-icon-tint is-info"><i class="fa fa-shield-halved"></i></span>
                 </div>
-
-                <div class="kpi-label">Total Risks</div>
-                <div class="kpi-value" data-counter="{{ total|default:0 }}">{{ total }}</div>
+                <p class="kpi-card-value" data-counter="{{ total|default:0 }}">{{ total }}</p>
+                <p class="kpi-card-label">Total Risks</p>
                 <div class="kpi-meta">Registered risks</div>
             </div>
         </div>
 
 
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi-card kpi-danger">
-                <div class="kpi-icon">
-                    <i class="fa fa-triangle-exclamation"></i>
+            <div class="kpi-card interactive-card">
+                <div class="kpi-card-top">
+                    <span class="metric-icon-tint is-danger"><i class="fa fa-triangle-exclamation"></i></span>
                 </div>
-
-                <div class="kpi-label">High Risks</div>
-                <div class="kpi-value text-danger" data-counter="{{ high|default:0 }}">
-                    {{ high }}
-                </div>
-
+                <p class="kpi-card-value" data-counter="{{ high|default:0 }}">{{ high }}</p>
+                <p class="kpi-card-label">High Risks</p>
                 <div class="kpi-meta">
                     High & very high
                 </div>
@@ -353,16 +297,12 @@
 
 
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi-card kpi-warning">
-                <div class="kpi-icon">
-                    <i class="fa fa-folder-open"></i>
+            <div class="kpi-card interactive-card">
+                <div class="kpi-card-top">
+                    <span class="metric-icon-tint is-pending"><i class="fa fa-folder-open"></i></span>
                 </div>
-
-                <div class="kpi-label">Open Risks</div>
-                <div class="kpi-value" data-counter="{{ open|default:0 }}">
-                    {{ open }}
-                </div>
-
+                <p class="kpi-card-value" data-counter="{{ open|default:0 }}">{{ open }}</p>
+                <p class="kpi-card-label">Open Risks</p>
                 <div class="kpi-meta">
                     Currently identified
                 </div>
@@ -371,17 +311,12 @@
 
 
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi-card kpi-primary">
-                <div class="kpi-icon">
-                    <i class="fa fa-gauge-high"></i>
+            <div class="kpi-card interactive-card">
+                <div class="kpi-card-top">
+                    <span class="metric-icon-tint is-info"><i class="fa fa-gauge-high"></i></span>
                 </div>
-
-                <div class="kpi-label">Avg. Risk Score</div>
-
-                <div class="kpi-value">
-                    {{ avg_score|floatformat:1 }}
-                </div>
-
+                <p class="kpi-card-value">{{ avg_score|floatformat:1 }}</p>
+                <p class="kpi-card-label">Avg. Risk Score</p>
                 <div class="kpi-meta">
                     Portfolio exposure
                 </div>
@@ -390,17 +325,12 @@
 
 
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi-card kpi-success">
-                <div class="kpi-icon">
-                    <i class="fa fa-file-shield"></i>
+            <div class="kpi-card interactive-card">
+                <div class="kpi-card-top">
+                    <span class="metric-icon-tint is-success"><i class="fa fa-file-shield"></i></span>
                 </div>
-
-                <div class="kpi-label">Policies</div>
-
-                <div class="kpi-value" data-counter="{{ policy_count|default:0 }}">
-                    {{ policy_count }}
-                </div>
-
+                <p class="kpi-card-value" data-counter="{{ policy_count|default:0 }}">{{ policy_count }}</p>
+                <p class="kpi-card-label">Policies</p>
                 <div class="kpi-meta">
                     Governance policies
                 </div>
@@ -409,17 +339,12 @@
 
 
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="kpi-card kpi-success">
-                <div class="kpi-icon">
-                    <i class="fa fa-sliders"></i>
+            <div class="kpi-card interactive-card">
+                <div class="kpi-card-top">
+                    <span class="metric-icon-tint is-success"><i class="fa fa-sliders"></i></span>
                 </div>
-
-                <div class="kpi-label">Controls</div>
-
-                <div class="kpi-value" data-counter="{{ control_count|default:0 }}">
-                    {{ control_count }}
-                </div>
-
+                <p class="kpi-card-value" data-counter="{{ control_count|default:0 }}">{{ control_count }}</p>
+                <p class="kpi-card-label">Controls</p>
                 <div class="kpi-meta">
                     Active controls
                 </div>
@@ -543,34 +468,42 @@
         <div class="dashboard-card-body">
             <div class="row g-3">
                 <div class="col-md-6 col-xl-3">
-                    <a href="{% url 'risk_incident_list' %}" class="kpi-card d-block text-reset">
-                        <div class="kpi-icon kpi-danger"><i class="fa fa-bolt"></i></div>
-                        <div class="kpi-label">Open Incidents</div>
-                        <div class="kpi-value">{{ open_incidents }}</div>
+                    <a href="{% url 'risk_incident_list' %}" class="kpi-card interactive-card d-block text-reset">
+                        <div class="kpi-card-top">
+                            <span class="metric-icon-tint is-danger"><i class="fa fa-bolt"></i></span>
+                        </div>
+                        <p class="kpi-card-value">{{ open_incidents }}</p>
+                        <p class="kpi-card-label">Open Incidents</p>
                         <div class="kpi-meta">Incidents, near misses, fraud, and breaches</div>
                     </a>
                 </div>
                 <div class="col-md-6 col-xl-3">
-                    <a href="{% url 'risk_kri_list' %}" class="kpi-card d-block text-reset">
-                        <div class="kpi-icon kpi-warning"><i class="fa fa-wave-square"></i></div>
-                        <div class="kpi-label">Breached KRIs</div>
-                        <div class="kpi-value">{{ breached_kris }}</div>
+                    <a href="{% url 'risk_kri_list' %}" class="kpi-card interactive-card d-block text-reset">
+                        <div class="kpi-card-top">
+                            <span class="metric-icon-tint is-pending"><i class="fa fa-wave-square"></i></span>
+                        </div>
+                        <p class="kpi-card-value">{{ breached_kris }}</p>
+                        <p class="kpi-card-label">Breached KRIs</p>
                         <div class="kpi-meta">Thresholds requiring escalation</div>
                     </a>
                 </div>
                 <div class="col-md-6 col-xl-3">
-                    <a href="{% url 'risk_control_list' %}" class="kpi-card d-block text-reset">
-                        <div class="kpi-icon kpi-primary"><i class="fa fa-shield-halved"></i></div>
-                        <div class="kpi-label">Weak Controls</div>
-                        <div class="kpi-value">{{ weak_controls }}</div>
+                    <a href="{% url 'risk_control_list' %}" class="kpi-card interactive-card d-block text-reset">
+                        <div class="kpi-card-top">
+                            <span class="metric-icon-tint is-info"><i class="fa fa-shield-halved"></i></span>
+                        </div>
+                        <p class="kpi-card-value">{{ weak_controls }}</p>
+                        <p class="kpi-card-label">Weak Controls</p>
                         <div class="kpi-meta">Needs improvement or weak effectiveness</div>
                     </a>
                 </div>
                 <div class="col-md-6 col-xl-3">
-                    <a href="{% url 'risk_whistleblower_list' %}" class="kpi-card d-block text-reset">
-                        <div class="kpi-icon kpi-danger"><i class="fa fa-user-shield"></i></div>
-                        <div class="kpi-label">Open Ethics Cases</div>
-                        <div class="kpi-value">{{ open_whistleblower_cases }}</div>
+                    <a href="{% url 'risk_whistleblower_list' %}" class="kpi-card interactive-card d-block text-reset">
+                        <div class="kpi-card-top">
+                            <span class="metric-icon-tint is-danger"><i class="fa fa-user-shield"></i></span>
+                        </div>
+                        <p class="kpi-card-value">{{ open_whistleblower_cases }}</p>
+                        <p class="kpi-card-label">Open Ethics Cases</p>
                         <div class="kpi-meta">Confidential case management</div>
                     </a>
                 </div>
