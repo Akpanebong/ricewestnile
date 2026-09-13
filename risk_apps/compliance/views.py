@@ -592,17 +592,10 @@ class ComplianceDocumentListView(ListView):
     context_object_name = 'documents'
 
 
-class ComplianceDocumentCreateView(CreateView):
-    model = ComplianceDocument
-    fields = ['requirement', 'file', 'is_verified']
-    template_name = 'compliance/form.html'
-    success_url = reverse_lazy('compliance_doc_list')
-
-
 class ComplianceDocumentUpdateView(UpdateView):
     model = ComplianceDocument
     fields = ['requirement', 'file', 'is_verified']
-    template_name = 'compliance/form.html'
+    template_name = 'compliance/document_form.html'
     success_url = reverse_lazy('compliance_doc_list')
 
 
