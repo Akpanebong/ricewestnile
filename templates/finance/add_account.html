@@ -1,6 +1,6 @@
 {% extends "finance/base.html" %}
 {% load currency_tags %}
-{% block title %}Add Account{% endblock %}
+{% block title %}{% if default_is_group %}Add Group{% else %}Add Account{% endif %}{% endblock %}
 
 {% block extra_head %}
 {% include "finance/includes/coa_styles.html" %}
@@ -11,7 +11,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="fw-bold">Add Account</h3>
+            <h3 class="fw-bold" id="pageHeading">{% if default_is_group %}Add Group{% else %}Add Account{% endif %}</h3>
             <p class="text-muted mb-0">Add a new group (folder) or a postable ledger account to the chart of accounts</p>
         </div>
         <a href="{% url 'finance:chart_of_accounts' %}" class="btn btn-outline-dark shadow-sm">
@@ -28,7 +28,7 @@
                         <input type="hidden" name="parent_id" id="addParentId">
 
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" name="is_group" id="addIsGroup">
+                            <input type="checkbox" class="form-check-input" name="is_group" id="addIsGroup" {% if default_is_group %}checked{% endif %}>
                             <label class="form-check-label" for="addIsGroup">This is a group (folder) &mdash; it organizes other accounts, nothing posts to it directly</label>
                         </div>
 
@@ -85,8 +85,18 @@
 {% include "finance/includes/coa_group_picker_modal.html" %}
 
 <script>
-document.getElementById('addIsGroup').addEventListener('change', function () {
-    document.getElementById('addLeafOnlyFields').hidden = this.checked;
-});
+(function () {
+    const isGroupCheckbox = document.getElementById('addIsGroup');
+    const leafOnlyFields = document.getElementById('addLeafOnlyFields');
+    const heading = document.getElementById('pageHeading');
+
+    function sync() {
+        leafOnlyFields.hidden = isGroupCheckbox.checked;
+        heading.textContent = isGroupCheckbox.checked ? 'Add Group' : 'Add Account';
+    }
+
+    isGroupCheckbox.addEventListener('change', sync);
+    sync();
+})();
 </script>
 {% endblock %}

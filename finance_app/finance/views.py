@@ -961,5 +961,6 @@ def add_account(request):
         "group_tree_roots": group_tree_roots,
         "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
         "base_currency": get_base_currency(),
+        "default_is_group": request.GET.get("is_group") == "1",
     }
     return render(request, "finance/add_account.html", context)
