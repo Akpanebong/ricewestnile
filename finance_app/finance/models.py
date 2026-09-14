@@ -286,9 +286,30 @@ class FinancialCategory(models.Model):
     alt_code = models.CharField(max_length=20, blank=True, help_text="Optional secondary/legacy code for this account.")
     name = models.CharField(max_length=100, unique=True)
     category_type = models.CharField(max_length=20, choices=CategoryType.choices)
+
+    # Tree structure: any node can be a group (a folder that organizes other
+    # groups or accounts, but is never posted to directly) or a leaf ledger
+    # account (postable — FinancialTransaction.category points only here).
+    # category_type is denormalized onto every node (not just roots) so
+    # grouping/ordering doesn't need a recursive parent-chain walk; the view
+    # is responsible for keeping a child's category_type in sync with its
+    # parent's when the tree is edited.
+    parent = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="children",
+        help_text="The group this account/sub-group sits under. Root groups (Assets, Liabilities, ...) leave this blank.",
+    )
+    is_group = models.BooleanField(
+        default=False,
+        help_text="A group (folder) organizes other groups/accounts underneath it. Transactions can only post to non-group (leaf) accounts.",
+    )
+
+    currency = models.CharField(
+        max_length=3, choices=[(c, c) for c in SUPPORTED_CURRENCIES], default=get_base_currency,
+        help_text="The currency this specific account is denominated in — opening/closing balance are shown in this currency.",
+    )
     opening_balance = models.DecimalField(
         max_digits=16, decimal_places=2, default=Decimal("0.00"),
-        help_text="Balance carried in when this account was set up, in the organization's base currency.",
+        help_text="Balance carried in when this account was set up, in the account's own currency.",
     )
 
     class Meta:
@@ -298,6 +319,10 @@ class FinancialCategory(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.name}"
+
+    @property
+    def balance_side(self):
+        return self.NATURAL_BALANCE_SIDE[self.category_type]
 
 
 class FinancialTransaction(models.Model):

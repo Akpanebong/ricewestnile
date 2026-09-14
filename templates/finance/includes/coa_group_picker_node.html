@@ -1,0 +1,10 @@
+<div class="group-picker-row" style="--coa-depth: {{ depth }};"
+     data-group-id="{{ node.pk }}"
+     data-group-label="{{ node.code }} — {{ node.name }}"
+     data-search-text="{{ node.code }} {{ node.name }}">
+    <i class="fa-solid fa-folder"></i>
+    <span><code>{{ node.code }}</code> — {{ node.name }}</span>
+</div>
+{% for child in node.tree_children %}
+    {% include "finance/includes/coa_group_picker_node.html" with node=child depth=depth|add:1 %}
+{% endfor %}

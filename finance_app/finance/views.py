@@ -21,7 +21,7 @@ from django.db.models.functions import Coalesce
 from account.templatetags.custom_tags import has_group
 from procurement.procureapp.models import Requisition, PurchaseOrder
 from assets.assetapp.models import Asset, AssetMaintenance
-from core.services import normalize_currency, get_base_currency, CURRENCY_LABELS, SUPPORTED_CURRENCIES
+from core.services import normalize_currency, get_base_currency, convert_amount, CURRENCY_LABELS, SUPPORTED_CURRENCIES
 
 
 @login_required(login_url="login")
@@ -675,7 +675,7 @@ def financial_ledger(request):
         "project_budget_total": project_budget_total,
         "projects": Project.objects.all(),
         "departments": Department.objects.all(),
-        "categories": FinancialCategory.objects.all(),
+        "categories": FinancialCategory.objects.filter(is_group=False),
         "transaction_types": FinancialTransaction.TransactionType.choices,
         "filters": request.GET,
     }
@@ -768,7 +768,7 @@ def record_transaction(request):
         return redirect(reverse("finance:ledger"))
 
     context = {
-        "categories": FinancialCategory.objects.all(),
+        "categories": FinancialCategory.objects.filter(is_group=False),
         "projects": Project.objects.all(),
         "departments": Department.objects.all(),
         "purchase_orders": PurchaseOrder.objects.filter(sent=True).order_by("-id")[:200],
@@ -805,6 +805,68 @@ def _parse_opening_balance(raw):
         return None
 
 
+def _is_descendant_or_self(candidate, node):
+    """True if `candidate` is `node` itself or sits anywhere under it — used
+    to block re-parenting a group underneath one of its own descendants,
+    which would otherwise create a cycle in the tree."""
+    while candidate is not None:
+        if candidate.pk == node.pk:
+            return True
+        candidate = candidate.parent
+    return False
+
+
+def _build_account_tree(only_groups=False):
+    """Fetch every FinancialCategory, annotate leaf accounts with their
+    transaction count and closing balance (in the account's own currency),
+    and wire them into an in-memory tree via `.tree_children`. Also computes
+    `.rollup_base` on every node — its own (for leaves) or its descendants'
+    (for groups) closing balance converted into the org's base currency, so
+    groups mixing accounts of different currencies still get one meaningful
+    total. Returns (root_nodes, all_nodes_by_id).
+    """
+    base_currency = get_base_currency()
+    qs = FinancialCategory.objects.select_related("parent")
+    if only_groups:
+        qs = qs.filter(is_group=True)
+    else:
+        qs = qs.annotate(
+            transaction_count=Coalesce(Count("transactions", distinct=True), Value(0)),
+            total_amount=Coalesce(Sum("transactions__amount"), Value(0), output_field=DECIMAL_ZERO),
+        )
+    categories = list(qs.order_by("category_type", "code"))
+
+    by_id = {c.pk: c for c in categories}
+    for c in categories:
+        c.tree_children = []
+        if not c.is_group:
+            # total_amount is already base-currency-equivalent (how
+            # FinancialTransaction.amount is always recorded) — convert it
+            # into this account's own currency to get its native balance.
+            c.closing_balance = c.opening_balance + convert_amount(c.total_amount, base_currency, c.currency)
+
+    roots = []
+    for c in categories:
+        parent = by_id.get(c.parent_id) if c.parent_id else None
+        if parent is not None:
+            parent.tree_children.append(c)
+        else:
+            roots.append(c)
+
+    if not only_groups:
+        def compute_rollup(node):
+            if node.is_group:
+                node.rollup_base = sum((compute_rollup(child) for child in node.tree_children), Decimal("0.00"))
+            else:
+                node.rollup_base = convert_amount(node.closing_balance, node.currency, base_currency)
+            return node.rollup_base
+
+        for root in roots:
+            compute_rollup(root)
+
+    return roots, by_id
+
+
 @login_required(login_url="login")
 def chart_of_accounts(request):
     if not _is_finance_staff(request.user):
@@ -824,68 +886,66 @@ def chart_of_accounts(request):
             category = get_object_or_404(FinancialCategory, pk=request.POST.get("category_id"))
             name = (request.POST.get("name") or "").strip()
             alt_code = (request.POST.get("alt_code") or "").strip().upper()
+            currency = normalize_currency(request.POST.get("currency"))
             opening_balance = _parse_opening_balance(request.POST.get("opening_balance"))
+            parent_id = request.POST.get("parent_id")
+            parent = FinancialCategory.objects.filter(pk=parent_id, is_group=True).first() if parent_id else None
 
             if not name:
                 messages.error(request, "Name is required.")
             elif opening_balance is None:
                 messages.error(request, "Enter a valid opening balance.")
+            elif parent_id and parent is None:
+                messages.error(request, "Choose a valid group.")
+            elif parent is not None and _is_descendant_or_self(parent, category):
+                messages.error(request, "A group can't be moved under itself or one of its own sub-groups.")
             else:
                 category.name = name
                 category.alt_code = alt_code
                 category.opening_balance = opening_balance
-                category.save(update_fields=["name", "alt_code", "opening_balance"])
+                if not category.is_group:
+                    category.currency = currency
+                if parent is not None:
+                    category.category_type = parent.category_type
+                    category.parent = parent
+                category.save(update_fields=["name", "alt_code", "opening_balance", "currency", "category_type", "parent"])
                 messages.success(request, f"Account '{category.code}' updated.")
             return redirect(reverse("finance:chart_of_accounts"))
 
         code = (request.POST.get("code") or "").strip().upper()
         alt_code = (request.POST.get("alt_code") or "").strip().upper()
         name = (request.POST.get("name") or "").strip()
-        category_type = request.POST.get("category_type")
+        is_group = request.POST.get("is_group") == "on"
+        currency = normalize_currency(request.POST.get("currency"))
         opening_balance = _parse_opening_balance(request.POST.get("opening_balance"))
+        parent = FinancialCategory.objects.filter(pk=request.POST.get("parent_id"), is_group=True).first()
 
-        if not (code and name and category_type):
-            messages.error(request, "Code, name, and type are all required.")
+        if not (code and name):
+            messages.error(request, "Code and name are required.")
+        elif parent is None:
+            messages.error(request, "Choose the group this account/sub-group belongs under.")
         elif opening_balance is None:
             messages.error(request, "Enter a valid opening balance.")
         elif FinancialCategory.objects.filter(code=code).exists():
             messages.error(request, f"A category with code '{code}' already exists.")
         else:
             FinancialCategory.objects.create(
-                code=code, alt_code=alt_code, name=name,
-                category_type=category_type, opening_balance=opening_balance,
+                code=code, alt_code=alt_code, name=name, parent=parent,
+                category_type=parent.category_type, is_group=is_group,
+                currency=currency, opening_balance=Decimal("0.00") if is_group else opening_balance,
             )
-            messages.success(request, f"Account '{name}' added to the chart of accounts.")
+            messages.success(request, f"{'Group' if is_group else 'Account'} '{name}' added to the chart of accounts.")
         return redirect(reverse("finance:chart_of_accounts"))
 
-    categories = FinancialCategory.objects.annotate(
-        transaction_count=Coalesce(Count("transactions", distinct=True), Value(0)),
-        total_amount=Coalesce(Sum("transactions__amount"), Value(0), output_field=DECIMAL_ZERO),
-    ).order_by("category_type", "code")
-
-    by_type = {}
-    for category in categories:
-        category.closing_balance = category.opening_balance + category.total_amount
-        by_type.setdefault(category.category_type, []).append(category)
-
-    # Pre-grouped as (type_value, type_label, [categories], group_total,
-    # balance_side) tuples so the template can do a plain nested loop
-    # instead of a variable-keyed dict lookup, which Django's template
-    # dot-notation can't express directly.
-    grouped_categories = [
-        (
-            type_value, type_label, by_type.get(type_value, []),
-            sum((c.closing_balance for c in by_type.get(type_value, [])), Decimal("0.00")),
-            FinancialCategory.NATURAL_BALANCE_SIDE[type_value],
-        )
-        for type_value, type_label in FinancialCategory.CategoryType.choices
-    ]
+    account_tree_roots, _ = _build_account_tree()
+    group_tree_roots, _ = _build_account_tree(only_groups=True)
 
     context = {
-        "grouped_categories": grouped_categories,
+        "account_tree_roots": account_tree_roots,
+        "group_tree_roots": group_tree_roots,
         "can_manage": can_manage,
-        "total_accounts": categories.count(),
-        "category_types": FinancialCategory.CategoryType.choices,
+        "total_accounts": FinancialCategory.objects.filter(is_group=False).count(),
+        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
         "base_currency": get_base_currency(),
     }
     return render(request, "finance/chart_of_accounts.html", context)
