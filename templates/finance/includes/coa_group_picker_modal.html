@@ -1,0 +1,76 @@
+<!-- GROUP PICKER MODAL — shared: whichever "..." button opened it (via
+     data-target-prefix) determines which hidden parent_id/label pair
+     gets the selection written into. -->
+<div class="modal fade" id="groupPickerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Account Groups</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="group-picker-search p-2 border-bottom">
+                    <input type="text" id="groupPickerSearch" class="form-control form-control-sm" placeholder="Display only rows containing...">
+                </div>
+                <div class="group-picker-list" id="groupPickerList">
+                    {% for root in group_tree_roots %}
+                        {% include "finance/includes/coa_group_picker_node.html" with node=root depth=0 %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    let activePrefix = null;
+
+    const groupPickerModalEl = document.getElementById('groupPickerModal');
+    groupPickerModalEl.addEventListener('show.bs.modal', function (event) {
+        activePrefix = event.relatedTarget.dataset.targetPrefix;
+        const currentId = document.getElementById(activePrefix + 'ParentId').value;
+        document.querySelectorAll('#groupPickerList .group-picker-row').forEach(function (row) {
+            row.classList.toggle('is-selected', row.dataset.groupId === currentId);
+        });
+    });
+
+    document.getElementById('groupPickerList').addEventListener('click', function (event) {
+        const row = event.target.closest('.group-picker-row');
+        if (!row || !activePrefix) return;
+        document.getElementById(activePrefix + 'ParentId').value = row.dataset.groupId;
+        document.getElementById(activePrefix + 'ParentLabel').value = row.dataset.groupLabel;
+        bootstrap.Modal.getInstance(groupPickerModalEl).hide();
+    });
+
+    document.getElementById('groupPickerSearch').addEventListener('input', function (event) {
+        const term = event.target.value.trim().toLowerCase();
+        const rows = document.querySelectorAll('#groupPickerList .group-picker-row');
+        if (!term) {
+            rows.forEach(function (row) { row.hidden = false; });
+            return;
+        }
+        const visible = new Set();
+        rows.forEach(function (row) {
+            if (row.dataset.searchText.toLowerCase().includes(term)) {
+                visible.add(row);
+                // Keep every ancestor row visible too, so a matched
+                // sub-group doesn't lose its parent's context.
+                let depth = Number(row.style.getPropertyValue('--coa-depth')) || 0;
+                let node = row.previousElementSibling;
+                while (node && depth > 0) {
+                    if (node.classList && node.classList.contains('group-picker-row')) {
+                        const nodeDepth = Number(node.style.getPropertyValue('--coa-depth')) || 0;
+                        if (nodeDepth < depth) {
+                            visible.add(node);
+                            depth = nodeDepth;
+                        }
+                    }
+                    node = node.previousElementSibling;
+                }
+            }
+        });
+        rows.forEach(function (row) { row.hidden = !visible.has(row); });
+    });
+})();
+</script>

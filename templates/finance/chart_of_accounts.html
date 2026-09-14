@@ -4,183 +4,7 @@
 {% block title %}Chart of Accounts{% endblock %}
 
 {% block extra_head %}
-<style>
-    .coa-tree-card {
-        overflow: hidden;
-    }
-
-    .coa-group {
-        display: flex;
-        align-items: center;
-        gap: 0.65rem;
-        padding: 0.85rem 1.1rem 0.85rem calc(1.1rem + var(--coa-depth, 0) * 1.4rem);
-        background: var(--surface-muted);
-        border-bottom: 1px solid var(--surface-1-border);
-        cursor: pointer;
-        user-select: none;
-    }
-
-    .coa-group:hover {
-        background: color-mix(in srgb, var(--sidebar-accent) 6%, var(--surface-muted));
-    }
-
-    .coa-group-chevron {
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        transition: transform var(--transition-fast);
-        flex-shrink: 0;
-    }
-
-    .coa-group[aria-expanded="true"] .coa-group-chevron {
-        transform: rotate(90deg);
-    }
-
-    .coa-group-icon {
-        color: var(--sidebar-accent);
-        flex-shrink: 0;
-    }
-
-    .coa-group-label {
-        font-weight: 800;
-        font-size: 0.94rem;
-        color: var(--text-primary);
-    }
-
-    .coa-group-label code {
-        color: inherit;
-    }
-
-    .coa-group-count {
-        font-size: 0.76rem;
-        color: var(--text-muted);
-        font-weight: 500;
-    }
-
-    .coa-group-total {
-        margin-left: auto;
-        font-weight: 700;
-        font-size: 0.9rem;
-        color: var(--text-primary);
-        white-space: nowrap;
-    }
-
-    .coa-account-row {
-        display: flex;
-        align-items: center;
-        gap: 0.65rem;
-        padding: 0.65rem 1.1rem 0.65rem calc(1.1rem + var(--coa-depth, 0) * 1.4rem);
-        border-bottom: 1px solid var(--border-subtle);
-        transition: background var(--transition-fast);
-    }
-
-    .coa-account-row:hover {
-        background: var(--surface-muted);
-    }
-
-    .coa-account-icon {
-        color: var(--text-light);
-        flex-shrink: 0;
-        font-size: 0.9rem;
-    }
-
-    .coa-account-copy {
-        min-width: 0;
-        flex: 1 1 auto;
-    }
-
-    .coa-account-name {
-        font-weight: 600;
-        font-size: 0.88rem;
-        color: var(--text-primary);
-    }
-
-    .coa-account-name code {
-        color: var(--sidebar-accent);
-        font-weight: 700;
-    }
-
-    .coa-account-meta {
-        font-size: 0.76rem;
-        color: var(--text-muted);
-        margin-top: 0.1rem;
-    }
-
-    .coa-account-amount {
-        text-align: right;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .coa-account-amount .closing {
-        font-weight: 700;
-        font-size: 0.88rem;
-        color: var(--text-primary);
-        display: block;
-    }
-
-    .coa-account-amount .opening {
-        font-size: 0.74rem;
-        color: var(--text-muted);
-    }
-
-    .coa-edit-btn {
-        flex-shrink: 0;
-    }
-
-    .coa-empty-group {
-        padding: 0.9rem 1.1rem 0.9rem calc(1.1rem + var(--coa-depth, 0) * 1.4rem);
-        color: var(--text-muted);
-        font-size: 0.84rem;
-    }
-
-    /* GROUP PICKER MODAL */
-    .group-picker-search {
-        position: sticky;
-        top: 0;
-        background: var(--surface-1);
-        z-index: 1;
-    }
-
-    .group-picker-list {
-        max-height: 360px;
-        overflow-y: auto;
-    }
-
-    .group-picker-row {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.55rem 0.9rem 0.55rem calc(0.9rem + var(--coa-depth, 0) * 1.3rem);
-        cursor: pointer;
-        font-size: 0.86rem;
-        color: var(--text-primary);
-        border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .group-picker-row i {
-        color: var(--sidebar-accent);
-        flex-shrink: 0;
-    }
-
-    .group-picker-row:hover {
-        background: var(--surface-muted);
-    }
-
-    .group-picker-row.is-selected {
-        background: color-mix(in srgb, var(--sidebar-accent) 10%, var(--surface-1));
-        font-weight: 700;
-    }
-
-    .group-field-row {
-        display: flex;
-        gap: 0.4rem;
-    }
-
-    .group-field-row input[readonly] {
-        background: var(--surface-muted);
-        cursor: pointer;
-    }
-</style>
+{% include "finance/includes/coa_styles.html" %}
 {% endblock %}
 
 {% block content %}
@@ -191,84 +15,22 @@
             <h3 class="fw-bold">Chart of Accounts</h3>
             <p class="text-muted mb-0">{{ total_accounts }} accounts across the 5 standard account groups &middot; group totals in {{ base_currency }}</p>
         </div>
-        <a href="{% url 'finance:ledger' %}" class="btn btn-outline-dark shadow-sm">
-            <i class="fa fa-scale-balanced me-1"></i> View Ledger
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'finance:ledger' %}" class="btn btn-outline-dark shadow-sm">
+                <i class="fa fa-scale-balanced me-1"></i> View Ledger
+            </a>
+            {% if can_manage %}
+            <a href="{% url 'finance:add_account' %}" class="btn btn-primary shadow-sm">
+                <i class="fa fa-plus me-1"></i> Add Account
+            </a>
+            {% endif %}
+        </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-xl-8">
-            <div class="card coa-tree-card">
-                {% for root in account_tree_roots %}
-                    {% include "finance/includes/coa_tree_node.html" with node=root depth=0 can_manage=can_manage base_currency=base_currency %}
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="col-xl-4">
-            <div class="card">
-                <div class="card-header bg-white fw-bold">Add Account</div>
-                <div class="card-body">
-                    {% if can_manage %}
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="add">
-                        <input type="hidden" name="parent_id" id="addParentId">
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" name="is_group" id="addIsGroup">
-                            <label class="form-check-label" for="addIsGroup">This is a group (folder) &mdash; it organizes other accounts, nothing posts to it directly</label>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Group</label>
-                            <div class="group-field-row">
-                                <input type="text" id="addParentLabel" class="form-control" placeholder="Choose the group this belongs under..." readonly required
-                                       data-bs-toggle="modal" data-bs-target="#groupPickerModal" data-target-prefix="add">
-                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#groupPickerModal" data-target-prefix="add">
-                                    <i class="fa-solid fa-ellipsis"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="row g-2 mb-3">
-                            <div class="col-7">
-                                <label class="form-label">Code</label>
-                                <input type="text" name="code" class="form-control" placeholder="e.g. TRAVEL-EXP" required>
-                            </div>
-                            <div class="col-5">
-                                <label class="form-label">Alt Code</label>
-                                <input type="text" name="alt_code" class="form-control" placeholder="Optional">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. Travel & Transport" required>
-                        </div>
-
-                        <div class="row g-2 mb-3" id="addLeafOnlyFields">
-                            <div class="col-5">
-                                <label class="form-label">Currency</label>
-                                <select name="currency" class="form-select">
-                                    {% for option in currency_options %}
-                                    <option value="{{ option.code }}" {% if option.code == base_currency %}selected{% endif %}>{{ option.code }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-7">
-                                <label class="form-label">Opening Balance</label>
-                                <input type="text" inputmode="decimal" data-currency-input name="opening_balance" class="form-control" value="0.00">
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">Add Account</button>
-                    </form>
-                    {% else %}
-                    <p class="text-muted mb-0">Only Finance staff can add new accounts to the chart of accounts.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+    <div class="card coa-tree-card">
+        {% for root in account_tree_roots %}
+            {% include "finance/includes/coa_tree_node.html" with node=root depth=0 can_manage=can_manage base_currency=base_currency %}
+        {% endfor %}
     </div>
 
 </div>
@@ -279,7 +41,6 @@
     <div class="modal-dialog">
         <form method="post" class="modal-content">
             {% csrf_token %}
-            <input type="hidden" name="action" value="edit">
             <input type="hidden" name="category_id" id="editCategoryId">
             <input type="hidden" name="parent_id" id="editParentId">
             <div class="modal-header">
@@ -328,97 +89,20 @@
     </div>
 </div>
 
-<!-- GROUP PICKER MODAL (shared by Add and Edit) -->
-<div class="modal fade" id="groupPickerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Account Groups</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="group-picker-search p-2 border-bottom">
-                    <input type="text" id="groupPickerSearch" class="form-control form-control-sm" placeholder="Display only rows containing...">
-                </div>
-                <div class="group-picker-list" id="groupPickerList">
-                    {% for root in group_tree_roots %}
-                        {% include "finance/includes/coa_group_picker_node.html" with node=root depth=0 %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{% include "finance/includes/coa_group_picker_modal.html" %}
 
 <script>
-(function () {
-    let activePrefix = null;
-
-    const groupPickerModalEl = document.getElementById('groupPickerModal');
-    groupPickerModalEl.addEventListener('show.bs.modal', function (event) {
-        activePrefix = event.relatedTarget.dataset.targetPrefix;
-        const currentId = document.getElementById(activePrefix + 'ParentId').value;
-        document.querySelectorAll('#groupPickerList .group-picker-row').forEach(function (row) {
-            row.classList.toggle('is-selected', row.dataset.groupId === currentId);
-        });
-    });
-
-    document.getElementById('groupPickerList').addEventListener('click', function (event) {
-        const row = event.target.closest('.group-picker-row');
-        if (!row || !activePrefix) return;
-        document.getElementById(activePrefix + 'ParentId').value = row.dataset.groupId;
-        document.getElementById(activePrefix + 'ParentLabel').value = row.dataset.groupLabel;
-        bootstrap.Modal.getInstance(groupPickerModalEl).hide();
-    });
-
-    document.getElementById('groupPickerSearch').addEventListener('input', function (event) {
-        const term = event.target.value.trim().toLowerCase();
-        const rows = document.querySelectorAll('#groupPickerList .group-picker-row');
-        if (!term) {
-            rows.forEach(function (row) { row.hidden = false; });
-            return;
-        }
-        const visible = new Set();
-        rows.forEach(function (row) {
-            if (row.dataset.searchText.toLowerCase().includes(term)) {
-                visible.add(row);
-                // Keep every ancestor row visible too, so a matched
-                // sub-group doesn't lose its parent's context.
-                let depth = Number(row.style.getPropertyValue('--coa-depth')) || 0;
-                let node = row.previousElementSibling;
-                while (node && depth > 0) {
-                    if (node.classList && node.classList.contains('group-picker-row')) {
-                        const nodeDepth = Number(node.style.getPropertyValue('--coa-depth')) || 0;
-                        if (nodeDepth < depth) {
-                            visible.add(node);
-                            depth = nodeDepth;
-                        }
-                    }
-                    node = node.previousElementSibling;
-                }
-            }
-        });
-        rows.forEach(function (row) { row.hidden = !visible.has(row); });
-    });
-
-    document.getElementById('editAccountModal').addEventListener('show.bs.modal', function (event) {
-        const btn = event.relatedTarget;
-        document.getElementById('editCategoryId').value = btn.dataset.categoryId;
-        document.getElementById('editCategoryCode').textContent = btn.dataset.categoryCode;
-        document.getElementById('editCategoryName').value = btn.dataset.categoryName;
-        document.getElementById('editCategoryAltCode').value = btn.dataset.categoryAltCode;
-        document.getElementById('editCategoryCurrency').value = btn.dataset.categoryCurrency;
-        document.getElementById('editCategoryOpeningBalance').value = btn.dataset.categoryOpeningBalance;
-        document.getElementById('editParentId').value = btn.dataset.categoryParentId;
-        document.getElementById('editParentLabel').value = btn.dataset.categoryParentLabel;
-    });
-
-    const addIsGroup = document.getElementById('addIsGroup');
-    const addLeafOnlyFields = document.getElementById('addLeafOnlyFields');
-    addIsGroup.addEventListener('change', function () {
-        addLeafOnlyFields.hidden = addIsGroup.checked;
-    });
-})();
+document.getElementById('editAccountModal').addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    document.getElementById('editCategoryId').value = btn.dataset.categoryId;
+    document.getElementById('editCategoryCode').textContent = btn.dataset.categoryCode;
+    document.getElementById('editCategoryName').value = btn.dataset.categoryName;
+    document.getElementById('editCategoryAltCode').value = btn.dataset.categoryAltCode;
+    document.getElementById('editCategoryCurrency').value = btn.dataset.categoryCurrency;
+    document.getElementById('editCategoryOpeningBalance').value = btn.dataset.categoryOpeningBalance;
+    document.getElementById('editParentId').value = btn.dataset.categoryParentId;
+    document.getElementById('editParentLabel').value = btn.dataset.categoryParentLabel;
+});
 </script>
 {% endif %}
 {% endblock %}

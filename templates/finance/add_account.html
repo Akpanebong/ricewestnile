@@ -1,0 +1,92 @@
+{% extends "finance/base.html" %}
+{% load currency_tags %}
+{% block title %}Add Account{% endblock %}
+
+{% block extra_head %}
+{% include "finance/includes/coa_styles.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Add Account</h3>
+            <p class="text-muted mb-0">Add a new group (folder) or a postable ledger account to the chart of accounts</p>
+        </div>
+        <a href="{% url 'finance:chart_of_accounts' %}" class="btn btn-outline-dark shadow-sm">
+            <i class="fa fa-arrow-left me-1"></i> Back to Chart of Accounts
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-6 col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="parent_id" id="addParentId">
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" name="is_group" id="addIsGroup">
+                            <label class="form-check-label" for="addIsGroup">This is a group (folder) &mdash; it organizes other accounts, nothing posts to it directly</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Group</label>
+                            <div class="group-field-row">
+                                <input type="text" id="addParentLabel" class="form-control" placeholder="Choose the group this belongs under..." readonly required
+                                       data-bs-toggle="modal" data-bs-target="#groupPickerModal" data-target-prefix="add">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#groupPickerModal" data-target-prefix="add">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-7">
+                                <label class="form-label">Code</label>
+                                <input type="text" name="code" class="form-control" placeholder="e.g. TRAVEL-EXP" required>
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label">Alt Code</label>
+                                <input type="text" name="alt_code" class="form-control" placeholder="Optional">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Travel & Transport" required>
+                        </div>
+
+                        <div class="row g-2 mb-3" id="addLeafOnlyFields">
+                            <div class="col-5">
+                                <label class="form-label">Currency</label>
+                                <select name="currency" class="form-select">
+                                    {% for option in currency_options %}
+                                    <option value="{{ option.code }}" {% if option.code == base_currency %}selected{% endif %}>{{ option.code }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-7">
+                                <label class="form-label">Opening Balance</label>
+                                <input type="text" inputmode="decimal" data-currency-input name="opening_balance" class="form-control" value="0.00">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Add Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% include "finance/includes/coa_group_picker_modal.html" %}
+
+<script>
+document.getElementById('addIsGroup').addEventListener('change', function () {
+    document.getElementById('addLeafOnlyFields').hidden = this.checked;
+});
+</script>
+{% endblock %}

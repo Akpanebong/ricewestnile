@@ -880,38 +880,56 @@ def chart_of_accounts(request):
             messages.error(request, "You do not have permission to manage the chart of accounts.")
             return redirect(reverse("finance:chart_of_accounts"))
 
-        action = request.POST.get("action", "add")
+        category = get_object_or_404(FinancialCategory, pk=request.POST.get("category_id"))
+        name = (request.POST.get("name") or "").strip()
+        alt_code = (request.POST.get("alt_code") or "").strip().upper()
+        currency = normalize_currency(request.POST.get("currency"))
+        opening_balance = _parse_opening_balance(request.POST.get("opening_balance"))
+        parent_id = request.POST.get("parent_id")
+        parent = FinancialCategory.objects.filter(pk=parent_id, is_group=True).first() if parent_id else None
 
-        if action == "edit":
-            category = get_object_or_404(FinancialCategory, pk=request.POST.get("category_id"))
-            name = (request.POST.get("name") or "").strip()
-            alt_code = (request.POST.get("alt_code") or "").strip().upper()
-            currency = normalize_currency(request.POST.get("currency"))
-            opening_balance = _parse_opening_balance(request.POST.get("opening_balance"))
-            parent_id = request.POST.get("parent_id")
-            parent = FinancialCategory.objects.filter(pk=parent_id, is_group=True).first() if parent_id else None
+        if not name:
+            messages.error(request, "Name is required.")
+        elif opening_balance is None:
+            messages.error(request, "Enter a valid opening balance.")
+        elif parent_id and parent is None:
+            messages.error(request, "Choose a valid group.")
+        elif parent is not None and _is_descendant_or_self(parent, category):
+            messages.error(request, "A group can't be moved under itself or one of its own sub-groups.")
+        else:
+            category.name = name
+            category.alt_code = alt_code
+            category.opening_balance = opening_balance
+            if not category.is_group:
+                category.currency = currency
+            if parent is not None:
+                category.category_type = parent.category_type
+                category.parent = parent
+            category.save(update_fields=["name", "alt_code", "opening_balance", "currency", "category_type", "parent"])
+            messages.success(request, f"Account '{category.code}' updated.")
+        return redirect(reverse("finance:chart_of_accounts"))
 
-            if not name:
-                messages.error(request, "Name is required.")
-            elif opening_balance is None:
-                messages.error(request, "Enter a valid opening balance.")
-            elif parent_id and parent is None:
-                messages.error(request, "Choose a valid group.")
-            elif parent is not None and _is_descendant_or_self(parent, category):
-                messages.error(request, "A group can't be moved under itself or one of its own sub-groups.")
-            else:
-                category.name = name
-                category.alt_code = alt_code
-                category.opening_balance = opening_balance
-                if not category.is_group:
-                    category.currency = currency
-                if parent is not None:
-                    category.category_type = parent.category_type
-                    category.parent = parent
-                category.save(update_fields=["name", "alt_code", "opening_balance", "currency", "category_type", "parent"])
-                messages.success(request, f"Account '{category.code}' updated.")
-            return redirect(reverse("finance:chart_of_accounts"))
+    account_tree_roots, _ = _build_account_tree()
+    group_tree_roots, _ = _build_account_tree(only_groups=True)
 
+    context = {
+        "account_tree_roots": account_tree_roots,
+        "group_tree_roots": group_tree_roots,
+        "can_manage": can_manage,
+        "total_accounts": FinancialCategory.objects.filter(is_group=False).count(),
+        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "base_currency": get_base_currency(),
+    }
+    return render(request, "finance/chart_of_accounts.html", context)
+
+
+@login_required(login_url="login")
+def add_account(request):
+    if not _can_manage_chart_of_accounts(request.user):
+        messages.error(request, "Only Finance staff can add new accounts to the chart of accounts.")
+        return redirect(reverse("finance:chart_of_accounts"))
+
+    if request.method == "POST":
         code = (request.POST.get("code") or "").strip().upper()
         alt_code = (request.POST.get("alt_code") or "").strip().upper()
         name = (request.POST.get("name") or "").strip()
@@ -935,17 +953,13 @@ def chart_of_accounts(request):
                 currency=currency, opening_balance=Decimal("0.00") if is_group else opening_balance,
             )
             messages.success(request, f"{'Group' if is_group else 'Account'} '{name}' added to the chart of accounts.")
-        return redirect(reverse("finance:chart_of_accounts"))
+            return redirect(reverse("finance:chart_of_accounts"))
 
-    account_tree_roots, _ = _build_account_tree()
     group_tree_roots, _ = _build_account_tree(only_groups=True)
 
     context = {
-        "account_tree_roots": account_tree_roots,
         "group_tree_roots": group_tree_roots,
-        "can_manage": can_manage,
-        "total_accounts": FinancialCategory.objects.filter(is_group=False).count(),
         "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
         "base_currency": get_base_currency(),
     }
-    return render(request, "finance/chart_of_accounts.html", context)
+    return render(request, "finance/add_account.html", context)
