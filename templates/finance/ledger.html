@@ -106,28 +106,28 @@
             <div class="card interactive-card ledger-metric-card p-3">
                 <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Total Income</small>
                 <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_income|default:0 }}" data-counter-decimals="2">0</h3>
-                <small class="text-muted">UGX</small>
+                <small class="text-muted">{{ base_currency }}</small>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="card interactive-card ledger-metric-card is-expense p-3">
                 <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Total Expense</small>
                 <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_expense|default:0 }}" data-counter-decimals="2">0</h3>
-                <small class="text-muted">UGX</small>
+                <small class="text-muted">{{ base_currency }}</small>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="card interactive-card ledger-metric-card is-transfer p-3">
                 <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Fund Transfers</small>
                 <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_transfer|default:0 }}" data-counter-decimals="2">0</h3>
-                <small class="text-muted">UGX</small>
+                <small class="text-muted">{{ base_currency }}</small>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="card interactive-card ledger-metric-card is-net p-3">
                 <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Net Position</small>
                 <h3 class="fw-bold mt-1 mb-0" data-counter="{{ net_position|default:0 }}" data-counter-decimals="2">0</h3>
-                <small class="text-muted">Income − Expense (UGX)</small>
+                <small class="text-muted">Income − Expense ({{ base_currency }})</small>
             </div>
         </div>
     </div>
@@ -182,7 +182,7 @@
                                 <th>Category</th>
                                 <th>Project / Dept</th>
                                 <th class="text-end">Original Amount</th>
-                                <th class="text-end">UGX Equivalent</th>
+                                <th class="text-end">{% display_currency %} Equivalent</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -205,7 +205,7 @@
                                 </td>
                                 <td class="text-end fw-bold">
                                     {{ txn.currency }} {{ txn.original_amount|floatformat:2|default:txn.amount|floatformat:2 }}
-                                    {% if txn.currency != "UGX" %}<br><small class="text-muted">@ {{ txn.exchange_rate_used|floatformat:2 }}/unit</small>{% endif %}
+                                    {% if txn.currency != base_currency %}<br><small class="text-muted">@ {{ txn.exchange_rate_used|floatformat:2 }}/unit</small>{% endif %}
                                 </td>
                                 <td class="text-end text-muted">{{ txn.amount|money:request }}</td>
                             </tr>
@@ -235,7 +235,7 @@
                         <span>{{ row.currency }} <small class="text-muted">({{ row.txn_count }})</small></span>
                         <div class="text-end">
                             <strong>{{ row.currency }} {{ row.total_original|floatformat:2 }}</strong>
-                            {% if row.currency != "UGX" %}<br><small class="text-muted">≈ {{ row.total_ugx|money:request }}</small>{% endif %}
+                            {% if row.currency != base_currency %}<br><small class="text-muted">≈ {{ row.total_ugx|money:request }}</small>{% endif %}
                         </div>
                     </div>
                     {% empty %}

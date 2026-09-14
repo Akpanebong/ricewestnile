@@ -21,7 +21,7 @@ from django.db.models.functions import Coalesce
 from account.templatetags.custom_tags import has_group
 from procurement.procureapp.models import Requisition, PurchaseOrder
 from assets.assetapp.models import Asset, AssetMaintenance
-from core.services import normalize_currency, CURRENCY_LABELS, SUPPORTED_CURRENCIES
+from core.services import normalize_currency, get_base_currency, CURRENCY_LABELS, SUPPORTED_CURRENCIES
 
 
 @login_required(login_url="login")
@@ -667,6 +667,7 @@ def financial_ledger(request):
         "net_position": net_position,
         "category_breakdown": category_breakdown,
         "currency_breakdown": currency_breakdown,
+        "base_currency": get_base_currency(),
         "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
         "procurement_total": procurement_total,
         "asset_totals": asset_totals,
@@ -688,6 +689,7 @@ def financial_ledger_export(request):
         return redirect(reverse("finance:dashboard"))
 
     transactions, _ = _filter_ledger(request)
+    base_currency = get_base_currency()
 
     wb = Workbook()
     ws = wb.active
@@ -696,7 +698,7 @@ def financial_ledger_export(request):
     ws.append([
         "Reference", "Date", "Type", "Category", "Project", "Department",
         "Donor Code", "Description", "Currency", "Original Amount",
-        "Exchange Rate Used", "Amount (UGX)",
+        "Exchange Rate Used", f"Amount ({base_currency})",
     ])
 
     for txn in transactions:
@@ -761,7 +763,7 @@ def record_transaction(request):
         messages.success(
             request,
             f"Transaction {txn.reference} recorded — "
-            f"{currency} {original_amount:,.2f} (UGX {txn.amount:,.2f} at rate {txn.exchange_rate_used}).",
+            f"{currency} {original_amount:,.2f} ({get_base_currency()} {txn.amount:,.2f} at rate {txn.exchange_rate_used}).",
         )
         return redirect(reverse("finance:ledger"))
 
@@ -774,6 +776,7 @@ def record_transaction(request):
         "asset_maintenances": AssetMaintenance.objects.select_related("asset").order_by("-id")[:200],
         "transaction_types": FinancialTransaction.TransactionType.choices,
         "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "base_currency": get_base_currency(),
     }
     return render(request, "finance/record_transaction.html", context)
 
