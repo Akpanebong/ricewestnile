@@ -2370,6 +2370,10 @@ body.sidebar-collapsed .sidebar-tag {
     outline: none;
 }
 
+/* Hidden by the native `hidden` attribute by default (belt-and-suspenders:
+   that's a browser built-in default, display:none regardless of whether
+   any of the rest of this stylesheet loaded) — hover/focus below
+   overrides it back to display:block, then opacity/transform fade it in. */
 .info-tip-bubble {
     position: absolute;
     bottom: calc(100% + 9px);
@@ -2386,7 +2390,6 @@ body.sidebar-collapsed .sidebar-tag {
     border-radius: var(--radius-md, 10px);
     box-shadow: var(--surface-2-shadow);
     opacity: 0;
-    visibility: hidden;
     transition: opacity 0.15s ease, transform 0.15s ease;
     z-index: 500;
     text-align: left;
@@ -2404,10 +2407,16 @@ body.sidebar-collapsed .sidebar-tag {
     border-top-color: var(--text-primary);
 }
 
+.info-tip:hover .info-tip-bubble[hidden],
+.info-tip:focus-visible .info-tip-bubble[hidden] {
+    /* Bootstrap's reboot sets [hidden] { display: none !important; } —
+       this has to match that specificity to win. */
+    display: block !important;
+}
+
 .info-tip:hover .info-tip-bubble,
 .info-tip:focus-visible .info-tip-bubble {
     opacity: 1;
-    visibility: visible;
     transform: translateX(-50%) translateY(0);
 }
 
