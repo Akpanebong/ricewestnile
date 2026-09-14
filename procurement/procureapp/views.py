@@ -1011,7 +1011,7 @@ def supplier_report(request, supplier_id=None):
         ws = wb.active
         ws.title = "Supplier Report"
 
-        logo_url = 'static/assets/images/ricewn.png'
+        logo_url = 'static/images/ricewn.png'
         try:
             logo = Image(logo_url)
             logo.height = 80

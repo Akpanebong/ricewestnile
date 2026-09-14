@@ -4,6 +4,7 @@ from xhtml2pdf import pisa
 from io import BytesIO
 from django.core.mail import EmailMessage
 from django.conf import settings
+from django.contrib.staticfiles import finders
 import os
 
 
@@ -54,11 +55,15 @@ def link_callback(uri, rel):
     if uri.startswith(settings.MEDIA_URL):
         path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
     elif uri.startswith(settings.STATIC_URL):
-        path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+        relative_path = uri.replace(settings.STATIC_URL, "")
+        # finders.find() locates the file straight from each app's static/
+        # dir (works in dev, where `collectstatic` is rarely run) and falls
+        # back to STATIC_ROOT for a deployment that does run collectstatic.
+        path = finders.find(relative_path) or os.path.join(settings.STATIC_ROOT, relative_path)
     else:
         return uri
 
-    if not os.path.isfile(path):
+    if not path or not os.path.isfile(path):
         raise Exception(f"Media file not found: {path}")
 
     return path

@@ -13,7 +13,7 @@ from account.models import Profile
 from .models import Leave, LeaveDocument, LeaveType, Employee
 
 
-logo_path = os.path.join(settings.BASE_DIR, "static", "assets", "images", "ricewn.png")
+logo_path = os.path.join(settings.BASE_DIR, "static", "images", "ricewn.png")
 
 
 def render_to_pdf(template_src, context_dict={}):

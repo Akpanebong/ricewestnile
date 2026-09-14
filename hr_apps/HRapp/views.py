@@ -928,7 +928,7 @@ def export_attendance_pdf(request):
     width, height = A4
 
     # --- Header Section ---
-    logo_path = os.path.join(settings.STATICFILES_DIRS[0], "assets/images/ricewn.png")
+    logo_path = os.path.join(settings.STATICFILES_DIRS[0], "images/ricewn.png")
     if os.path.exists(logo_path):
         p.drawImage(logo_path, 40, height - 80, width=160, height=60, mask="auto")
 

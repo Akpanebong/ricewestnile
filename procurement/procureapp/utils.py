@@ -8,6 +8,7 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.template.loader import get_template
 from django.http import HttpResponse
+from django.contrib.staticfiles import finders
 from xhtml2pdf import pisa
 import os
 
@@ -17,10 +18,12 @@ def link_callback(uri, rel):
     # STATIC FILES
     if uri.startswith(settings.STATIC_URL):
 
-        path = os.path.join(
-            settings.STATIC_ROOT,
-            uri.replace(settings.STATIC_URL, "")
-        )
+        relative_path = uri.replace(settings.STATIC_URL, "")
+        # finders.find() locates the file straight from each app's static/
+        # dir (works in dev, where `collectstatic` is rarely run) and falls
+        # back to STATIC_ROOT for a deployment that does run collectstatic
+        # and may not keep the source app dirs around.
+        path = finders.find(relative_path) or os.path.join(settings.STATIC_ROOT, relative_path)
 
     # MEDIA FILES
     elif uri.startswith(settings.MEDIA_URL):
@@ -33,7 +36,7 @@ def link_callback(uri, rel):
     else:
         return uri
 
-    if not os.path.isfile(path):
+    if not path or not os.path.isfile(path):
         raise Exception(f"File not found: {path}")
 
     return path
