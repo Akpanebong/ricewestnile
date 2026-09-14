@@ -28,7 +28,10 @@
     <div class="page-header">
         <div>
             <span class="page-header-eyebrow">Settings</span>
-            <h1 class="page-header-title">Currency &amp; Region</h1>
+            <h1 class="page-header-title">
+                Currency &amp; Region
+                {% include "includes/info_tip.html" with text="Base currency and display currency are independent: base currency is a one-time, organization-wide setup choice everything is stored against; display currency is just your own preference for how amounts are shown to you." %}
+            </h1>
             <p class="page-header-subtitle">The organization's base currency, your own display preference, and exchange rates.</p>
         </div>
     </div>
@@ -141,7 +144,9 @@
             <!-- EXCHANGE RATES -->
             <div class="settings-section">
                 <div class="d-flex justify-content-between align-items-start gap-3 mb-1">
-                    <div class="settings-section-title mb-0">Exchange Rates</div>
+                    <div class="settings-section-title mb-0">Exchange Rates
+                        {% include "includes/info_tip.html" with text="Live API rates are fetched automatically. Fallback means the last known rate is being reused because the live source was unreachable. Organization-set means an admin entered the rate manually below." %}
+                    </div>
                     <span class="badge-outline">
                         {% if currency_rate_is_manual %}Organization-set{% elif currency_rate_is_fallback %}Fallback{% else %}Live API{% endif %}
                     </span>

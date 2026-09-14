@@ -2337,3 +2337,95 @@ body.sidebar-collapsed .sidebar-tag {
 .header-dropdown-item.is-danger:hover {
     background: var(--icon-tint-danger-bg);
 }
+
+/* =========================================================
+   INFO TIPS — a small "i" badge attached to a section/label
+   that reveals a short explanation ONLY on hover (or keyboard
+   focus, for accessibility). No click/tap-to-toggle — it's
+   purely a hover reveal, and never navigates anywhere even if
+   nested inside a clickable card.
+   ========================================================= */
+
+.info-tip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-left: 0.35rem;
+    border-radius: 50%;
+    background: var(--icon-tint-info-bg);
+    color: var(--status-info-text);
+    font-size: 0.62rem;
+    cursor: help;
+    position: relative;
+    vertical-align: middle;
+}
+
+.info-tip:hover,
+.info-tip:focus-visible {
+    background: var(--status-info-text);
+    color: #fff;
+    outline: none;
+}
+
+.info-tip-bubble {
+    position: absolute;
+    bottom: calc(100% + 9px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    width: max-content;
+    max-width: 260px;
+    background: var(--text-primary);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.45;
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--radius-md, 10px);
+    box-shadow: var(--surface-2-shadow);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 500;
+    text-align: left;
+    white-space: normal;
+    pointer-events: none;
+}
+
+.info-tip-bubble::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--text-primary);
+}
+
+.info-tip:hover .info-tip-bubble,
+.info-tip:focus-visible .info-tip-bubble {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Use near a right-hand edge (e.g. top-right of a card) so the
+   bubble opens leftward instead of overflowing the viewport. */
+.info-tip.align-end .info-tip-bubble {
+    left: auto;
+    right: -6px;
+    transform: translateY(4px);
+}
+
+.info-tip.align-end .info-tip-bubble::after {
+    left: auto;
+    right: 10px;
+    transform: none;
+}
+
+.info-tip.align-end:hover .info-tip-bubble,
+.info-tip.align-end:focus-visible .info-tip-bubble {
+    transform: translateY(0);
+}

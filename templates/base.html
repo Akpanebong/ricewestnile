@@ -1169,6 +1169,22 @@ const body =
 
 
     /* =====================================================
+       INFO TIPS
+
+       Hover/focus-only by design (see components.css) — if one
+       happens to sit inside a clickable card or row, tapping
+       the little badge itself should never follow that link.
+    ===================================================== */
+
+    document.querySelectorAll(".info-tip").forEach(function (tip) {
+        tip.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+    });
+
+
+    /* =====================================================
        FORM UX: LOADING STATE + DOUBLE-SUBMIT GUARD
     ===================================================== */
 

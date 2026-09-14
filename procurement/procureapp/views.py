@@ -273,12 +273,12 @@ def dashboard(request):
         'supplier_count': Supplier.objects.count(),
         'po_pending': RFQ.objects.count(),
         'kpis': [
-            {'label': 'Procurement Pipeline', 'value': ProcurementPlan.objects.count(), 'amount': procurement_total, 'icon': 'fa-diagram-project', 'tone': 'primary', 'url': reverse('requisition_list')},
-            {'label': 'Requisition Value', 'value': Requisition.objects.count(), 'amount': requisition_total['total'], 'icon': 'fa-file-signature', 'tone': 'success', 'url': reverse('req_list')},
-            {'label': 'Purchase Orders', 'value': PurchaseOrder.objects.count(), 'amount': purchase_order_total, 'icon': 'fa-cart-shopping', 'tone': 'info', 'url': reverse('purchase_order')},
-            {'label': 'Supplier Spend', 'value': SupplierSpendReport.objects.filter(payment_status='Paid').values('supplier').distinct().count(), 'amount': supplier_spend_total, 'icon': 'fa-handshake', 'tone': 'warning', 'url': reverse('supplier_report')},
-            {'label': 'Project Budgets', 'value': ProjectBudget.objects.count(), 'amount': project_budget_total, 'icon': 'fa-scale-balanced', 'tone': 'dark', 'url': reverse('procurement_core:project_list')},
-            {'label': 'Finance Requests', 'value': CashRequisition.objects.count(), 'amount': cash_requisition_total, 'icon': 'fa-money-bill-transfer', 'tone': 'danger', 'url': reverse('finance:list_cash_req')},
+            {'label': 'Procurement Pipeline', 'value': ProcurementPlan.objects.count(), 'amount': procurement_total, 'icon': 'fa-diagram-project', 'tone': 'primary', 'url': reverse('requisition_list'), 'tip': 'Procurement plans currently moving through the pipeline, from initial planning to completion.'},
+            {'label': 'Requisition Value', 'value': Requisition.objects.count(), 'amount': requisition_total['total'], 'icon': 'fa-file-signature', 'tone': 'success', 'url': reverse('req_list'), 'tip': 'Requisitions raised against procurement plans, and their combined value.'},
+            {'label': 'Purchase Orders', 'value': PurchaseOrder.objects.count(), 'amount': purchase_order_total, 'icon': 'fa-cart-shopping', 'tone': 'info', 'url': reverse('purchase_order'), 'tip': 'Purchase orders issued to suppliers once a requisition and RFQ are approved.'},
+            {'label': 'Supplier Spend', 'value': SupplierSpendReport.objects.filter(payment_status='Paid').values('supplier').distinct().count(), 'amount': supplier_spend_total, 'icon': 'fa-handshake', 'tone': 'warning', 'url': reverse('supplier_report'), 'tip': 'Distinct suppliers with at least one paid spend report on record.'},
+            {'label': 'Project Budgets', 'value': ProjectBudget.objects.count(), 'amount': project_budget_total, 'icon': 'fa-scale-balanced', 'tone': 'dark', 'url': reverse('procurement_core:project_list'), 'tip': 'Budgets allocated to projects, tracked against actual procurement and cash requisition spend.'},
+            {'label': 'Finance Requests', 'value': CashRequisition.objects.count(), 'amount': cash_requisition_total, 'icon': 'fa-money-bill-transfer', 'tone': 'danger', 'url': reverse('finance:list_cash_req'), 'tip': 'Fund requisitions raised in Accounting, including ones tied back to a procurement plan or purchase order.'},
         ],
         'status_sections': [
             {'title': 'Procurement Plans', 'rows': procurement_status},

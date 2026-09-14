@@ -9,7 +9,10 @@
     <div class="page-header">
         <div>
             <span class="page-header-eyebrow">Accounting</span>
-            <h1 class="page-header-title">Accounting Dashboard</h1>
+            <h1 class="page-header-title">
+                Accounting Dashboard
+                {% include "includes/info_tip.html" with text="An overview of fund requisitions, administrative expenses, and retirements — everything raised, approved, and accounted for moves through this workflow before it lands in the Financial Ledger." %}
+            </h1>
             <p class="page-header-subtitle">Procurement &amp; Expense Workflow Overview</p>
         </div>
 
@@ -30,7 +33,9 @@
                     <span class="kpi-card-sub">{{ total_pending_amount|money:request }}</span>
                 </div>
                 <p class="kpi-card-value" data-counter="{{ pending_requisitions.count|default:0 }}">{{ pending_requisitions.count }}</p>
-                <p class="kpi-card-label">Pending Requests</p>
+                <p class="kpi-card-label">Pending Requests
+                    {% include "includes/info_tip.html" with text="Fund requisitions submitted but not yet fully approved through the Finance / Operations / ED workflow. Click to view the queue." %}
+                </p>
             </a>
         </div>
 
@@ -41,7 +46,9 @@
                     <span class="kpi-card-sub">{{ total_approved_amount|money:request }}</span>
                 </div>
                 <p class="kpi-card-value" data-counter="{{ approved_requisitions.count|default:0 }}">{{ approved_requisitions.count }}</p>
-                <p class="kpi-card-label">Approved Requests</p>
+                <p class="kpi-card-label">Approved Requests
+                    {% include "includes/info_tip.html" with text="Fully approved requisitions. Approval automatically records a fund advance in the Financial Ledger." %}
+                </p>
             </a>
         </div>
 
@@ -52,7 +59,9 @@
                     <span class="kpi-card-sub">{{ total_admin_expenses|money:request }}</span>
                 </div>
                 <p class="kpi-card-value" data-counter="{{ admin_expenses.count|default:0 }}">{{ admin_expenses.count }}</p>
-                <p class="kpi-card-label">Admin Expenses</p>
+                <p class="kpi-card-label">Admin Expenses
+                    {% include "includes/info_tip.html" with text="Administrative expense notes raised against an approved requisition, for costs that are not tracked as line-item purchases." align="end" %}
+                </p>
             </div>
         </div>
 
@@ -62,7 +71,9 @@
                     <span class="metric-icon-tint is-neutral"><i class="fa-solid fa-book"></i></span>
                 </div>
                 <p class="kpi-card-value" data-counter="{{ accountings.count|default:0 }}">{{ accountings.count }}</p>
-                <p class="kpi-card-label">Accounting Records</p>
+                <p class="kpi-card-label">Accounting Records
+                    {% include "includes/info_tip.html" with text="Fund retirements — the record of how a released advance was actually received and spent, reconciled against the original requisition." align="end" %}
+                </p>
             </div>
         </div>
 

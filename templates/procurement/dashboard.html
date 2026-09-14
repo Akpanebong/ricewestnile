@@ -141,7 +141,9 @@ body:has(.procure-dashboard) .app-main {
     <div class="row g-3 align-items-center">
       <div class="col-lg-7">
         <div class="section-eyebrow text-white-50 mb-2">RICE West Nile</div>
-        <h1>Procurement Command Dashboard</h1>
+        <h1>Procurement Command Dashboard
+            {% include "includes/info_tip.html" with text="Tracks procurement plans, requisitions, RFQs, purchase orders, supplier spend, and project budgets in one place — from planning through to payment." %}
+        </h1>
         <div class="mt-2 text-white-50">Plans, requisitions, RFQs, suppliers, purchase orders, budgets, finance requests, and control logs in one operating view.</div>
       </div>
       <div class="col-lg-5">
@@ -174,7 +176,9 @@ body:has(.procure-dashboard) .app-main {
           </span>
         </div>
         <p class="kpi-card-value" data-counter="{{ kpi.value|default:0 }}">{{ kpi.value|default:0|intcomma }}</p>
-        <p class="kpi-card-label">{{ kpi.label }}</p>
+        <p class="kpi-card-label">{{ kpi.label }}
+            {% if kpi.tip %}{% include "includes/info_tip.html" with text=kpi.tip %}{% endif %}
+        </p>
         <div class="money-line mt-2">{{ kpi.amount|default:0|money:request }}</div>
       </a>
     </div>

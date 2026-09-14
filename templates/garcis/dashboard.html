@@ -229,6 +229,7 @@
 
                 <h2 class="mb-1">
                     Risk & Compliance Dashboard
+                    {% include "includes/info_tip.html" with text="GARCIS pulls together the enterprise risk register, governance policies and controls, and audit findings into one compliance view." %}
                 </h2>
 
                 <p class="mb-0">
@@ -276,7 +277,9 @@
                     <span class="metric-icon-tint is-info"><i class="fa fa-shield-halved"></i></span>
                 </div>
                 <p class="kpi-card-value" data-counter="{{ total|default:0 }}">{{ total }}</p>
-                <p class="kpi-card-label">Total Risks</p>
+                <p class="kpi-card-label">Total Risks
+                    {% include "includes/info_tip.html" with text="Every risk currently logged in the Risk Register, regardless of level or status." %}
+                </p>
                 <div class="kpi-meta">Registered risks</div>
             </div>
         </div>
@@ -288,7 +291,9 @@
                     <span class="metric-icon-tint is-danger"><i class="fa fa-triangle-exclamation"></i></span>
                 </div>
                 <p class="kpi-card-value" data-counter="{{ high|default:0 }}">{{ high }}</p>
-                <p class="kpi-card-label">High Risks</p>
+                <p class="kpi-card-label">High Risks
+                    {% include "includes/info_tip.html" with text="Risks scored High or Very High by likelihood x impact — the ones most likely to need a mitigation plan or escalation." %}
+                </p>
                 <div class="kpi-meta">
                     High & very high
                 </div>
@@ -302,7 +307,9 @@
                     <span class="metric-icon-tint is-pending"><i class="fa fa-folder-open"></i></span>
                 </div>
                 <p class="kpi-card-value" data-counter="{{ open|default:0 }}">{{ open }}</p>
-                <p class="kpi-card-label">Open Risks</p>
+                <p class="kpi-card-label">Open Risks
+                    {% include "includes/info_tip.html" with text="Risks that are still active — not yet closed, mitigated, or accepted." %}
+                </p>
                 <div class="kpi-meta">
                     Currently identified
                 </div>
@@ -316,7 +323,9 @@
                     <span class="metric-icon-tint is-info"><i class="fa fa-gauge-high"></i></span>
                 </div>
                 <p class="kpi-card-value">{{ avg_score|floatformat:1 }}</p>
-                <p class="kpi-card-label">Avg. Risk Score</p>
+                <p class="kpi-card-label">Avg. Risk Score
+                    {% include "includes/info_tip.html" with text="The average likelihood x impact score across all registered risks — a quick read on overall portfolio exposure." %}
+                </p>
                 <div class="kpi-meta">
                     Portfolio exposure
                 </div>
@@ -330,7 +339,9 @@
                     <span class="metric-icon-tint is-success"><i class="fa fa-file-shield"></i></span>
                 </div>
                 <p class="kpi-card-value" data-counter="{{ policy_count|default:0 }}">{{ policy_count }}</p>
-                <p class="kpi-card-label">Policies</p>
+                <p class="kpi-card-label">Policies
+                    {% include "includes/info_tip.html" with text="Governance policies on record, from the Governance module — the documented rules the organization operates under." align="end" %}
+                </p>
                 <div class="kpi-meta">
                     Governance policies
                 </div>
@@ -344,7 +355,9 @@
                     <span class="metric-icon-tint is-success"><i class="fa fa-sliders"></i></span>
                 </div>
                 <p class="kpi-card-value" data-counter="{{ control_count|default:0 }}">{{ control_count }}</p>
-                <p class="kpi-card-label">Controls</p>
+                <p class="kpi-card-label">Controls
+                    {% include "includes/info_tip.html" with text="Internal controls on record for mitigating identified risks, from the Governance module." align="end" %}
+                </p>
                 <div class="kpi-meta">
                     Active controls
                 </div>
