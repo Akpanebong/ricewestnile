@@ -2096,14 +2096,23 @@ body.sidebar-collapsed .sidebar-tag {
    ========================================================= */
 
 /* Every Bootstrap dropdown gets a soft entrance instead of
-   popping in instantly. */
+   popping in instantly.
+
+   Popper.js positions the menu with its own inline `transform`
+   (translate3d) once it opens. Animating that same `transform`
+   property here fights Popper for control of it and produces a
+   visible snap/jump right as the menu appears. The `translate`
+   and `scale` properties are independent from `transform` (CSS
+   Transforms Level 2) and compose with it instead of overwriting
+   it, so the entrance animates smoothly without touching Popper's
+   positioning. */
 .dropdown-menu.show {
     animation: headerDropdownIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes headerDropdownIn {
-    from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; translate: 0 -6px; scale: 0.98; }
+    to { opacity: 1; translate: 0 0; scale: 1; }
 }
 
 .header-icon-btn {
