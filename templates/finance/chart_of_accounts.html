@@ -1,17 +1,136 @@
 {% extends "finance/base.html" %}
 {% load currency_tags %}
+{% load humanize %}
 {% block title %}Chart of Accounts{% endblock %}
 
 {% block extra_head %}
 <style>
-    .coa-type-header {
+    .coa-tree-card {
+        overflow: hidden;
+    }
+
+    .coa-group {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.85rem 1.1rem;
         background: var(--surface-muted);
-        padding: 0.6rem 1rem;
+        border-bottom: 1px solid var(--surface-1-border);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .coa-group:hover {
+        background: color-mix(in srgb, var(--sidebar-accent) 6%, var(--surface-muted));
+    }
+
+    .coa-group-chevron {
         font-size: 0.72rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
         color: var(--text-muted);
+        transition: transform var(--transition-fast);
+        flex-shrink: 0;
+    }
+
+    .coa-group[aria-expanded="true"] .coa-group-chevron {
+        transform: rotate(90deg);
+    }
+
+    .coa-group-icon {
+        color: var(--sidebar-accent);
+        flex-shrink: 0;
+    }
+
+    .coa-group-label {
+        font-weight: 800;
+        font-size: 0.94rem;
+        color: var(--text-primary);
+    }
+
+    .coa-group-count {
+        font-size: 0.76rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .coa-group-total {
+        margin-left: auto;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        white-space: nowrap;
+    }
+
+    .coa-account-row {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.65rem 1.1rem 0.65rem 2.6rem;
+        border-bottom: 1px solid var(--border-subtle);
+        transition: background var(--transition-fast);
+    }
+
+    .coa-account-row:hover {
+        background: var(--surface-muted);
+    }
+
+    .coa-account-row:last-child {
+        border-bottom: none;
+    }
+
+    .coa-account-icon {
+        color: var(--text-light);
+        flex-shrink: 0;
+        font-size: 0.9rem;
+    }
+
+    .coa-account-copy {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .coa-account-name {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: var(--text-primary);
+    }
+
+    .coa-account-name code {
+        color: var(--sidebar-accent);
+        font-weight: 700;
+    }
+
+    .coa-account-meta {
+        font-size: 0.76rem;
+        color: var(--text-muted);
+        margin-top: 0.1rem;
+    }
+
+    .coa-account-amount {
+        text-align: right;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .coa-account-amount .closing {
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--text-primary);
+        display: block;
+    }
+
+    .coa-account-amount .opening {
+        font-size: 0.74rem;
+        color: var(--text-muted);
+    }
+
+    .coa-edit-btn {
+        flex-shrink: 0;
+    }
+
+    .coa-empty-group {
+        padding: 0.9rem 1.1rem 0.9rem 2.6rem;
+        color: var(--text-muted);
+        font-size: 0.84rem;
     }
 </style>
 {% endblock %}
@@ -22,7 +141,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold">Chart of Accounts</h3>
-            <p class="text-muted mb-0">The categories every financial transaction is classified against — {{ total_accounts }} accounts</p>
+            <p class="text-muted mb-0">{{ total_accounts }} accounts across the 5 standard account groups &middot; amounts in {{ base_currency }}</p>
         </div>
         <a href="{% url 'finance:ledger' %}" class="btn btn-outline-dark shadow-sm">
             <i class="fa fa-scale-balanced me-1"></i> View Ledger
@@ -31,34 +150,45 @@
 
     <div class="row g-4">
         <div class="col-xl-8">
-            <div class="card">
-                {% for type_value, type_label, accounts in grouped_categories %}
-                <div class="coa-type-header">{{ type_label }} Accounts</div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Code</th>
-                                <th>Name</th>
-                                <th class="text-end">Transactions</th>
-                                <th class="text-end">Total Recorded</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for category in accounts %}
-                            <tr>
-                                <td><code>{{ category.code }}</code></td>
-                                <td>{{ category.name }}</td>
-                                <td class="text-end">{{ category.transaction_count }}</td>
-                                <td class="text-end fw-bold">{{ category.total_amount|money:request }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-3">No accounts of this type yet.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <div class="card coa-tree-card">
+                {% for type_value, type_label, accounts, group_total, balance_side in grouped_categories %}
+                <div class="coa-group" data-bs-toggle="collapse" data-bs-target="#coa-group-{{ type_value }}"
+                     role="button" aria-expanded="{% if accounts %}true{% else %}false{% endif %}" aria-controls="coa-group-{{ type_value }}">
+                    <i class="fa-solid fa-chevron-right coa-group-chevron"></i>
+                    <i class="fa-solid fa-folder coa-group-icon"></i>
+                    <span class="coa-group-label">{{ type_label }}</span>
+                    <span class="coa-group-count">({{ accounts|length }})</span>
+                    <span class="coa-group-total">{{ group_total|floatformat:2|intcomma }} {{ balance_side }}</span>
+                </div>
+                <div class="collapse{% if accounts %} show{% endif %}" id="coa-group-{{ type_value }}">
+                    {% for category in accounts %}
+                    <div class="coa-account-row">
+                        <i class="fa-regular fa-folder coa-account-icon"></i>
+                        <div class="coa-account-copy">
+                            <div class="coa-account-name"><code>{{ category.code }}</code> — {{ category.name }}</div>
+                            <div class="coa-account-meta">
+                                {% if category.alt_code %}Alt: {{ category.alt_code }} &middot; {% endif %}{{ category.transaction_count }} transaction{{ category.transaction_count|pluralize }}
+                            </div>
+                        </div>
+                        <div class="coa-account-amount">
+                            <span class="closing">{{ category.closing_balance|floatformat:2|intcomma }} {{ balance_side }}</span>
+                            <span class="opening">Opening {{ category.opening_balance|floatformat:2|intcomma }}</span>
+                        </div>
+                        {% if can_manage %}
+                        <button type="button" class="btn-icon coa-edit-btn" title="Edit account" aria-label="Edit {{ category.name }}"
+                                data-bs-toggle="modal" data-bs-target="#editAccountModal"
+                                data-category-id="{{ category.pk }}"
+                                data-category-code="{{ category.code }}"
+                                data-category-name="{{ category.name }}"
+                                data-category-alt-code="{{ category.alt_code }}"
+                                data-category-opening-balance="{{ category.opening_balance|floatformat:2 }}">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="coa-empty-group">No accounts in this group yet.</div>
+                    {% endfor %}
                 </div>
                 {% endfor %}
             </div>
@@ -71,21 +201,32 @@
                     {% if can_manage %}
                     <form method="post">
                         {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Code</label>
-                            <input type="text" name="code" class="form-control" placeholder="e.g. TRAVEL-EXP" required>
+                        <input type="hidden" name="action" value="add">
+                        <div class="row g-2 mb-3">
+                            <div class="col-7">
+                                <label class="form-label">Code</label>
+                                <input type="text" name="code" class="form-control" placeholder="e.g. TRAVEL-EXP" required>
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label">Alt Code</label>
+                                <input type="text" name="alt_code" class="form-control" placeholder="Optional">
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Name</label>
                             <input type="text" name="name" class="form-control" placeholder="e.g. Travel & Transport" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Type</label>
+                            <label class="form-label">Group</label>
                             <select name="category_type" class="form-select" required>
                                 {% for value, label in category_types %}
                                 <option value="{{ value }}">{{ label }}</option>
                                 {% endfor %}
                             </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Opening Balance ({{ base_currency }})</label>
+                            <input type="text" inputmode="decimal" data-currency-input name="opening_balance" class="form-control" value="0.00">
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Add Account</button>
                     </form>
@@ -98,4 +239,49 @@
     </div>
 
 </div>
+
+{% if can_manage %}
+<div class="modal fade" id="editAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" class="modal-content">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="category_id" id="editCategoryId">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Account <code id="editCategoryCode"></code></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" name="name" id="editCategoryName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Alt Code</label>
+                    <input type="text" name="alt_code" id="editCategoryAltCode" class="form-control" placeholder="Optional">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Opening Balance ({{ base_currency }})</label>
+                    <input type="text" inputmode="decimal" data-currency-input name="opening_balance" id="editCategoryOpeningBalance" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('editAccountModal').addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    document.getElementById('editCategoryId').value = btn.dataset.categoryId;
+    document.getElementById('editCategoryCode').textContent = btn.dataset.categoryCode;
+    document.getElementById('editCategoryName').value = btn.dataset.categoryName;
+    document.getElementById('editCategoryAltCode').value = btn.dataset.categoryAltCode;
+    document.getElementById('editCategoryOpeningBalance').value = btn.dataset.categoryOpeningBalance;
+});
+</script>
+{% endif %}
 {% endblock %}

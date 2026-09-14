@@ -207,9 +207,9 @@ class AdminExpenseNoteAdmin(admin.ModelAdmin):
 @admin.register(models.FinancialCategory)
 class FinancialCategoryAdmin(admin.ModelAdmin):
 
-    list_display = ("code", "name", "category_type")
+    list_display = ("code", "alt_code", "name", "category_type", "opening_balance")
     list_filter = ("category_type",)
-    search_fields = ("code", "name")
+    search_fields = ("code", "alt_code", "name")
 
 
 # 🔹 Financial Transactions (Ledger)

@@ -797,6 +797,14 @@ def _can_manage_chart_of_accounts(user):
     return user.is_superuser or has_group(user, "Finance")
 
 
+def _parse_opening_balance(raw):
+    raw = (raw or "0").replace(",", "").strip()
+    try:
+        return Decimal(raw)
+    except InvalidOperation:
+        return None
+
+
 @login_required(login_url="login")
 def chart_of_accounts(request):
     if not _is_finance_staff(request.user):
@@ -810,16 +818,43 @@ def chart_of_accounts(request):
             messages.error(request, "You do not have permission to manage the chart of accounts.")
             return redirect(reverse("finance:chart_of_accounts"))
 
+        action = request.POST.get("action", "add")
+
+        if action == "edit":
+            category = get_object_or_404(FinancialCategory, pk=request.POST.get("category_id"))
+            name = (request.POST.get("name") or "").strip()
+            alt_code = (request.POST.get("alt_code") or "").strip().upper()
+            opening_balance = _parse_opening_balance(request.POST.get("opening_balance"))
+
+            if not name:
+                messages.error(request, "Name is required.")
+            elif opening_balance is None:
+                messages.error(request, "Enter a valid opening balance.")
+            else:
+                category.name = name
+                category.alt_code = alt_code
+                category.opening_balance = opening_balance
+                category.save(update_fields=["name", "alt_code", "opening_balance"])
+                messages.success(request, f"Account '{category.code}' updated.")
+            return redirect(reverse("finance:chart_of_accounts"))
+
         code = (request.POST.get("code") or "").strip().upper()
+        alt_code = (request.POST.get("alt_code") or "").strip().upper()
         name = (request.POST.get("name") or "").strip()
         category_type = request.POST.get("category_type")
+        opening_balance = _parse_opening_balance(request.POST.get("opening_balance"))
 
         if not (code and name and category_type):
             messages.error(request, "Code, name, and type are all required.")
+        elif opening_balance is None:
+            messages.error(request, "Enter a valid opening balance.")
         elif FinancialCategory.objects.filter(code=code).exists():
             messages.error(request, f"A category with code '{code}' already exists.")
         else:
-            FinancialCategory.objects.create(code=code, name=name, category_type=category_type)
+            FinancialCategory.objects.create(
+                code=code, alt_code=alt_code, name=name,
+                category_type=category_type, opening_balance=opening_balance,
+            )
             messages.success(request, f"Account '{name}' added to the chart of accounts.")
         return redirect(reverse("finance:chart_of_accounts"))
 
@@ -830,13 +865,19 @@ def chart_of_accounts(request):
 
     by_type = {}
     for category in categories:
+        category.closing_balance = category.opening_balance + category.total_amount
         by_type.setdefault(category.category_type, []).append(category)
 
-    # Pre-grouped as (type_value, type_label, [categories]) tuples so the
-    # template can do a plain nested loop instead of a variable-keyed dict
-    # lookup, which Django's template dot-notation can't express directly.
+    # Pre-grouped as (type_value, type_label, [categories], group_total,
+    # balance_side) tuples so the template can do a plain nested loop
+    # instead of a variable-keyed dict lookup, which Django's template
+    # dot-notation can't express directly.
     grouped_categories = [
-        (type_value, type_label, by_type.get(type_value, []))
+        (
+            type_value, type_label, by_type.get(type_value, []),
+            sum((c.closing_balance for c in by_type.get(type_value, [])), Decimal("0.00")),
+            FinancialCategory.NATURAL_BALANCE_SIDE[type_value],
+        )
         for type_value, type_label in FinancialCategory.CategoryType.choices
     ]
 
@@ -845,5 +886,6 @@ def chart_of_accounts(request):
         "can_manage": can_manage,
         "total_accounts": categories.count(),
         "category_types": FinancialCategory.CategoryType.choices,
+        "base_currency": get_base_currency(),
     }
     return render(request, "finance/chart_of_accounts.html", context)

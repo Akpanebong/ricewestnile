@@ -15,12 +15,13 @@ DEFAULT_CHART_OF_ACCOUNTS = [
     ("PROC-EXP", "Procurement & Supplies", "expense"),
     ("BANK-CHG", "Bank Charges & Fees", "expense"),
 
-    # Transfer
-    ("FUND-ADV", "Fund Advance / Transfer", "transfer"),
-    ("INTERFUND", "Inter-Fund Transfer", "transfer"),
+    # Transfer (folded into Assets — a fund advance/transfer is a movement
+    # of a fund balance, not an income/expense/equity event of its own)
+    ("FUND-ADV", "Fund Advance / Transfer", "asset"),
+    ("INTERFUND", "Inter-Fund Transfer", "asset"),
 
-    # Capital
-    ("CAPEX", "Capital Expenditure / Asset Purchase", "capital"),
+    # Capital (folded into Assets)
+    ("CAPEX", "Capital Expenditure / Asset Purchase", "asset"),
 ]
 
 

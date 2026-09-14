@@ -261,14 +261,35 @@ class FinancialCategory(models.Model):
     """A lightweight chart-of-accounts entry used to classify FinancialTransaction records."""
 
     class CategoryType(models.TextChoices):
+        # Ordered to match the standard 5-group chart of accounts layout
+        # (Assets, Liabilities, Equity, Income, Expenses) — the view relies
+        # on this iteration order to render groups top-to-bottom.
+        ASSET = "asset", "Assets"
+        LIABILITY = "liability", "Liabilities"
+        EQUITY = "equity", "Equity"
         INCOME = "income", "Income"
-        EXPENSE = "expense", "Expense"
-        TRANSFER = "transfer", "Fund Transfer"
-        CAPITAL = "capital", "Capital / Asset"
+        EXPENSE = "expense", "Expenses"
+
+    # Which side of the ledger each group normally carries a balance on —
+    # used only to label a group/account's total as Dr or Cr for display.
+    # This app doesn't record true double-entry debit/credit postings, so
+    # this is a display convention, not a computed balance side.
+    NATURAL_BALANCE_SIDE = {
+        CategoryType.ASSET: "Dr",
+        CategoryType.LIABILITY: "Cr",
+        CategoryType.EQUITY: "Cr",
+        CategoryType.INCOME: "Cr",
+        CategoryType.EXPENSE: "Dr",
+    }
 
     code = models.CharField(max_length=20, unique=True)
+    alt_code = models.CharField(max_length=20, blank=True, help_text="Optional secondary/legacy code for this account.")
     name = models.CharField(max_length=100, unique=True)
     category_type = models.CharField(max_length=20, choices=CategoryType.choices)
+    opening_balance = models.DecimalField(
+        max_digits=16, decimal_places=2, default=Decimal("0.00"),
+        help_text="Balance carried in when this account was set up, in the organization's base currency.",
+    )
 
     class Meta:
         verbose_name = "Financial Category"
@@ -386,7 +407,7 @@ class FinancialTransaction(models.Model):
         rate_used = cash_requisition.exchange_rate_used if cash_requisition.exchange_rate_used is not None else Decimal("1")
         return cls.objects.create(
             transaction_type=cls.TransactionType.TRANSFER,
-            category=cls._get_category("FUND-ADV", "Fund Advance / Transfer", FinancialCategory.CategoryType.TRANSFER),
+            category=cls._get_category("FUND-ADV", "Fund Advance / Transfer", FinancialCategory.CategoryType.ASSET),
             amount=amount,
             currency=currency,
             original_amount=original_amount,
