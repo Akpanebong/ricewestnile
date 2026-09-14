@@ -720,14 +720,28 @@ document.addEventListener("DOMContentLoaded", function () {
         toastInstance.show();
     });
 
-    /* Populate the breadcrumb trail from the already-rendered header brand text and page title */
+    /* Populate the breadcrumb trail from the already-rendered header brand
+       text/link and page title. The header logo anchor already carries the
+       right "go to this subsystem's home" URL for the current page (each
+       subsystem's base template sets it via the `header_home_url` block),
+       so reuse it here instead of the crumb being dead text. */
     (function () {
         const subsystemEl = document.getElementById('breadcrumbSubsystem');
         const pageEl = document.getElementById('breadcrumbPage');
         const brandLabel = document.querySelector('.ricewn-brand small');
+        const brandLink = brandLabel ? brandLabel.closest('a') : null;
+        const brandHref = brandLink ? brandLink.getAttribute('href') : null;
 
         if (subsystemEl && brandLabel) {
-            subsystemEl.textContent = brandLabel.textContent.trim();
+            const label = brandLabel.textContent.trim();
+            if (brandHref) {
+                const link = document.createElement('a');
+                link.href = brandHref;
+                link.textContent = label;
+                subsystemEl.appendChild(link);
+            } else {
+                subsystemEl.textContent = label;
+            }
         }
         if (pageEl) {
             const pageTitle = document.title.split('|')[0].trim();
