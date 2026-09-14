@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from openpyxl import Workbook
 from django.core.paginator import Paginator
@@ -964,3 +965,115 @@ def add_account(request):
         "default_is_group": request.GET.get("is_group") == "1",
     }
     return render(request, "finance/add_account.html", context)
+
+
+@login_required(login_url="login")
+def general_ledger_report(request):
+    """
+    Per-account transaction statement with a running balance — pick one or
+    more leaf accounts, a period, and optional Department/Project filters,
+    and get an "opening balance -> each transaction -> closing balance"
+    listing for each account, the way a classic general ledger report
+    reads. Amounts are shown in one report-wide currency (converted from
+    each transaction's base-currency-equivalent amount), not each
+    account's own native currency, so multiple accounts stay comparable
+    on one report.
+
+    Every transaction posted to an account is shown as a Debit or Credit
+    based on that ACCOUNT's natural balance side (FinancialCategory.
+    balance_side) — the same additive-only convention the rest of the app
+    already uses for closing balances (see FinancialCategory.
+    NATURAL_BALANCE_SIDE). This app doesn't record independent debit/
+    credit legs per transaction, so this is the one convention that keeps
+    this report's running balance consistent with the balance shown
+    everywhere else for the same account, rather than inventing a second,
+    conflicting notion of "debit vs credit" just for this report.
+    """
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can run financial reports.")
+        return redirect(reverse("finance:dashboard"))
+
+    today = date.today()
+    start_date = request.GET.get("start_date") or date(today.year, 1, 1).isoformat()
+    end_date = request.GET.get("end_date") or today.isoformat()
+    department_id = request.GET.get("department")
+    project_id = request.GET.get("project")
+    report_currency = normalize_currency(request.GET.get("currency") or get_base_currency())
+    selected_account_ids = [v for v in request.GET.getlist("accounts") if v]
+
+    base_currency = get_base_currency()
+    leaf_accounts = FinancialCategory.objects.filter(is_group=False).select_related("parent").order_by("category_type", "code")
+
+    accounts = leaf_accounts.filter(pk__in=selected_account_ids) if selected_account_ids else leaf_accounts
+
+    txn_filter = Q(date__gte=start_date, date__lte=end_date)
+    if department_id:
+        txn_filter &= Q(department_id=department_id)
+    if project_id:
+        txn_filter &= Q(project_id=project_id)
+
+    report_rows = []
+    grand_opening = Decimal("0.00")
+    grand_movement = Decimal("0.00")
+
+    for account in accounts:
+        prior_amount = FinancialTransaction.objects.filter(category=account, date__lt=start_date).aggregate(
+            total=Coalesce(Sum("amount"), Value(0), output_field=DECIMAL_ZERO)
+        )["total"]
+        opening_balance = convert_amount(
+            account.opening_balance, account.currency, report_currency
+        ) + convert_amount(prior_amount, base_currency, report_currency)
+
+        transactions = FinancialTransaction.objects.filter(txn_filter, category=account).select_related(
+            "project", "department"
+        ).order_by("date", "pk")
+
+        running_balance = opening_balance
+        rows = []
+        period_debit = Decimal("0.00")
+        period_credit = Decimal("0.00")
+        for txn in transactions:
+            display_amount = convert_amount(txn.amount, base_currency, report_currency)
+            is_debit = account.balance_side == "Dr"
+            running_balance += display_amount
+            if is_debit:
+                period_debit += display_amount
+            else:
+                period_credit += display_amount
+            rows.append({
+                "txn": txn,
+                "debit": display_amount if is_debit else None,
+                "credit": display_amount if not is_debit else None,
+                "balance": running_balance,
+            })
+
+        report_rows.append({
+            "account": account,
+            "opening_balance": opening_balance,
+            "rows": rows,
+            "closing_balance": running_balance,
+            "period_debit": period_debit,
+            "period_credit": period_credit,
+        })
+        grand_opening += opening_balance
+        grand_movement += (running_balance - opening_balance)
+
+    context = {
+        "report_rows": report_rows,
+        "grand_opening": grand_opening,
+        "grand_closing": grand_opening + grand_movement,
+        "all_accounts": leaf_accounts,
+        "selected_account_ids": selected_account_ids,
+        "departments": Department.objects.all(),
+        "projects": Project.objects.all(),
+        "filters": {
+            "start_date": start_date,
+            "end_date": end_date,
+            "department": department_id,
+            "project": project_id,
+            "currency": report_currency,
+        },
+        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "base_currency": base_currency,
+    }
+    return render(request, "finance/general_ledger_report.html", context)

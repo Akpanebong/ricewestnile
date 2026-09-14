@@ -108,6 +108,20 @@
 
 </a>
 
+<a href="{% url 'finance:general_ledger_report' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'general_ledger_report' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-file-lines"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        General Ledger Report
+    </span>
+
+</a>
+
 
 <!-- =====================================================
      SETTINGS

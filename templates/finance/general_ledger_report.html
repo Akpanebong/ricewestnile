@@ -1,0 +1,238 @@
+{% extends "finance/base.html" %}
+{% load currency_tags %}
+{% load humanize %}
+{% block title %}General Ledger Report{% endblock %}
+
+{% block extra_head %}
+<style>
+    .glr-filter-card {
+        background: var(--surface-1, #fff);
+        border: 1px solid var(--surface-1-border, #e2e8f0);
+        border-radius: var(--radius-lg, 16px);
+        box-shadow: var(--surface-1-shadow, 0 2px 8px -2px rgba(15,23,42,.05));
+    }
+
+    .glr-accounts-select {
+        min-height: 140px;
+    }
+
+    .glr-account-card {
+        border: 1px solid var(--surface-1-border);
+        border-radius: var(--radius-lg, 16px);
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+    }
+
+    .glr-account-head {
+        background: var(--surface-muted);
+        padding: 0.75rem 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .glr-account-head .name {
+        font-weight: 800;
+        font-size: 0.94rem;
+        color: var(--text-primary);
+    }
+
+    .glr-account-head .meta {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+    }
+
+    .glr-row-opening td, .glr-row-closing td {
+        font-weight: 700;
+        background: var(--surface-muted);
+    }
+
+    .glr-summary-bar {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        padding: 0.85rem 1.1rem;
+        background: var(--surface-1, #fff);
+        border: 1px solid var(--surface-1-border);
+        border-radius: var(--radius-lg, 16px);
+        margin-bottom: 1.25rem;
+    }
+
+    .glr-summary-bar .item .label {
+        display: block;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        font-weight: 700;
+    }
+
+    .glr-summary-bar .item .value {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    @media print {
+        .glr-filter-card, .no-print { display: none !important; }
+        .glr-account-card { break-inside: avoid; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h3 class="fw-bold">General Ledger Report</h3>
+            <p class="text-muted mb-0">Opening balance, every transaction, and the running balance for each account over a period</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'finance:chart_of_accounts' %}" class="btn btn-outline-dark shadow-sm">
+                <i class="fa fa-sitemap me-1"></i> Chart of Accounts
+            </a>
+            <button type="button" class="btn btn-outline-primary shadow-sm" onclick="window.print()">
+                <i class="fa fa-print me-1"></i> Print
+            </button>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="glr-filter-card p-3 mb-4 no-print">
+        <form method="get" class="row g-3">
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small text-muted mb-1">Period From</label>
+                <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small text-muted mb-1">Period To</label>
+                <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small text-muted mb-1">Department</label>
+                <select name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                    <option value="{{ d.id }}" {% if filters.department == d.id|stringformat:"s" %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small text-muted mb-1">Project</label>
+                <select name="project" class="form-select">
+                    <option value="">All Projects</option>
+                    {% for p in projects %}
+                    <option value="{{ p.id }}" {% if filters.project == p.id|stringformat:"s" %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-8">
+                <label class="form-label small text-muted mb-1">Accounts <span class="text-muted">(none selected = all accounts)</span></label>
+                <select name="accounts" class="form-select glr-accounts-select" multiple>
+                    {% for account in all_accounts %}
+                    <option value="{{ account.pk }}" {% if account.pk|stringformat:"s" in selected_account_ids %}selected{% endif %}>
+                        {{ account.code }} — {{ account.name }} ({{ account.get_category_type_display }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Report Currency</label>
+                <select name="currency" class="form-select">
+                    {% for option in currency_options %}
+                    <option value="{{ option.code }}" {% if option.code == filters.currency %}selected{% endif %}>{{ option.code }} — {{ option.label }}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">Every account converts into this currency here, so mixed-currency accounts stay comparable.</div>
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-magnifying-glass-chart me-1"></i> Show Report
+                </button>
+                <a href="{% url 'finance:general_ledger_report' %}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="glr-summary-bar">
+        <div class="item">
+            <span class="label">Period</span>
+            <span class="value">{{ filters.start_date }} &rarr; {{ filters.end_date }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Accounts</span>
+            <span class="value">{{ report_rows|length }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Opening ({{ filters.currency }})</span>
+            <span class="value">{{ grand_opening|floatformat:2|intcomma }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Closing ({{ filters.currency }})</span>
+            <span class="value">{{ grand_closing|floatformat:2|intcomma }}</span>
+        </div>
+    </div>
+
+    <!-- REPORT -->
+    {% for entry in report_rows %}
+    <div class="glr-account-card">
+        <div class="glr-account-head">
+            <span class="name"><code>{{ entry.account.code }}</code> — {{ entry.account.name }}</span>
+            <span class="meta">{{ entry.account.get_category_type_display }} &middot; {{ entry.account.balance_side }}-normal &middot; native {{ entry.account.currency }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Description</th>
+                        <th class="text-end">Debit</th>
+                        <th class="text-end">Credit</th>
+                        <th class="text-end">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="glr-row-opening">
+                        <td colspan="5">Opening balance of {{ filters.start_date }}</td>
+                        <td class="text-end">{{ entry.opening_balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% for row in entry.rows %}
+                    <tr>
+                        <td>{{ row.txn.date|date:"M d, Y" }}</td>
+                        <td>{{ row.txn.reference }}</td>
+                        <td>{{ row.txn.description }}</td>
+                        <td class="text-end">{% if row.debit %}{{ row.debit|floatformat:2|intcomma }}{% endif %}</td>
+                        <td class="text-end">{% if row.credit %}{{ row.credit|floatformat:2|intcomma }}{% endif %}</td>
+                        <td class="text-end">{{ row.balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">No transactions in this period.</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="glr-row-closing">
+                        <td colspan="3">Closing balance of {{ filters.end_date }}</td>
+                        <td class="text-end">{{ entry.period_debit|floatformat:2|intcomma }}</td>
+                        <td class="text-end">{{ entry.period_credit|floatformat:2|intcomma }}</td>
+                        <td class="text-end">{{ entry.closing_balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa fa-file-lines"></i></div>
+        <div class="empty-state-title">No accounts match these filters</div>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}
