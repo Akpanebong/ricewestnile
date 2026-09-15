@@ -4,6 +4,27 @@
 
 {% block extra_head %}
 {% include "finance/includes/coa_styles.html" %}
+<style>
+    .aa-field-label {
+        font-weight: 700;
+        font-size: 0.92rem;
+    }
+
+    .aa-required {
+        color: var(--status-rejected-text, #dc2626);
+    }
+
+    .aa-name-input {
+        font-size: 1.1rem;
+        padding: 0.6rem 0.9rem;
+    }
+
+    .aa-check-block {
+        background: var(--surface-muted);
+        border-radius: var(--radius-md, 10px);
+        padding: 0.85rem 1rem;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -22,59 +43,70 @@
     <div class="row justify-content-center">
         <div class="col-xl-6 col-lg-8">
             <div class="card">
-                <div class="card-body">
+                <div class="card-body p-4">
                     <form method="post">
                         {% csrf_token %}
-                        <input type="hidden" name="parent_id" id="addParentId">
+                        <input type="hidden" name="parent_id" id="addParentId" value="{{ preselected_parent.pk|default:'' }}">
 
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" name="is_group" id="addIsGroup" {% if default_is_group %}checked{% endif %}>
-                            <label class="form-check-label" for="addIsGroup">This is a group (folder) &mdash; it organizes other accounts, nothing posts to it directly</label>
+                        <div class="mb-3">
+                            <label class="form-label aa-field-label">Account Name <span class="aa-required">*</span></label>
+                            <input type="text" name="name" class="form-control aa-name-input" placeholder="e.g. Travel & Transport" required autofocus>
+                            <div class="form-text">The name of the new account. Please don't create duplicate accounts for the same thing under different groups.</div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-7">
+                                <label class="form-label aa-field-label">Account Number</label>
+                                <input type="text" inputmode="numeric" name="code" id="addCodeInput" class="form-control" placeholder="e.g. 1040" required>
+                                <div class="form-text">Suggested automatically once you choose a group below &mdash; feel free to change it.</div>
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label aa-field-label">Alt Code</label>
+                                <input type="text" name="alt_code" class="form-control" placeholder="Optional">
+                                <div class="form-text">A secondary/legacy code, if this account had one before.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 aa-check-block">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" name="is_group" id="addIsGroup" {% if default_is_group %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="addIsGroup">Is Group</label>
+                            </div>
+                            <div class="form-text mb-0">Further accounts can be made under groups, but transactions can only be recorded against non-group (leaf) accounts.</div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Group</label>
+                            <label class="form-label aa-field-label">Parent Group <span class="aa-required">*</span></label>
                             <div class="group-field-row">
                                 <input type="text" id="addParentLabel" class="form-control" placeholder="Choose the group this belongs under..." readonly required
+                                       value="{% if preselected_parent %}{{ preselected_parent.code }} — {{ preselected_parent.name }}{% endif %}"
                                        data-bs-toggle="modal" data-bs-target="#groupPickerModal" data-target-prefix="add">
                                 <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#groupPickerModal" data-target-prefix="add">
                                     <i class="fa-solid fa-ellipsis"></i>
                                 </button>
                             </div>
+                            <div class="form-text">Where this account sits in the chart of accounts.</div>
                         </div>
 
-                        <div class="row g-2 mb-3">
-                            <div class="col-7">
-                                <label class="form-label">Code</label>
-                                <input type="text" inputmode="numeric" name="code" id="addCodeInput" class="form-control" placeholder="e.g. 1040" required>
-                                <div class="form-text">Suggested automatically once you choose a group &mdash; feel free to change it.</div>
-                            </div>
+                        <div class="row g-2 mb-4" id="addLeafOnlyFields">
                             <div class="col-5">
-                                <label class="form-label">Alt Code</label>
-                                <input type="text" name="alt_code" class="form-control" placeholder="Optional">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. Travel & Transport" required>
-                        </div>
-
-                        <div class="row g-2 mb-3" id="addLeafOnlyFields">
-                            <div class="col-5">
-                                <label class="form-label">Currency</label>
+                                <label class="form-label aa-field-label">Currency</label>
                                 <select name="currency" class="form-select">
                                     {% for option in currency_options %}
                                     <option value="{{ option.code }}" {% if option.code == base_currency %}selected{% endif %}>{{ option.code }}</option>
                                     {% endfor %}
                                 </select>
+                                <div class="form-text">Optional. Defaults to the organization's base currency.</div>
                             </div>
                             <div class="col-7">
-                                <label class="form-label">Opening Balance</label>
+                                <label class="form-label aa-field-label">Opening Balance</label>
                                 <input type="text" inputmode="decimal" data-currency-input name="opening_balance" class="form-control" value="0.00">
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Add Account</button>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary px-4" id="submitBtn">Create Account</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -90,10 +122,12 @@
     const isGroupCheckbox = document.getElementById('addIsGroup');
     const leafOnlyFields = document.getElementById('addLeafOnlyFields');
     const heading = document.getElementById('pageHeading');
+    const submitBtn = document.getElementById('submitBtn');
 
     function sync() {
         leafOnlyFields.hidden = isGroupCheckbox.checked;
         heading.textContent = isGroupCheckbox.checked ? 'Add Group' : 'Add Account';
+        submitBtn.textContent = isGroupCheckbox.checked ? 'Create Group' : 'Create Account';
     }
 
     isGroupCheckbox.addEventListener('change', sync);
@@ -107,15 +141,23 @@
     let codeTouchedByUser = false;
     codeInput.addEventListener('input', function () { codeTouchedByUser = true; });
 
-    document.getElementById('groupPickerList').addEventListener('click', function (event) {
+    function suggestCodeFor(groupId) {
         if (codeTouchedByUser) return;
-        const row = event.target.closest('.group-picker-row');
-        if (!row) return;
-        const suggestion = nextCodeByGroupId[row.dataset.groupId];
+        const suggestion = nextCodeByGroupId[groupId];
         if (suggestion) {
             codeInput.value = suggestion;
         }
+    }
+
+    document.getElementById('groupPickerList').addEventListener('click', function (event) {
+        const row = event.target.closest('.group-picker-row');
+        if (!row) return;
+        suggestCodeFor(row.dataset.groupId);
     });
+
+    {% if preselected_parent %}
+    suggestCodeFor('{{ preselected_parent.pk }}');
+    {% endif %}
 })();
 </script>
 {% endblock %}

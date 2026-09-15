@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.db.models import Sum, ExpressionWrapper, F, DecimalField, Value, Q, Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseForbidden
@@ -976,14 +977,47 @@ def add_account(request):
         siblings = children_codes_by_parent.get(group.pk, [])
         next_code_by_group_id[group.pk] = str(max(siblings, default=base) + 10)
 
+    # "Add Child" on a group's row action toolbar links here with the
+    # parent already known — skip making Finance staff re-pick it.
+    preselected_parent = FinancialCategory.objects.filter(pk=request.GET.get("parent_id"), is_group=True).first()
+
     context = {
         "group_tree_roots": group_tree_roots,
         "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
         "base_currency": get_base_currency(),
         "default_is_group": request.GET.get("is_group") == "1",
         "next_code_by_group_id_json": json.dumps(next_code_by_group_id),
+        "preselected_parent": preselected_parent,
     }
     return render(request, "finance/add_account.html", context)
+
+
+@login_required(login_url="login")
+def delete_account(request, pk):
+    if not _can_manage_chart_of_accounts(request.user):
+        messages.error(request, "Only Finance staff can delete accounts.")
+        return redirect(reverse("finance:chart_of_accounts"))
+
+    category = get_object_or_404(FinancialCategory, pk=pk)
+
+    if request.method == "POST":
+        if category.parent_id is None:
+            messages.error(request, "Root account groups can't be deleted.")
+        else:
+            name = category.name
+            try:
+                category.delete()
+                messages.success(request, f"'{name}' deleted from the chart of accounts.")
+            except ProtectedError:
+                # Mirrors the two PROTECT constraints on FinancialCategory:
+                # a group can't be deleted while it still has children, and
+                # a leaf can't be deleted while transactions reference it.
+                if category.is_group:
+                    messages.error(request, f"Can't delete '{name}' — it still has sub-accounts under it. Move or remove those first.")
+                else:
+                    messages.error(request, f"Can't delete '{name}' — it has transactions recorded against it.")
+
+    return redirect(reverse("finance:chart_of_accounts"))
 
 
 @login_required(login_url="login")

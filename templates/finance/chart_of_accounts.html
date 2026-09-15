@@ -94,6 +94,26 @@
 
 {% include "finance/includes/coa_group_picker_modal.html" %}
 
+<!-- DELETE ACCOUNT CONFIRMATION MODAL -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" id="deleteAccountForm" class="modal-content">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title">Delete <code id="deleteCategoryLabel"></code>?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">This can't be undone. A group can only be deleted once it has no sub-accounts left, and an account can only be deleted once it has no transactions recorded against it.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 document.getElementById('editAccountModal').addEventListener('show.bs.modal', function (event) {
     const btn = event.relatedTarget;
@@ -106,6 +126,38 @@ document.getElementById('editAccountModal').addEventListener('show.bs.modal', fu
     document.getElementById('editParentId').value = btn.dataset.categoryParentId;
     document.getElementById('editParentLabel').value = btn.dataset.categoryParentLabel;
 });
+
+const deleteUrlTemplate = "{% url 'finance:delete_account' 0 %}";
+document.getElementById('deleteAccountModal').addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    document.getElementById('deleteCategoryLabel').textContent = btn.dataset.categoryLabel;
+    document.getElementById('deleteAccountForm').action = deleteUrlTemplate.replace('/0/', '/' + btn.dataset.categoryId + '/');
+});
+
+(function () {
+    // Click a row (group or leaf) to reveal its action toolbar (Edit /
+    // Delete / Add Child / View Ledger) — only one row's toolbar is open
+    // at a time, and clicking inside the toolbar itself never toggles
+    // the row (which, for a group, would otherwise also collapse it).
+    let selectedRow = null;
+
+    document.querySelectorAll('.coa-row').forEach(function (row) {
+        row.addEventListener('click', function (event) {
+            if (event.target.closest('.coa-row-actions')) return;
+            if (selectedRow && selectedRow !== row) {
+                selectedRow.classList.remove('is-selected');
+            }
+            row.classList.toggle('is-selected');
+            selectedRow = row.classList.contains('is-selected') ? row : null;
+        });
+    });
+
+    document.querySelectorAll('.coa-row-actions').forEach(function (actions) {
+        actions.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+    });
+})();
 </script>
 {% endif %}
 {% endblock %}

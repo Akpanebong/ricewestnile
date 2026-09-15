@@ -1,12 +1,33 @@
 {% load currency_tags %}
 {% load humanize %}
 {% if node.is_group %}
-<div class="coa-group" style="--coa-depth: {{ depth }};" data-bs-toggle="collapse" data-bs-target="#coa-node-{{ node.pk }}"
+<div class="coa-group coa-row" style="--coa-depth: {{ depth }};" data-row-id="node-{{ node.pk }}"
+     data-bs-toggle="collapse" data-bs-target="#coa-node-{{ node.pk }}"
      role="button" aria-expanded="{% if node.tree_children %}true{% else %}false{% endif %}" aria-controls="coa-node-{{ node.pk }}">
     <i class="fa-solid fa-chevron-right coa-group-chevron"></i>
     <i class="fa-solid fa-folder coa-group-icon"></i>
     <span class="coa-group-label"><code>{{ node.code }}</code> — {{ node.name }}</span>
     <span class="coa-group-count">({{ node.tree_children|length }})</span>
+    {% if can_manage %}
+    <span class="coa-row-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" title="Edit group"
+                data-bs-toggle="modal" data-bs-target="#editAccountModal"
+                data-category-id="{{ node.pk }}"
+                data-category-code="{{ node.code }}"
+                data-category-name="{{ node.name }}"
+                data-category-alt-code="{{ node.alt_code }}"
+                data-category-currency="{{ node.currency }}"
+                data-category-opening-balance="{{ node.opening_balance|floatformat:2 }}"
+                data-category-parent-id="{{ node.parent_id }}"
+                data-category-parent-label="{{ node.parent.code }} — {{ node.parent.name }}">Edit</button>
+        {% if node.parent_id %}
+        <button type="button" class="btn btn-sm btn-outline-secondary" title="Delete group"
+                data-bs-toggle="modal" data-bs-target="#deleteAccountModal"
+                data-category-id="{{ node.pk }}" data-category-label="{{ node.code }} — {{ node.name }}">Delete</button>
+        {% endif %}
+        <a href="{% url 'finance:add_account' %}?parent_id={{ node.pk }}" class="btn btn-sm btn-outline-secondary" title="Add an account/sub-group under this group">Add Child</a>
+    </span>
+    {% endif %}
     <span class="coa-group-total">{{ node.rollup_base|floatformat:2|intcomma }} {{ base_currency }} {{ node.balance_side }}</span>
 </div>
 <div class="collapse{% if node.tree_children %} show{% endif %}" id="coa-node-{{ node.pk }}">
@@ -17,7 +38,7 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="coa-account-row" style="--coa-depth: {{ depth }};">
+<div class="coa-account-row coa-row" style="--coa-depth: {{ depth }};" data-row-id="node-{{ node.pk }}" role="button" tabindex="0">
     <i class="fa-regular fa-circle coa-account-icon"></i>
     <div class="coa-account-copy">
         <div class="coa-account-name"><code>{{ node.code }}</code> — {{ node.name }}</div>
@@ -25,23 +46,27 @@
             {% if node.alt_code %}Alt: {{ node.alt_code }} &middot; {% endif %}{{ node.currency }} &middot; {{ node.transaction_count }} transaction{{ node.transaction_count|pluralize }}
         </div>
     </div>
+    {% if can_manage %}
+    <span class="coa-row-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" title="Edit account"
+                data-bs-toggle="modal" data-bs-target="#editAccountModal"
+                data-category-id="{{ node.pk }}"
+                data-category-code="{{ node.code }}"
+                data-category-name="{{ node.name }}"
+                data-category-alt-code="{{ node.alt_code }}"
+                data-category-currency="{{ node.currency }}"
+                data-category-opening-balance="{{ node.opening_balance|floatformat:2 }}"
+                data-category-parent-id="{{ node.parent_id }}"
+                data-category-parent-label="{{ node.parent.code }} — {{ node.parent.name }}">Edit</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" title="Delete account"
+                data-bs-toggle="modal" data-bs-target="#deleteAccountModal"
+                data-category-id="{{ node.pk }}" data-category-label="{{ node.code }} — {{ node.name }}">Delete</button>
+        <a href="{% url 'finance:general_ledger_report_view' %}?accounts={{ node.pk }}" class="btn btn-sm btn-outline-secondary" title="View this account's General Ledger">View Ledger</a>
+    </span>
+    {% endif %}
     <div class="coa-account-amount">
         <span class="closing">{{ node.closing_balance|floatformat:2|intcomma }} {{ node.currency }} {{ node.balance_side }}</span>
         <span class="opening">Opening {{ node.opening_balance|floatformat:2|intcomma }} {{ node.currency }}</span>
     </div>
-    {% if can_manage %}
-    <button type="button" class="btn-icon coa-edit-btn" title="Edit account" aria-label="Edit {{ node.name }}"
-            data-bs-toggle="modal" data-bs-target="#editAccountModal"
-            data-category-id="{{ node.pk }}"
-            data-category-code="{{ node.code }}"
-            data-category-name="{{ node.name }}"
-            data-category-alt-code="{{ node.alt_code }}"
-            data-category-currency="{{ node.currency }}"
-            data-category-opening-balance="{{ node.opening_balance|floatformat:2 }}"
-            data-category-parent-id="{{ node.parent_id }}"
-            data-category-parent-label="{{ node.parent.code }} — {{ node.parent.name }}">
-        <i class="fa-solid fa-pen"></i>
-    </button>
-    {% endif %}
 </div>
 {% endif %}

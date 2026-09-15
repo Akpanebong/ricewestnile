@@ -47,6 +47,7 @@ urlpatterns = [
     path("ledger/record/", views.record_transaction, name="record_transaction"),
     path("chart-of-accounts/", views.chart_of_accounts, name="chart_of_accounts"),
     path("chart-of-accounts/add/", views.add_account, name="add_account"),
+    path("chart-of-accounts/<int:pk>/delete/", views.delete_account, name="delete_account"),
     path("reports/", views.reports_home, name="reports_home"),
     path("reports/general-ledger/", views.general_ledger_report, name="general_ledger_report"),
     path("reports/general-ledger/view/", views.general_ledger_report_view, name="general_ledger_report_view"),

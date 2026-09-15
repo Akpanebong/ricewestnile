@@ -58,6 +58,35 @@
         white-space: nowrap;
     }
 
+    /* Row action toolbar (Edit / Delete / Add Child / View Ledger) —
+       hidden until the row is clicked/selected, so the tree stays clean
+       until you actually want to act on a specific account or group. */
+    .coa-row-actions {
+        display: none;
+        align-items: center;
+        gap: 0.35rem;
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    .coa-row.is-selected .coa-row-actions {
+        display: flex;
+    }
+
+    .coa-row-actions .btn {
+        font-size: 0.72rem;
+        padding: 0.2rem 0.6rem;
+        white-space: nowrap;
+    }
+
+    .coa-group.is-selected {
+        background: color-mix(in srgb, var(--sidebar-accent) 10%, var(--surface-muted));
+    }
+
+    .coa-account-row.is-selected {
+        background: color-mix(in srgb, var(--sidebar-accent) 8%, var(--surface-1));
+    }
+
     .coa-account-row {
         display: flex;
         align-items: center;
