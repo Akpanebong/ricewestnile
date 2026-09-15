@@ -1,0 +1,259 @@
+{% load static %}
+{% load humanize %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Balance Sheet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/ricewn.png' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/variables.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <style>
+        body {
+            min-height: 100vh;
+            color: var(--text-primary);
+            background: var(--body-bg);
+            font-family: var(--font-primary);
+        }
+
+        .glr-topbar {
+            background: var(--surface-1);
+            border-bottom: 1px solid var(--surface-1-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .glr-brand-name {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .glr-brand-sub {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .stmt-card {
+            border: 1px solid var(--surface-1-border);
+            border-radius: var(--radius-lg, 16px);
+            margin-bottom: 1.25rem;
+            overflow: hidden;
+            background: var(--surface-1);
+        }
+
+        .stmt-card-head {
+            background: var(--surface-muted);
+            padding: 0.75rem 1.1rem;
+            font-weight: 800;
+            font-size: 0.94rem;
+        }
+
+        .stmt-row-group td:first-child {
+            padding-left: calc(1rem + var(--stmt-depth, 0) * 1.4rem);
+            font-weight: 700;
+        }
+
+        table td:first-child {
+            padding-left: calc(1rem + var(--stmt-depth, 0) * 1.4rem);
+        }
+
+        .stmt-total-row td {
+            font-weight: 800;
+            background: var(--surface-muted);
+            border-top: 2px solid var(--surface-1-border);
+        }
+
+        .bs-diff-row td {
+            font-weight: 800;
+            font-size: 1.02rem;
+        }
+
+        .bs-diff-row.is-balanced td {
+            color: var(--status-approved-text, #15803d);
+        }
+
+        .bs-diff-row.is-off td {
+            color: var(--status-rejected-text, #dc2626);
+        }
+
+        .glr-summary-bar {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            padding: 0.85rem 1.1rem;
+            background: var(--surface-1);
+            border: 1px solid var(--surface-1-border);
+            border-radius: var(--radius-lg, 16px);
+            margin-bottom: 1.25rem;
+        }
+
+        .glr-summary-bar .item .label {
+            display: block;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .glr-summary-bar .item .value {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .bs-note {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            padding: 0.85rem 1.1rem;
+            background: color-mix(in srgb, var(--status-pending-text, #b45309) 8%, var(--surface-1));
+            border: 1px solid color-mix(in srgb, var(--status-pending-text, #b45309) 25%, var(--surface-1-border));
+            border-radius: var(--radius-lg, 16px);
+            margin-bottom: 1.25rem;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            .stmt-card { break-inside: avoid; }
+            body { background: #fff; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="glr-topbar py-2 no-print">
+    <div class="container-fluid px-3 px-lg-4 d-flex align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+            <img src="{% static 'images/ricewn.png' %}" height="32" alt="RICE West Nile">
+            <div>
+                <div class="glr-brand-name">Balance Sheet</div>
+                <div class="glr-brand-sub">RICE West Nile &middot; Accounting</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'finance:balance_sheet_report' %}?{{ request.GET.urlencode }}" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-arrow-left me-1"></i> Edit Filters
+            </a>
+            <a href="{% url 'finance:reports_home' %}" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-chart-column me-1"></i> All Reports
+            </a>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                <i class="fa fa-print me-1"></i> Print
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="container-fluid px-3 px-lg-4 py-4" style="max-width: 1100px; margin: 0 auto;">
+
+    <div class="mb-3 d-none d-print-block">
+        <h4 class="fw-bold mb-0">RICE West Nile — Balance Sheet as of {{ as_of_date }}</h4>
+    </div>
+
+    <div class="bs-note">
+        <i class="fa-solid fa-circle-info me-1"></i>
+        This app doesn't yet record true double-entry postings, so Assets won't necessarily equal Liabilities + Equity. "Retained Earnings" below is cumulative Income minus Expenses to date (the standard way undistributed net income closes into Equity) — the "Difference" line shows what's left unreconciled after that, explicitly, rather than hiding it.
+    </div>
+
+    <div class="glr-summary-bar">
+        <div class="item">
+            <span class="label">As Of</span>
+            <span class="value">{{ as_of_date }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Total Assets ({{ currency }})</span>
+            <span class="value">{{ total_assets|floatformat:2|intcomma }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Total Liabilities + Equity ({{ currency }})</span>
+            <span class="value">{{ total_liabilities_and_equity|floatformat:2|intcomma }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Difference ({{ currency }})</span>
+            <span class="value">{{ difference|floatformat:2|intcomma }}</span>
+        </div>
+    </div>
+
+    <div class="stmt-card">
+        <div class="stmt-card-head">Assets</div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <tbody>
+                    {% for root in asset_roots %}
+                        {% include "finance/includes/balance_sheet_tree_node.html" with node=root depth=0 %}
+                    {% empty %}
+                    <tr><td colspan="2" class="text-center text-muted py-3">No asset accounts.</td></tr>
+                    {% endfor %}
+                    <tr class="stmt-total-row">
+                        <td>Total Assets</td>
+                        <td class="text-end">{{ total_assets|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="stmt-card">
+        <div class="stmt-card-head">Liabilities</div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <tbody>
+                    {% for root in liability_roots %}
+                        {% include "finance/includes/balance_sheet_tree_node.html" with node=root depth=0 %}
+                    {% empty %}
+                    <tr><td colspan="2" class="text-center text-muted py-3">No liability accounts.</td></tr>
+                    {% endfor %}
+                    <tr class="stmt-total-row">
+                        <td>Total Liabilities</td>
+                        <td class="text-end">{{ total_liabilities|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="stmt-card">
+        <div class="stmt-card-head">Equity</div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <tbody>
+                    {% for root in equity_roots %}
+                        {% include "finance/includes/balance_sheet_tree_node.html" with node=root depth=0 %}
+                    {% empty %}
+                    <tr><td colspan="2" class="text-center text-muted py-3">No equity accounts.</td></tr>
+                    {% endfor %}
+                    <tr>
+                        <td>Retained Earnings (Income &minus; Expenses to date)</td>
+                        <td class="text-end">{{ retained_earnings|floatformat:2|intcomma }}</td>
+                    </tr>
+                    <tr class="stmt-total-row">
+                        <td>Total Liabilities + Equity</td>
+                        <td class="text-end">{{ total_liabilities_and_equity|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="stmt-card">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <tbody>
+                    <tr class="bs-diff-row {% if difference == 0 %}is-balanced{% else %}is-off{% endif %}">
+                        <td>Difference (Assets &minus; (Liabilities + Equity))</td>
+                        <td class="text-end">{{ difference|floatformat:2|intcomma }} {{ currency }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>

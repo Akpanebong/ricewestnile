@@ -820,23 +820,35 @@ def _is_descendant_or_self(candidate, node):
     return False
 
 
-def _build_account_tree(only_groups=False):
+def _build_account_tree(only_groups=False, as_of_date=None, report_currency=None, category_types=None, rates=None):
     """Fetch every FinancialCategory, annotate leaf accounts with their
     transaction count and closing balance (in the account's own currency),
     and wire them into an in-memory tree via `.tree_children`. Also computes
     `.rollup_base` on every node — its own (for leaves) or its descendants'
-    (for groups) closing balance converted into the org's base currency, so
-    groups mixing accounts of different currencies still get one meaningful
-    total. Returns (root_nodes, all_nodes_by_id).
+    (for groups) closing balance converted into report_currency (defaults
+    to the org's base currency), so groups mixing accounts of different
+    currencies still get one meaningful total. Returns (root_nodes,
+    all_nodes_by_id).
+
+    `as_of_date` restricts the balance to transactions up to and including
+    that date (a point-in-time snapshot, e.g. for the Balance Sheet)
+    instead of the account's all-time balance (the Chart of Accounts'
+    default). `category_types` restricts to a subset of the 5 root types
+    (e.g. just Assets, for the Balance Sheet's Assets section).
     """
     base_currency = get_base_currency()
+    report_currency = report_currency or base_currency
+    rates = rates or get_latest_usd_rates()
     qs = FinancialCategory.objects.select_related("parent")
+    if category_types:
+        qs = qs.filter(category_type__in=category_types)
     if only_groups:
         qs = qs.filter(is_group=True)
     else:
+        txn_filter = Q(transactions__date__lte=as_of_date) if as_of_date else Q()
         qs = qs.annotate(
-            transaction_count=Coalesce(Count("transactions", distinct=True), Value(0)),
-            total_amount=Coalesce(Sum("transactions__amount"), Value(0), output_field=DECIMAL_ZERO),
+            transaction_count=Coalesce(Count("transactions", filter=txn_filter, distinct=True), Value(0)),
+            total_amount=Coalesce(Sum("transactions__amount", filter=txn_filter), Value(0), output_field=DECIMAL_ZERO),
         )
     categories = list(qs.order_by("category_type", "code"))
 
@@ -847,7 +859,7 @@ def _build_account_tree(only_groups=False):
             # total_amount is already base-currency-equivalent (how
             # FinancialTransaction.amount is always recorded) — convert it
             # into this account's own currency to get its native balance.
-            c.closing_balance = c.opening_balance + convert_amount(c.total_amount, base_currency, c.currency)
+            c.closing_balance = c.opening_balance + convert_amount(c.total_amount, base_currency, c.currency, rates=rates)
 
     roots = []
     for c in categories:
@@ -862,7 +874,7 @@ def _build_account_tree(only_groups=False):
             if node.is_group:
                 node.rollup_base = sum((compute_rollup(child) for child in node.tree_children), Decimal("0.00"))
             else:
-                node.rollup_base = convert_amount(node.closing_balance, node.currency, base_currency)
+                node.rollup_base = convert_amount(node.closing_balance, node.currency, report_currency, rates=rates)
             return node.rollup_base
 
         for root in roots:
@@ -1072,6 +1084,12 @@ def reports_home(request):
             "description": "Each project's approved budget against what was actually spent, with variance and utilization.",
             "url": reverse("finance:budget_vs_actual_report"),
             "icon": "fa-chart-pie",
+        },
+        {
+            "name": "Balance Sheet",
+            "description": "Assets, Liabilities, and Equity as of a chosen date, grouped like the Chart of Accounts.",
+            "url": reverse("finance:balance_sheet_report"),
+            "icon": "fa-scale-balanced",
         },
     ]
     return render(request, "finance/reports_home.html", {"reports": reports})
@@ -1494,3 +1512,97 @@ def budget_vs_actual_report_view(request):
         "filters": filters,
     }
     return render(request, "finance/budget_vs_actual_report_view.html", context)
+
+
+@login_required(login_url="login")
+def balance_sheet_report(request):
+    """Filter form for the Balance Sheet — a point-in-time snapshot, so it
+    only needs an "as of" date and a currency, not a date range."""
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can run financial reports.")
+        return redirect(reverse("finance:dashboard"))
+
+    context = {
+        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "as_of_date": request.GET.get("as_of_date") or date.today().isoformat(),
+        "currency": normalize_currency(request.GET.get("currency") or get_base_currency()),
+    }
+    return render(request, "finance/balance_sheet_report.html", context)
+
+
+@login_required(login_url="login")
+def balance_sheet_report_view(request):
+    """
+    Assets, Liabilities, and Equity balances as of a chosen date, grouped
+    the same way as the Chart of Accounts.
+
+    This app doesn't (yet) record true double-entry postings — an expense
+    reduces an expense account's activity but isn't linked to which
+    specific cash/bank account paid for it — so nothing here structurally
+    guarantees Assets = Liabilities + Equity the way a real double-entry
+    balance sheet would. To stay honest about that instead of silently
+    presenting a number that happens to look balanced, this also computes
+    Retained Earnings (cumulative Income minus Expenses up to the as-of
+    date, the standard way undistributed net income closes into Equity)
+    as its own labeled line, and shows the residual difference between
+    Assets and (Liabilities + Equity + Retained Earnings) explicitly
+    rather than hiding it. Once double-entry postings exist, that
+    difference should read as zero; until then, it's a real, visible
+    measure of how much financial activity isn't yet tied to a specific
+    balance-sheet account.
+    """
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can run financial reports.")
+        return redirect(reverse("finance:dashboard"))
+
+    as_of_date = request.GET.get("as_of_date") or date.today().isoformat()
+    report_currency = normalize_currency(request.GET.get("currency") or get_base_currency())
+    base_currency = get_base_currency()
+    rates = get_latest_usd_rates()
+
+    asset_roots, _ = _build_account_tree(
+        as_of_date=as_of_date, report_currency=report_currency,
+        category_types=[FinancialCategory.CategoryType.ASSET], rates=rates,
+    )
+    liability_roots, _ = _build_account_tree(
+        as_of_date=as_of_date, report_currency=report_currency,
+        category_types=[FinancialCategory.CategoryType.LIABILITY], rates=rates,
+    )
+    equity_roots, _ = _build_account_tree(
+        as_of_date=as_of_date, report_currency=report_currency,
+        category_types=[FinancialCategory.CategoryType.EQUITY], rates=rates,
+    )
+
+    total_assets = sum((r.rollup_base for r in asset_roots), Decimal("0.00"))
+    total_liabilities = sum((r.rollup_base for r in liability_roots), Decimal("0.00"))
+    total_equity = sum((r.rollup_base for r in equity_roots), Decimal("0.00"))
+
+    income_to_date = FinancialCategory.objects.filter(
+        category_type=FinancialCategory.CategoryType.INCOME, is_group=False
+    ).aggregate(
+        total=Coalesce(Sum("transactions__amount", filter=Q(transactions__date__lte=as_of_date)), Value(0), output_field=DECIMAL_ZERO)
+    )["total"]
+    expense_to_date = FinancialCategory.objects.filter(
+        category_type=FinancialCategory.CategoryType.EXPENSE, is_group=False
+    ).aggregate(
+        total=Coalesce(Sum("transactions__amount", filter=Q(transactions__date__lte=as_of_date)), Value(0), output_field=DECIMAL_ZERO)
+    )["total"]
+    retained_earnings = convert_amount(income_to_date - expense_to_date, base_currency, report_currency, rates=rates)
+
+    total_liabilities_and_equity = total_liabilities + total_equity + retained_earnings
+    difference = total_assets - total_liabilities_and_equity
+
+    context = {
+        "asset_roots": asset_roots,
+        "liability_roots": liability_roots,
+        "equity_roots": equity_roots,
+        "total_assets": total_assets,
+        "total_liabilities": total_liabilities,
+        "total_equity": total_equity,
+        "retained_earnings": retained_earnings,
+        "total_liabilities_and_equity": total_liabilities_and_equity,
+        "difference": difference,
+        "as_of_date": as_of_date,
+        "currency": report_currency,
+    }
+    return render(request, "finance/balance_sheet_report_view.html", context)

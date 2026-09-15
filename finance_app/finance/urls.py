@@ -55,4 +55,6 @@ urlpatterns = [
     path("reports/income-statement/view/", views.income_statement_report_view, name="income_statement_report_view"),
     path("reports/budget-vs-actual/", views.budget_vs_actual_report, name="budget_vs_actual_report"),
     path("reports/budget-vs-actual/view/", views.budget_vs_actual_report_view, name="budget_vs_actual_report_view"),
+    path("reports/balance-sheet/", views.balance_sheet_report, name="balance_sheet_report"),
+    path("reports/balance-sheet/view/", views.balance_sheet_report_view, name="balance_sheet_report_view"),
 ]

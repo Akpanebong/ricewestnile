@@ -1,0 +1,58 @@
+{% extends "finance/base.html" %}
+{% block title %}Balance Sheet{% endblock %}
+
+{% block extra_head %}
+<style>
+    .glr-filter-card {
+        background: var(--surface-1, #fff);
+        border: 1px solid var(--surface-1-border, #e2e8f0);
+        border-radius: var(--radius-lg, 16px);
+        box-shadow: var(--surface-1-shadow, 0 2px 8px -2px rgba(15,23,42,.05));
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Balance Sheet</h3>
+            <p class="text-muted mb-0">A snapshot of Assets, Liabilities, and Equity as of a chosen date</p>
+        </div>
+        <a href="{% url 'finance:reports_home' %}" class="btn btn-outline-dark shadow-sm">
+            <i class="fa fa-arrow-left me-1"></i> All Reports
+        </a>
+    </div>
+
+    <div class="glr-filter-card p-3">
+        <form method="get" action="{% url 'finance:balance_sheet_report_view' %}" class="row g-3">
+            <div class="col-sm-6 col-md-4">
+                <label class="form-label small text-muted mb-1">As Of Date</label>
+                <input type="date" name="as_of_date" class="form-control" value="{{ as_of_date }}">
+            </div>
+            <div class="col-sm-6 col-md-4">
+                <label class="form-label small text-muted mb-1">Report Currency</label>
+                <select name="currency" class="form-select">
+                    {% for option in currency_options %}
+                    <option value="{{ option.code }}" {% if option.code == currency %}selected{% endif %}>{{ option.code }} — {{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-magnifying-glass-chart me-1"></i> Show Report
+                </button>
+                <a href="{% url 'finance:balance_sheet_report' %}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="alert alert-warning mt-4 mb-0">
+        <i class="fa-solid fa-triangle-exclamation me-1"></i>
+        This system doesn't yet record true double-entry postings (an expense isn't linked to which bank/cash account paid for it), so Assets won't necessarily equal Liabilities + Equity. The report shows the difference explicitly rather than hiding it — see the report for details.
+    </div>
+
+</div>
+{% endblock %}
