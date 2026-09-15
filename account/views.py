@@ -1,8 +1,11 @@
+import csv
+import io
 import datetime
 from smtplib import SMTPRecipientsRefused
 from django.core.paginator import Paginator
 from django.urls import reverse, reverse_lazy
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
 
 from core.project_models import Project
 from hr_apps.HRapp.models import Employee
@@ -11,7 +14,7 @@ from django.db import transaction
 from django.db.models import Q
 from hr_apps.HRapp.views import is_supervisor
 from hr_apps.HRapp.utils import employee_leave_balances
-from .models import Department, Profile, ExitProcess, ExitStepType, ExitStepStatus, Unit
+from .models import Department, Profile, ExitProcess, ExitStepType, ExitStepStatus, Unit, PROFILE_TYPE
 from .forms import DepartmentForm, ProfileForm, EmployeeUpdateForm, ExitProcessStepFormSet, get_employee_profile_form_sections
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
@@ -418,6 +421,172 @@ def profile_create(request):
         'form': form,
         'title': 'Create Profile'
     })
+
+
+EMPLOYEE_IMPORT_HEADERS = [
+    'username', 'first_name', 'last_name', 'email', 'phone', 'title',
+    'profile_type', 'department', 'unit', 'project', 'job_title', 'address',
+]
+
+VALID_PROFILE_TYPES = {choice[0].lower(): choice[0] for choice in PROFILE_TYPE}
+
+
+@login_required
+def download_employee_import_template(request):
+    current_user = request.user
+    if not (current_user.is_superuser or has_group(current_user, 'HR')):
+        return HttpResponseForbidden("Access Denied.")
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=Employee_Import_Template.csv'
+    writer = csv.writer(response)
+    writer.writerow(EMPLOYEE_IMPORT_HEADERS)
+    writer.writerow([
+        'jdoe', 'Jane', 'Doe', 'jane.doe@example.org', '+256700000000', 'Ms.',
+        'Staff', 'Finance', '', '', 'Accountant', '',
+    ])
+    return response
+
+
+@login_required
+def import_employees(request):
+    current_user = request.user
+    if not (current_user.is_superuser or has_group(current_user, 'HR')):
+        logout(request)
+        messages.warning(request, 'Oops!!! Access Denied')
+        return redirect(reverse('logout'))
+
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        raw = request.FILES['csv_file'].read()
+
+        data = None
+        for enc in ['utf-8', 'latin-1', 'cp1252', 'utf-16']:
+            try:
+                data = raw.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+
+        if data is None:
+            messages.error(request, "Unable to decode CSV. Please save the file as UTF-8.")
+            return redirect('import_employees')
+
+        data = data.replace('\x00', '')
+        reader = csv.DictReader(io.StringIO(data))
+
+        created_accounts = []
+        errors = []
+        login_url = request.build_absolute_uri(reverse('login'))
+
+        for nr, row in enumerate(reader, start=1):
+            row = {(k or '').strip(): (v or '').strip() for k, v in row.items()}
+            try:
+                username = row.get('username')
+                first_name = row.get('first_name')
+                last_name = row.get('last_name')
+
+                if not username or not first_name or not last_name:
+                    raise ValueError("username, first_name, and last_name are required")
+
+                if Profile.objects.filter(username__iexact=username).exists():
+                    raise ValueError(f"username '{username}' already exists")
+
+                email = row.get('email', '').lower()
+                if email and Profile.objects.filter(email__iexact=email).exists():
+                    raise ValueError(f"email '{email}' is already in use")
+
+                profile_type = VALID_PROFILE_TYPES.get(row.get('profile_type', '').lower(), 'Staff')
+
+                row_warnings = []
+
+                department = None
+                if row.get('department'):
+                    department = Department.objects.filter(name__iexact=row['department']).first()
+                    if department is None:
+                        row_warnings.append(f"department '{row['department']}' not found — left blank")
+
+                unit = None
+                if row.get('unit'):
+                    unit_qs = Unit.objects.filter(name__iexact=row['unit'])
+                    if department:
+                        unit_qs = unit_qs.filter(department=department)
+                    unit = unit_qs.first()
+                    if unit is None:
+                        row_warnings.append(f"unit '{row['unit']}' not found — left blank")
+
+                project = None
+                if row.get('project'):
+                    project = Project.objects.filter(name__iexact=row['project']).first()
+                    if project is None:
+                        row_warnings.append(f"project '{row['project']}' not found — left blank")
+
+                with transaction.atomic():
+                    password = generate_strong_password()
+                    user = Profile.objects.create(
+                        username=username,
+                        first_name=first_name,
+                        last_name=last_name,
+                        email=email,
+                        phone=row.get('phone', ''),
+                        title=row.get('title', ''),
+                        profile_type=profile_type,
+                        department=department,
+                        unit=unit,
+                        project=project,
+                        address=row.get('address', ''),
+                    )
+                    user.set_password(password)
+                    user.save()
+
+                    Employee.objects.get_or_create(
+                        user=user,
+                        defaults={
+                            "date_joined": datetime.datetime.now(),
+                            "staff_id": f'R-{user.id}',
+                            "category": profile_type,
+                            "department": department,
+                            "job_title": row.get('job_title', ''),
+                        }
+                    )
+
+                email_sent = False
+                if email:
+                    subject = "Your Account Has Been Created"
+                    message = (
+                        f"Dear {user.first_name or user.username},\n\n"
+                        f"Your account has been successfully created.\n\n"
+                        f"Username: {user.username}\n"
+                        f"Password: {password}\n\n"
+                        f"Login here: {login_url}\n\n"
+                        f"Please change your password.\n\n"
+                        f"Regards,\nHR Team"
+                    )
+                    try:
+                        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+                        email_sent = True
+                    except Exception as e:
+                        errors.append(f"Row {nr}: account created for '{username}', but email failed: {e}")
+
+                created_accounts.append({
+                    'row': nr,
+                    'username': username,
+                    'full_name': f"{first_name} {last_name}",
+                    'email': email,
+                    'email_sent': email_sent,
+                    'password': None if email_sent else password,
+                    'warnings': row_warnings,
+                })
+
+            except Exception as e:
+                errors.append(f"Row {nr}: {e}")
+
+        messages.info(request, f"Imported {len(created_accounts)} employees; {len(errors)} errors")
+        return render(request, "profile/import_employees_result.html", {
+            "created_accounts": created_accounts,
+            "errors": errors,
+        })
+
+    return render(request, "profile/import_employees.html")
 
 
 @login_required(login_url='login')

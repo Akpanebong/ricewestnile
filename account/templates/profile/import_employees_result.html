@@ -1,0 +1,103 @@
+{% extends 'hr/base.html' %}
+{% block title %}Import Result{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
+        <div>
+            <h4 class="fw-bold mb-1">Import Result</h4>
+            <p class="text-muted mb-0">Review the accounts that were created and any rows that need correction.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'import_employees' %}" class="btn btn-outline-secondary shadow-sm">Import Again</a>
+            <a href="{% url 'profile_list' %}" class="btn btn-outline-dark shadow-sm">
+                <i class="fa fa-arrow-left me-1"></i> Employees
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm text-center py-3">
+                <div class="text-muted small text-uppercase">Accounts Created</div>
+                <div class="fs-3 fw-bold text-success">{{ created_accounts|length }}</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm text-center py-3">
+                <div class="text-muted small text-uppercase">Errors</div>
+                <div class="fs-3 fw-bold {% if errors %}text-danger{% else %}text-muted{% endif %}">{{ errors|length }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if created_accounts %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fa fa-users text-success me-2"></i>Created Accounts</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Credentials</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for acc in created_accounts %}
+                    <tr>
+                        <td>{{ acc.row }}</td>
+                        <td><code>{{ acc.username }}</code></td>
+                        <td>{{ acc.full_name }}</td>
+                        <td>{{ acc.email|default:"—" }}</td>
+                        <td>
+                            {% if acc.email_sent %}
+                                <span class="badge text-bg-success">Emailed</span>
+                            {% else %}
+                                <span class="badge text-bg-warning text-dark">No email — temp password:</span>
+                                <code>{{ acc.password }}</code>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for w in acc.warnings %}
+                                <div class="small text-warning-emphasis">{{ w }}</div>
+                            {% empty %}
+                                <span class="text-muted small">—</span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fa fa-triangle-exclamation text-warning me-2"></i>Rows Skipped</h5>
+        </div>
+        <div class="card-body">
+            {% if errors %}
+                <div class="list-group list-group-flush">
+                    {% for e in errors %}
+                        <div class="list-group-item px-0">{{ e }}</div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fa fa-circle-check fa-2x text-success mb-2"></i>
+                    <div class="fw-bold">No rows were skipped.</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -10,9 +10,14 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
 
         {% if request.user|has_group:"HR" or request.user.is_superuser %}
-        <a href="{% url 'profile_create' %}" class="btn btn-success px-3 shadow-sm">
-            <i class="fa fa-plus"></i> New Profile
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'profile_create' %}" class="btn btn-success px-3 shadow-sm">
+                <i class="fa fa-plus"></i> New Profile
+            </a>
+            <a href="{% url 'import_employees' %}" class="btn btn-outline-success px-3 shadow-sm">
+                <i class="fa fa-file-csv"></i> Import Employees
+            </a>
+        </div>
         {% endif %}
 
         <form method="get" class="d-flex align-items-center gap-2" role="search">

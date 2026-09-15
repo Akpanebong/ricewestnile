@@ -1,0 +1,79 @@
+{% extends 'hr/base.html' %}
+{% block title %}Import Employees{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    {% include "message.html" %}
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
+        <div>
+            <h4 class="fw-bold mb-1">Import Employees</h4>
+            <p class="text-muted mb-0">Create many new employee accounts at once from a CSV file, instead of one at a time.</p>
+        </div>
+        <a href="{% url 'profile_list' %}" class="btn btn-outline-dark shadow-sm">
+            <i class="fa fa-arrow-left me-1"></i> Employees
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fa fa-file-csv text-success me-2"></i>CSV Upload</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label" for="csv_file">CSV File</label>
+                            <input class="form-control" id="csv_file" type="file" name="csv_file" accept=".csv" required>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="fa fa-cloud-arrow-up me-1"></i> Import Employees
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fa fa-list-check text-primary me-2"></i>Columns</h5>
+                    <a href="{% url 'download_employee_import_template' %}" class="btn btn-outline-success btn-sm">
+                        <i class="fa fa-download me-1"></i> Download Template
+                    </a>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2"><strong>Required:</strong></p>
+                    <div class="small lh-lg mb-3">
+                        <span class="badge text-bg-light border me-1 mb-1">username</span>
+                        <span class="badge text-bg-light border me-1 mb-1">first_name</span>
+                        <span class="badge text-bg-light border me-1 mb-1">last_name</span>
+                    </div>
+                    <p class="text-muted small mb-2"><strong>Optional:</strong></p>
+                    <div class="small lh-lg mb-3">
+                        <span class="badge text-bg-light border me-1 mb-1">email</span>
+                        <span class="badge text-bg-light border me-1 mb-1">phone</span>
+                        <span class="badge text-bg-light border me-1 mb-1">title</span>
+                        <span class="badge text-bg-light border me-1 mb-1">profile_type</span>
+                        <span class="badge text-bg-light border me-1 mb-1">department</span>
+                        <span class="badge text-bg-light border me-1 mb-1">unit</span>
+                        <span class="badge text-bg-light border me-1 mb-1">project</span>
+                        <span class="badge text-bg-light border me-1 mb-1">job_title</span>
+                        <span class="badge text-bg-light border me-1 mb-1">address</span>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        A login account and password are generated for every row. Leave <code>email</code> blank
+                        for someone without one — no email will be sent for that row, and their temporary
+                        password will be shown on the results page instead so you can hand it over directly.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

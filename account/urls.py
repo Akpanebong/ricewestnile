@@ -37,6 +37,8 @@ urlpatterns = [
     path('update_profile/<slug:slug>/', views.update_profile, name='update_employee'),
     path('profiles/', views.profile_list, name='profile_list'),
     path('profiles/create/', views.profile_create, name='profile_create'),
+    path('profiles/import/', views.import_employees, name='import_employees'),
+    path('profiles/import/template/', views.download_employee_import_template, name='download_employee_import_template'),
     path('profiles/<int:pk>/update/<slug:slug>/', views.employee_profile_update, name='profile_update'),
     path('profiles/<int:pk>/delete/', views.profile_delete, name='profile_delete'),
 
