@@ -11,6 +11,22 @@
         border-radius: var(--radius-lg, 16px);
         box-shadow: var(--surface-1-shadow, 0 2px 8px -2px rgba(15,23,42,.05));
     }
+
+    .glr-fields-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.5rem 1rem;
+        padding: 0.75rem;
+        background: var(--surface-muted);
+        border-radius: var(--radius-md, 10px);
+    }
+
+    .glr-fields-grid .form-check {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin: 0;
+    }
 </style>
 {% endblock %}
 
@@ -76,6 +92,20 @@
                     {% endfor %}
                 </select>
                 <div class="form-text">Every account converts into this currency here, so mixed-currency accounts stay comparable.</div>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label small text-muted mb-1">Columns to Display</label>
+                <div class="glr-fields-grid" id="glrFieldsGrid">
+                    {% for key, label in optional_fields %}
+                    <label class="form-check">
+                        <input type="checkbox" class="form-check-input" name="fields" value="{{ key }}"
+                               {% if selected_fields %}{% if key in selected_fields %}checked{% endif %}{% elif key in default_fields %}checked{% endif %}>
+                        <span class="form-check-label">{{ label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="form-text">Remembered on this browser until you change it.</div>
             </div>
 
             <div class="col-12">
@@ -179,6 +209,34 @@
     });
 
     updateLabel();
+})();
+
+(function () {
+    // "Columns to Display" — persisted per-browser so the choice sticks
+    // across visits until the user changes it, without needing a
+    // server-side preferences model. The URL's own `fields` params (e.g.
+    // from the report's "Edit Filters" link) win over the saved value,
+    // since that reflects a real prior selection, not a stale default.
+    const STORAGE_KEY = 'ricewn.glr.fields';
+    const checkboxes = document.querySelectorAll('#glrFieldsGrid input[name="fields"]');
+    const urlHasFields = new URLSearchParams(window.location.search).has('fields');
+
+    if (!urlHasFields) {
+        let saved = null;
+        try {
+            saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || 'null');
+        } catch (e) { /* localStorage unavailable, ignore */ }
+        if (Array.isArray(saved)) {
+            checkboxes.forEach(function (cb) { cb.checked = saved.includes(cb.value); });
+        }
+    }
+
+    document.getElementById('glrFilterForm').addEventListener('submit', function () {
+        const checked = [...checkboxes].filter(function (cb) { return cb.checked; }).map(function (cb) { return cb.value; });
+        try {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+        } catch (e) { /* localStorage unavailable, ignore */ }
+    });
 })();
 </script>
 {% endblock %}

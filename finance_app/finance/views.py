@@ -1024,6 +1024,23 @@ def _general_ledger_filter_defaults(request):
     }
 
 
+# The full set of optional columns the General Ledger report can show,
+# picked before the report runs (not toggled after the fact) — persisted
+# client-side (localStorage) so the choice sticks until the user changes
+# it again, without needing a server-side preferences model.
+GL_OPTIONAL_FIELDS = [
+    ("debit_base", "Debit (Base Currency)"),
+    ("credit_base", "Credit (Base Currency)"),
+    ("balance_base", "Balance (Base Currency)"),
+    ("debit_original", "Debit (Original Currency)"),
+    ("credit_original", "Credit (Original Currency)"),
+    ("balance_original", "Balance (Original Currency)"),
+    ("project", "Project"),
+    ("department", "Department"),
+]
+GL_DEFAULT_FIELDS = ["debit_base", "credit_base", "balance_base"]
+
+
 @login_required(login_url="login")
 def general_ledger_report(request):
     """
@@ -1047,6 +1064,9 @@ def general_ledger_report(request):
         "projects": Project.objects.all(),
         "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
         "filters": _general_ledger_filter_defaults(request),
+        "optional_fields": GL_OPTIONAL_FIELDS,
+        "selected_fields": request.GET.getlist("fields") or None,
+        "default_fields": GL_DEFAULT_FIELDS,
     }
     return render(request, "finance/general_ledger_report.html", context)
 
@@ -1122,12 +1142,23 @@ def general_ledger_report_view(request):
     grand_movement = Decimal("0.00")
 
     for account in accounts:
-        prior_amount = FinancialTransaction.objects.filter(category=account, date__lt=start_date).aggregate(
-            total=Coalesce(Sum("amount"), Value(0), output_field=DECIMAL_ZERO)
-        )["total"]
+        # Aggregate aliases deliberately avoid the literal field names
+        # "amount"/"original_amount" — using one as its own aggregate's
+        # alias makes Django resolve a later F("amount") in the same
+        # .aggregate() call against that annotation instead of the raw
+        # column ("Cannot compute Sum('amount'): 'amount' is an aggregate").
+        prior = FinancialTransaction.objects.filter(category=account, date__lt=start_date).aggregate(
+            prior_amount=Coalesce(Sum("amount"), Value(0), output_field=DECIMAL_ZERO),
+            prior_original=Coalesce(Sum(Coalesce(F("original_amount"), F("amount"))), Value(0), output_field=DECIMAL_ZERO),
+        )
         opening_balance = convert_amount(
             account.opening_balance, account.currency, report_currency, rates=rates
-        ) + convert_amount(prior_amount, base_currency, report_currency, rates=rates)
+        ) + convert_amount(prior["prior_amount"], base_currency, report_currency, rates=rates)
+        # "Original currency" balance stays in the account's own currency
+        # throughout (no conversion) — meaningful because a ledger account
+        # is expected to only ever be posted to in its own currency, the
+        # same assumption a real bank-account ledger makes.
+        opening_balance_original = account.opening_balance + prior["prior_original"]
 
         transactions = list(
             FinancialTransaction.objects.filter(txn_filter, category=account)
@@ -1142,7 +1173,10 @@ def general_ledger_report_view(request):
         rows = []
         period_debit = Decimal("0.00")
         period_credit = Decimal("0.00")
+        period_debit_original = Decimal("0.00")
+        period_credit_original = Decimal("0.00")
         running_balance = opening_balance
+        running_balance_original = opening_balance_original
 
         if transactions:
             df = pd.DataFrame(transactions)
@@ -1162,21 +1196,34 @@ def general_ledger_report_view(request):
             df["debit"] = df["display_amount"] if is_debit else None
             df["credit"] = None if is_debit else df["display_amount"]
 
+            df["balance_original"] = opening_balance_original + df["original_amount"].cumsum()
+            df["debit_original"] = df["original_amount"] if is_debit else None
+            df["credit_original"] = None if is_debit else df["original_amount"]
+
             period_debit = _decimal_sum(df["debit"]) if is_debit else Decimal("0.00")
             period_credit = _decimal_sum(df["credit"]) if not is_debit else Decimal("0.00")
+            period_debit_original = _decimal_sum(df["debit_original"]) if is_debit else Decimal("0.00")
+            period_credit_original = _decimal_sum(df["credit_original"]) if not is_debit else Decimal("0.00")
             running_balance = df["balance"].iloc[-1]
+            running_balance_original = df["balance_original"].iloc[-1]
             rows = df.to_dict("records")
 
         report_rows.append({
             "account": account,
             "opening_balance": opening_balance,
+            "opening_balance_original": opening_balance_original,
             "rows": rows,
             "closing_balance": running_balance,
+            "closing_balance_original": running_balance_original,
             "period_debit": period_debit,
             "period_credit": period_credit,
+            "period_debit_original": period_debit_original,
+            "period_credit_original": period_credit_original,
         })
         grand_opening += opening_balance
         grand_movement += (running_balance - opening_balance)
+
+    selected_fields = request.GET.getlist("fields") or GL_DEFAULT_FIELDS
 
     context = {
         "report_rows": report_rows,
@@ -1184,5 +1231,7 @@ def general_ledger_report_view(request):
         "grand_closing": grand_opening + grand_movement,
         "filters": filters,
         "base_currency": base_currency,
+        "selected_fields": selected_fields,
+        "optional_fields": GL_OPTIONAL_FIELDS,
     }
     return render(request, "finance/general_ledger_report_view.html", context)
