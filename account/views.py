@@ -431,20 +431,73 @@ EMPLOYEE_IMPORT_HEADERS = [
 VALID_PROFILE_TYPES = {choice[0].lower(): choice[0] for choice in PROFILE_TYPE}
 
 
+def _build_employee_import_workbook():
+    from openpyxl import Workbook
+    from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.datavalidation import DataValidation
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Employees"
+    ws.append(EMPLOYEE_IMPORT_HEADERS)
+    ws.append([
+        'jdoe', 'Jane', 'Doe', 'jane.doe@example.org', '+256700000000', 'Ms.',
+        'Staff', '', '', '', 'Accountant', '',
+    ])
+
+    # A hidden sheet holding the actual choices, so the dropdowns on the
+    # Employees sheet always reflect this system's real data rather than a
+    # hardcoded guess — Excel data validation needs a cell range to point
+    # its "list" source at, it can't inline query a database.
+    lists_ws = wb.create_sheet("Lists")
+    lists_ws.sheet_state = "hidden"
+
+    option_columns = {
+        'A': [choice[0] for choice in PROFILE_TYPE],
+        'B': list(Department.objects.order_by('name').values_list('name', flat=True)),
+        'C': list(Unit.objects.order_by('name').values_list('name', flat=True)),
+        'D': list(Project.objects.order_by('name').values_list('name', flat=True)),
+    }
+    for col, values in option_columns.items():
+        for i, value in enumerate(values, start=1):
+            lists_ws[f'{col}{i}'] = value
+
+    last_data_row = 500
+
+    def add_dropdown(field_name, list_col, values):
+        if not values:
+            return
+        field_col = get_column_letter(EMPLOYEE_IMPORT_HEADERS.index(field_name) + 1)
+        dv = DataValidation(
+            type="list",
+            formula1=f"=Lists!${list_col}$1:${list_col}${len(values)}",
+            allow_blank=True,
+        )
+        dv.error = "Please choose a value from the dropdown list."
+        dv.errorTitle = "Invalid entry"
+        ws.add_data_validation(dv)
+        dv.add(f"{field_col}2:{field_col}{last_data_row}")
+
+    add_dropdown('profile_type', 'A', option_columns['A'])
+    add_dropdown('department', 'B', option_columns['B'])
+    add_dropdown('unit', 'C', option_columns['C'])
+    add_dropdown('project', 'D', option_columns['D'])
+
+    return wb
+
+
 @login_required
 def download_employee_import_template(request):
     current_user = request.user
     if not (current_user.is_superuser or has_group(current_user, 'HR')):
         return HttpResponseForbidden("Access Denied.")
 
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename=Employee_Import_Template.csv'
-    writer = csv.writer(response)
-    writer.writerow(EMPLOYEE_IMPORT_HEADERS)
-    writer.writerow([
-        'jdoe', 'Jane', 'Doe', 'jane.doe@example.org', '+256700000000', 'Ms.',
-        'Staff', 'Finance', '', '', 'Accountant', '',
-    ])
+    wb = _build_employee_import_workbook()
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=Employee_Import_Template.xlsx'
+    wb.save(response)
     return response
 
 
@@ -612,7 +665,11 @@ def import_employees(request):
                         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
                         email_sent = True
                     except Exception as e:
-                        errors.append(f"Row {nr}: account created for '{username}', but email failed: {e}")
+                        # The account was still created successfully — only
+                        # delivery failed — so this is a warning on the row,
+                        # not an error that skipped it. The password falls
+                        # through to the row below either way.
+                        row_warnings.append(f"could not email credentials to {email}: {e}")
 
                 created_accounts.append({
                     'row': nr,

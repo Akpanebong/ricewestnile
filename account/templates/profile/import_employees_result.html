@@ -59,6 +59,9 @@
                         <td>
                             {% if acc.email_sent %}
                                 <span class="badge text-bg-success">Emailed</span>
+                            {% elif acc.email %}
+                                <span class="badge text-bg-danger">Email failed — temp password:</span>
+                                <code>{{ acc.password }}</code>
                             {% else %}
                                 <span class="badge text-bg-warning text-dark">No email — temp password:</span>
                                 <code>{{ acc.password }}</code>
