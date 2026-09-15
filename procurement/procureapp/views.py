@@ -105,7 +105,8 @@ def get_project_budget_data():
 @login_required(login_url='login')
 def dashboard(request):
     if not (has_group(request.user, 'Procurement') or has_group(request.user, 'ED')  or request.user.is_superuser):
-        return redirect(reverse_lazy("profile_update", kwargs={'pk': request.user.pk, 'slug': request.user.slug}))
+        messages.error(request, "Only Procurement staff, ED, or a superuser can access the Procurement dashboard.")
+        return redirect(reverse_lazy("system_home"))
 
     money_field = DecimalField(max_digits=18, decimal_places=2)
     zero_money = Value(0, output_field=money_field)
