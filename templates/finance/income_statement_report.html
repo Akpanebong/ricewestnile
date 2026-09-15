@@ -1,0 +1,75 @@
+{% extends "finance/base.html" %}
+{% block title %}Income Statement{% endblock %}
+
+{% block extra_head %}
+<style>
+    .glr-filter-card {
+        background: var(--surface-1, #fff);
+        border: 1px solid var(--surface-1-border, #e2e8f0);
+        border-radius: var(--radius-lg, 16px);
+        box-shadow: var(--surface-1-shadow, 0 2px 8px -2px rgba(15,23,42,.05));
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Income Statement</h3>
+            <p class="text-muted mb-0">Choose a period and filters, then run the report in its own full-page view</p>
+        </div>
+        <a href="{% url 'finance:reports_home' %}" class="btn btn-outline-dark shadow-sm">
+            <i class="fa fa-arrow-left me-1"></i> All Reports
+        </a>
+    </div>
+
+    <div class="glr-filter-card p-3">
+        <form method="get" action="{% url 'finance:income_statement_report_view' %}" class="row g-3">
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small text-muted mb-1">Period From</label>
+                <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small text-muted mb-1">Period To</label>
+                <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small text-muted mb-1">Department</label>
+                <select name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                    <option value="{{ d.id }}" {% if filters.department == d.id|stringformat:"s" %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <label class="form-label small text-muted mb-1">Project</label>
+                <select name="project" class="form-select">
+                    <option value="">All Projects</option>
+                    {% for p in projects %}
+                    <option value="{{ p.id }}" {% if filters.project == p.id|stringformat:"s" %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Report Currency</label>
+                <select name="currency" class="form-select">
+                    {% for option in currency_options %}
+                    <option value="{{ option.code }}" {% if option.code == filters.currency %}selected{% endif %}>{{ option.code }} — {{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-magnifying-glass-chart me-1"></i> Show Report
+                </button>
+                <a href="{% url 'finance:income_statement_report' %}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

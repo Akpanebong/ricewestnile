@@ -1004,6 +1004,18 @@ def reports_home(request):
             "url": reverse("finance:general_ledger_report"),
             "icon": "fa-file-lines",
         },
+        {
+            "name": "Income Statement",
+            "description": "Income and expenses for a period, grouped the same way as the Chart of Accounts, with the net result.",
+            "url": reverse("finance:income_statement_report"),
+            "icon": "fa-scale-unbalanced",
+        },
+        {
+            "name": "Budget vs Actual",
+            "description": "Each project's approved budget against what was actually spent, with variance and utilization.",
+            "url": reverse("finance:budget_vs_actual_report"),
+            "icon": "fa-chart-pie",
+        },
     ]
     return render(request, "finance/reports_home.html", {"reports": reports})
 
@@ -1235,3 +1247,193 @@ def general_ledger_report_view(request):
         "optional_fields": GL_OPTIONAL_FIELDS,
     }
     return render(request, "finance/general_ledger_report_view.html", context)
+
+
+def _build_period_activity_tree(category_types, txn_filter, report_currency, rates, base_currency):
+    """
+    Roll up transaction activity WITHIN A PERIOD (not an all-time opening/
+    closing balance) for every account under the given root category
+    type(s), converted into report_currency. Used by the Income Statement,
+    and written generically enough that Budget vs Actual (or any future
+    period-based report) can reuse it instead of writing its own rollup.
+    """
+    categories = list(FinancialCategory.objects.filter(category_type__in=category_types).select_related("parent"))
+    by_id = {c.pk: c for c in categories}
+    for c in categories:
+        c.tree_children = []
+        if not c.is_group:
+            total = FinancialTransaction.objects.filter(txn_filter, category=c).aggregate(
+                total=Coalesce(Sum("amount"), Value(0), output_field=DECIMAL_ZERO)
+            )["total"]
+            c.period_amount = convert_amount(total, base_currency, report_currency, rates=rates)
+
+    roots = []
+    for c in categories:
+        parent = by_id.get(c.parent_id) if c.parent_id else None
+        if parent is not None:
+            parent.tree_children.append(c)
+        else:
+            roots.append(c)
+
+    def rollup(node):
+        if node.is_group:
+            node.period_amount = sum((rollup(child) for child in node.tree_children), Decimal("0.00"))
+        return node.period_amount
+
+    for root in roots:
+        rollup(root)
+
+    return roots
+
+
+@login_required(login_url="login")
+def income_statement_report(request):
+    """Filter form for the Income Statement — same period/dept/project/
+    currency shape as the General Ledger's filter page, opening the actual
+    report in its own full page on submit."""
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can run financial reports.")
+        return redirect(reverse("finance:dashboard"))
+
+    context = {
+        "departments": Department.objects.all(),
+        "projects": Project.objects.all(),
+        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "filters": _general_ledger_filter_defaults(request),
+    }
+    return render(request, "finance/income_statement_report.html", context)
+
+
+@login_required(login_url="login")
+def income_statement_report_view(request):
+    """
+    Income and Expense accounts for a period, grouped the same way as the
+    Chart of Accounts, with the net result (Income - Expenses). Unlike the
+    General Ledger, this only needs period activity per account (a flow),
+    not an opening/closing balance (a stock) — Income/Expense accounts are
+    temporary accounts that measure what happened during the period, not a
+    running position.
+    """
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can run financial reports.")
+        return redirect(reverse("finance:dashboard"))
+
+    filters = _general_ledger_filter_defaults(request)
+    report_currency = filters["currency"]
+    base_currency = get_base_currency()
+    rates = get_latest_usd_rates()
+
+    txn_filter = Q(date__gte=filters["start_date"], date__lte=filters["end_date"])
+    if filters["department"]:
+        txn_filter &= Q(department_id=filters["department"])
+    if filters["project"]:
+        txn_filter &= Q(project_id=filters["project"])
+
+    income_roots = _build_period_activity_tree(
+        [FinancialCategory.CategoryType.INCOME], txn_filter, report_currency, rates, base_currency
+    )
+    expense_roots = _build_period_activity_tree(
+        [FinancialCategory.CategoryType.EXPENSE], txn_filter, report_currency, rates, base_currency
+    )
+
+    total_income = sum((r.period_amount for r in income_roots), Decimal("0.00"))
+    total_expense = sum((r.period_amount for r in expense_roots), Decimal("0.00"))
+
+    context = {
+        "income_roots": income_roots,
+        "expense_roots": expense_roots,
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "net_result": total_income - total_expense,
+        "filters": filters,
+    }
+    return render(request, "finance/income_statement_report_view.html", context)
+
+
+@login_required(login_url="login")
+def budget_vs_actual_report(request):
+    """Filter form for Budget vs Actual — pick a fiscal year (matching
+    ProjectBudget entries) and the period to measure actual spend against."""
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can run financial reports.")
+        return redirect(reverse("finance:dashboard"))
+
+    fiscal_years = list(
+        ProjectBudget.objects.order_by("-fiscal_year").values_list("fiscal_year", flat=True).distinct()
+    )
+
+    context = {
+        "fiscal_years": fiscal_years,
+        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "filters": _general_ledger_filter_defaults(request),
+        "selected_fiscal_year": request.GET.get("fiscal_year") or (fiscal_years[0] if fiscal_years else ""),
+    }
+    return render(request, "finance/budget_vs_actual_report.html", context)
+
+
+@login_required(login_url="login")
+def budget_vs_actual_report_view(request):
+    """
+    Each project's approved budget for a fiscal year against what was
+    actually spent (summed FinancialTransaction activity for that project
+    over the chosen date range), with variance and percentage utilized.
+
+    ProjectBudget doesn't store its own start/end dates (just a fiscal_year
+    label and an optional quarter), so "actual" spend is measured over the
+    date range chosen in the filter — the org's own understanding of that
+    fiscal year's calendar span — rather than one this view invents.
+    Budget rows are summed per project regardless of period (Full Year vs.
+    quarterly): correct as long as a project's budget was entered once
+    (either as one Full Year row or as non-overlapping quarters), and
+    reports a total including all their prior quarters, which is a
+    reasonable summary as long as budgets are entered consistently.
+    """
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can run financial reports.")
+        return redirect(reverse("finance:dashboard"))
+
+    filters = _general_ledger_filter_defaults(request)
+    report_currency = filters["currency"]
+    base_currency = get_base_currency()
+    rates = get_latest_usd_rates()
+    fiscal_year = request.GET.get("fiscal_year") or ""
+
+    budgets = ProjectBudget.objects.filter(fiscal_year=fiscal_year).values("project_id").annotate(
+        total_budget=Coalesce(Sum("budget_amount"), Value(0), output_field=DECIMAL_ZERO)
+    )
+    budget_by_project = {row["project_id"]: row["total_budget"] for row in budgets}
+
+    rows = []
+    grand_budget = Decimal("0.00")
+    grand_actual = Decimal("0.00")
+
+    for project in Project.objects.filter(pk__in=budget_by_project.keys()):
+        budget_amount = convert_amount(budget_by_project[project.pk], base_currency, report_currency, rates=rates)
+        actual_amount_base = FinancialTransaction.objects.filter(
+            project=project, date__gte=filters["start_date"], date__lte=filters["end_date"],
+        ).aggregate(total=Coalesce(Sum("amount"), Value(0), output_field=DECIMAL_ZERO))["total"]
+        actual_amount = convert_amount(actual_amount_base, base_currency, report_currency, rates=rates)
+        variance = budget_amount - actual_amount
+        percent_used = (actual_amount / budget_amount * 100) if budget_amount else None
+
+        rows.append({
+            "project": project,
+            "budget": budget_amount,
+            "actual": actual_amount,
+            "variance": variance,
+            "percent_used": percent_used,
+        })
+        grand_budget += budget_amount
+        grand_actual += actual_amount
+
+    rows.sort(key=lambda r: r["project"].name)
+
+    context = {
+        "rows": rows,
+        "grand_budget": grand_budget,
+        "grand_actual": grand_actual,
+        "grand_variance": grand_budget - grand_actual,
+        "fiscal_year": fiscal_year,
+        "filters": filters,
+    }
+    return render(request, "finance/budget_vs_actual_report_view.html", context)

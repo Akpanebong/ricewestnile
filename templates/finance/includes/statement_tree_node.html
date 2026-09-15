@@ -1,0 +1,15 @@
+{% load humanize %}
+{% if node.is_group %}
+<tr class="stmt-row-group" style="--stmt-depth: {{ depth }};">
+    <td><i class="fa-solid fa-folder me-2 text-muted"></i>{{ node.name }}</td>
+    <td class="text-end">{{ node.period_amount|floatformat:2|intcomma }}</td>
+</tr>
+{% for child in node.tree_children %}
+    {% include "finance/includes/statement_tree_node.html" with node=child depth=depth|add:1 %}
+{% endfor %}
+{% else %}
+<tr style="--stmt-depth: {{ depth }};">
+    <td><code>{{ node.code }}</code> — {{ node.name }}</td>
+    <td class="text-end">{{ node.period_amount|floatformat:2|intcomma }}</td>
+</tr>
+{% endif %}

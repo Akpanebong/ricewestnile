@@ -50,4 +50,8 @@ urlpatterns = [
     path("reports/", views.reports_home, name="reports_home"),
     path("reports/general-ledger/", views.general_ledger_report, name="general_ledger_report"),
     path("reports/general-ledger/view/", views.general_ledger_report_view, name="general_ledger_report_view"),
+    path("reports/income-statement/", views.income_statement_report, name="income_statement_report"),
+    path("reports/income-statement/view/", views.income_statement_report_view, name="income_statement_report_view"),
+    path("reports/budget-vs-actual/", views.budget_vs_actual_report, name="budget_vs_actual_report"),
+    path("reports/budget-vs-actual/view/", views.budget_vs_actual_report_view, name="budget_vs_actual_report_view"),
 ]

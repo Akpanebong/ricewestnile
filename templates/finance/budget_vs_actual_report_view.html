@@ -1,0 +1,220 @@
+{% load static %}
+{% load humanize %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Budget vs Actual</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/ricewn.png' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/variables.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <style>
+        body {
+            min-height: 100vh;
+            color: var(--text-primary);
+            background: var(--body-bg);
+            font-family: var(--font-primary);
+        }
+
+        .glr-topbar {
+            background: var(--surface-1);
+            border-bottom: 1px solid var(--surface-1-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .glr-brand-name {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .glr-brand-sub {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .stmt-card {
+            border: 1px solid var(--surface-1-border);
+            border-radius: var(--radius-lg, 16px);
+            overflow: hidden;
+            background: var(--surface-1);
+        }
+
+        .stmt-total-row td {
+            font-weight: 800;
+            background: var(--surface-muted);
+            border-top: 2px solid var(--surface-1-border);
+        }
+
+        .bva-variance.is-over {
+            color: var(--status-rejected-text, #dc2626);
+            font-weight: 700;
+        }
+
+        .bva-variance.is-under {
+            color: var(--status-approved-text, #15803d);
+        }
+
+        .bva-progress {
+            height: 6px;
+            border-radius: 999px;
+            background: var(--surface-muted);
+            overflow: hidden;
+            width: 100px;
+        }
+
+        .bva-progress-bar {
+            height: 100%;
+            background: var(--sidebar-accent);
+        }
+
+        .bva-progress-bar.is-over {
+            background: var(--status-rejected-text, #dc2626);
+        }
+
+        .glr-summary-bar {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            padding: 0.85rem 1.1rem;
+            background: var(--surface-1);
+            border: 1px solid var(--surface-1-border);
+            border-radius: var(--radius-lg, 16px);
+            margin-bottom: 1.25rem;
+        }
+
+        .glr-summary-bar .item .label {
+            display: block;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .glr-summary-bar .item .value {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #fff; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="glr-topbar py-2 no-print">
+    <div class="container-fluid px-3 px-lg-4 d-flex align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+            <img src="{% static 'images/ricewn.png' %}" height="32" alt="RICE West Nile">
+            <div>
+                <div class="glr-brand-name">Budget vs Actual</div>
+                <div class="glr-brand-sub">RICE West Nile &middot; Accounting</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'finance:budget_vs_actual_report' %}?{{ request.GET.urlencode }}" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-arrow-left me-1"></i> Edit Filters
+            </a>
+            <a href="{% url 'finance:reports_home' %}" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-chart-column me-1"></i> All Reports
+            </a>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                <i class="fa fa-print me-1"></i> Print
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="container-fluid px-3 px-lg-4 py-4" style="max-width: 1200px; margin: 0 auto;">
+
+    <div class="mb-3 d-none d-print-block">
+        <h4 class="fw-bold mb-0">RICE West Nile — Budget vs Actual ({{ fiscal_year }})</h4>
+    </div>
+
+    <div class="glr-summary-bar">
+        <div class="item">
+            <span class="label">Fiscal Year</span>
+            <span class="value">{{ fiscal_year|default:"—" }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Actual Spend Period</span>
+            <span class="value">{{ filters.start_date }} &rarr; {{ filters.end_date }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Total Budget ({{ filters.currency }})</span>
+            <span class="value">{{ grand_budget|floatformat:2|intcomma }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Total Actual ({{ filters.currency }})</span>
+            <span class="value">{{ grand_actual|floatformat:2|intcomma }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Variance ({{ filters.currency }})</span>
+            <span class="value">{{ grand_variance|floatformat:2|intcomma }}</span>
+        </div>
+    </div>
+
+    <div class="stmt-card">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Project</th>
+                        <th class="text-end">Budget</th>
+                        <th class="text-end">Actual</th>
+                        <th class="text-end">Variance</th>
+                        <th>Utilized</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>{{ row.project }}</td>
+                        <td class="text-end">{{ row.budget|floatformat:2|intcomma }}</td>
+                        <td class="text-end">{{ row.actual|floatformat:2|intcomma }}</td>
+                        <td class="text-end bva-variance {% if row.variance < 0 %}is-over{% else %}is-under{% endif %}">
+                            {{ row.variance|floatformat:2|intcomma }}
+                        </td>
+                        <td>
+                            {% if row.percent_used is not None %}
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bva-progress">
+                                    <div class="bva-progress-bar {% if row.percent_used > 100 %}is-over{% endif %}" style="width: {{ row.percent_used|floatformat:0 }}%; max-width: 100%;"></div>
+                                </div>
+                                <small class="text-muted">{{ row.percent_used|floatformat:0 }}%</small>
+                            </div>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3">No project budgets recorded for this fiscal year.</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="stmt-total-row">
+                        <td>Total</td>
+                        <td class="text-end">{{ grand_budget|floatformat:2|intcomma }}</td>
+                        <td class="text-end">{{ grand_actual|floatformat:2|intcomma }}</td>
+                        <td class="text-end">{{ grand_variance|floatformat:2|intcomma }}</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>
