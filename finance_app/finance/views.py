@@ -730,62 +730,6 @@ def financial_ledger_export(request):
     return response
 
 
-@login_required(login_url="login")
-def record_transaction(request):
-    if not _is_finance_staff(request.user):
-        messages.error(request, "Only Finance and Operations staff can record financial transactions.")
-        return redirect(reverse("finance:dashboard"))
-
-    if request.method == "POST":
-        # The transaction's currency is a fact about the money itself, not
-        # about the person recording it — deliberately NOT user_amount_to_ugx()
-        # (which converts using the *viewer's* display-currency preference).
-        currency = normalize_currency(request.POST.get("currency"))
-        raw_amount = (request.POST.get("amount") or "0").replace(",", "").strip()
-        try:
-            original_amount = Decimal(raw_amount)
-        except InvalidOperation:
-            messages.error(request, "Enter a valid amount.")
-            return redirect(reverse("finance:record_transaction"))
-
-        category = get_object_or_404(FinancialCategory, pk=request.POST.get("category"))
-
-        txn = FinancialTransaction.record_manual_transaction(
-            transaction_type=request.POST.get("transaction_type"),
-            category=category,
-            currency=currency,
-            original_amount=original_amount,
-            date=request.POST.get("date"),
-            description=request.POST.get("description", ""),
-            donor_code=request.POST.get("donor_code", ""),
-            project_id=request.POST.get("project") or None,
-            department_id=request.POST.get("department") or None,
-            purchase_order_id=request.POST.get("purchase_order") or None,
-            asset_id=request.POST.get("asset") or None,
-            asset_maintenance_id=request.POST.get("asset_maintenance") or None,
-            created_by=request.user,
-        )
-        messages.success(
-            request,
-            f"Transaction {txn.reference} recorded — "
-            f"{currency} {original_amount:,.2f} ({get_base_currency()} {txn.amount:,.2f} at rate {txn.exchange_rate_used}).",
-        )
-        return redirect(reverse("finance:ledger"))
-
-    context = {
-        "categories": FinancialCategory.objects.filter(is_group=False),
-        "projects": Project.objects.all(),
-        "departments": Department.objects.all(),
-        "purchase_orders": PurchaseOrder.objects.filter(sent=True).order_by("-id")[:200],
-        "assets": Asset.objects.all()[:200],
-        "asset_maintenances": AssetMaintenance.objects.select_related("asset").order_by("-id")[:200],
-        "transaction_types": FinancialTransaction.TransactionType.choices,
-        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
-        "base_currency": get_base_currency(),
-    }
-    return render(request, "finance/record_transaction.html", context)
-
-
 def _is_finance_staff(user):
     """
     Org-wide financial data (the ledger, the chart of accounts, ad-hoc

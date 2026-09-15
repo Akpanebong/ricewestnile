@@ -560,39 +560,6 @@ class FinancialTransaction(models.Model):
         rate_used = (to_rate / from_rate) if from_rate else Decimal("0")
         return base_amount, rate_used
 
-    @classmethod
-    def record_manual_transaction(cls, *, transaction_type, category, currency, original_amount,
-                                   date, description="", donor_code="", project_id=None, department_id=None,
-                                   purchase_order_id=None, asset_id=None, asset_maintenance_id=None, created_by=None):
-        """
-        The fully multicurrency-aware entry point: takes the amount in
-        whatever currency the transaction actually happened in, and derives
-        the base-currency-equivalent + the rate used — rather than assuming
-        a fixed currency like the auto-populated record_* methods above
-        have to.
-
-        Relations are accepted as `_id` values (matching how they arrive
-        from a form's raw POST data) rather than instances.
-        """
-        base_amount, rate_used = cls.convert_to_base_currency(original_amount, currency)
-        return cls.objects.create(
-            transaction_type=transaction_type,
-            category=category,
-            amount=base_amount,
-            currency=currency,
-            original_amount=original_amount,
-            exchange_rate_used=rate_used,
-            date=date,
-            description=description,
-            donor_code=donor_code,
-            project_id=project_id,
-            department_id=department_id,
-            purchase_order_id=purchase_order_id,
-            asset_id=asset_id,
-            asset_maintenance_id=asset_maintenance_id,
-            created_by=created_by,
-        )
-
 
 class JournalEntry(models.Model):
     """

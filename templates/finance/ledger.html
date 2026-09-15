@@ -29,8 +29,8 @@
             <p class="text-muted mb-0">Consolidated income, expense, and transfer records across the organization</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{% url 'finance:record_transaction' %}" class="btn btn-primary shadow-sm">
-                <i class="fa fa-plus me-1"></i> Record Transaction
+            <a href="{% url 'finance:journal_entry_create' %}" class="btn btn-primary shadow-sm">
+                <i class="fa fa-plus me-1"></i> New Journal Entry
             </a>
             <a href="{% url 'finance:ledger_export' %}?{{ request.GET.urlencode }}" class="btn btn-outline-dark shadow-sm">
                 <i class="fa fa-file-excel me-1"></i> Export Excel

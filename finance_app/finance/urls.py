@@ -44,7 +44,6 @@ urlpatterns = [
     # =========================
     path("ledger/", views.financial_ledger, name="ledger"),
     path("ledger/export/", views.financial_ledger_export, name="ledger_export"),
-    path("ledger/record/", views.record_transaction, name="record_transaction"),
     path("chart-of-accounts/", views.chart_of_accounts, name="chart_of_accounts"),
     path("chart-of-accounts/add/", views.add_account, name="add_account"),
     path("chart-of-accounts/<int:pk>/delete/", views.delete_account, name="delete_account"),

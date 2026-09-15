@@ -80,20 +80,6 @@
 
 </a>
 
-<a href="{% url 'finance:record_transaction' %}"
-   class="sidebar-dashboard
-   {% if current_url == 'record_transaction' %}active{% endif %}">
-
-    <span class="sidebar-nav-icon">
-        <i class="fa-solid fa-circle-plus"></i>
-    </span>
-
-    <span class="sidebar-nav-text">
-        Record Transaction
-    </span>
-
-</a>
-
 <a href="{% url 'finance:chart_of_accounts' %}"
    class="sidebar-dashboard
    {% if current_url == 'chart_of_accounts' %}active{% endif %}">
