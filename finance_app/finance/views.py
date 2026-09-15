@@ -962,20 +962,43 @@ def add_account(request):
     group_tree_roots, _ = _build_account_tree(only_groups=True)
 
     # A next-available-code suggestion per group, so picking a group in the
-    # picker can pre-fill Code with a sensible number (existing max sibling
-    # code + 10, or the group's own code + 10 if it has no children yet)
-    # instead of leaving Finance staff to invent one from scratch.
+    # picker can pre-fill Code with a sensible number instead of leaving
+    # Finance staff to invent one from scratch. The step between siblings
+    # shrinks by a factor of 10 with each level of nesting — matching the
+    # org's own numbering convention (1000 Assets -> 1100 Current Assets
+    # children step by hundreds, 1600 Loans and Advances' children step by
+    # tens, 1650 Securities and Deposits' children step by ones) — derived
+    # from how many trailing zeros the PARENT's own code has, rather than
+    # a flat +10 that would suggest 1661 for a new child of 1650 instead
+    # of the correct 1652.
     all_categories = list(FinancialCategory.objects.values("pk", "parent_id", "code"))
     children_codes_by_parent = {}
     for c in all_categories:
         if c["parent_id"] is not None and c["code"].isdigit():
             children_codes_by_parent.setdefault(c["parent_id"], []).append(int(c["code"]))
 
+    def numbering_step(code):
+        if not code.isdigit():
+            return 10
+        stripped = code.rstrip("0")
+        trailing_zeros = len(code) - len(stripped)
+        return 10 ** (trailing_zeros - 1) if trailing_zeros else 1
+
+    all_existing_codes = {c["code"] for c in all_categories}
+
     next_code_by_group_id = {}
     for group in FinancialCategory.objects.filter(is_group=True):
         base = int(group.code) if group.code.isdigit() else 0
+        step = numbering_step(group.code)
         siblings = children_codes_by_parent.get(group.pk, [])
-        next_code_by_group_id[group.pk] = str(max(siblings, default=base) + 10)
+        candidate = max(siblings, default=base) + step
+        # A sibling-based suggestion can still land on a code already used
+        # elsewhere in the tree (e.g. a direct child of "1000 Assets" with
+        # existing children up to 1900 would suggest 2000 — the next root's
+        # own code). Keep stepping forward until it's actually free.
+        while str(candidate) in all_existing_codes:
+            candidate += step
+        next_code_by_group_id[group.pk] = str(candidate)
 
     # "Add Child" on a group's row action toolbar links here with the
     # parent already known — skip making Finance staff re-pick it.
