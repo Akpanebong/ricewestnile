@@ -46,7 +46,8 @@
                         <div class="row g-2 mb-3">
                             <div class="col-7">
                                 <label class="form-label">Code</label>
-                                <input type="text" name="code" class="form-control" placeholder="e.g. TRAVEL-EXP" required>
+                                <input type="text" inputmode="numeric" name="code" id="addCodeInput" class="form-control" placeholder="e.g. 1040" required>
+                                <div class="form-text">Suggested automatically once you choose a group &mdash; feel free to change it.</div>
                             </div>
                             <div class="col-5">
                                 <label class="form-label">Alt Code</label>
@@ -97,6 +98,24 @@
 
     isGroupCheckbox.addEventListener('change', sync);
     sync();
+
+    // Suggest the next available numeric code for whichever group gets
+    // picked — only when Code is still empty/untouched, so it never
+    // clobbers something the user already typed.
+    const nextCodeByGroupId = {{ next_code_by_group_id_json|safe }};
+    const codeInput = document.getElementById('addCodeInput');
+    let codeTouchedByUser = false;
+    codeInput.addEventListener('input', function () { codeTouchedByUser = true; });
+
+    document.getElementById('groupPickerList').addEventListener('click', function (event) {
+        if (codeTouchedByUser) return;
+        const row = event.target.closest('.group-picker-row');
+        if (!row) return;
+        const suggestion = nextCodeByGroupId[row.dataset.groupId];
+        if (suggestion) {
+            codeInput.value = suggestion;
+        }
+    });
 })();
 </script>
 {% endblock %}

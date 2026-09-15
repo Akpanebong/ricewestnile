@@ -405,11 +405,29 @@ class FinancialTransaction(models.Model):
 
     @classmethod
     def _get_category(cls, code, name, category_type):
-        category, _ = FinancialCategory.objects.get_or_create(
-            code=code,
-            defaults={"name": name, "category_type": category_type},
+        """
+        `code` here is a stable internal mnemonic (kept in `alt_code`), not
+        the account's numeric `code` — Finance staff can freely renumber
+        accounts from the Chart of Accounts UI, so looking this up by the
+        numeric code would silently create a duplicate category the moment
+        someone renumbers the real one.
+        """
+        category = FinancialCategory.objects.filter(alt_code=code).first()
+        if category:
+            return category
+
+        root = FinancialCategory.objects.filter(
+            parent__isnull=True, is_group=True, category_type=category_type
+        ).first()
+        next_code = code
+        if root and root.code.isdigit():
+            sibling_codes = FinancialCategory.objects.filter(parent=root).values_list("code", flat=True)
+            numeric_siblings = [int(c) for c in sibling_codes if c.isdigit()]
+            next_code = str(max(numeric_siblings, default=int(root.code)) + 10)
+
+        return FinancialCategory.objects.create(
+            code=next_code, alt_code=code, name=name, category_type=category_type, parent=root,
         )
-        return category
 
     @classmethod
     def record_cash_advance(cls, cash_requisition, user):

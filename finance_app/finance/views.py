@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from openpyxl import Workbook
@@ -22,7 +23,8 @@ from django.db.models.functions import Coalesce
 from account.templatetags.custom_tags import has_group
 from procurement.procureapp.models import Requisition, PurchaseOrder
 from assets.assetapp.models import Asset, AssetMaintenance
-from core.services import normalize_currency, get_base_currency, convert_amount, CURRENCY_LABELS, SUPPORTED_CURRENCIES
+import pandas as pd
+from core.services import normalize_currency, get_base_currency, convert_amount, get_latest_usd_rates, CURRENCY_LABELS, SUPPORTED_CURRENCIES
 
 
 @login_required(login_url="login")
@@ -958,13 +960,57 @@ def add_account(request):
 
     group_tree_roots, _ = _build_account_tree(only_groups=True)
 
+    # A next-available-code suggestion per group, so picking a group in the
+    # picker can pre-fill Code with a sensible number (existing max sibling
+    # code + 10, or the group's own code + 10 if it has no children yet)
+    # instead of leaving Finance staff to invent one from scratch.
+    all_categories = list(FinancialCategory.objects.values("pk", "parent_id", "code"))
+    children_codes_by_parent = {}
+    for c in all_categories:
+        if c["parent_id"] is not None and c["code"].isdigit():
+            children_codes_by_parent.setdefault(c["parent_id"], []).append(int(c["code"]))
+
+    next_code_by_group_id = {}
+    for group in FinancialCategory.objects.filter(is_group=True):
+        base = int(group.code) if group.code.isdigit() else 0
+        siblings = children_codes_by_parent.get(group.pk, [])
+        next_code_by_group_id[group.pk] = str(max(siblings, default=base) + 10)
+
     context = {
         "group_tree_roots": group_tree_roots,
         "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
         "base_currency": get_base_currency(),
         "default_is_group": request.GET.get("is_group") == "1",
+        "next_code_by_group_id_json": json.dumps(next_code_by_group_id),
     }
     return render(request, "finance/add_account.html", context)
+
+
+@login_required(login_url="login")
+def reports_home(request):
+    """
+    Landing page for every Accounting report — the single place reports
+    live instead of each one getting its own line in the sidebar. New
+    report types get added here as cards, not as more sidebar entries.
+    """
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can run financial reports.")
+        return redirect(reverse("finance:dashboard"))
+
+    reports = [
+        {
+            "name": "General Ledger",
+            "description": "Opening balance, every transaction, and the running balance for one or more accounts over a period.",
+            "url": reverse("finance:general_ledger_report"),
+            "icon": "fa-file-lines",
+        },
+    ]
+    return render(request, "finance/reports_home.html", {"reports": reports})
+
+
+def _decimal_sum(series):
+    total = series.sum()
+    return total if isinstance(total, Decimal) else Decimal("0.00")
 
 
 @login_required(login_url="login")
@@ -988,6 +1034,16 @@ def general_ledger_report(request):
     this report's running balance consistent with the balance shown
     everywhere else for the same account, rather than inventing a second,
     conflicting notion of "debit vs credit" just for this report.
+
+    The per-account transaction processing (running balance, debit/credit
+    split, period totals) is done with pandas rather than a hand-rolled
+    Python loop — object-dtype Series keep every amount an exact Decimal
+    (verified: no float precision loss), and cumsum()/sum() give the
+    running balance and period totals in one vectorized pass instead of
+    manually accumulating three separate counters per row. This is also
+    the foundation future reports (Trial Balance, Income & Expenditure)
+    can reuse — they're mostly a different groupby/pivot over the same
+    per-transaction DataFrame.
     """
     if not _is_finance_staff(request.user):
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
@@ -1002,6 +1058,11 @@ def general_ledger_report(request):
     selected_account_ids = [v for v in request.GET.getlist("accounts") if v]
 
     base_currency = get_base_currency()
+    # Fetched once and reused for every conversion below — convert_amount()
+    # would otherwise re-fetch/re-resolve exchange rates on every single
+    # call, once per transaction, which adds up fast on a report spanning
+    # many accounts.
+    rates = get_latest_usd_rates()
     leaf_accounts = FinancialCategory.objects.filter(is_group=False).select_related("parent").order_by("category_type", "code")
 
     accounts = leaf_accounts.filter(pk__in=selected_account_ids) if selected_account_ids else leaf_accounts
@@ -1021,31 +1082,34 @@ def general_ledger_report(request):
             total=Coalesce(Sum("amount"), Value(0), output_field=DECIMAL_ZERO)
         )["total"]
         opening_balance = convert_amount(
-            account.opening_balance, account.currency, report_currency
-        ) + convert_amount(prior_amount, base_currency, report_currency)
+            account.opening_balance, account.currency, report_currency, rates=rates
+        ) + convert_amount(prior_amount, base_currency, report_currency, rates=rates)
 
-        transactions = FinancialTransaction.objects.filter(txn_filter, category=account).select_related(
-            "project", "department"
-        ).order_by("date", "pk")
+        transactions = list(
+            FinancialTransaction.objects.filter(txn_filter, category=account)
+            .order_by("date", "pk")
+            .values("date", "reference", "description", "amount")
+        )
 
-        running_balance = opening_balance
+        is_debit = account.balance_side == "Dr"
         rows = []
         period_debit = Decimal("0.00")
         period_credit = Decimal("0.00")
-        for txn in transactions:
-            display_amount = convert_amount(txn.amount, base_currency, report_currency)
-            is_debit = account.balance_side == "Dr"
-            running_balance += display_amount
-            if is_debit:
-                period_debit += display_amount
-            else:
-                period_credit += display_amount
-            rows.append({
-                "txn": txn,
-                "debit": display_amount if is_debit else None,
-                "credit": display_amount if not is_debit else None,
-                "balance": running_balance,
-            })
+        running_balance = opening_balance
+
+        if transactions:
+            df = pd.DataFrame(transactions)
+            df["display_amount"] = df["amount"].apply(
+                lambda amount: convert_amount(amount, base_currency, report_currency, rates=rates)
+            )
+            df["balance"] = opening_balance + df["display_amount"].cumsum()
+            df["debit"] = df["display_amount"] if is_debit else None
+            df["credit"] = None if is_debit else df["display_amount"]
+
+            period_debit = _decimal_sum(df["debit"]) if is_debit else Decimal("0.00")
+            period_credit = _decimal_sum(df["credit"]) if not is_debit else Decimal("0.00")
+            running_balance = df["balance"].iloc[-1]
+            rows = df.to_dict("records")
 
         report_rows.append({
             "account": account,

@@ -108,16 +108,16 @@
 
 </a>
 
-<a href="{% url 'finance:general_ledger_report' %}"
+<a href="{% url 'finance:reports_home' %}"
    class="sidebar-dashboard
-   {% if current_url == 'general_ledger_report' %}active{% endif %}">
+   {% if current_url == 'reports_home' or current_url == 'general_ledger_report' %}active{% endif %}">
 
     <span class="sidebar-nav-icon">
-        <i class="fa-solid fa-file-lines"></i>
+        <i class="fa-solid fa-chart-column"></i>
     </span>
 
     <span class="sidebar-nav-text">
-        General Ledger Report
+        Reports
     </span>
 
 </a>

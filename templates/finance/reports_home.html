@@ -1,0 +1,102 @@
+{% extends "finance/base.html" %}
+{% block title %}Accounting Reports{% endblock %}
+
+{% block extra_head %}
+<style>
+    .report-tile {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+        height: 100%;
+        padding: 1.35rem;
+        background: var(--surface-1, #fff);
+        border: 1px solid var(--surface-1-border, #e2e8f0);
+        border-radius: var(--radius-lg, 16px);
+        box-shadow: var(--surface-1-shadow);
+        text-decoration: none;
+        transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .report-tile:hover {
+        transform: translateY(-3px);
+        border-color: color-mix(in srgb, var(--sidebar-accent) 35%, var(--surface-1-border));
+        box-shadow: var(--surface-2-shadow);
+    }
+
+    .report-tile-icon {
+        width: 46px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-md, 10px);
+        font-size: 1.15rem;
+        color: var(--sidebar-accent);
+        background: color-mix(in srgb, var(--sidebar-accent) 12%, white);
+        flex-shrink: 0;
+    }
+
+    .report-tile-title {
+        font-size: 1.02rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .report-tile-description {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin: 0;
+        flex: 1 1 auto;
+    }
+
+    .report-tile-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--sidebar-accent);
+    }
+
+    .report-tile-cta i {
+        font-size: 0.72rem;
+        transition: transform var(--transition-fast);
+    }
+
+    .report-tile:hover .report-tile-cta i {
+        transform: translateX(3px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h3 class="fw-bold">Accounting Reports</h3>
+        <p class="text-muted mb-0">Every Accounting report lives here — pick one to run it with your own filters.</p>
+    </div>
+
+    <div class="row g-3">
+        {% for report in reports %}
+        <div class="col-12 col-sm-6 col-lg-4">
+            <a class="report-tile" href="{{ report.url }}">
+                <span class="report-tile-icon">
+                    <i class="fa-solid {{ report.icon }}"></i>
+                </span>
+                <div>
+                    <h3 class="report-tile-title">{{ report.name }}</h3>
+                    <p class="report-tile-description">{{ report.description }}</p>
+                </div>
+                <span class="report-tile-cta">
+                    Run report <i class="fa-solid fa-arrow-right"></i>
+                </span>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
