@@ -28,7 +28,7 @@
         <a href="{% url 'finance:add_account' %}?parent_id={{ node.pk }}" class="btn btn-sm btn-outline-secondary" title="Add an account/sub-group under this group">Add Child</a>
     </span>
     {% endif %}
-    <span class="coa-group-total">{{ node.rollup_base|floatformat:2|intcomma }} {{ base_currency }} {{ node.balance_side }}</span>
+    <span class="coa-group-total">{{ node.rollup_base|abs_value|floatformat:2|intcomma }} {{ base_currency }} {{ node.rollup_base|display_side:node.balance_side }}</span>
 </div>
 <div class="collapse{% if node.tree_children %} show{% endif %}" id="coa-node-{{ node.pk }}">
     {% for child in node.tree_children %}
@@ -65,7 +65,7 @@
     </span>
     {% endif %}
     <div class="coa-account-amount">
-        <span class="closing">{{ node.closing_balance|floatformat:2|intcomma }} {{ node.currency }} {{ node.balance_side }}</span>
+        <span class="closing">{{ node.closing_balance|abs_value|floatformat:2|intcomma }} {{ node.currency }} {{ node.closing_balance|display_side:node.balance_side }}</span>
         <span class="opening">Opening {{ node.opening_balance|floatformat:2|intcomma }} {{ node.currency }}</span>
     </div>
 </div>

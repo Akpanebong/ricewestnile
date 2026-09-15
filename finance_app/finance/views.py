@@ -16,6 +16,7 @@ from core.project_models import Project, ProjectBudget
 from finance_app.finance.models import (
     AccountingForm, AdminExpenseNote, CashRequisition, CashRequisitionItem,
     ApprovalLog, AccountingItem, FinancialTransaction, FinancialCategory,
+    JournalEntry, JournalEntryLine,
 )
 
 from .utils.workflow import advance_workflow, user_can_approve
@@ -1280,17 +1281,30 @@ def general_ledger_report_view(request):
                 lambda amount: convert_amount(amount, base_currency, report_currency, rates=rates)
             )
             df["balance"] = opening_balance + df["display_amount"].cumsum()
-            df["debit"] = df["display_amount"] if is_debit else None
-            df["credit"] = None if is_debit else df["display_amount"]
-
             df["balance_original"] = opening_balance_original + df["original_amount"].cumsum()
-            df["debit_original"] = df["original_amount"] if is_debit else None
-            df["credit_original"] = None if is_debit else df["original_amount"]
 
-            period_debit = _decimal_sum(df["debit"]) if is_debit else Decimal("0.00")
-            period_credit = _decimal_sum(df["credit"]) if not is_debit else Decimal("0.00")
-            period_debit_original = _decimal_sum(df["debit_original"]) if is_debit else Decimal("0.00")
-            period_credit_original = _decimal_sum(df["credit_original"]) if not is_debit else Decimal("0.00")
+            # A row's amount can be negative (a journal-entry line that
+            # decreases this account) — which column it belongs in depends
+            # on its own sign, not just the account's fixed natural side.
+            # Every pre-journal-entry transaction is non-negative, so this
+            # is a no-op for historical data: it always lands in the
+            # account's natural column exactly as before.
+            def split_debit_credit(amount):
+                is_debit_row = (amount >= 0) == is_debit
+                return (abs(amount), None) if is_debit_row else (None, abs(amount))
+
+            base_split = df["display_amount"].apply(split_debit_credit)
+            df["debit"] = base_split.apply(lambda pair: pair[0])
+            df["credit"] = base_split.apply(lambda pair: pair[1])
+
+            original_split = df["original_amount"].apply(split_debit_credit)
+            df["debit_original"] = original_split.apply(lambda pair: pair[0])
+            df["credit_original"] = original_split.apply(lambda pair: pair[1])
+
+            period_debit = _decimal_sum(df["debit"])
+            period_credit = _decimal_sum(df["credit"])
+            period_debit_original = _decimal_sum(df["debit_original"])
+            period_credit_original = _decimal_sum(df["credit_original"])
             running_balance = df["balance"].iloc[-1]
             running_balance_original = df["balance_original"].iloc[-1]
             rows = df.to_dict("records")
@@ -1640,3 +1654,132 @@ def balance_sheet_report_view(request):
         "currency": report_currency,
     }
     return render(request, "finance/balance_sheet_report_view.html", context)
+
+
+@login_required(login_url="login")
+def journal_entry_list(request):
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can view journal entries.")
+        return redirect(reverse("finance:dashboard"))
+
+    entries = JournalEntry.objects.select_related("created_by").prefetch_related(
+        "lines__category"
+    ).order_by("-date", "-created_at")[:200]
+
+    return render(request, "finance/journal_entry_list.html", {
+        "entries": entries,
+        "can_manage": _can_manage_chart_of_accounts(request.user),
+    })
+
+
+@login_required(login_url="login")
+def journal_entry_detail(request, pk):
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can view journal entries.")
+        return redirect(reverse("finance:dashboard"))
+
+    entry = get_object_or_404(
+        JournalEntry.objects.prefetch_related("lines__category", "lines__department", "lines__project"), pk=pk
+    )
+    return render(request, "finance/journal_entry_detail.html", {"entry": entry})
+
+
+@login_required(login_url="login")
+def journal_entry_create(request):
+    """
+    A proper double-entry posting: pick an account per line, put an amount
+    in either Debit or Credit, and keep adding lines until Total Debit
+    equals Total Credit. Gated behind the same "can manage the chart of
+    accounts" permission as structural changes there, rather than the
+    broader "Finance or Operations staff" check every other Finance view
+    uses — a manual journal entry can move money in or out of any account
+    directly, with no requisition/approval trail behind it, so it warrants
+    the narrower permission.
+    """
+    if not _can_manage_chart_of_accounts(request.user):
+        messages.error(request, "Only Finance staff can post journal entries.")
+        return redirect(reverse("finance:journal_entry_list"))
+
+    leaf_accounts = FinancialCategory.objects.filter(is_group=False).order_by("category_type", "code")
+
+    if request.method == "POST":
+        entry_date = request.POST.get("date") or ""
+        header_description = (request.POST.get("description") or "").strip()
+
+        category_ids = request.POST.getlist("line_category")
+        debits = request.POST.getlist("line_debit")
+        credits = request.POST.getlist("line_credit")
+        line_descriptions = request.POST.getlist("line_description")
+        line_departments = request.POST.getlist("line_department")
+        line_projects = request.POST.getlist("line_project")
+
+        errors = []
+        lines_data = []
+        total_debit = Decimal("0.00")
+        total_credit = Decimal("0.00")
+
+        for i, category_id in enumerate(category_ids):
+            debit_raw = debits[i] if i < len(debits) else ""
+            credit_raw = credits[i] if i < len(credits) else ""
+            if not category_id and not debit_raw.strip() and not credit_raw.strip():
+                continue  # a blank trailing row from "Add row" — skip silently
+
+            category = FinancialCategory.objects.filter(pk=category_id, is_group=False).first()
+            debit = _parse_opening_balance(debit_raw)
+            credit = _parse_opening_balance(credit_raw)
+
+            if category is None:
+                errors.append(f"Row {i + 1}: choose an account.")
+                continue
+            if debit is None or credit is None:
+                errors.append(f"Row {i + 1}: enter a valid Debit or Credit amount.")
+                continue
+            if debit and credit:
+                errors.append(f"Row {i + 1} ({category.name}): enter either a Debit or a Credit, not both.")
+                continue
+            if not debit and not credit:
+                errors.append(f"Row {i + 1} ({category.name}): enter a Debit or a Credit amount.")
+                continue
+
+            lines_data.append({
+                "category": category,
+                "debit": debit,
+                "credit": credit,
+                "description": (line_descriptions[i] if i < len(line_descriptions) else "").strip(),
+                "department_id": (line_departments[i] if i < len(line_departments) else "") or None,
+                "project_id": (line_projects[i] if i < len(line_projects) else "") or None,
+            })
+            total_debit += debit
+            total_credit += credit
+
+        if not entry_date:
+            errors.append("Posting date is required.")
+        if len(lines_data) < 2:
+            errors.append("A journal entry needs at least two lines.")
+        elif total_debit != total_credit:
+            errors.append(
+                f"This entry doesn't balance — Total Debit ({total_debit:,.2f}) must equal "
+                f"Total Credit ({total_credit:,.2f})."
+            )
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            with transaction.atomic():
+                entry = JournalEntry.objects.create(
+                    date=entry_date, description=header_description, created_by=request.user,
+                )
+                for line in lines_data:
+                    journal_line = JournalEntryLine.objects.create(journal_entry=entry, **line)
+                    journal_line.post()
+            messages.success(request, f"Journal Entry {entry.reference} posted.")
+            return redirect(reverse("finance:journal_entry_detail", args=[entry.pk]))
+
+    context = {
+        "leaf_accounts": leaf_accounts,
+        "departments": Department.objects.all(),
+        "projects": Project.objects.all(),
+        "today": date.today().isoformat(),
+    }
+    return render(request, "finance/journal_entry_create.html", context)

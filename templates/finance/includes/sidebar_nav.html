@@ -108,6 +108,20 @@
 
 </a>
 
+<a href="{% url 'finance:journal_entry_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'journal_entry_list' or current_url == 'journal_entry_create' or current_url == 'journal_entry_detail' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-book"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Journal Entries
+    </span>
+
+</a>
+
 <a href="{% url 'finance:reports_home' %}"
    class="sidebar-dashboard
    {% if current_url == 'reports_home' or current_url == 'general_ledger_report' %}active{% endif %}">

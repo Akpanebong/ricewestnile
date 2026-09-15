@@ -57,4 +57,7 @@ urlpatterns = [
     path("reports/budget-vs-actual/view/", views.budget_vs_actual_report_view, name="budget_vs_actual_report_view"),
     path("reports/balance-sheet/", views.balance_sheet_report, name="balance_sheet_report"),
     path("reports/balance-sheet/view/", views.balance_sheet_report_view, name="balance_sheet_report_view"),
+    path("journal-entries/", views.journal_entry_list, name="journal_entry_list"),
+    path("journal-entries/new/", views.journal_entry_create, name="journal_entry_create"),
+    path("journal-entries/<int:pk>/", views.journal_entry_detail, name="journal_entry_detail"),
 ]

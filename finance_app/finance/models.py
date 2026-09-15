@@ -344,6 +344,7 @@ class FinancialTransaction(models.Model):
         INCOME = "income", "Income"
         EXPENSE = "expense", "Expense"
         TRANSFER = "transfer", "Transfer"
+        JOURNAL = "journal", "Journal Entry"
 
     reference = models.CharField(max_length=40, unique=True, editable=False)
     transaction_type = models.CharField(max_length=20, choices=TransactionType.choices)
@@ -357,6 +358,13 @@ class FinancialTransaction(models.Model):
     # `original_amount`/`exchange_rate_used` preserve what the transaction
     # actually was, so donor reports can show real USD/KES/etc figures
     # instead of only the base-currency-converted number.
+    # Always non-negative for every transaction type except JOURNAL: a
+    # journal entry line can be negative — it means "this decreases the
+    # account's natural-side balance" (e.g. a credit posted to a Dr-normal
+    # asset account). Every balance computation across the app is a plain
+    # Sum(amount), so a signed amount here is what actually lets a journal
+    # entry both increase one account and decrease another without any of
+    # that aggregation logic needing to change.
     amount = models.DecimalField(max_digits=16, decimal_places=2, help_text="Base-currency-equivalent amount, for cross-currency totals.")
     currency = models.CharField(max_length=3, default=get_base_currency, help_text="The currency this transaction was actually recorded in.")
     original_amount = models.DecimalField(
@@ -584,3 +592,123 @@ class FinancialTransaction(models.Model):
             asset_maintenance_id=asset_maintenance_id,
             created_by=created_by,
         )
+
+
+class JournalEntry(models.Model):
+    """
+    A manual double-entry posting: one header with two or more lines, where
+    total debits must equal total credits — the "going forward, real
+    double-entry" mechanism agreed on earlier, kept as its own model rather
+    than retrofitted onto every existing single-sided transaction path
+    (cash requisitions, retirements, admin expenses), which continue to
+    record exactly as they did before. Each line still creates a normal
+    FinancialTransaction row (see JournalEntryLine.post()), so every
+    existing report (Chart of Accounts, General Ledger, Income Statement,
+    Balance Sheet) picks up journal entries automatically without needing
+    to know this model exists.
+    """
+
+    reference = models.CharField(max_length=40, unique=True, editable=False)
+    date = models.DateField()
+    description = models.CharField(max_length=255, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="journal_entries_created")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Journal Entry"
+        verbose_name_plural = "Journal Entries"
+        ordering = ("-date", "-created_at")
+
+    def __str__(self):
+        return self.reference
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            self.reference = f"JV-{uuid.uuid4().hex[:10].upper()}"
+        super().save(*args, **kwargs)
+
+    @property
+    def total_debit(self):
+        return sum((line.debit for line in self.lines.all()), Decimal("0.00"))
+
+    @property
+    def total_credit(self):
+        return sum((line.credit for line in self.lines.all()), Decimal("0.00"))
+
+    @property
+    def is_balanced(self):
+        return self.total_debit == self.total_credit
+
+
+class JournalEntryLine(models.Model):
+    """
+    One side of a JournalEntry — exactly one of debit/credit is non-zero.
+    Posting a line (see post()) creates the corresponding FinancialTransaction
+    with a SIGNED amount: positive if this line increases the account's own
+    natural balance side, negative if it decreases it. Every existing
+    balance computation is a plain Sum(amount), so a signed amount is what
+    lets one entry increase one account and decrease another without any
+    of that aggregation logic needing to change — the same convention a
+    real ledger uses, just expressed as a sign instead of two columns.
+    """
+
+    journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name="lines")
+    category = models.ForeignKey(FinancialCategory, on_delete=models.PROTECT, related_name="journal_lines")
+    debit = models.DecimalField(max_digits=16, decimal_places=2, default=Decimal("0.00"))
+    credit = models.DecimalField(max_digits=16, decimal_places=2, default=Decimal("0.00"))
+    description = models.CharField(max_length=255, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name="journal_lines")
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="journal_lines")
+    transaction = models.OneToOneField(
+        FinancialTransaction, on_delete=models.SET_NULL, null=True, blank=True, related_name="journal_line",
+    )
+
+    class Meta:
+        ordering = ("pk",)
+
+    def __str__(self):
+        return f"{self.category} — Dr {self.debit} / Cr {self.credit}"
+
+    def post(self):
+        """Create (or update, if already posted) the FinancialTransaction
+        this line represents, with the signed amount described above.
+
+        Journal entries don't support multi-currency posting yet — amounts
+        are entered and recorded in the org's base currency regardless of
+        which currency the account itself is denominated in, rather than
+        mislabeling a base-currency figure as if it were in the account's
+        native currency.
+        """
+        base_currency = get_base_currency()
+        raw = self.debit - self.credit
+        signed_amount = raw if self.category.balance_side == "Dr" else -raw
+
+        if self.transaction_id:
+            txn = self.transaction
+            txn.category = self.category
+            txn.amount = signed_amount
+            txn.original_amount = signed_amount
+            txn.currency = base_currency
+            txn.date = self.journal_entry.date
+            txn.description = self.description or self.journal_entry.description
+            txn.department = self.department
+            txn.project = self.project
+            txn.save()
+            return txn
+
+        txn = FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.JOURNAL,
+            category=self.category,
+            amount=signed_amount,
+            currency=base_currency,
+            original_amount=signed_amount,
+            exchange_rate_used=Decimal("1"),
+            date=self.journal_entry.date,
+            description=self.description or self.journal_entry.description,
+            department=self.department,
+            project=self.project,
+            created_by=self.journal_entry.created_by,
+        )
+        self.transaction = txn
+        self.save(update_fields=["transaction"])
+        return txn

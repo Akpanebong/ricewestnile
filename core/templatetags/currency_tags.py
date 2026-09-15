@@ -58,3 +58,27 @@ def money_value(context, amount, source_currency=CurrencyRate.UGX):
 @register.filter
 def display_amount(amount, request):
     return display_amount_from_ugx(amount, request=request)
+
+
+@register.filter
+def abs_value(amount):
+    """abs() for template use — needed once balances can go negative
+    (a signed journal-entry amount putting an account into the opposite
+    of its natural position) and the template wants to show the
+    magnitude next to a Dr/Cr label rather than a raw negative number."""
+    if amount is None:
+        return amount
+    return abs(amount)
+
+
+@register.filter
+def display_side(amount, natural_side):
+    """Given a signed balance and an account's natural side (Dr/Cr from
+    FinancialCategory.balance_side), return the side that balance is
+    actually sitting on — flips to the opposite of natural_side when the
+    balance has gone negative (e.g. a Dr-normal account with more credits
+    posted against it than debits). For every pre-existing, always-
+    non-negative balance this is a no-op: it just returns natural_side."""
+    if amount is None or amount >= 0:
+        return natural_side
+    return "Cr" if natural_side == "Dr" else "Dr"

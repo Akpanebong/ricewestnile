@@ -1,0 +1,252 @@
+{% extends "finance/base.html" %}
+{% block title %}New Journal Entry{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+<style>
+    .je-card {
+        background: var(--surface-1, #fff);
+        border: 1px solid var(--surface-1-border, #e2e8f0);
+        border-radius: var(--radius-lg, 16px);
+        box-shadow: var(--surface-1-shadow, 0 2px 8px -2px rgba(15,23,42,.05));
+        padding: 1.5rem;
+    }
+
+    .je-lines-table th {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--text-muted);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .je-lines-table td {
+        vertical-align: top;
+        padding-top: 0.6rem;
+    }
+
+    .je-lines-table .form-select,
+    .je-lines-table .form-control {
+        font-size: 0.86rem;
+    }
+
+    .je-remove-row {
+        color: var(--text-light);
+        border: none;
+        background: transparent;
+        padding: 0.4rem;
+    }
+
+    .je-remove-row:hover {
+        color: var(--status-rejected-text, #dc2626);
+    }
+
+    .je-totals-row td {
+        font-weight: 800;
+        border-top: 2px solid var(--surface-1-border);
+        padding-top: 0.75rem;
+    }
+
+    .je-totals-row.is-balanced .je-total-value {
+        color: var(--status-approved-text, #15803d);
+    }
+
+    .je-totals-row.is-unbalanced .je-total-value {
+        color: var(--status-rejected-text, #dc2626);
+    }
+
+    /* Flatpickr theming to match the reference: a plain rounded input,
+       black "today"/selected day, no unnecessary chrome. */
+    .flatpickr-calendar {
+        border-radius: var(--radius-lg, 16px);
+        box-shadow: var(--surface-2-shadow, 0 12px 30px -4px rgba(15,23,42,.16));
+        border: 1px solid var(--surface-1-border);
+    }
+
+    .flatpickr-day.selected, .flatpickr-day.selected:hover {
+        background: var(--text-primary);
+        border-color: var(--text-primary);
+    }
+
+    .flatpickr-day.today {
+        border-color: var(--text-primary);
+    }
+
+    .flatpickr-months .flatpickr-month,
+    .flatpickr-current-month .flatpickr-monthDropdown-months,
+    .flatpickr-weekdays {
+        background: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">New Journal Entry</h3>
+            <p class="text-muted mb-0">A double-entry posting — total debits must equal total credits before it can be saved</p>
+        </div>
+        <a href="{% url 'finance:journal_entry_list' %}" class="btn btn-outline-dark shadow-sm">
+            <i class="fa fa-arrow-left me-1"></i> Journal Entries
+        </a>
+    </div>
+
+    <form method="post" id="journalEntryForm">
+        {% csrf_token %}
+        <div class="je-card mb-4">
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-md-4">
+                    <label class="form-label fw-bold">Posting Date <span class="text-danger">*</span></label>
+                    <input type="text" name="date" id="postingDate" class="form-control" value="{{ today }}" required autocomplete="off">
+                </div>
+                <div class="col-sm-6 col-md-8">
+                    <label class="form-label fw-bold">Description</label>
+                    <input type="text" name="description" class="form-control" placeholder="What is this entry for? (optional — used as the default for any line left blank)">
+                </div>
+            </div>
+
+            <label class="form-label fw-bold mb-2">Accounting Entries</label>
+            <div class="table-responsive">
+                <table class="table je-lines-table align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">Account</th>
+                            <th>Description</th>
+                            <th style="width: 12%;">Department</th>
+                            <th style="width: 12%;">Project</th>
+                            <th class="text-end" style="width: 12%;">Debit</th>
+                            <th class="text-end" style="width: 12%;">Credit</th>
+                            <th style="width: 2%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="journalLinesBody"></tbody>
+                    <tfoot>
+                        <tr class="je-totals-row" id="totalsRow">
+                            <td colspan="4">Total</td>
+                            <td class="text-end je-total-value" id="totalDebitDisplay">0.00</td>
+                            <td class="text-end je-total-value" id="totalCreditDisplay">0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="addRowBtn">
+                <i class="fa fa-plus me-1"></i> Add Row
+            </button>
+        </div>
+
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary px-4" id="submitBtn" disabled>Save Journal Entry</button>
+        </div>
+    </form>
+</div>
+
+<template id="journalLineTemplate">
+    <tr>
+        <td>
+            <select name="line_category" class="form-select je-account-select" required>
+                <option value="">Select account...</option>
+                {% for account in leaf_accounts %}
+                <option value="{{ account.pk }}">{{ account.code }} — {{ account.name }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td><input type="text" name="line_description" class="form-control" placeholder="Line description"></td>
+        <td>
+            <select name="line_department" class="form-select">
+                <option value="">—</option>
+                {% for d in departments %}
+                <option value="{{ d.id }}">{{ d }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <select name="line_project" class="form-select">
+                <option value="">—</option>
+                {% for p in projects %}
+                <option value="{{ p.id }}">{{ p }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td><input type="text" inputmode="decimal" data-currency-input name="line_debit" class="form-control je-debit-input text-end" placeholder="0.00"></td>
+        <td><input type="text" inputmode="decimal" data-currency-input name="line_credit" class="form-control je-credit-input text-end" placeholder="0.00"></td>
+        <td><button type="button" class="je-remove-row" title="Remove row"><i class="fa-solid fa-xmark"></i></button></td>
+    </tr>
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<script>
+(function () {
+    flatpickr('#postingDate', {
+        dateFormat: 'Y-m-d',
+        defaultDate: document.getElementById('postingDate').value,
+        allowInput: true,
+    });
+
+    const tbody = document.getElementById('journalLinesBody');
+    const template = document.getElementById('journalLineTemplate');
+    const addRowBtn = document.getElementById('addRowBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const totalsRow = document.getElementById('totalsRow');
+    const totalDebitDisplay = document.getElementById('totalDebitDisplay');
+    const totalCreditDisplay = document.getElementById('totalCreditDisplay');
+
+    function parseAmount(value) {
+        const cleaned = (value || '').replace(/,/g, '').trim();
+        const parsed = parseFloat(cleaned);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function recalcTotals() {
+        let totalDebit = 0;
+        let totalCredit = 0;
+        tbody.querySelectorAll('tr').forEach(function (row) {
+            totalDebit += parseAmount(row.querySelector('.je-debit-input').value);
+            totalCredit += parseAmount(row.querySelector('.je-credit-input').value);
+        });
+        totalDebitDisplay.textContent = totalDebit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        totalCreditDisplay.textContent = totalCredit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        const isBalanced = totalDebit > 0 && Math.abs(totalDebit - totalCredit) < 0.005;
+        totalsRow.classList.toggle('is-balanced', isBalanced);
+        totalsRow.classList.toggle('is-unbalanced', !isBalanced);
+        submitBtn.disabled = !isBalanced;
+    }
+
+    function addRow() {
+        const fragment = template.content.cloneNode(true);
+        const row = fragment.querySelector('tr');
+
+        row.querySelector('.je-debit-input').addEventListener('input', function () {
+            if (parseAmount(this.value) > 0) {
+                row.querySelector('.je-credit-input').value = '';
+            }
+            recalcTotals();
+        });
+        row.querySelector('.je-credit-input').addEventListener('input', function () {
+            if (parseAmount(this.value) > 0) {
+                row.querySelector('.je-debit-input').value = '';
+            }
+            recalcTotals();
+        });
+        row.querySelector('.je-remove-row').addEventListener('click', function () {
+            if (tbody.querySelectorAll('tr').length <= 2) return;
+            row.remove();
+            recalcTotals();
+        });
+
+        tbody.appendChild(row);
+    }
+
+    addRowBtn.addEventListener('click', addRow);
+
+    // Start with two blank rows — a journal entry needs at least two lines.
+    addRow();
+    addRow();
+    recalcTotals();
+})();
+</script>
+{% endblock %}

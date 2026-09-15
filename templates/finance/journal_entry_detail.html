@@ -1,0 +1,58 @@
+{% extends "finance/base.html" %}
+{% load humanize %}
+{% block title %}Journal Entry {{ entry.reference }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Journal Entry <code>{{ entry.reference }}</code></h3>
+            <p class="text-muted mb-0">{{ entry.date|date:"M d, Y" }}{% if entry.description %} &middot; {{ entry.description }}{% endif %}</p>
+        </div>
+        <a href="{% url 'finance:journal_entry_list' %}" class="btn btn-outline-dark shadow-sm">
+            <i class="fa fa-arrow-left me-1"></i> Journal Entries
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Account</th>
+                        <th>Description</th>
+                        <th>Department</th>
+                        <th>Project</th>
+                        <th class="text-end">Debit</th>
+                        <th class="text-end">Credit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in entry.lines.all %}
+                    <tr>
+                        <td><code>{{ line.category.code }}</code> — {{ line.category.name }}</td>
+                        <td>{{ line.description|default:"—" }}</td>
+                        <td>{{ line.department|default:"—" }}</td>
+                        <td>{{ line.project|default:"—" }}</td>
+                        <td class="text-end">{% if line.debit %}{{ line.debit|floatformat:2|intcomma }}{% endif %}</td>
+                        <td class="text-end">{% if line.credit %}{{ line.credit|floatformat:2|intcomma }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="fw-bold" style="background: var(--surface-muted); border-top: 2px solid var(--surface-1-border);">
+                        <td colspan="4">Total</td>
+                        <td class="text-end">{{ entry.total_debit|floatformat:2|intcomma }}</td>
+                        <td class="text-end">{{ entry.total_credit|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <p class="text-muted small mt-3">
+        Posted by {{ entry.created_by|default:"—" }} on {{ entry.created_at|date:"M d, Y, g:i a" }}.
+        Each line above posted its own transaction to the account it names — visible in that account's General Ledger, alongside every other transaction.
+    </p>
+
+</div>
+{% endblock %}
