@@ -30,6 +30,18 @@ urlpatterns = [
     path('departments/units/', views.units_for_department, name='units_for_department'),
     path('units/projects/', views.projects_for_unit, name='projects_for_unit'),
 
+    # Unit URLs
+    path('units/', views.unit_list, name='unit_list'),
+    path('units/create/', views.unit_create, name='unit_create'),
+    path('units/<int:pk>/edit/', views.unit_update, name='unit_update'),
+    path('units/<int:pk>/delete/', views.unit_delete, name='unit_delete'),
+
+    # Program Area URLs
+    path('program-areas/', views.program_area_list, name='program_area_list'),
+    path('program-areas/create/', views.program_area_create, name='program_area_create'),
+    path('program-areas/<int:pk>/edit/', views.program_area_update, name='program_area_update'),
+    path('program-areas/<int:pk>/delete/', views.program_area_delete, name='program_area_delete'),
+
     # Search
     path('search/', views.global_search, name='global_search'),
 
@@ -41,6 +53,7 @@ urlpatterns = [
     path('profiles/import/template/', views.download_employee_import_template, name='download_employee_import_template'),
     path('profiles/<int:pk>/update/<slug:slug>/', views.employee_profile_update, name='profile_update'),
     path('profiles/<int:pk>/delete/', views.profile_delete, name='profile_delete'),
+    path('profiles/<int:pk>/reset-password/', views.admin_reset_password, name='admin_reset_password'),
 
     # Exit flow (HR updates, CMT views)
     path("exit-flow/hr/", views.exit_process_hr_list, name="account_exit_process_hr_list"),

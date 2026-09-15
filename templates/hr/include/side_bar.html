@@ -99,6 +99,26 @@ module-open
             Community Structure
         </a>
 
+        {% if request.user|has_group:"HR" or request.user.is_superuser %}
+        <a href="{% url 'department_list' %}"
+           class="{% if current_url == 'department_list' %}active{% endif %}">
+            <i class="fa-solid fa-building"></i>
+            Departments
+        </a>
+
+        <a href="{% url 'unit_list' %}"
+           class="{% if current_url == 'unit_list' %}active{% endif %}">
+            <i class="fa-solid fa-diagram-project"></i>
+            Units
+        </a>
+
+        <a href="{% url 'program_area_list' %}"
+           class="{% if current_url == 'program_area_list' %}active{% endif %}">
+            <i class="fa-solid fa-map-location-dot"></i>
+            Program Areas
+        </a>
+        {% endif %}
+
     </div>
 
 </div>

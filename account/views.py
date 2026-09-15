@@ -14,8 +14,8 @@ from django.db import transaction
 from django.db.models import Q
 from hr_apps.HRapp.views import is_supervisor
 from hr_apps.HRapp.utils import employee_leave_balances
-from .models import Department, Profile, ExitProcess, ExitStepType, ExitStepStatus, Unit, PROFILE_TYPE
-from .forms import DepartmentForm, ProfileForm, EmployeeUpdateForm, ExitProcessStepFormSet, get_employee_profile_form_sections
+from .models import Department, Profile, ExitProcess, ExitStepType, ExitStepStatus, Unit, ProgramArea, PROFILE_TYPE
+from .forms import DepartmentForm, ProfileForm, EmployeeUpdateForm, ExitProcessStepFormSet, get_employee_profile_form_sections, UnitForm, ProgramAreaForm
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.conf import settings
@@ -47,12 +47,15 @@ token_generator = PasswordResetTokenGenerator()
 # -------------------- DEPARTMENT --------------------
 @login_required
 def department_list(request):
-    departments = Department.objects.all()
-    return render(request, 'dept/dept_list.html', {'departments': departments})
+    departments = Department.objects.prefetch_related('units').all()
+    return render(request, 'dept/dept_list.html', {'departments': departments, 'can_manage': is_hr(request.user) or request.user.is_superuser})
 
 
 @login_required
 def department_create(request):
+    if not (is_hr(request.user) or request.user.is_superuser):
+        messages.error(request, "Only HR can manage departments.")
+        return redirect('department_list')
     departments = Department.objects.exclude(name='ED')
     form = DepartmentForm(request.POST or None)
     if form.is_valid():
@@ -64,6 +67,9 @@ def department_create(request):
 
 @login_required
 def department_update(request, pk):
+    if not (is_hr(request.user) or request.user.is_superuser):
+        messages.error(request, "Only HR can manage departments.")
+        return redirect('department_list')
     department = get_object_or_404(Department, pk=pk)
     form = DepartmentForm(request.POST or None, instance=department)
     if form.is_valid():
@@ -75,10 +81,109 @@ def department_update(request, pk):
 
 @login_required
 def department_delete(request, pk):
+    if not (is_hr(request.user) or request.user.is_superuser):
+        messages.error(request, "Only HR can manage departments.")
+        return redirect('department_list')
     department = get_object_or_404(Department, pk=pk)
-    department.delete()
-    messages.success(request, "Department deleted successfully.")
-    return redirect('department_list')
+    if request.method == 'POST':
+        department.delete()
+        messages.success(request, "Department deleted successfully.")
+        return redirect('department_list')
+    return render(request, 'delete_confirmation.html', {'delete': department, 'cancel_url': reverse('department_list')})
+
+
+# -------------------- UNIT --------------------
+@login_required
+def unit_list(request):
+    units = Unit.objects.select_related('department', 'head').all()
+    return render(request, 'dept/unit_list.html', {'units': units, 'can_manage': is_hr(request.user) or request.user.is_superuser})
+
+
+@login_required
+def unit_create(request):
+    if not (is_hr(request.user) or request.user.is_superuser):
+        messages.error(request, "Only HR can manage units.")
+        return redirect('unit_list')
+    form = UnitForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Unit created successfully.")
+        return redirect('unit_list')
+    return render(request, 'dept/unit_form.html', {'form': form, 'title': 'Create Unit'})
+
+
+@login_required
+def unit_update(request, pk):
+    if not (is_hr(request.user) or request.user.is_superuser):
+        messages.error(request, "Only HR can manage units.")
+        return redirect('unit_list')
+    unit = get_object_or_404(Unit, pk=pk)
+    form = UnitForm(request.POST or None, instance=unit)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Unit updated successfully.")
+        return redirect('unit_list')
+    return render(request, 'dept/unit_form.html', {'form': form, 'title': 'Update Unit'})
+
+
+@login_required
+def unit_delete(request, pk):
+    if not (is_hr(request.user) or request.user.is_superuser):
+        messages.error(request, "Only HR can manage units.")
+        return redirect('unit_list')
+    unit = get_object_or_404(Unit, pk=pk)
+    if request.method == 'POST':
+        unit.delete()
+        messages.success(request, "Unit deleted successfully.")
+        return redirect('unit_list')
+    return render(request, 'delete_confirmation.html', {'delete': unit, 'cancel_url': reverse('unit_list')})
+
+
+# -------------------- PROGRAM AREA --------------------
+@login_required
+def program_area_list(request):
+    program_areas = ProgramArea.objects.all()
+    return render(request, 'dept/program_area_list.html', {'program_areas': program_areas, 'can_manage': is_hr(request.user) or request.user.is_superuser})
+
+
+@login_required
+def program_area_create(request):
+    if not (is_hr(request.user) or request.user.is_superuser):
+        messages.error(request, "Only HR can manage program areas.")
+        return redirect('program_area_list')
+    form = ProgramAreaForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Program area created successfully.")
+        return redirect('program_area_list')
+    return render(request, 'dept/program_area_form.html', {'form': form, 'title': 'Create Program Area'})
+
+
+@login_required
+def program_area_update(request, pk):
+    if not (is_hr(request.user) or request.user.is_superuser):
+        messages.error(request, "Only HR can manage program areas.")
+        return redirect('program_area_list')
+    program_area = get_object_or_404(ProgramArea, pk=pk)
+    form = ProgramAreaForm(request.POST or None, instance=program_area)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Program area updated successfully.")
+        return redirect('program_area_list')
+    return render(request, 'dept/program_area_form.html', {'form': form, 'title': 'Update Program Area'})
+
+
+@login_required
+def program_area_delete(request, pk):
+    if not (is_hr(request.user) or request.user.is_superuser):
+        messages.error(request, "Only HR can manage program areas.")
+        return redirect('program_area_list')
+    program_area = get_object_or_404(ProgramArea, pk=pk)
+    if request.method == 'POST':
+        program_area.delete()
+        messages.success(request, "Program area deleted successfully.")
+        return redirect('program_area_list')
+    return render(request, 'delete_confirmation.html', {'delete': program_area, 'cancel_url': reverse('program_area_list')})
 
 
 # -------------------- PROFILE --------------------
@@ -255,7 +360,7 @@ def profile_list(request):
     ]
 
     # ✅ BASE QUERYSETS
-    profiles_qs = Profile.objects.select_related("department").order_by('program_area')
+    profiles_qs = Profile.objects.select_related("department", "program_area").order_by('program_area__name')
 
     staff_qs = Employee.objects.select_related(
         "user", "user__department"
@@ -1014,6 +1119,59 @@ def profile_delete(request, pk):
         return redirect('profile_list')
     return render(request, 'delete_confirmation.html',
                   {'delete': profile, "cancel_url": reverse('profile_list')})
+
+
+@login_required
+def admin_reset_password(request, pk):
+    """
+    For when an employee can't get in on their own — no working password AND
+    no access to their email either. A superuser can either trigger the same
+    secure reset-link email forgot_password sends, or, if email isn't
+    reachable at all, set a brand new password directly and hand it over
+    out-of-band (the only path back in for an unrecoverable account, since
+    passwords are stored as one-way hashes and can never be looked up again).
+    """
+    if not request.user.is_superuser:
+        messages.error(request, "Only a superuser can reset another user's password.")
+        return redirect('profile_list')
+
+    profile = get_object_or_404(Profile, pk=pk)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'email_link':
+            if not profile.email:
+                messages.error(request, f"{profile.username} has no email address on file — use \"Set password directly\" instead.")
+                return redirect('admin_reset_password', pk=pk)
+
+            uid = urlsafe_base64_encode(force_bytes(profile.pk))
+            token = token_generator.make_token(profile)
+            reset_link = request.build_absolute_uri(reverse('reset_password', kwargs={'uidb64': uid, 'token': token}))
+
+            text_content = render_to_string('account/reset_email.txt', {'user': profile, 'reset_link': reset_link})
+            html_content = render_to_string('account/password_reset_email.html', {
+                'user': profile, 'reset_link': reset_link, 'app_name': "RICE West Nile Human Resource System",
+            })
+            try:
+                msg = EmailMultiAlternatives("Reset your password", text_content, settings.DEFAULT_FROM_EMAIL, [profile.email])
+                msg.attach_alternative(html_content, "text/html")
+                msg.send()
+                messages.success(request, f"Reset link emailed to {profile.email}.")
+            except Exception as e:
+                messages.error(request, f"Could not send the email: {e}")
+            return redirect('admin_reset_password', pk=pk)
+
+        elif action == 'set_directly':
+            new_password = generate_strong_password()
+            profile.set_password(new_password)
+            profile.save()
+            return render(request, 'profile/admin_reset_password.html', {
+                'profile': profile,
+                'new_password': new_password,
+            })
+
+    return render(request, 'profile/admin_reset_password.html', {'profile': profile})
 
 
 def forgot_password(request):

@@ -32,7 +32,7 @@ def sync_profile_groups(profile):
 
     # Program Area
     if profile.program_area:
-        desired_groups.add(profile.program_area)
+        desired_groups.add(profile.program_area.name)
 
     # Department (reviewers only)
     if profile.department and profile.can_review:
@@ -66,7 +66,7 @@ def sync_profile_groups(profile):
             or group.name == getattr(profile.department, "name", None)
             or group.name == getattr(profile.unit, "name", None)
             or group.name == getattr(profile.project, "name", None)
-            or group.name == profile.program_area
+            or group.name == getattr(profile.program_area, "name", None)
             or Department.objects.filter(name=group.name).exists()
         )
 

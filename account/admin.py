@@ -1,6 +1,6 @@
 from django.contrib.auth.admin import UserAdmin
 from django.contrib import admin
-from .models import (Profile, Department, ExitProcessStep, ExitProcess, Unit)
+from .models import (Profile, Department, ExitProcessStep, ExitProcess, Unit, ProgramArea)
 
 
 @admin.register(Profile)

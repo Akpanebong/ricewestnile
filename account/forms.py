@@ -1,6 +1,6 @@
 from django import forms
 from django.core.validators import RegexValidator
-from .models import Profile, Department, ExitProcessStep
+from .models import Profile, Department, ExitProcessStep, Unit, ProgramArea
 from django.forms import CheckboxInput
 from hr_apps.HRapp.employee_models import (BankDetail, Dependant, EducationHistory,EmergencyContact, Employee, EmployeeAddress, EmployeeContact, EmployeePersonalInfo, WorkExperience,)
 from django.forms import inlineformset_factory, modelformset_factory
@@ -13,6 +13,26 @@ class DepartmentForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'head': forms.Select(attrs={'class': 'form-control'})
+        }
+
+
+class UnitForm(forms.ModelForm):
+    class Meta:
+        model = Unit
+        fields = ['department', 'name', 'head']
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'head': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+
+class ProgramAreaForm(forms.ModelForm):
+    class Meta:
+        model = ProgramArea
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 
@@ -330,6 +350,13 @@ class ProfileForm(forms.ModelForm):
         queryset=Department.objects.exclude(name='ED'),
         empty_label='--Choose Department--',
         help_text='Click <a target="_blank" href="/departments/create/">Add Department</a>'
+    )
+
+    program_area = forms.ModelChoiceField(
+        queryset=ProgramArea.objects.all(),
+        required=False,
+        empty_label='--Choose Program Area--',
+        help_text='Click <a target="_blank" href="/program-areas/create/">Add Program Area</a>'
     )
 
     class Meta:

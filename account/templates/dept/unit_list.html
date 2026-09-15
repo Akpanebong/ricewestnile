@@ -1,5 +1,5 @@
 {% extends "hr/base.html" %}
-{% block title %}Departments{% endblock %}
+{% block title %}Units{% endblock %}
 {% block content %}
 <div class="container-fluid">
 
@@ -7,14 +7,14 @@
 
     <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
         <div>
-            <h4 class="fw-bold mb-1">Departments</h4>
-            <p class="text-muted mb-0">Manage the departments employees and units can be assigned to.</p>
+            <h4 class="fw-bold mb-1">Units</h4>
+            <p class="text-muted mb-0">Manage the units within each department that employees and projects can be assigned to.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{% url 'unit_list' %}" class="btn btn-outline-dark shadow-sm">Units</a>
+            <a href="{% url 'department_list' %}" class="btn btn-outline-dark shadow-sm">Departments</a>
             {% if can_manage %}
-            <a href="{% url 'department_create' %}" class="btn btn-success shadow-sm">
-                <i class="fa fa-plus me-1"></i> Add Department
+            <a href="{% url 'unit_create' %}" class="btn btn-success shadow-sm">
+                <i class="fa fa-plus me-1"></i> Add Unit
             </a>
             {% endif %}
         </div>
@@ -26,21 +26,21 @@
                 <thead class="table-light">
                     <tr>
                         <th>Name</th>
+                        <th>Department</th>
                         <th>Head</th>
-                        <th>Units</th>
                         {% if can_manage %}<th>Actions</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for dept in departments %}
+                    {% for unit in units %}
                     <tr>
-                        <td>{{ dept.name }}</td>
-                        <td>{{ dept.head|default:"—" }}</td>
-                        <td>{{ dept.units.count }}</td>
+                        <td>{{ unit.name }}</td>
+                        <td>{{ unit.department }}</td>
+                        <td>{{ unit.head|default:"—" }}</td>
                         {% if can_manage %}
                         <td>
-                            <a href="{% url 'department_update' dept.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                            <a href="{% url 'department_delete' dept.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                            <a href="{% url 'unit_update' unit.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a href="{% url 'unit_delete' unit.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
                         </td>
                         {% endif %}
                     </tr>
@@ -48,7 +48,7 @@
                     <tr>
                         <td colspan="4">
                             <div class="empty-state">
-                                <div class="empty-state-title">No departments yet</div>
+                                <div class="empty-state-title">No units yet</div>
                             </div>
                         </td>
                     </tr>

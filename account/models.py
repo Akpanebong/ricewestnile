@@ -38,6 +38,24 @@ PROFILE_TYPE = [
 ]
 
 
+class ProgramArea(models.Model):
+    """
+    A manageable replacement for the old hardcoded PROGRAM_AREA choices on
+    Profile — that tuple is still used as-is by the unrelated Presentation
+    model in com_app.communication, so it's left alone; only Profile's own
+    program_area needed a real place to add new values from.
+    """
+    name = models.CharField(max_length=150, unique=True)
+
+    class Meta:
+        ordering = ("name",)
+        verbose_name = "Program Area"
+        verbose_name_plural = "Program Areas"
+
+    def __str__(self):
+        return self.name
+
+
 class Department(models.Model):
     name = models.CharField(max_length=120, unique=True)
     head = models.ForeignKey("Profile", on_delete=models.SET_NULL, null=True, blank=True,
@@ -71,7 +89,7 @@ class Unit(models.Model):
 
 
 class Profile(AbstractUser):
-    program_area = models.CharField(choices=PROGRAM_AREA, max_length=255, null=True, blank=True)
+    program_area = models.ForeignKey(ProgramArea, on_delete=models.SET_NULL, null=True, blank=True, related_name="members")
     profile_type = models.CharField(choices=PROFILE_TYPE, max_length=255, default="Staff", null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name="members")
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name="members")

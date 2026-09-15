@@ -18,6 +18,11 @@
             <a class="btn btn-outline-warning btn-sm" href="{% url 'account_exit_process_hr_list' %}">
                 Onboarding / Exit
             </a>
+            {% if request.user.is_superuser %}
+            <a class="btn btn-outline-danger btn-sm" href="{% url 'admin_reset_password' profile.pk %}">
+                <i class="fa fa-key me-1"></i> Reset Password
+            </a>
+            {% endif %}
         </div>
     </div>
 
