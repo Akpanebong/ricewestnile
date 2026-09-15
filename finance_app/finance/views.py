@@ -1526,8 +1526,21 @@ def balance_sheet_report(request):
         "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
         "as_of_date": request.GET.get("as_of_date") or date.today().isoformat(),
         "currency": normalize_currency(request.GET.get("currency") or get_base_currency()),
+        "detail_level": request.GET.get("detail_level") or "full",
     }
     return render(request, "finance/balance_sheet_report.html", context)
+
+
+def _flatten_to_leaves(node):
+    """Collect every leaf (postable) descendant of a tree node, discarding
+    the group/folder structure — used for the Balance Sheet's "accounts
+    only" display mode."""
+    if node.is_group:
+        leaves = []
+        for child in node.tree_children:
+            leaves.extend(_flatten_to_leaves(child))
+        return leaves
+    return [node]
 
 
 @login_required(login_url="login")
@@ -1559,6 +1572,11 @@ def balance_sheet_report_view(request):
     report_currency = normalize_currency(request.GET.get("currency") or get_base_currency())
     base_currency = get_base_currency()
     rates = get_latest_usd_rates()
+    # "full": every group/sub-group folder shown, exactly like the Chart of
+    # Accounts. "flat": no folders at all except the Assets/Liabilities/
+    # Equity section headers themselves — every leaf account listed
+    # directly under its section, sorted by code.
+    detail_level = request.GET.get("detail_level") or "full"
 
     asset_roots, _ = _build_account_tree(
         as_of_date=as_of_date, report_currency=report_currency,
@@ -1572,6 +1590,18 @@ def balance_sheet_report_view(request):
         as_of_date=as_of_date, report_currency=report_currency,
         category_types=[FinancialCategory.CategoryType.EQUITY], rates=rates,
     )
+
+    asset_leaves = liability_leaves = equity_leaves = None
+    if detail_level == "flat":
+        asset_leaves = sorted(
+            (leaf for root in asset_roots for leaf in _flatten_to_leaves(root)), key=lambda n: n.code
+        )
+        liability_leaves = sorted(
+            (leaf for root in liability_roots for leaf in _flatten_to_leaves(root)), key=lambda n: n.code
+        )
+        equity_leaves = sorted(
+            (leaf for root in equity_roots for leaf in _flatten_to_leaves(root)), key=lambda n: n.code
+        )
 
     total_assets = sum((r.rollup_base for r in asset_roots), Decimal("0.00"))
     total_liabilities = sum((r.rollup_base for r in liability_roots), Decimal("0.00"))
@@ -1593,9 +1623,13 @@ def balance_sheet_report_view(request):
     difference = total_assets - total_liabilities_and_equity
 
     context = {
+        "detail_level": detail_level,
         "asset_roots": asset_roots,
         "liability_roots": liability_roots,
         "equity_roots": equity_roots,
+        "asset_leaves": asset_leaves,
+        "liability_leaves": liability_leaves,
+        "equity_leaves": equity_leaves,
         "total_assets": total_assets,
         "total_liabilities": total_liabilities,
         "total_equity": total_equity,

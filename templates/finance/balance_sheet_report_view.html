@@ -54,6 +54,19 @@
             font-size: 0.94rem;
         }
 
+        .stmt-section-row td {
+            background: var(--surface-muted);
+            font-weight: 800;
+            font-size: 0.94rem;
+            padding-top: 0.9rem;
+            padding-bottom: 0.9rem;
+            border-top: 1px solid var(--surface-1-border);
+        }
+
+        .stmt-section-row:first-child td {
+            border-top: none;
+        }
+
         .stmt-row-group td:first-child {
             padding-left: calc(1rem + var(--stmt-depth, 0) * 1.4rem);
             font-weight: 700;
@@ -181,54 +194,71 @@
     </div>
 
     <div class="stmt-card">
-        <div class="stmt-card-head">Assets</div>
         <div class="table-responsive">
             <table class="table table-sm mb-0 align-middle">
                 <tbody>
-                    {% for root in asset_roots %}
-                        {% include "finance/includes/balance_sheet_tree_node.html" with node=root depth=0 %}
-                    {% empty %}
-                    <tr><td colspan="2" class="text-center text-muted py-3">No asset accounts.</td></tr>
-                    {% endfor %}
+                    <tr class="stmt-section-row"><td colspan="2">Assets</td></tr>
+                    {% if detail_level == "flat" %}
+                        {% for leaf in asset_leaves %}
+                        <tr style="--stmt-depth: 1;">
+                            <td><code>{{ leaf.code }}</code> — {{ leaf.name }}</td>
+                            <td class="text-end">{{ leaf.rollup_base|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No asset accounts.</td></tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for root in asset_roots %}
+                            {% include "finance/includes/balance_sheet_tree_node.html" with node=root depth=1 %}
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No asset accounts.</td></tr>
+                        {% endfor %}
+                    {% endif %}
                     <tr class="stmt-total-row">
                         <td>Total Assets</td>
                         <td class="text-end">{{ total_assets|floatformat:2|intcomma }}</td>
                     </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <div class="stmt-card">
-        <div class="stmt-card-head">Liabilities</div>
-        <div class="table-responsive">
-            <table class="table table-sm mb-0 align-middle">
-                <tbody>
-                    {% for root in liability_roots %}
-                        {% include "finance/includes/balance_sheet_tree_node.html" with node=root depth=0 %}
-                    {% empty %}
-                    <tr><td colspan="2" class="text-center text-muted py-3">No liability accounts.</td></tr>
-                    {% endfor %}
+                    <tr class="stmt-section-row"><td colspan="2">Liabilities</td></tr>
+                    {% if detail_level == "flat" %}
+                        {% for leaf in liability_leaves %}
+                        <tr style="--stmt-depth: 1;">
+                            <td><code>{{ leaf.code }}</code> — {{ leaf.name }}</td>
+                            <td class="text-end">{{ leaf.rollup_base|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No liability accounts.</td></tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for root in liability_roots %}
+                            {% include "finance/includes/balance_sheet_tree_node.html" with node=root depth=1 %}
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No liability accounts.</td></tr>
+                        {% endfor %}
+                    {% endif %}
                     <tr class="stmt-total-row">
                         <td>Total Liabilities</td>
                         <td class="text-end">{{ total_liabilities|floatformat:2|intcomma }}</td>
                     </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <div class="stmt-card">
-        <div class="stmt-card-head">Equity</div>
-        <div class="table-responsive">
-            <table class="table table-sm mb-0 align-middle">
-                <tbody>
-                    {% for root in equity_roots %}
-                        {% include "finance/includes/balance_sheet_tree_node.html" with node=root depth=0 %}
-                    {% empty %}
-                    <tr><td colspan="2" class="text-center text-muted py-3">No equity accounts.</td></tr>
-                    {% endfor %}
-                    <tr>
+                    <tr class="stmt-section-row"><td colspan="2">Equity</td></tr>
+                    {% if detail_level == "flat" %}
+                        {% for leaf in equity_leaves %}
+                        <tr style="--stmt-depth: 1;">
+                            <td><code>{{ leaf.code }}</code> — {{ leaf.name }}</td>
+                            <td class="text-end">{{ leaf.rollup_base|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No equity accounts.</td></tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for root in equity_roots %}
+                            {% include "finance/includes/balance_sheet_tree_node.html" with node=root depth=1 %}
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No equity accounts.</td></tr>
+                        {% endfor %}
+                    {% endif %}
+                    <tr style="--stmt-depth: 1;">
                         <td>Retained Earnings (Income &minus; Expenses to date)</td>
                         <td class="text-end">{{ retained_earnings|floatformat:2|intcomma }}</td>
                     </tr>
@@ -236,15 +266,7 @@
                         <td>Total Liabilities + Equity</td>
                         <td class="text-end">{{ total_liabilities_and_equity|floatformat:2|intcomma }}</td>
                     </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <div class="stmt-card">
-        <div class="table-responsive">
-            <table class="table table-sm mb-0 align-middle">
-                <tbody>
                     <tr class="bs-diff-row {% if difference == 0 %}is-balanced{% else %}is-off{% endif %}">
                         <td>Difference (Assets &minus; (Liabilities + Equity))</td>
                         <td class="text-end">{{ difference|floatformat:2|intcomma }} {{ currency }}</td>
