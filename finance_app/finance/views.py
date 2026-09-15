@@ -1132,7 +1132,10 @@ def general_ledger_report_view(request):
         transactions = list(
             FinancialTransaction.objects.filter(txn_filter, category=account)
             .order_by("date", "pk")
-            .values("date", "reference", "description", "amount")
+            .values(
+                "date", "reference", "description", "amount",
+                "currency", "original_amount", "department__name", "project__name",
+            )
         )
 
         is_debit = account.balance_side == "Dr"
@@ -1143,6 +1146,15 @@ def general_ledger_report_view(request):
 
         if transactions:
             df = pd.DataFrame(transactions)
+            df = df.rename(columns={"department__name": "department", "project__name": "project"})
+            # original_amount is only null for transactions recorded before
+            # the multi-currency migration backfilled it — fall back to the
+            # base-currency amount (paired with its own currency column
+            # left as-is) so every row still has something to show, the
+            # same fallback the Financial Ledger page already uses.
+            df["original_amount"] = df["original_amount"].fillna(df["amount"])
+            df["department"] = df["department"].fillna("—")
+            df["project"] = df["project"].fillna("—")
             df["display_amount"] = df["amount"].apply(
                 lambda amount: convert_amount(amount, base_currency, report_currency, rates=rates)
             )

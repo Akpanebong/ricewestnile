@@ -119,6 +119,37 @@
             .glr-account-card { break-inside: avoid; }
             body { background: #fff; }
         }
+
+        /* Optional columns — off by default, toggled on via the checkboxes
+           in the top bar. Hidden with a plain class rather than re-running
+           the report, so switching them on/off is instant. */
+        .glr-col-original, .glr-col-dimensions {
+            display: none;
+        }
+
+        body.show-original-col .glr-col-original {
+            display: table-cell;
+        }
+
+        body.show-dimensions-col .glr-col-dimensions {
+            display: table-cell;
+        }
+
+        .glr-columns-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .glr-columns-toggle label {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -150,6 +181,18 @@
 
     <div class="mb-3 d-none d-print-block">
         <h4 class="fw-bold mb-0">RICE West Nile — General Ledger Report</h4>
+    </div>
+
+    <div class="d-flex justify-content-end mb-2 no-print">
+        <div class="glr-columns-toggle">
+            <span class="fw-bold text-muted">Columns:</span>
+            <label>
+                <input type="checkbox" id="toggleOriginalCol"> Amount in original currency
+            </label>
+            <label>
+                <input type="checkbox" id="toggleDimensionsCol"> Project / Department
+            </label>
+        </div>
     </div>
 
     <!-- SUMMARY -->
@@ -186,6 +229,8 @@
                         <th>Date</th>
                         <th>Reference</th>
                         <th>Description</th>
+                        <th class="glr-col-original">Amount (Original Currency)</th>
+                        <th class="glr-col-dimensions">Project / Dept</th>
                         <th class="text-end">Debit</th>
                         <th class="text-end">Credit</th>
                         <th class="text-end">Balance</th>
@@ -193,7 +238,11 @@
                 </thead>
                 <tbody>
                     <tr class="glr-row-opening">
-                        <td colspan="5">Opening balance of {{ filters.start_date }}</td>
+                        <td colspan="3">Opening balance of {{ filters.start_date }}</td>
+                        <td class="glr-col-original"></td>
+                        <td class="glr-col-dimensions"></td>
+                        <td></td>
+                        <td></td>
                         <td class="text-end">{{ entry.opening_balance|floatformat:2|intcomma }}</td>
                     </tr>
                     {% for row in entry.rows %}
@@ -201,17 +250,24 @@
                         <td>{{ row.date|date:"M d, Y" }}</td>
                         <td>{{ row.reference }}</td>
                         <td>{{ row.description }}</td>
+                        <td class="glr-col-original">{{ row.currency }} {{ row.original_amount|floatformat:2|intcomma }}</td>
+                        <td class="glr-col-dimensions">
+                            {{ row.project }}
+                            {% if row.department != "—" %}<br><small class="text-muted">{{ row.department }}</small>{% endif %}
+                        </td>
                         <td class="text-end">{% if row.debit %}{{ row.debit|floatformat:2|intcomma }}{% endif %}</td>
                         <td class="text-end">{% if row.credit %}{{ row.credit|floatformat:2|intcomma }}{% endif %}</td>
                         <td class="text-end">{{ row.balance|floatformat:2|intcomma }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-3">No transactions in this period.</td>
+                        <td colspan="8" class="text-center text-muted py-3">No transactions in this period.</td>
                     </tr>
                     {% endfor %}
                     <tr class="glr-row-closing">
                         <td colspan="3">Closing balance of {{ filters.end_date }}</td>
+                        <td class="glr-col-original"></td>
+                        <td class="glr-col-dimensions"></td>
                         <td class="text-end">{{ entry.period_debit|floatformat:2|intcomma }}</td>
                         <td class="text-end">{{ entry.period_credit|floatformat:2|intcomma }}</td>
                         <td class="text-end">{{ entry.closing_balance|floatformat:2|intcomma }}</td>
@@ -228,5 +284,34 @@
     {% endfor %}
 
 </main>
+
+<script>
+(function () {
+    const STORAGE_KEY = 'ricewn.glr.optionalColumns';
+    const toggles = {
+        original: {checkbox: document.getElementById('toggleOriginalCol'), bodyClass: 'show-original-col'},
+        dimensions: {checkbox: document.getElementById('toggleDimensionsCol'), bodyClass: 'show-dimensions-col'},
+    };
+
+    let saved = {};
+    try {
+        saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '{}');
+    } catch (e) { /* localStorage unavailable, ignore */ }
+
+    Object.keys(toggles).forEach(function (key) {
+        const {checkbox, bodyClass} = toggles[key];
+        checkbox.checked = Boolean(saved[key]);
+        document.body.classList.toggle(bodyClass, checkbox.checked);
+
+        checkbox.addEventListener('change', function () {
+            document.body.classList.toggle(bodyClass, checkbox.checked);
+            saved[key] = checkbox.checked;
+            try {
+                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+            } catch (e) { /* localStorage unavailable, ignore */ }
+        });
+    });
+})();
+</script>
 </body>
 </html>
