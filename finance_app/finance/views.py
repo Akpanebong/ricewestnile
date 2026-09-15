@@ -1013,9 +1013,53 @@ def _decimal_sum(series):
     return total if isinstance(total, Decimal) else Decimal("0.00")
 
 
+def _general_ledger_filter_defaults(request):
+    today = date.today()
+    return {
+        "start_date": request.GET.get("start_date") or date(today.year, 1, 1).isoformat(),
+        "end_date": request.GET.get("end_date") or today.isoformat(),
+        "department": request.GET.get("department") or "",
+        "project": request.GET.get("project") or "",
+        "currency": normalize_currency(request.GET.get("currency") or get_base_currency()),
+    }
+
+
 @login_required(login_url="login")
 def general_ledger_report(request):
     """
+    The General Ledger report's filter form. Submitting it opens the
+    actual report in its own full page (general_ledger_report_view) —
+    this page only ever shows the filter controls, never the report
+    itself, so it stays lightweight (no report computation here) and the
+    report gets the whole screen instead of sharing it with a filter form.
+    """
+    if not _is_finance_staff(request.user):
+        messages.error(request, "Only Finance and Operations staff can run financial reports.")
+        return redirect(reverse("finance:dashboard"))
+
+    leaf_accounts = FinancialCategory.objects.filter(is_group=False).select_related("parent").order_by("category_type", "code")
+    selected_account_ids = [v for v in request.GET.getlist("accounts") if v]
+
+    context = {
+        "all_accounts": leaf_accounts,
+        "selected_account_ids": selected_account_ids,
+        "departments": Department.objects.all(),
+        "projects": Project.objects.all(),
+        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "filters": _general_ledger_filter_defaults(request),
+    }
+    return render(request, "finance/general_ledger_report.html", context)
+
+
+@login_required(login_url="login")
+def general_ledger_report_view(request):
+    """
+    The General Ledger report itself — a standalone full page (not the
+    normal app chrome/sidebar) so the report gets the full screen and,
+    just as importantly, printing it naturally prints only the report:
+    there's no sidebar/header/breadcrumb in this template to suppress
+    with print CSS in the first place.
+
     Per-account transaction statement with a running balance — pick one or
     more leaf accounts, a period, and optional Department/Project filters,
     and get an "opening balance -> each transaction -> closing balance"
@@ -1049,12 +1093,12 @@ def general_ledger_report(request):
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
-    today = date.today()
-    start_date = request.GET.get("start_date") or date(today.year, 1, 1).isoformat()
-    end_date = request.GET.get("end_date") or today.isoformat()
-    department_id = request.GET.get("department")
-    project_id = request.GET.get("project")
-    report_currency = normalize_currency(request.GET.get("currency") or get_base_currency())
+    filters = _general_ledger_filter_defaults(request)
+    start_date = filters["start_date"]
+    end_date = filters["end_date"]
+    department_id = filters["department"]
+    project_id = filters["project"]
+    report_currency = filters["currency"]
     selected_account_ids = [v for v in request.GET.getlist("accounts") if v]
 
     base_currency = get_base_currency()
@@ -1126,18 +1170,7 @@ def general_ledger_report(request):
         "report_rows": report_rows,
         "grand_opening": grand_opening,
         "grand_closing": grand_opening + grand_movement,
-        "all_accounts": leaf_accounts,
-        "selected_account_ids": selected_account_ids,
-        "departments": Department.objects.all(),
-        "projects": Project.objects.all(),
-        "filters": {
-            "start_date": start_date,
-            "end_date": end_date,
-            "department": department_id,
-            "project": project_id,
-            "currency": report_currency,
-        },
-        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "filters": filters,
         "base_currency": base_currency,
     }
-    return render(request, "finance/general_ledger_report.html", context)
+    return render(request, "finance/general_ledger_report_view.html", context)

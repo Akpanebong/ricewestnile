@@ -49,4 +49,5 @@ urlpatterns = [
     path("chart-of-accounts/add/", views.add_account, name="add_account"),
     path("reports/", views.reports_home, name="reports_home"),
     path("reports/general-ledger/", views.general_ledger_report, name="general_ledger_report"),
+    path("reports/general-ledger/view/", views.general_ledger_report_view, name="general_ledger_report_view"),
 ]

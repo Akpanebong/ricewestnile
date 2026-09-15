@@ -1,0 +1,232 @@
+{% load static %}
+{% load humanize %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>General Ledger Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/ricewn.png' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/variables.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <style>
+        body {
+            min-height: 100vh;
+            color: var(--text-primary);
+            background: var(--body-bg);
+            font-family: var(--font-primary);
+        }
+
+        .glr-topbar {
+            background: var(--surface-1);
+            border-bottom: 1px solid var(--surface-1-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .glr-brand-name {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .glr-brand-sub {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .glr-account-card {
+            border: 1px solid var(--surface-1-border);
+            border-radius: var(--radius-lg, 16px);
+            margin-bottom: 1.25rem;
+            overflow: hidden;
+            background: var(--surface-1);
+        }
+
+        .glr-account-head {
+            background: var(--surface-muted);
+            padding: 0.75rem 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .glr-account-head .name {
+            font-weight: 800;
+            font-size: 0.94rem;
+            color: var(--text-primary);
+        }
+
+        .glr-account-head .meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .glr-row-opening td, .glr-row-closing td {
+            font-weight: 700;
+            background: var(--surface-muted);
+        }
+
+        .glr-summary-bar {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            padding: 0.85rem 1.1rem;
+            background: var(--surface-1);
+            border: 1px solid var(--surface-1-border);
+            border-radius: var(--radius-lg, 16px);
+            margin-bottom: 1.25rem;
+        }
+
+        .glr-summary-bar .item .label {
+            display: block;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .glr-summary-bar .item .value {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* Because this page has no sidebar/header/breadcrumb to fight
+           with, printing only ever needs to hide the one thing on this
+           page that isn't part of the report itself: this top bar. */
+        @media print {
+            .no-print { display: none !important; }
+            .glr-account-card { break-inside: avoid; }
+            body { background: #fff; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="glr-topbar py-2 no-print">
+    <div class="container-fluid px-3 px-lg-4 d-flex align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+            <img src="{% static 'images/ricewn.png' %}" height="32" alt="RICE West Nile">
+            <div>
+                <div class="glr-brand-name">General Ledger Report</div>
+                <div class="glr-brand-sub">RICE West Nile &middot; Accounting</div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'finance:general_ledger_report' %}?{{ request.GET.urlencode }}" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-arrow-left me-1"></i> Edit Filters
+            </a>
+            <a href="{% url 'finance:reports_home' %}" class="btn btn-outline-dark btn-sm">
+                <i class="fa fa-chart-column me-1"></i> All Reports
+            </a>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                <i class="fa fa-print me-1"></i> Print
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="container-fluid px-3 px-lg-4 py-4" style="max-width: 1400px; margin: 0 auto;">
+
+    <div class="mb-3 d-none d-print-block">
+        <h4 class="fw-bold mb-0">RICE West Nile — General Ledger Report</h4>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="glr-summary-bar">
+        <div class="item">
+            <span class="label">Period</span>
+            <span class="value">{{ filters.start_date }} &rarr; {{ filters.end_date }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Accounts</span>
+            <span class="value">{{ report_rows|length }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Opening ({{ filters.currency }})</span>
+            <span class="value">{{ grand_opening|floatformat:2|intcomma }}</span>
+        </div>
+        <div class="item">
+            <span class="label">Closing ({{ filters.currency }})</span>
+            <span class="value">{{ grand_closing|floatformat:2|intcomma }}</span>
+        </div>
+    </div>
+
+    <!-- REPORT -->
+    {% for entry in report_rows %}
+    <div class="glr-account-card">
+        <div class="glr-account-head">
+            <span class="name"><code>{{ entry.account.code }}</code> — {{ entry.account.name }}</span>
+            <span class="meta">{{ entry.account.get_category_type_display }} &middot; {{ entry.account.balance_side }}-normal &middot; native {{ entry.account.currency }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Description</th>
+                        <th class="text-end">Debit</th>
+                        <th class="text-end">Credit</th>
+                        <th class="text-end">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="glr-row-opening">
+                        <td colspan="5">Opening balance of {{ filters.start_date }}</td>
+                        <td class="text-end">{{ entry.opening_balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% for row in entry.rows %}
+                    <tr>
+                        <td>{{ row.date|date:"M d, Y" }}</td>
+                        <td>{{ row.reference }}</td>
+                        <td>{{ row.description }}</td>
+                        <td class="text-end">{% if row.debit %}{{ row.debit|floatformat:2|intcomma }}{% endif %}</td>
+                        <td class="text-end">{% if row.credit %}{{ row.credit|floatformat:2|intcomma }}{% endif %}</td>
+                        <td class="text-end">{{ row.balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">No transactions in this period.</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="glr-row-closing">
+                        <td colspan="3">Closing balance of {{ filters.end_date }}</td>
+                        <td class="text-end">{{ entry.period_debit|floatformat:2|intcomma }}</td>
+                        <td class="text-end">{{ entry.period_credit|floatformat:2|intcomma }}</td>
+                        <td class="text-end">{{ entry.closing_balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa fa-file-lines"></i></div>
+        <div>No accounts match these filters.</div>
+    </div>
+    {% endfor %}
+
+</main>
+</body>
+</html>

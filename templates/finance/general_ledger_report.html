@@ -1,6 +1,5 @@
 {% extends "finance/base.html" %}
 {% load currency_tags %}
-{% load humanize %}
 {% block title %}General Ledger Report{% endblock %}
 
 {% block extra_head %}
@@ -12,94 +11,25 @@
         border-radius: var(--radius-lg, 16px);
         box-shadow: var(--surface-1-shadow, 0 2px 8px -2px rgba(15,23,42,.05));
     }
-
-    .glr-account-card {
-        border: 1px solid var(--surface-1-border);
-        border-radius: var(--radius-lg, 16px);
-        margin-bottom: 1.25rem;
-        overflow: hidden;
-    }
-
-    .glr-account-head {
-        background: var(--surface-muted);
-        padding: 0.75rem 1.1rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .glr-account-head .name {
-        font-weight: 800;
-        font-size: 0.94rem;
-        color: var(--text-primary);
-    }
-
-    .glr-account-head .meta {
-        font-size: 0.78rem;
-        color: var(--text-muted);
-    }
-
-    .glr-row-opening td, .glr-row-closing td {
-        font-weight: 700;
-        background: var(--surface-muted);
-    }
-
-    .glr-summary-bar {
-        display: flex;
-        gap: 1.5rem;
-        flex-wrap: wrap;
-        padding: 0.85rem 1.1rem;
-        background: var(--surface-1, #fff);
-        border: 1px solid var(--surface-1-border);
-        border-radius: var(--radius-lg, 16px);
-        margin-bottom: 1.25rem;
-    }
-
-    .glr-summary-bar .item .label {
-        display: block;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--text-muted);
-        font-weight: 700;
-    }
-
-    .glr-summary-bar .item .value {
-        font-size: 1.05rem;
-        font-weight: 800;
-        color: var(--text-primary);
-    }
-
-    @media print {
-        .glr-filter-card, .no-print { display: none !important; }
-        .glr-account-card { break-inside: avoid; }
-    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold">General Ledger Report</h3>
-            <p class="text-muted mb-0">Opening balance, every transaction, and the running balance for each account over a period</p>
+            <p class="text-muted mb-0">Choose a period and filters, then run the report in its own full-page view</p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'finance:reports_home' %}" class="btn btn-outline-dark shadow-sm">
-                <i class="fa fa-arrow-left me-1"></i> All Reports
-            </a>
-            <button type="button" class="btn btn-outline-primary shadow-sm" onclick="window.print()">
-                <i class="fa fa-print me-1"></i> Print
-            </button>
-        </div>
+        <a href="{% url 'finance:reports_home' %}" class="btn btn-outline-dark shadow-sm">
+            <i class="fa fa-arrow-left me-1"></i> All Reports
+        </a>
     </div>
 
     <!-- FILTERS -->
-    <div class="glr-filter-card p-3 mb-4 no-print">
-        <form method="get" class="row g-3" id="glrFilterForm">
+    <div class="glr-filter-card p-3">
+        <form method="get" action="{% url 'finance:general_ledger_report_view' %}" class="row g-3" id="glrFilterForm">
             <div class="col-sm-6 col-md-3">
                 <label class="form-label small text-muted mb-1">Period From</label>
                 <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
@@ -158,7 +88,7 @@
     </div>
 
     <!-- ACCOUNTS PICKER MODAL -->
-    <div class="modal fade no-print" id="accountsPickerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="accountsPickerModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
@@ -189,81 +119,6 @@
             </div>
         </div>
     </div>
-
-    <!-- SUMMARY -->
-    <div class="glr-summary-bar">
-        <div class="item">
-            <span class="label">Period</span>
-            <span class="value">{{ filters.start_date }} &rarr; {{ filters.end_date }}</span>
-        </div>
-        <div class="item">
-            <span class="label">Accounts</span>
-            <span class="value">{{ report_rows|length }}</span>
-        </div>
-        <div class="item">
-            <span class="label">Opening ({{ filters.currency }})</span>
-            <span class="value">{{ grand_opening|floatformat:2|intcomma }}</span>
-        </div>
-        <div class="item">
-            <span class="label">Closing ({{ filters.currency }})</span>
-            <span class="value">{{ grand_closing|floatformat:2|intcomma }}</span>
-        </div>
-    </div>
-
-    <!-- REPORT -->
-    {% for entry in report_rows %}
-    <div class="glr-account-card">
-        <div class="glr-account-head">
-            <span class="name"><code>{{ entry.account.code }}</code> — {{ entry.account.name }}</span>
-            <span class="meta">{{ entry.account.get_category_type_display }} &middot; {{ entry.account.balance_side }}-normal &middot; native {{ entry.account.currency }}</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-sm mb-0 align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Date</th>
-                        <th>Reference</th>
-                        <th>Description</th>
-                        <th class="text-end">Debit</th>
-                        <th class="text-end">Credit</th>
-                        <th class="text-end">Balance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="glr-row-opening">
-                        <td colspan="5">Opening balance of {{ filters.start_date }}</td>
-                        <td class="text-end">{{ entry.opening_balance|floatformat:2|intcomma }}</td>
-                    </tr>
-                    {% for row in entry.rows %}
-                    <tr>
-                        <td>{{ row.date|date:"M d, Y" }}</td>
-                        <td>{{ row.reference }}</td>
-                        <td>{{ row.description }}</td>
-                        <td class="text-end">{% if row.debit %}{{ row.debit|floatformat:2|intcomma }}{% endif %}</td>
-                        <td class="text-end">{% if row.credit %}{{ row.credit|floatformat:2|intcomma }}{% endif %}</td>
-                        <td class="text-end">{{ row.balance|floatformat:2|intcomma }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-3">No transactions in this period.</td>
-                    </tr>
-                    {% endfor %}
-                    <tr class="glr-row-closing">
-                        <td colspan="3">Closing balance of {{ filters.end_date }}</td>
-                        <td class="text-end">{{ entry.period_debit|floatformat:2|intcomma }}</td>
-                        <td class="text-end">{{ entry.period_credit|floatformat:2|intcomma }}</td>
-                        <td class="text-end">{{ entry.closing_balance|floatformat:2|intcomma }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% empty %}
-    <div class="empty-state">
-        <div class="empty-state-icon"><i class="fa fa-file-lines"></i></div>
-        <div class="empty-state-title">No accounts match these filters</div>
-    </div>
-    {% endfor %}
 
 </div>
 
