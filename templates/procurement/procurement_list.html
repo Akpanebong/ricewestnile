@@ -368,6 +368,7 @@
 
                         <ul class="dropdown-menu dropdown-menu-end">
 
+                            {% if can_create_procurement %}
                             <li>
                                 <a class="dropdown-item"
                                    href="{% url 'requisition_create' %}">
@@ -376,6 +377,7 @@
                                     New Procurement Plan
                                 </a>
                             </li>
+                            {% endif %}
 
                             <li>
                                 <a class="dropdown-item"
@@ -643,11 +645,13 @@
                                         There are currently no procurement requisitions available.
                                     </p>
 
+                                    {% if can_create_procurement %}
                                     <a href="{% url 'requisition_create' %}"
                                        class="btn btn-primary btn-enterprise">
 
                                         Create Requisition
                                     </a>
+                                    {% endif %}
 
                                 </div>
 

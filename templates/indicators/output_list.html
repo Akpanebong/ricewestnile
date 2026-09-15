@@ -876,6 +876,7 @@
                                 <i class="fa fa-eye"></i>
 
                             </a>
+                            {% if request.user.is_superuser %}
                             <a href="{% url 'monitoring:create_output' output.pk %}"
                             class="om-action om-action-view"
                                title="Create Output">
@@ -902,8 +903,8 @@
                                onclick="return confirm('Are you sure you want to remove this output?');">
 
                                 <i class="fa fa-trash"></i>
-
                             </a>
+                            {% endif %}
 
                         </div>
 

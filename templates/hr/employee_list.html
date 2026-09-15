@@ -51,7 +51,7 @@
                                     <th>Date Joined</th>
                                     <th>Phone</th>
                                     <th>Email</th>
-                                    {% if request.user.is_superuser %}
+                                    {% if can_manage %}
                                     <th>Actions</th>
                                     {% endif %}
                                     <th>Status</th>
@@ -66,7 +66,7 @@
                                     <td>{{ emp.date_joined }}</td>
                                     <td>{{ emp.phone }}</td>
                                     <td>{{ emp.email }}</td>
-                                    {% if request.user.is_superuser %}
+                                    {% if can_manage %}
                                     <td>
                                         <a href="{% url 'edit_employee' emp.id emp.slug %}" class="btn-success btn-sm">
                                             <i class="fa fa-edit"></i></a>
@@ -87,7 +87,7 @@
                                 </tr>
                                 {% endfor %}
                             </tbody>
-                                                                {% if request.user.is_superuser %}
+                                                                {% if can_manage %}
 
                             <tfoot>
                                 <tr>

@@ -1281,9 +1281,11 @@ const body =
             { label: 'Communication', meta: 'Communication dashboard', url: "{% url 'comm:dashboard' %}", icon: 'fa-comments' },
             { label: 'Assets', meta: 'Asset Management dashboard', url: "{% url 'asset:dashboard' %}", icon: 'fa-boxes-stacked' },
             { label: 'New Fund Requisition', meta: 'Accounting · Create', url: "{% url 'finance:create_cash_req' %}", icon: 'fa-money-bill-wave' },
+            {% if is_finance_staff %}
             { label: 'Financial Ledger', meta: 'Accounting · Income, expense & transfer report', url: "{% url 'finance:ledger' %}", icon: 'fa-scale-balanced' },
             { label: 'Chart of Accounts', meta: 'Accounting · Manage account categories', url: "{% url 'finance:chart_of_accounts' %}", icon: 'fa-sitemap' },
             { label: 'Accounting Reports', meta: 'Accounting · General ledger and other financial reports', url: "{% url 'finance:reports_home' %}", icon: 'fa-chart-column' },
+            {% endif %}
             { label: 'Currency & Region', meta: 'Base currency, display currency, and exchange rates', url: "{% url 'currency_settings' %}", icon: 'fa-earth-africa' },
             { label: 'Notifications', meta: 'View all notifications', url: "{% url 'notifications:list' %}", icon: 'fa-bell' },
         ];

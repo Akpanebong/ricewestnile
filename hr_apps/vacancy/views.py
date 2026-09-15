@@ -308,6 +308,10 @@ def job_list(request):
             "jobs": paginator.get_page(request.GET.get("page")),
             "units": Unit.objects.exclude(name="ED").order_by("name"),
             "selected_unit": unit_id,
+            "can_view_requests": request.user.is_authenticated,
+            "can_create_request": request.user.is_authenticated and (
+                request.user.is_superuser or Unit.objects.filter(head=request.user).exists()
+            ),
         },
     )
 

@@ -17,16 +17,20 @@
             </small>
         </div>
 
-        {% if request.user.is_superuser %}
+        {% if can_view_requests or can_create_request %}
         <div class="d-flex gap-2">
+            {% if can_view_requests %}
             <a href="{% url 'vacancy:recruitment_request_list' %}"
                class="btn btn-outline-secondary btn-sm">
                 <i class="fa fa-list"></i> Requests
             </a>
+            {% endif %}
+            {% if can_create_request %}
             <a href="{% url 'vacancy:recruitment_request_create' %}"
                class="btn btn-success btn-sm">
                 <i class="fa fa-plus"></i> New Request
             </a>
+            {% endif %}
         </div>
         {% endif %}
     </div>

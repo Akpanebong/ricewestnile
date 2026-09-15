@@ -233,7 +233,8 @@ def employee_list(request):
     employees = paginator.get_page(page_number)
 
     return render(request, "hr/employee_list.html", {
-        "employees": employees
+        "employees": employees,
+        "can_manage": is_hr(request.user) or is_supervisor(request.user) or request.user.is_superuser,
     })
 
 

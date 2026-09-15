@@ -21,6 +21,7 @@ from finance_app.finance.models import (
 
 from .utils.workflow import advance_workflow, user_can_approve
 from .utils.pdf import render_to_pdf
+from .permissions import is_finance_staff as _is_finance_staff, can_manage_chart_of_accounts as _can_manage_chart_of_accounts
 from django.db.models.functions import Coalesce
 from account.templatetags.custom_tags import has_group
 from procurement.procureapp.models import Requisition, PurchaseOrder
@@ -728,22 +729,6 @@ def financial_ledger_export(request):
     response["Content-Disposition"] = 'attachment; filename="financial_ledger.xlsx"'
     wb.save(response)
     return response
-
-
-def _is_finance_staff(user):
-    """
-    Org-wide financial data (the ledger, the chart of accounts, ad-hoc
-    transaction recording) is restricted to the same groups the Finance
-    dashboard already treats as managers — everyone else only ever sees
-    their own requisitions there. Views below previously only checked
-    @login_required, which let any authenticated account view every
-    donor's funding and record arbitrary transactions.
-    """
-    return user.is_superuser or has_group(user, "Finance") or has_group(user, "Operations")
-
-
-def _can_manage_chart_of_accounts(user):
-    return user.is_superuser or has_group(user, "Finance")
 
 
 def _parse_opening_balance(raw):

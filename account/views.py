@@ -367,9 +367,13 @@ def profile_list(request):
     ).order_by("staff_id")
 
     # ✅ ACCESS CONTROL
+    # Every employee can browse the org directory (name/title/department/
+    # contact) across every department, for transparency — no financial,
+    # salary, or performance data is exposed here. Only HR/superusers get
+    # the richer per-type breakdowns (Employee/Intern/Volunteer/Community
+    # Structure tabs) and the Edit action, since profile_list.html already
+    # gates those on the same has_group/is_superuser check.
     if not (has_group(user, 'HR') or user.is_superuser):
-        profiles_qs = profiles_qs.filter(department=user.department)
-        staff_qs = staff_qs.filter(user__department=user.department)
         data_type = "profiles"
 
     # ✅ STRICT FILTERING (NO MIXING)

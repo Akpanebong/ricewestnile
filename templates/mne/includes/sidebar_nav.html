@@ -1,3 +1,4 @@
+{% load group_tags %}
 {% with current_url=request.resolver_match.url_name %}
 
 <!-- =====================================================
@@ -80,6 +81,7 @@ module-open
         </a>
 
 
+        {% if request.user|has_group:"MEAL" or request.user.is_superuser %}
         <!-- STRATEGIC OBJECTIVES -->
 
         <a href="{% url 'monitoring:so_list' %}"
@@ -114,6 +116,7 @@ module-open
             Indicators
 
         </a>
+        {% endif %}
 
 
         <!-- DATA ENTRY -->
@@ -193,6 +196,7 @@ module-open
         </a>
 
 
+        {% if request.user|has_group:"MEAL" or request.user.is_superuser %}
         <!-- LOCATIONS -->
 
         <a href="{% url 'core:location_list' %}"
@@ -215,6 +219,7 @@ module-open
             Program Areas
 
         </a>
+        {% endif %}
 
     </div>
 
@@ -234,6 +239,7 @@ module-open
      CSV IMPORT
 ===================================================== -->
 
+{% if request.user|has_group:"MEAL" or request.user.is_superuser %}
 <a href="{% url 'monitoring:csv_import' %}"
    class="sidebar-dashboard
    {% if current_url == 'csv_import' %}active{% endif %}">
@@ -247,6 +253,7 @@ module-open
     </span>
 
 </a>
+{% endif %}
 
 
 <!-- =====================================================

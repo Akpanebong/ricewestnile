@@ -1,3 +1,4 @@
+{% load custom_tags %}
 {% with current_url=request.resolver_match.url_name %}
 
 
@@ -218,6 +219,7 @@
 </div>
 
 
+{% if request.user|has_group:"REVIEW" or request.user.can_review %}
 <!-- =====================================================
      REVIEW QUEUE
 ===================================================== -->
@@ -242,6 +244,7 @@
     </span>
 
 </a>
+{% endif %}
 
 
 <!-- =====================================================

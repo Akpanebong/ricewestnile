@@ -615,6 +615,12 @@ class ProcurementPlanListView(ListView):
             'search', ''
         )
 
+        context['can_create_procurement'] = (
+            self.request.user.is_authenticated
+            and (self.request.user.is_superuser
+                 or Project.objects.filter(project_head=self.request.user).exists())
+        )
+
         return context
 
 

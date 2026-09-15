@@ -735,7 +735,7 @@
                         Unit of Measure
                     </th>
 
-                    {% if request.user|has_group:"MEAL" and request.user.is_superuser %}
+                    {% if request.user|has_group:"MEAL" or request.user.is_superuser %}
 
                     <th class="text-center"
                         style="width:145px;">
@@ -832,12 +832,13 @@
 
                     <!-- Actions -->
 
-                    {% if request.user|has_group:"MEAL" and request.user.is_superuser %}
+                    {% if request.user|has_group:"MEAL" or request.user.is_superuser %}
 
                     <td>
 
                         <div class="im-actions">
 
+                            {% if request.user.is_superuser %}
                             <!-- Edit -->
 
                             <a class="im-action im-action-edit"
@@ -848,6 +849,7 @@
                                 <i class="fa fa-edit"></i>
 
                             </a>
+                            {% endif %}
 
 
                             <!-- Enter Data -->
@@ -862,6 +864,7 @@
                             </a>
 
 
+                            {% if request.user.is_superuser %}
                             <!-- Delete -->
 
                             <a class="im-action im-action-delete"
@@ -873,6 +876,7 @@
                                 <i class="fa fa-trash"></i>
 
                             </a>
+                            {% endif %}
 
                         </div>
 

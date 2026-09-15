@@ -98,6 +98,7 @@ TEMPLATES = [
                 "com_app.communication.context_processors.focus_areas",
                 "notification.context_processors.notifications",
                 "assets.assetapp.context_processors.asset_counts",
+                "finance_app.finance.context_processors.finance_permissions",
             ],
             "builtins": [
                 "core.templatetags.currency_tags",
