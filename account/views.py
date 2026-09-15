@@ -448,6 +448,55 @@ def download_employee_import_template(request):
     return response
 
 
+def _cell_to_str(value):
+    if value is None:
+        return ''
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value).strip()
+
+
+def _read_csv_rows(uploaded_file):
+    raw = uploaded_file.read()
+    data = None
+    for enc in ['utf-8', 'latin-1', 'cp1252', 'utf-16']:
+        try:
+            data = raw.decode(enc)
+            break
+        except UnicodeDecodeError:
+            continue
+
+    if data is None:
+        raise ValueError("Unable to decode the CSV file. Please save it as UTF-8.")
+
+    data = data.replace('\x00', '')
+    return list(csv.DictReader(io.StringIO(data)))
+
+
+def _read_xlsx_rows(uploaded_file):
+    from openpyxl import load_workbook
+
+    workbook = load_workbook(uploaded_file, read_only=True, data_only=True)
+    worksheet = workbook.active
+    rows_iter = worksheet.iter_rows(values_only=True)
+
+    try:
+        headers = [_cell_to_str(h) for h in next(rows_iter)]
+    except StopIteration:
+        return []
+
+    rows = []
+    for values in rows_iter:
+        if values is None or all(v is None for v in values):
+            continue
+        rows.append({
+            header: _cell_to_str(value)
+            for header, value in zip(headers, values)
+            if header
+        })
+    return rows
+
+
 @login_required
 def import_employees(request):
     current_user = request.user
@@ -456,29 +505,27 @@ def import_employees(request):
         messages.warning(request, 'Oops!!! Access Denied')
         return redirect(reverse('logout'))
 
-    if request.method == 'POST' and request.FILES.get('csv_file'):
-        raw = request.FILES['csv_file'].read()
+    uploaded_file = request.FILES.get('import_file')
 
-        data = None
-        for enc in ['utf-8', 'latin-1', 'cp1252', 'utf-16']:
-            try:
-                data = raw.decode(enc)
-                break
-            except UnicodeDecodeError:
-                continue
-
-        if data is None:
-            messages.error(request, "Unable to decode CSV. Please save the file as UTF-8.")
+    if request.method == 'POST' and uploaded_file:
+        filename = uploaded_file.name.lower()
+        try:
+            if filename.endswith('.xlsx'):
+                rows = _read_xlsx_rows(uploaded_file)
+            elif filename.endswith('.csv'):
+                rows = _read_csv_rows(uploaded_file)
+            else:
+                messages.error(request, "Please upload a .csv or .xlsx file.")
+                return redirect('import_employees')
+        except Exception as e:
+            messages.error(request, f"Could not read the file: {e}")
             return redirect('import_employees')
-
-        data = data.replace('\x00', '')
-        reader = csv.DictReader(io.StringIO(data))
 
         created_accounts = []
         errors = []
         login_url = request.build_absolute_uri(reverse('login'))
 
-        for nr, row in enumerate(reader, start=1):
+        for nr, row in enumerate(rows, start=1):
             row = {(k or '').strip(): (v or '').strip() for k, v in row.items()}
             try:
                 username = row.get('username')
