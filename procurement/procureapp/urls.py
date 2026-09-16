@@ -1,9 +1,12 @@
 from django.urls import path
 from . import views, views_rfq, views_req, views_po
+from . import disposal_views
 from procurement.procureapp.master_procurement import master_procurement_plan as master
 
 urlpatterns = [
     path('', views.dashboard, name='procurement'),
+    path('asset-disposals/', disposal_views.disposal_queue, name='disposal_queue'),
+    path('asset-disposals/<int:pk>/review/', disposal_views.disposal_review, name='disposal_review'),
     path('plans/master/', master, name='master_procurement_plan'),
 
     # suppliers

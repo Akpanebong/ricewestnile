@@ -1,0 +1,103 @@
+[1mdiff --cc finance_app/finance/admin.py[m
+[1mindex 33f7f33,a03824d..0000000[m
+[1m--- a/finance_app/finance/admin.py[m
+[1m+++ b/finance_app/finance/admin.py[m
+[36m@@@ -203,47 -197,51 +203,98 @@@[m [mclass AdminExpenseNoteAdmin(admin.Model[m
+      search_fields = ("created_by__username",)[m
+  [m
+  [m
+[32m++<<<<<<< Updated upstream[m
+[32m +# 🔹 Financial Categories[m
+[32m +@admin.register(models.FinancialCategory)[m
+[32m +class FinancialCategoryAdmin(admin.ModelAdmin):[m
+[32m +[m
+[32m +    list_display = ("code", "alt_code", "name", "category_type", "opening_balance")[m
+[32m +    list_filter = ("category_type",)[m
+[32m +    search_fields = ("code", "alt_code", "name")[m
+[32m +[m
+[32m +[m
+[32m +# 🔹 Financial Transactions (Ledger)[m
+[32m +@admin.register(models.FinancialTransaction)[m
+[32m +class FinancialTransactionAdmin(admin.ModelAdmin):[m
+[32m +[m
+[32m +    list_display = ([m
+[32m +        "reference",[m
+[32m +        "transaction_type",[m
+[32m +        "category",[m
+[32m +        "currency",[m
+[32m +        "original_amount",[m
+[32m +        "amount",[m
+[32m +        "date",[m
+[32m +        "project",[m
+[32m +        "department",[m
+[32m +        "created_by",[m
+[32m +    )[m
+[32m +[m
+[32m +    list_filter = ([m
+[32m +        "transaction_type",[m
+[32m +        "category",[m
+[32m +        "currency",[m
+[32m +        "date",[m
+[32m +        "project",[m
+[32m +        "department",[m
+[32m +    )[m
+[32m +[m
+[32m +    search_fields = ([m
+[32m +        "reference",[m
+[32m +        "donor_code",[m
+[32m +        "description",[m
+[32m +    )[m
+[32m +[m
+[32m +    readonly_fields = ("reference", "created_at")[m
+[32m +[m
+[32m +    ordering = ("-date",)[m
+[32m++=======[m
+[32m+ @admin.register(models.FinanceBudget)[m
+[32m+ class FinanceBudgetAdmin(admin.ModelAdmin):[m
+[32m+     list_display = ("name", "project", "period_start", "period_end", "status", "created_by", "total_amount_display")[m
+[32m+     list_filter = ("status", "currency")[m
+[32m+     search_fields = ("name", "donor", "project__name")[m
+[32m+     readonly_fields = ("created_by", "created_at", "updated_at")[m
+[32m+ [m
+[32m+     def total_amount_display(self, obj):[m
+[32m+         return obj.total_amount[m
+[32m+     total_amount_display.short_description = "Total"[m
+[32m+ [m
+[32m+ [m
+[32m+ @admin.register(models.FinanceBudgetLine)[m
+[32m+ class FinanceBudgetLineAdmin(admin.ModelAdmin):[m
+[32m+     list_display = ("budget", "code", "description", "price_per_unit", "units", "frequency", "total")[m
+[32m+     list_filter = ("budget",)[m
+[32m+     search_fields = ("code", "description", "activity")[m
+[32m+ [m
+[32m+ [m
+[32m+ @admin.register(models.BudgetPerformance)[m
+[32m+ class BudgetPerformanceAdmin(admin.ModelAdmin):[m
+[32m+     list_display = ("budget", "line", "period", "funds_received", "expenditure", "variance", "absorption_rate")[m
+[32m+     list_filter = ("period", "budget")[m
+[32m+ [m
+[32m+ [m
+[32m+ @admin.register(models.CashBook)[m
+[32m+ class CashBookAdmin(admin.ModelAdmin):[m
+[32m+     list_display = ("name", "project", "period_start", "period_end", "opening_balance", "closing_balance")[m
+[32m+     list_filter = ("period_start", "project")[m
+[32m+     search_fields = ("name", "donor")[m
+[32m+ [m
+[32m+ [m
+[32m+ @admin.register(models.CashBookEntry)[m
+[32m+ class CashBookEntryAdmin(admin.ModelAdmin):[m
+[32m+     list_display = ("cash_book", "date", "pv_number", "payee", "receipt", "payment", "running_balance")[m
+[32m+     list_filter = ("date", "cash_book")[m
+[32m+     search_fields = ("pv_number", "payee", "description", "budget_line")[m
+[32m+ [m
+[32m+ [m
+[32m+ @admin.register(models.BankReconciliation)[m
+[32m+ class BankReconciliationAdmin(admin.ModelAdmin):[m
+[32m+     list_display = ("cash_book", "statement_balance", "adjusted_balance", "difference", "prepared_by", "prepared_at")[m
+[32m+ [m
+[32m+ [m
+[32m+ @admin.register(models.BankReconciliationItem)[m
+[32m+ class BankReconciliationItemAdmin(admin.ModelAdmin):[m
+[32m+     list_display = ("reconciliation", "item_type", "date", "reference", "payee", "amount")[m
+[32m+     list_filter = ("item_type", "date")[m
+[32m++>>>>>>> Stashed changes[m

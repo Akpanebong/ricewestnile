@@ -1,0 +1,626 @@
+
+{% extends "procurement/base.html" %}
+
+{% block title %}Asset Disposal Queue{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       ASSET DISPOSAL QUEUE
+    ========================================================= */
+
+    .disposal-page {
+        animation: disposalFadeIn .35s ease both;
+    }
+
+    .disposal-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .disposal-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        margin-bottom: .3rem;
+        color: #198754;
+        font-size: .7rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .disposal-eyebrow i {
+        font-size: .65rem;
+    }
+
+    .disposal-title {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 750;
+        letter-spacing: -.02em;
+        color: #172b24;
+    }
+
+    .disposal-subtitle {
+        max-width: 680px;
+        margin: .35rem 0 0;
+        color: #6c757d;
+        font-size: .82rem;
+    }
+
+    .disposal-count {
+        min-width: 68px;
+        padding: .5rem .75rem;
+        border: 1px solid #e4ebe7;
+        border-radius: 11px;
+        background: #fff;
+        text-align: center;
+        box-shadow: 0 3px 12px rgba(20, 40, 30, .04);
+    }
+
+    .disposal-count strong {
+        display: block;
+        color: #198754;
+        font-size: 1.05rem;
+        line-height: 1;
+    }
+
+    .disposal-count span {
+        display: block;
+        margin-top: .2rem;
+        color: #7a8694;
+        font-size: .62rem;
+        font-weight: 600;
+    }
+
+
+    /* =========================================================
+       TABLE CARD
+    ========================================================= */
+
+    .disposal-card {
+        overflow: hidden;
+        border: 1px solid #e8eeeb;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(20, 40, 30, .055);
+    }
+
+    .disposal-table {
+        margin: 0;
+    }
+
+    .disposal-table thead th {
+        padding: .72rem .9rem;
+        border-bottom: 1px solid #e7ece9;
+        background: #f8faf9;
+        color: #66736d;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .disposal-table tbody tr {
+        animation: disposalRowIn .4s ease both;
+        transition: background-color .2s ease;
+    }
+
+    .disposal-table tbody tr:hover {
+        background: #fbfdfc;
+    }
+
+    .disposal-table tbody td {
+        padding: .85rem .9rem;
+        border-color: #edf1ef;
+        color: #35413c;
+        font-size: .78rem;
+    }
+
+
+    /* =========================================================
+       ASSET
+    ========================================================= */
+
+    .asset-info {
+        display: flex;
+        align-items: center;
+        gap: .65rem;
+        min-width: 180px;
+    }
+
+    .asset-icon {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        background: rgba(25, 135, 84, .09);
+        color: #198754;
+        font-size: .8rem;
+    }
+
+    .asset-number {
+        display: block;
+        color: #1f3029;
+        font-size: .8rem;
+        font-weight: 750;
+    }
+
+    .asset-description {
+        display: block;
+        max-width: 220px;
+        margin-top: .12rem;
+        color: #89938e;
+        font-size: .7rem;
+    }
+
+
+    /* =========================================================
+       REASON / DECLARER
+    ========================================================= */
+
+    .reason-text {
+        max-width: 230px;
+        color: #4d5954;
+        line-height: 1.45;
+    }
+
+    .declared-by {
+        white-space: nowrap;
+        color: #4b5752;
+        font-weight: 600;
+    }
+
+
+    /* =========================================================
+       STATUS
+    ========================================================= */
+
+    .disposal-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .32rem .58rem;
+        border-radius: 999px;
+        font-size: .65rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .status-under-review {
+        color: #9a6700;
+        background: #fff7df;
+    }
+
+    .status-approved {
+        color: #087443;
+        background: #eaf8f0;
+    }
+
+    .status-rejected {
+        color: #b42318;
+        background: #fff0ef;
+    }
+
+    .status-disposed {
+        color: #475467;
+        background: #f0f2f4;
+    }
+
+    .status-default {
+        color: #667085;
+        background: #f2f4f7;
+    }
+
+
+    /* =========================================================
+       REVIEW FORM
+    ========================================================= */
+
+    .review-form {
+        min-width: 330px;
+        display: grid;
+        grid-template-columns: 125px minmax(150px, 1fr) auto;
+        gap: .4rem;
+        align-items: center;
+    }
+
+    .review-form .form-select,
+    .review-form .form-control {
+        min-height: 34px;
+        border-color: #dfe6e2;
+        border-radius: 8px;
+        font-size: .72rem;
+        box-shadow: none;
+    }
+
+    .review-form .form-select:focus,
+    .review-form .form-control:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 .16rem rgba(25, 135, 84, .1);
+    }
+
+    .review-form .btn {
+        min-height: 34px;
+        border-radius: 8px;
+        padding: .3rem .7rem;
+        font-size: .7rem;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .review-form .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 110, 253, .15);
+    }
+
+
+    /* =========================================================
+       EMPTY STATE
+    ========================================================= */
+
+    .disposal-empty {
+        padding: 3rem 1rem !important;
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 46px;
+        height: 46px;
+        margin: 0 auto .75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: #f3f7f5;
+        color: #8a9992;
+        font-size: 1rem;
+    }
+
+    .disposal-empty strong {
+        display: block;
+        margin-bottom: .2rem;
+        color: #34413b;
+        font-size: .85rem;
+    }
+
+    .disposal-empty span {
+        color: #8a9590;
+        font-size: .72rem;
+    }
+
+
+    /* =========================================================
+       ANIMATIONS
+    ========================================================= */
+
+    @keyframes disposalFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes disposalRowIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+
+    {% for item in disposals %}
+    .disposal-table tbody tr:nth-child({{ forloop.counter }}) {
+        animation-delay: {{ forloop.counter0|add:"0" }}0ms;
+    }
+    {% endfor %}
+
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 992px) {
+
+        .disposal-header {
+            align-items: flex-start;
+        }
+
+        .disposal-card {
+            overflow-x: auto;
+        }
+
+        .disposal-table {
+            min-width: 950px;
+        }
+
+    }
+
+
+    @media (max-width: 576px) {
+
+        .disposal-title {
+            font-size: 1.15rem;
+        }
+
+        .disposal-subtitle {
+            font-size: .75rem;
+        }
+
+        .disposal-count {
+            min-width: 58px;
+        }
+
+    }
+
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .disposal-page,
+        .disposal-table tbody tr {
+            animation: none !important;
+        }
+
+        .review-form .btn {
+            transition: none;
+        }
+
+    }
+</style>
+
+
+<div class="container py-3 disposal-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+    <div class="disposal-header">
+
+        <div>
+            <div class="disposal-eyebrow">
+                <i class="fa-solid fa-box-open"></i>
+                Procurement review
+            </div>
+
+            <h1 class="disposal-title">
+                Asset disposal queue
+            </h1>
+
+            <p class="disposal-subtitle">
+                Items declared by the organization for procurement review and disposal.
+            </p>
+        </div>
+
+
+        <div class="disposal-count">
+            <strong>{{ disposals|length }}</strong>
+            <span>Requests</span>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         QUEUE
+    ====================================================== -->
+    <div class="disposal-card">
+
+        <div class="table-responsive">
+
+            <table class="table disposal-table align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Reason</th>
+                        <th>Declared by</th>
+                        <th>Status</th>
+                        <th>Review action</th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+
+                    {% for item in disposals %}
+
+                        <tr>
+
+                            <!-- Asset -->
+                            <td>
+                                <div class="asset-info">
+
+                                    <div class="asset-icon">
+                                        <i class="fa-solid fa-box-archive"></i>
+                                    </div>
+
+                                    <div>
+                                        <span class="asset-number">
+                                            {{ item.asset.asset_no }}
+                                        </span>
+
+                                        <span class="asset-description">
+                                            {{ item.asset.description|truncatewords:10 }}
+                                        </span>
+                                    </div>
+
+                                </div>
+                            </td>
+
+
+                            <!-- Reason -->
+                            <td>
+                                <div class="reason-text">
+                                    {{ item.reason|truncatewords:18 }}
+                                </div>
+                            </td>
+
+
+                            <!-- Declared by -->
+                            <td>
+                                <span class="declared-by">
+                                    {{ item.declared_by }}
+                                </span>
+                            </td>
+
+
+                            <!-- Status -->
+                            <td>
+
+                                {% if item.status == "UNDER_REVIEW" %}
+
+                                    <span class="disposal-status status-under-review">
+                                        <span class="status-dot"></span>
+                                        {{ item.get_status_display }}
+                                    </span>
+
+                                {% elif item.status == "APPROVED" %}
+
+                                    <span class="disposal-status status-approved">
+                                        <span class="status-dot"></span>
+                                        {{ item.get_status_display }}
+                                    </span>
+
+                                {% elif item.status == "REJECTED" %}
+
+                                    <span class="disposal-status status-rejected">
+                                        <span class="status-dot"></span>
+                                        {{ item.get_status_display }}
+                                    </span>
+
+                                {% elif item.status == "DISPOSED" %}
+
+                                    <span class="disposal-status status-disposed">
+                                        <span class="status-dot"></span>
+                                        {{ item.get_status_display }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="disposal-status status-default">
+                                        <span class="status-dot"></span>
+                                        {{ item.get_status_display }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Review -->
+                            <td>
+
+                                <form method="post"
+                                      action="{% url 'disposal_review' item.pk %}"
+                                      class="review-form">
+
+                                    {% csrf_token %}
+
+                                    <select name="status"
+                                            class="form-select form-select-sm"
+                                            aria-label="Disposal status">
+
+                                        <option value="UNDER_REVIEW"
+                                            {% if item.status == "UNDER_REVIEW" %}selected{% endif %}>
+                                            Under review
+                                        </option>
+
+                                        <option value="APPROVED"
+                                            {% if item.status == "APPROVED" %}selected{% endif %}>
+                                            Approved
+                                        </option>
+
+                                        <option value="REJECTED"
+                                            {% if item.status == "REJECTED" %}selected{% endif %}>
+                                            Rejected
+                                        </option>
+
+                                        <option value="DISPOSED"
+                                            {% if item.status == "DISPOSED" %}selected{% endif %}>
+                                            Disposed
+                                        </option>
+
+                                    </select>
+
+
+                                    <input type="text"
+                                           name="procurement_notes"
+                                           class="form-control form-control-sm"
+                                           placeholder="Review notes"
+                                           aria-label="Procurement notes">
+
+
+                                    <button type="submit"
+                                            class="btn btn-primary btn-sm">
+
+                                        <i class="fa-solid fa-check me-1"></i>
+                                        Save
+
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="5" class="disposal-empty">
+
+                                <div class="empty-icon">
+                                    <i class="fa-solid fa-inbox"></i>
+                                </div>
+
+                                <strong>
+                                    No disposal requests
+                                </strong>
+
+                                <span>
+                                    The asset disposal queue is currently clear.
+                                </span>
+
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

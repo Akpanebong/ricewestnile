@@ -1,0 +1,831 @@
+
+{% extends "communication/base.html" %}
+
+{% block title %}New Broadcast | Media Presence{% endblock %}
+
+{% block media_content %}
+
+{% include "media_presence/includes/media_header.html" %}
+
+<div class="media-shell">
+
+    <div class="row justify-content-center">
+
+        <div class="col-xl-8 col-lg-9">
+
+            <div class="broadcast-form-card">
+
+                <!-- =================================================
+                     FORM HEADER
+                ================================================== -->
+
+                <div class="broadcast-form-header">
+
+                    <div class="broadcast-form-icon">
+                        <i class="fa-solid fa-tower-broadcast"></i>
+                    </div>
+
+                    <div>
+                        <div class="media-eyebrow text-success mb-1">
+                            Publish an appearance
+                        </div>
+
+                        <h2 class="broadcast-form-title">
+                            Broadcast details
+                        </h2>
+
+                        <p class="broadcast-form-subtitle">
+                            Add the details of a media appearance or live broadcast.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     FORM
+                ================================================== -->
+
+                <form
+                    method="post"
+                    enctype="multipart/form-data"
+                    class="media-form broadcast-form"
+                    novalidate
+                >
+
+                    {% csrf_token %}
+
+
+                    <!-- FORM ERRORS -->
+
+                    {% if form.non_field_errors %}
+
+                        <div class="broadcast-form-error">
+
+                            <i class="fa-solid fa-circle-exclamation"></i>
+
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- =================================================
+                         FIELDS
+                    ================================================== -->
+
+                    <div class="broadcast-fields">
+
+                        {% for field in form %}
+
+                            {% if field.field.widget.input_type == "checkbox" %}
+
+                                <!-- =================================================
+                                     BOOLEAN FIELD
+                                ================================================== -->
+
+                                <div class="broadcast-boolean-field">
+
+                                    <div class="broadcast-boolean-content">
+
+                                        <div class="broadcast-boolean-icon">
+                                            <i class="fa-solid fa-toggle-on"></i>
+                                        </div>
+
+                                        <div>
+
+                                            <label
+                                                for="{{ field.id_for_label }}"
+                                                class="broadcast-boolean-label"
+                                            >
+                                                {{ field.label }}
+                                            </label>
+
+                                            {% if field.help_text %}
+                                                <div class="broadcast-field-help">
+                                                    {{ field.help_text }}
+                                                </div>
+                                            {% endif %}
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="form-check form-switch broadcast-switch">
+
+                                        {{ field }}
+
+                                    </div>
+
+                                </div>
+
+
+                                {% if field.errors %}
+
+                                    <div class="broadcast-field-errors">
+
+                                        {% for error in field.errors %}
+                                            <div>
+                                                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+
+                            {% else %}
+
+                                <!-- =================================================
+                                     NORMAL FIELD
+                                ================================================== -->
+
+                                <div class="broadcast-field">
+
+                                    <label
+                                        for="{{ field.id_for_label }}"
+                                        class="broadcast-field-label"
+                                    >
+
+                                        {{ field.label }}
+
+                                        {% if field.field.required %}
+                                            <span class="required-mark">*</span>
+                                        {% endif %}
+
+                                    </label>
+
+
+                                    {{ field }}
+
+
+                                    {% if field.help_text %}
+
+                                        <div class="broadcast-field-help">
+                                            <i class="fa-regular fa-circle-question me-1"></i>
+                                            {{ field.help_text }}
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if field.errors %}
+
+                                        <div class="broadcast-field-errors">
+
+                                            {% for error in field.errors %}
+                                                <div>
+                                                    <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                                    {{ error }}
+                                                </div>
+                                            {% endfor %}
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </div>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <!-- =================================================
+                         ACTIONS
+                    ================================================== -->
+
+                    <div class="broadcast-form-actions">
+
+                        <a
+                            href="{% url 'media_presence:broadcasts' %}"
+                            class="broadcast-cancel-btn"
+                        >
+                            <i class="fa-solid fa-arrow-left"></i>
+                            Cancel
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="broadcast-save-btn"
+                        >
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Save broadcast</span>
+                            <i class="fa-solid fa-arrow-right save-arrow"></i>
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+/* =========================================================
+   FORM CARD
+========================================================= */
+
+.broadcast-form-card {
+    overflow: hidden;
+
+    border: 1px solid rgba(24,50,58,.07);
+    border-radius: 17px;
+
+    background: #fff;
+
+    box-shadow:
+        0 8px 28px rgba(20,40,50,.065);
+
+    animation:
+        broadcastFormEnter
+        .55s
+        cubic-bezier(.2,.8,.2,1)
+        both;
+}
+
+
+/* =========================================================
+   FORM HEADER
+========================================================= */
+
+.broadcast-form-header {
+    display: flex;
+    align-items: center;
+
+    gap: .85rem;
+
+    padding: 1.25rem 1.4rem;
+
+    border-bottom: 1px solid rgba(24,50,58,.06);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(8,127,123,.035),
+            transparent
+        );
+}
+
+.broadcast-form-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 11px;
+
+    background: rgba(8,127,123,.09);
+
+    color: #087f7b;
+
+    font-size: .9rem;
+
+    transition:
+        transform .3s ease,
+        background-color .3s ease;
+}
+
+.broadcast-form-card:hover .broadcast-form-icon {
+    transform: rotate(-4deg) translateY(-1px);
+
+    background: rgba(8,127,123,.13);
+}
+
+.broadcast-form-title {
+    margin: 0;
+
+    color: #18323a;
+
+    font-size: 1.12rem;
+    font-weight: 750;
+
+    letter-spacing: -.02em;
+}
+
+.broadcast-form-subtitle {
+    margin: .2rem 0 0;
+
+    color: #7a8985;
+
+    font-size: .7rem;
+}
+
+
+/* =========================================================
+   FORM BODY
+========================================================= */
+
+.broadcast-form {
+    padding: 1.35rem 1.4rem;
+}
+
+.broadcast-fields {
+    display: flex;
+    flex-direction: column;
+
+    gap: .95rem;
+}
+
+
+/* =========================================================
+   NORMAL FIELD
+========================================================= */
+
+.broadcast-field {
+    position: relative;
+}
+
+.broadcast-field-label {
+    display: block;
+
+    margin-bottom: .35rem;
+
+    color: #344b50;
+
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.required-mark {
+    margin-left: 2px;
+
+    color: #dc3545;
+}
+
+
+/* =========================================================
+   FORM CONTROLS
+========================================================= */
+
+.broadcast-form input:not([type="checkbox"]):not([type="radio"]),
+.broadcast-form select,
+.broadcast-form textarea {
+
+    width: 100%;
+
+    padding: .58rem .7rem;
+
+    border: 1px solid #dfe7e5;
+    border-radius: 9px;
+
+    background: #fff;
+
+    color: #263e43;
+
+    font-size: .76rem;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease,
+        background-color .2s ease;
+}
+
+
+.broadcast-form textarea {
+    min-height: 85px;
+    resize: vertical;
+}
+
+
+.broadcast-form input[type="file"] {
+    padding: .45rem .55rem;
+
+    background: #fafcfb;
+
+    cursor: pointer;
+}
+
+
+.broadcast-form input:not([type="checkbox"]):not([type="radio"]):focus,
+.broadcast-form select:focus,
+.broadcast-form textarea:focus {
+
+    border-color: #087f7b;
+
+    outline: none;
+
+    background: #fff;
+
+    box-shadow:
+        0 0 0 3px rgba(8,127,123,.09);
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.broadcast-form input::placeholder,
+.broadcast-form textarea::placeholder {
+    color: #a2afac;
+}
+
+
+/* =========================================================
+   HELP TEXT
+========================================================= */
+
+.broadcast-field-help {
+    margin-top: .3rem;
+
+    color: #8a9895;
+
+    font-size: .63rem;
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   BOOLEAN / CHECKBOX FIELD
+========================================================= */
+
+.broadcast-boolean-field {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    padding: .75rem .8rem;
+
+    border: 1px solid rgba(8,127,123,.09);
+    border-radius: 11px;
+
+    background:
+        rgba(8,127,123,.025);
+
+    transition:
+        border-color .2s ease,
+        background-color .2s ease,
+        transform .2s ease;
+}
+
+.broadcast-boolean-field:hover {
+
+    border-color: rgba(8,127,123,.18);
+
+    background:
+        rgba(8,127,123,.045);
+
+    transform: translateY(-1px);
+}
+
+
+.broadcast-boolean-content {
+    display: flex;
+    align-items: center;
+
+    gap: .65rem;
+
+    min-width: 0;
+}
+
+
+.broadcast-boolean-icon {
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 8px;
+
+    background: rgba(8,127,123,.09);
+
+    color: #087f7b;
+
+    font-size: .7rem;
+}
+
+
+.broadcast-boolean-label {
+
+    display: block;
+
+    margin: 0;
+
+    color: #344b50;
+
+    font-size: .72rem;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   BOOLEAN SWITCH
+========================================================= */
+
+.broadcast-switch {
+
+    display: flex;
+    align-items: center;
+
+    margin: 0;
+    padding: 0;
+}
+
+
+.broadcast-switch input[type="checkbox"] {
+
+    width: 2.15rem !important;
+    height: 1.15rem !important;
+
+    margin: 0 !important;
+
+    float: none;
+
+    border: 1px solid #cbd8d5;
+
+    background-color: #e8efed;
+
+    cursor: pointer;
+
+    box-shadow: none;
+
+    transition:
+        background-color .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+
+.broadcast-switch input[type="checkbox"]:checked {
+
+    border-color: #087f7b;
+
+    background-color: #087f7b;
+}
+
+
+.broadcast-switch input[type="checkbox"]:focus {
+
+    border-color: #087f7b;
+
+    box-shadow:
+        0 0 0 3px rgba(8,127,123,.10);
+}
+
+
+/* =========================================================
+   ERRORS
+========================================================= */
+
+.broadcast-form-error {
+
+    display: flex;
+    align-items: flex-start;
+
+    gap: .65rem;
+
+    margin-bottom: 1rem;
+
+    padding: .7rem .8rem;
+
+    border: 1px solid rgba(220,53,69,.14);
+    border-radius: 9px;
+
+    background: rgba(220,53,69,.045);
+
+    color: #a33a45;
+
+    font-size: .7rem;
+}
+
+.broadcast-form-error > i {
+    margin-top: 2px;
+}
+
+
+.broadcast-field-errors {
+
+    margin-top: .3rem;
+
+    color: #dc3545;
+
+    font-size: .63rem;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.broadcast-form-actions {
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: .5rem;
+
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+
+    border-top: 1px solid rgba(24,50,58,.06);
+}
+
+
+.broadcast-cancel-btn,
+.broadcast-save-btn {
+
+    min-height: 35px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: .45rem;
+
+    padding: .48rem .75rem;
+
+    border-radius: 8px;
+
+    font-size: .7rem;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        background-color .2s ease;
+}
+
+
+.broadcast-cancel-btn {
+
+    border: 1px solid #e0e7e5;
+
+    background: #f8faf9;
+
+    color: #63736f;
+}
+
+.broadcast-cancel-btn:hover {
+
+    background: #f0f4f3;
+
+    color: #344b50;
+
+    transform: translateY(-1px);
+}
+
+
+.broadcast-save-btn {
+
+    border: 0;
+
+    background: #087f7b;
+
+    color: #fff;
+
+    cursor: pointer;
+}
+
+.broadcast-save-btn:hover {
+
+    background: #075c63;
+
+    color: #fff;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 7px 16px rgba(8,127,123,.18);
+}
+
+
+.save-arrow {
+
+    font-size: .58rem;
+
+    opacity: .55;
+
+    transition:
+        transform .2s ease,
+        opacity .2s ease;
+}
+
+.broadcast-save-btn:hover .save-arrow {
+
+    opacity: 1;
+
+    transform: translateX(3px);
+}
+
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+@keyframes broadcastFormEnter {
+
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .broadcast-form-card,
+    .broadcast-form-icon {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .broadcast-boolean-field,
+    .broadcast-cancel-btn,
+    .broadcast-save-btn,
+    .save-arrow {
+        transition: none !important;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 575.98px) {
+
+    .broadcast-form-header {
+        padding: 1rem;
+    }
+
+    .broadcast-form {
+        padding: 1rem;
+    }
+
+    .broadcast-form-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .broadcast-form-title {
+        font-size: 1rem;
+    }
+
+    .broadcast-form-subtitle {
+        display: none;
+    }
+
+    .broadcast-boolean-field {
+        padding: .65rem;
+    }
+
+    .broadcast-form-actions {
+        justify-content: stretch;
+    }
+
+    .broadcast-cancel-btn,
+    .broadcast-save-btn {
+        flex: 1;
+    }
+
+}
+
+</style>
+
+{% endblock %}

@@ -11,7 +11,8 @@ load_dotenv(BASE_DIR / ".env")
 # used to default to True — showing full stack traces (source, settings,
 # local variables) to any visitor. It now fails closed instead; local
 # development sets DJANGO_DEBUG=True explicitly via .env (see .env.example).
-DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
+DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
+# DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
 # No insecure hardcoded fallback. A deployment that forgets DJANGO_SECRET_KEY
 # now refuses to start with DEBUG=False, rather than silently signing every
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     "notification",
     "assets.assetapp",
     "com_app.communication",
+    "com_app.media_presence",
     "hr_apps.HRapp",
     "hr_apps.appraisals",
     "hr_apps.vacancy",
@@ -128,9 +130,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "en-us"
+# RICE West Nile operates in Uganda. Keep this configurable for deployments,
+# but always use an IANA timezone name (for example, Africa/Kampala or Africa/Lagos).
 TIME_ZONE = os.getenv("DJANGO_TIME_ZONE", "Africa/Kampala")
 USE_I18N = True
-USE_TZ = False
+# Store timestamps consistently and let Django convert them to TIME_ZONE when
+# displaying them. This also makes timezone.now() safe for exam start checks.
+USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]

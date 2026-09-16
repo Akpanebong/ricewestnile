@@ -7,6 +7,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Sum, F, DecimalField
 from django.core.exceptions import ValidationError
+
+from assets.assetapp.models import ASSET_CATEGORIES
 from core.project_models import Project, ProjectBudget
 from decimal import Decimal
 
@@ -57,7 +59,9 @@ class ApprovalWorkflowModel(TimestampedModel):
 class Product(models.Model):
     name = models.CharField(max_length=255)
     est_unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
-    category = models.CharField(max_length=120, blank=True, null=True)
+    # category = models.CharField(max_length=120, blank=True, null=True)
+    category = models.CharField(max_length=50, choices=ASSET_CATEGORIES, blank=True, null=True, )
+    other_category = models.CharField(max_length=120, blank=True, default='')
     abpc = models.BooleanField(default=False)# approved by project coodinator
 
     def __str__(self):

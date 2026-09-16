@@ -1,0 +1,1346 @@
+
+{% extends "communication/base.html" %}
+
+{% block title %}{{ gallery.title }} | Media Presence{% endblock %}
+
+{% block media_content %}
+
+{% include "media_presence/includes/media_header.html" %}
+
+
+<div class="media-shell gallery-page">
+
+    <!-- =====================================================
+         GALLERY HERO
+    ====================================================== -->
+    <section class="gallery-detail-hero mb-4">
+
+        <div class="gallery-hero-glow gallery-glow-one"></div>
+        <div class="gallery-hero-glow gallery-glow-two"></div>
+
+        <div class="position-relative">
+
+            <div class="row align-items-end g-4">
+
+                <div class="col-lg-8">
+
+                    <div class="gallery-project-tag">
+                        <i class="fa-solid fa-diagram-project me-2"></i>
+                        {{ gallery.project.name }}
+                    </div>
+
+                    <h1 class="gallery-detail-title">
+                        {{ gallery.title }}
+                    </h1>
+
+                    {% if gallery.description %}
+                    <p class="gallery-detail-description">
+                        {{ gallery.description }}
+                    </p>
+                    {% endif %}
+
+                    <div class="gallery-meta">
+
+                        <span>
+                            <i class="fa-solid fa-images me-2"></i>
+                            {{ gallery.photos.count }}
+                            photo{{ gallery.photos.count|pluralize }}
+                        </span>
+
+                        <span class="gallery-meta-divider"></span>
+
+                        <span>
+                            <i class="fa-solid fa-camera-retro me-2"></i>
+                            Project story
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-lg-4 text-lg-end">
+
+                    <a
+                        href="{% url 'media_presence:galleries' %}"
+                        class="btn gallery-back-button"
+                    >
+                        <i class="fa-solid fa-arrow-left me-2"></i>
+                        Back to galleries
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         PHOTO GRID
+    ====================================================== -->
+    <section class="gallery-photo-section">
+
+        {% if gallery.photos.all %}
+
+        <div class="gallery-section-heading mb-3">
+
+            <div>
+                <span class="gallery-section-eyebrow">
+                    <i class="fa-solid fa-camera me-1"></i>
+                    Visual archive
+                </span>
+
+                <h2 class="h4 fw-bold mb-0">
+                    Project moments
+                </h2>
+            </div>
+
+            <div class="gallery-section-hint d-none d-md-flex">
+                <i class="fa-solid fa-expand me-2"></i>
+                Click a photo to explore
+            </div>
+
+        </div>
+
+
+        <div class="row g-3 g-md-4">
+
+            {% for photo in gallery.photos.all %}
+
+            <div
+                class="col-6 col-md-4 col-lg-3 gallery-photo-column"
+                style="--gallery-index: {{ forloop.counter0 }};"
+            >
+
+                <article
+                    class="media-gallery-item gallery-photo-card"
+                    tabindex="0"
+                    role="button"
+                    aria-label="View {{ photo.title|default:'gallery photo' }}"
+                    data-gallery-index="{{ forloop.counter0 }}"
+                >
+
+                    <!-- IMAGE -->
+                    <div class="gallery-photo-frame">
+
+                        <img
+                            src="{{ photo.image.url }}"
+                            class="media-gallery-photo"
+                            alt="{{ photo.title }}"
+                            loading="lazy"
+                            data-gallery-image="{{ photo.image.url }}"
+                            data-gallery-title="{{ photo.title }}"
+                            data-bs-toggle="modal"
+                            data-bs-target="#photoLightbox"
+                        >
+
+
+                        <!-- Gradient -->
+                        <div class="gallery-photo-gradient"></div>
+
+
+                        <!-- Hover overlay -->
+                        <div class="media-gallery-overlay">
+
+                            <div class="gallery-view-action">
+
+                                <span class="gallery-view-icon">
+                                    <i class="fa-solid fa-expand"></i>
+                                </span>
+
+                                <span class="gallery-view-text">
+                                    View photo
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Top controls -->
+                        <div class="gallery-photo-controls">
+
+                            <button
+                                type="button"
+                                class="gallery-icon-button"
+                                data-bs-toggle="modal"
+                                data-bs-target="#photoLightbox"
+                                data-gallery-image="{{ photo.image.url }}"
+                                data-gallery-title="{{ photo.title }}"
+                                aria-label="View photo"
+                            >
+                                <i class="fa-solid fa-expand"></i>
+                            </button>
+
+                            <a
+                                href="{% url 'media_presence:photo_download' photo.pk %}"
+                                class="gallery-icon-button download-button"
+                                download
+                                aria-label="Download photo"
+                            >
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+
+                        </div>
+
+
+                        <!-- Caption -->
+                        <div class="media-gallery-caption">
+
+                            {% if photo.title %}
+                            <strong>{{ photo.title }}</strong>
+                            {% endif %}
+
+                            {% if photo.caption %}
+                            <small>{{ photo.caption }}</small>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+            {% empty %}
+
+            <!-- EMPTY -->
+            <div class="col-12">
+
+                <div class="gallery-empty-state">
+
+                    <div class="gallery-empty-icon">
+                        <i class="fa-solid fa-images"></i>
+                    </div>
+
+                    <h3 class="h5 fw-bold">
+                        No photos yet
+                    </h3>
+
+                    <p class="text-muted mb-0">
+                        Photos added to this project gallery will appear here.
+                    </p>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =====================================================
+         ADD PHOTO
+    ====================================================== -->
+    <section class="row justify-content-center mt-5 pt-3">
+
+        <div class="col-xl-7 col-lg-8">
+
+            <div class="upload-card">
+
+                <div class="upload-card-decoration"></div>
+
+                <div class="upload-card-header">
+
+                    <div class="upload-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+
+                    <div>
+                        <span class="upload-eyebrow">
+                            Media management
+                        </span>
+
+                        <h2 class="h5 fw-bold mb-1">
+                            Add a project photo
+                        </h2>
+
+                        <p class="text-muted mb-0">
+                            Upload a new visual to this gallery.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <form
+                    method="post"
+                    enctype="multipart/form-data"
+                    class="media-form gallery-upload-form"
+                >
+
+                    {% csrf_token %}
+
+                    <div class="upload-form-fields">
+                        {{ form.as_p }}
+                    </div>
+
+                    <div class="d-flex flex-column flex-sm-row
+                                justify-content-between align-items-sm-center
+                                gap-3 mt-4">
+
+                        <small class="text-muted">
+                            <i class="fa-solid fa-shield-halved me-1"></i>
+                            Supported image uploads
+                        </small>
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary upload-button"
+                        >
+                            <i class="fa-solid fa-cloud-arrow-up me-2"></i>
+                            Upload photo
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- =========================================================
+     PHOTO LIGHTBOX
+========================================================= -->
+<div
+    class="modal fade media-lightbox"
+    id="photoLightbox"
+    tabindex="-1"
+    aria-labelledby="photoLightboxTitle"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <div class="lightbox-heading">
+
+                    <span class="lightbox-eyebrow">
+                        Project gallery
+                    </span>
+
+                    <h5
+                        class="modal-title"
+                        id="photoLightboxTitle"
+                    >
+                        Photo preview
+                    </h5>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <div class="lightbox-image-stage">
+
+                    <div class="lightbox-loader">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <img
+                        id="photoLightboxImage"
+                        class="media-lightbox-image"
+                        src=""
+                        alt=""
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+{{ block.super }}
+
+<style>
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.gallery-page {
+    position: relative;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.gallery-detail-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 2.5rem;
+    border-radius: 24px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(8, 127, 123, 0.08),
+            rgba(7, 92, 99, 0.035)
+        );
+    border: 1px solid rgba(8, 127, 123, 0.10);
+    animation: heroReveal 0.75s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.gallery-hero-glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(2px);
+}
+
+.gallery-glow-one {
+    width: 260px;
+    height: 260px;
+    right: -90px;
+    top: -110px;
+    background: rgba(8, 127, 123, 0.09);
+}
+
+.gallery-glow-two {
+    width: 180px;
+    height: 180px;
+    left: 35%;
+    bottom: -120px;
+    background: rgba(7, 92, 99, 0.06);
+}
+
+.gallery-project-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 0.9rem;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    background: rgba(8, 127, 123, 0.09);
+    color: #087f7b;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+
+.gallery-detail-title {
+    max-width: 850px;
+    margin-bottom: 0.8rem;
+    color: #18323a;
+    font-size: clamp(2rem, 4vw, 3.3rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+}
+
+.gallery-detail-description {
+    max-width: 760px;
+    margin-bottom: 1.25rem;
+    color: #607078;
+    font-size: 1rem;
+    line-height: 1.75;
+}
+
+.gallery-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    color: #68777d;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.gallery-meta-divider {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #087f7b;
+}
+
+.gallery-back-button {
+    border: 1px solid rgba(24, 50, 58, 0.10);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #18323a;
+    font-weight: 700;
+    padding: 0.7rem 1rem;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        background-color 0.25s ease;
+}
+
+.gallery-back-button:hover {
+    transform: translateY(-2px);
+    background: #fff;
+    color: #087f7b;
+    box-shadow: 0 10px 25px rgba(20, 40, 50, 0.08);
+}
+
+
+/* =========================================================
+   SECTION HEADING
+========================================================= */
+
+.gallery-section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.gallery-section-eyebrow {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #087f7b;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+}
+
+.gallery-section-hint {
+    align-items: center;
+    color: #8a989d;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   PHOTO CARD
+========================================================= */
+
+.gallery-photo-column {
+    animation: photoReveal 0.65s cubic-bezier(.2,.8,.2,1) both;
+    animation-delay: calc(var(--gallery-index) * 70ms + 100ms);
+}
+
+.gallery-photo-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #eef2f1;
+    box-shadow: 0 5px 20px rgba(20, 40, 50, 0.07);
+    cursor: pointer;
+    outline: none;
+    transition:
+        transform 0.4s cubic-bezier(.2,.8,.2,1),
+        box-shadow 0.4s ease;
+}
+
+.gallery-photo-card:hover,
+.gallery-photo-card:focus-visible {
+    transform: translateY(-7px);
+    box-shadow: 0 18px 40px rgba(20, 40, 50, 0.15);
+}
+
+.gallery-photo-frame {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+}
+
+.media-gallery-photo {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition:
+        transform 0.75s cubic-bezier(.2,.8,.2,1),
+        filter 0.5s ease;
+}
+
+.gallery-photo-card:hover .media-gallery-photo,
+.gallery-photo-card:focus-visible .media-gallery-photo {
+    transform: scale(1.08);
+    filter: saturate(1.08);
+}
+
+
+/* =========================================================
+   GRADIENT
+========================================================= */
+
+.gallery-photo-gradient {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.02) 35%,
+            rgba(0, 0, 0, 0.65) 100%
+        );
+    opacity: 0.72;
+    transition: opacity 0.35s ease;
+}
+
+.gallery-photo-card:hover .gallery-photo-gradient {
+    opacity: 0.9;
+}
+
+
+/* =========================================================
+   HOVER VIEW
+========================================================= */
+
+.media-gallery-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(8, 127, 123, 0.18);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+}
+
+.gallery-photo-card:hover .media-gallery-overlay,
+.gallery-photo-card:focus-visible .media-gallery-overlay {
+    opacity: 1;
+}
+
+.gallery-view-action {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #18323a;
+    font-size: 0.78rem;
+    font-weight: 800;
+    transform: translateY(12px) scale(0.94);
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
+}
+
+.gallery-photo-card:hover .gallery-view-action,
+.gallery-photo-card:focus-visible .gallery-view-action {
+    transform: translateY(0) scale(1);
+}
+
+.gallery-view-icon {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #087f7b;
+    color: #fff;
+}
+
+
+/* =========================================================
+   PHOTO CONTROLS
+========================================================= */
+
+.gallery-photo-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 4;
+    transform: translateY(-8px);
+    opacity: 0;
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.gallery-photo-card:hover .gallery-photo-controls,
+.gallery-photo-card:focus-visible .gallery-photo-controls {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.gallery-icon-button {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.94);
+    color: #18323a;
+    text-decoration: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.13);
+    transition:
+        transform 0.2s ease,
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.gallery-icon-button:hover {
+    transform: translateY(-2px);
+    background: #fff;
+    color: #087f7b;
+}
+
+.download-button:hover {
+    color: #0d6efd;
+}
+
+
+/* =========================================================
+   CAPTION
+========================================================= */
+
+.media-gallery-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    padding: 1rem;
+    color: #fff;
+    transform: translateY(4px);
+    transition: transform 0.35s ease;
+}
+
+.gallery-photo-card:hover .media-gallery-caption {
+    transform: translateY(0);
+}
+
+.media-gallery-caption strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.86rem;
+    line-height: 1.3;
+}
+
+.media-gallery-caption small {
+    display: block;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.78;
+    font-size: 0.72rem;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.gallery-empty-state {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    border: 1px dashed rgba(8, 127, 123, 0.22);
+    border-radius: 18px;
+    background: rgba(8, 127, 123, 0.025);
+    animation: photoReveal 0.6s ease both;
+}
+
+.gallery-empty-icon {
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    border-radius: 20px;
+    background: rgba(8, 127, 123, 0.08);
+    color: #087f7b;
+    font-size: 1.8rem;
+    animation: floatingIcon 3s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   UPLOAD CARD
+========================================================= */
+
+.upload-card {
+    position: relative;
+    overflow: hidden;
+    padding: 1.6rem;
+    border: 1px solid rgba(8, 127, 123, 0.10);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 8px 28px rgba(20, 40, 50, 0.07);
+    animation: photoReveal 0.7s 0.25s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.upload-card-decoration {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    right: -70px;
+    top: -80px;
+    border-radius: 50%;
+    background: rgba(8, 127, 123, 0.055);
+}
+
+.upload-card-header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.4rem;
+}
+
+.upload-icon {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    background: rgba(8, 127, 123, 0.09);
+    color: #087f7b;
+    font-size: 1.15rem;
+    transition:
+        transform 0.35s ease,
+        background-color 0.35s ease;
+}
+
+.upload-card:hover .upload-icon {
+    transform: translateY(-3px) rotate(-3deg);
+    background: rgba(8, 127, 123, 0.14);
+}
+
+.upload-eyebrow {
+    display: block;
+    margin-bottom: 0.15rem;
+    color: #087f7b;
+    font-size: 0.67rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.gallery-upload-form {
+    position: relative;
+    z-index: 1;
+}
+
+.gallery-upload-form p {
+    margin-bottom: 1rem;
+}
+
+.gallery-upload-form label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: #33464d;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.gallery-upload-form input,
+.gallery-upload-form textarea,
+.gallery-upload-form select {
+    width: 100%;
+    border: 1px solid #dfe6e4;
+    border-radius: 9px;
+    padding: 0.7rem 0.8rem;
+    background: #fff;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.gallery-upload-form input:focus,
+.gallery-upload-form textarea:focus,
+.gallery-upload-form select:focus {
+    border-color: #087f7b;
+    box-shadow: 0 0 0 3px rgba(8, 127, 123, 0.10);
+    outline: none;
+}
+
+.gallery-upload-form textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.upload-button {
+    border-radius: 9px;
+    padding: 0.7rem 1rem;
+    font-weight: 700;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.upload-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(13, 110, 253, 0.18);
+}
+
+
+/* =========================================================
+   LIGHTBOX
+========================================================= */
+
+.media-lightbox {
+    background: rgba(5, 15, 20, 0.82);
+    backdrop-filter: blur(8px);
+}
+
+.media-lightbox .modal-dialog {
+    max-width: 1180px;
+}
+
+.media-lightbox .modal-content {
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    background: #10191d;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+}
+
+.media-lightbox .modal-header {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 25, 30, 0.88);
+}
+
+.lightbox-eyebrow {
+    display: block;
+    margin-bottom: 0.15rem;
+    color: #6fcfc9;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+}
+
+.lightbox-heading .modal-title {
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.lightbox-image-stage {
+    position: relative;
+    min-height: 55vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.media-lightbox-image {
+    display: block;
+    max-width: 100%;
+    max-height: 76vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 10px;
+    opacity: 0;
+    transform: scale(0.96);
+    transition:
+        opacity 0.4s ease,
+        transform 0.45s cubic-bezier(.2,.8,.2,1);
+}
+
+.media-lightbox-image.loaded {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.lightbox-loader {
+    position: absolute;
+    display: flex;
+    gap: 5px;
+    transition: opacity 0.2s ease;
+}
+
+.lightbox-loader span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+    animation: loaderPulse 1s ease-in-out infinite;
+}
+
+.lightbox-loader span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.lightbox-loader span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.lightbox-loader.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes heroReveal {
+
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+@keyframes photoReveal {
+
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+}
+
+@keyframes floatingIcon {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+
+}
+
+@keyframes loaderPulse {
+
+    0%,
+    100% {
+        opacity: 0.25;
+        transform: scale(0.8);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .gallery-detail-hero,
+    .gallery-photo-column,
+    .upload-card,
+    .gallery-empty-icon,
+    .gallery-photo-card,
+    .media-gallery-photo,
+    .media-gallery-overlay,
+    .gallery-view-action,
+    .gallery-photo-controls,
+    .media-gallery-caption,
+    .gallery-back-button,
+    .upload-icon,
+    .upload-button,
+    .media-lightbox-image,
+    .lightbox-loader span {
+        animation: none !important;
+        transition: none !important;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .gallery-detail-hero {
+        padding: 1.5rem;
+        border-radius: 18px;
+    }
+
+    .gallery-detail-title {
+        font-size: 2rem;
+    }
+
+    .gallery-detail-description {
+        font-size: 0.92rem;
+    }
+
+    .gallery-back-button {
+        width: 100%;
+    }
+
+    .gallery-photo-frame {
+        aspect-ratio: 1 / 1;
+    }
+
+    /*
+       Keep controls accessible on touch screens.
+    */
+    .gallery-photo-controls {
+        opacity: 1;
+        transform: none;
+    }
+
+    .gallery-view-action {
+        display: none;
+    }
+
+    .media-gallery-caption {
+        transform: none;
+        padding: 0.75rem;
+    }
+
+    .upload-card {
+        padding: 1.25rem;
+        border-radius: 17px;
+    }
+
+    .lightbox-image-stage {
+        min-height: 50vh;
+        padding: 0.5rem;
+    }
+
+}
+
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media (max-width: 420px) {
+
+    .gallery-detail-title {
+        font-size: 1.7rem;
+    }
+
+    .gallery-meta {
+        font-size: 0.75rem;
+    }
+
+    .gallery-meta-divider {
+        display: none;
+    }
+
+    .gallery-photo-column {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
+    .row.g-3 {
+        --bs-gutter-x: 10px;
+        --bs-gutter-y: 10px;
+    }
+
+}
+
+</style>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const modal = document.getElementById("photoLightbox");
+
+    if (!modal) {
+        return;
+    }
+
+    const lightboxImage =
+        document.getElementById("photoLightboxImage");
+
+    const lightboxTitle =
+        document.getElementById("photoLightboxTitle");
+
+    const loader =
+        modal.querySelector(".lightbox-loader");
+
+
+    /* =====================================================
+       OPEN LIGHTBOX
+    ====================================================== */
+
+    modal.addEventListener("show.bs.modal", function (event) {
+
+        const trigger = event.relatedTarget;
+
+        if (!trigger) {
+            return;
+        }
+
+        const image =
+            trigger.dataset.galleryImage;
+
+        const title =
+            trigger.dataset.galleryTitle || "Photo preview";
+
+
+        if (!image) {
+            return;
+        }
+
+
+        /* Reset animation */
+        lightboxImage.classList.remove("loaded");
+
+        if (loader) {
+            loader.classList.remove("hidden");
+        }
+
+
+        /* Update title */
+        lightboxTitle.textContent = title;
+
+
+        /*
+         * Clear the current image first so the next
+         * image gets a fresh transition.
+         */
+        lightboxImage.removeAttribute("src");
+
+
+        /* Load new image */
+        const preload = new Image();
+
+        preload.onload = function () {
+
+            lightboxImage.src = image;
+            lightboxImage.alt = title;
+
+            requestAnimationFrame(function () {
+
+                lightboxImage.classList.add("loaded");
+
+                if (loader) {
+                    loader.classList.add("hidden");
+                }
+
+            });
+
+        };
+
+
+        preload.onerror = function () {
+
+            lightboxImage.alt = "Unable to load gallery photo";
+
+            if (loader) {
+                loader.classList.add("hidden");
+            }
+
+        };
+
+
+        preload.src = image;
+
+    });
+
+
+    /* =====================================================
+       CLEAN LIGHTBOX
+    ====================================================== */
+
+    modal.addEventListener("hidden.bs.modal", function () {
+
+        lightboxImage.classList.remove("loaded");
+
+        setTimeout(function () {
+
+            lightboxImage.removeAttribute("src");
+            lightboxImage.alt = "";
+
+        }, 250);
+
+    });
+
+
+    /* =====================================================
+       KEYBOARD ACCESS
+    ====================================================== */
+
+    document.querySelectorAll(".gallery-photo-card").forEach(function (card) {
+
+        card.addEventListener("keydown", function (event) {
+
+            if (event.key === "Enter" || event.key === " ") {
+
+                event.preventDefault();
+
+                const image =
+                    card.querySelector("[data-gallery-image]");
+
+                if (!image) {
+                    return;
+                }
+
+                image.click();
+
+            }
+
+        });
+
+    });
+
+});
+</script>
+
+{% endblock %}

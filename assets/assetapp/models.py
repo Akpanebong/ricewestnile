@@ -3,6 +3,9 @@ from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import date
 from django.db import models
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from core.project_models import Location
 from account.models import Profile
 
 ASSET_CATEGORIES = (
@@ -14,6 +17,7 @@ ASSET_CATEGORIES = (
     ('LAND', 'Land'),
     ('BUILDING', 'Building'),
     ('PLANT', 'Plant & Machinery'),
+    ('OTHER', 'Other'),
 )
 
 MODE_OF_ACQUISITION = (
@@ -115,6 +119,72 @@ class AssetMaintenance(models.Model):
 
     class Meta:
         ordering = ['-maintenance_date']
+
+
+class AssetDisposalRequest(models.Model):
+    class Status(models.TextChoices):
+        DECLARED = "DECLARED", "Declared"
+        UNDER_REVIEW = "UNDER_REVIEW", "Under procurement review"
+        APPROVED = "APPROVED", "Approved for disposal"
+        DISPOSED = "DISPOSED", "Disposed"
+        REJECTED = "REJECTED", "Rejected"
+
+    asset = models.OneToOneField(Asset, on_delete=models.PROTECT, related_name="disposal_request")
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DECLARED, db_index=True)
+    declared_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="asset_disposals_declared")
+    declared_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="asset_disposals_reviewed")
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    procurement_notes = models.TextField(blank=True)
+    disposal_date = models.DateField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-declared_at",)
+
+    def __str__(self):
+        return f"Disposal: {self.asset.asset_no}"
+
+
+class WeeklyVehiclePlan(models.Model):
+    week_start = models.DateField(help_text="Use the Monday of the planning week")
+    notes = models.TextField(blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="vehicle_plans_created")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-week_start",)
+        constraints = [models.UniqueConstraint(fields=("week_start",), name="unique_vehicle_plan_week")]
+
+    def clean(self):
+        if self.week_start and self.week_start.weekday() != 0:
+            raise ValidationError("Weekly plans must start on a Monday.")
+
+    def __str__(self):
+        return f"Vehicle plan - week of {self.week_start}"
+
+
+class VehicleAssignment(models.Model):
+    plan = models.ForeignKey(WeeklyVehiclePlan, on_delete=models.CASCADE, related_name="assignments")
+    vehicle = models.ForeignKey(Asset, on_delete=models.PROTECT, related_name="weekly_assignments", limit_choices_to={"category": "VEHICLE"})
+    driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="vehicle_assignments")
+    # location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="vehicle_assignments")
+    location = models.CharField(max_length=255, blank=True)
+    purpose = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("location", "vehicle__asset_no")
+        constraints = [
+            models.UniqueConstraint(fields=("plan", "vehicle"), name="unique_vehicle_per_week"),
+        ]
+
+    def clean(self):
+        if self.vehicle_id and self.vehicle.category != "VEHICLE":
+            raise ValidationError("Only assets in the Vehicle category can be assigned.")
+
+    def __str__(self):
+        return f"{self.vehicle} - {self.driver} - {self.location}"
 
 
 class AuditLog(models.Model):

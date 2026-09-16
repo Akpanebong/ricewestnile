@@ -1,4 +1,5 @@
 from django import template
+from django.conf import settings
 from decimal import Decimal
 
 from core.models import CurrencyRate
@@ -25,14 +26,19 @@ def accounting_format(amount):
     Usage in template: {{ amount|accounting_format }}
     """
     if amount is None or amount == '':
-        return '0.00'
-    
+        return f'{getattr(settings, "DEFAULT_DISPLAY_CURRENCY", "UGX")} 0.00'
     try:
         num = Decimal(str(amount))
         # Format with commas using Python's format
-        return '{:,.2f}'.format(num)
+        return f'{getattr(settings, "DEFAULT_DISPLAY_CURRENCY", "UGX")} {{:,.2f}}'.format(num)
     except (ValueError, TypeError):
-        return '0.00'
+        return f'{getattr(settings, "DEFAULT_DISPLAY_CURRENCY", "UGX")} 0.00'
+
+
+@register.filter
+def accounting_money(amount, request=None):
+    """Currency-aware accounting display with comma separators."""
+    return format_money(amount, request=request)
 
 
 @register.simple_tag(takes_context=True)

@@ -1,0 +1,931 @@
+
+{% extends "finance/finance_tools_base.html" %}
+
+{% block title %}Bank reconciliation | Finance{% endblock %}
+
+{% block finance_content %}
+
+<style>
+    /* =========================================================
+       BANK RECONCILIATION
+       ========================================================= */
+
+    .reconciliation-page {
+        animation: reconciliationIn .4s ease both;
+    }
+
+    @keyframes reconciliationIn {
+        from {
+            opacity: 0;
+            transform: translateY(7px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* =========================================================
+       HERO
+       ========================================================= */
+
+    .reconciliation-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 1.15rem 1.3rem;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #087f7b, #075c63);
+        color: #fff;
+        box-shadow: 0 10px 26px rgba(7, 92, 99, .12);
+    }
+
+    .reconciliation-hero::before,
+    .reconciliation-hero::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: #fff;
+        opacity: .07;
+        pointer-events: none;
+    }
+
+    .reconciliation-hero::before {
+        width: 150px;
+        height: 150px;
+        right: -65px;
+        top: -85px;
+    }
+
+    .reconciliation-hero::after {
+        width: 85px;
+        height: 85px;
+        right: 100px;
+        bottom: -55px;
+    }
+
+    .reconciliation-hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .reconciliation-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        margin-bottom: .25rem;
+        color: rgba(255,255,255,.72);
+        font-size: .67rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .reconciliation-title {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 800;
+        letter-spacing: -.025em;
+    }
+
+    .reconciliation-description {
+        margin: .3rem 0 0;
+        color: rgba(255,255,255,.72);
+        font-size: .76rem;
+    }
+
+    .reconciliation-back {
+        position: relative;
+        z-index: 3;
+        border-radius: 9px;
+        padding: .45rem .7rem;
+        font-size: .73rem;
+        font-weight: 700;
+        transition: transform .2s ease,
+                    background-color .2s ease,
+                    color .2s ease;
+    }
+
+    .reconciliation-back:hover {
+        transform: translateY(-2px);
+    }
+
+    /* =========================================================
+       MAIN CARD
+       ========================================================= */
+
+    .reconciliation-card {
+        overflow: hidden;
+        border: 1px solid #e7eeeb !important;
+        border-radius: 16px !important;
+        background: #fff;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, .035);
+    }
+
+    .reconciliation-section {
+        padding: 1rem;
+    }
+
+    .reconciliation-section + .reconciliation-section {
+        border-top: 1px solid #edf2f0;
+    }
+
+    /* =========================================================
+       SECTION HEADINGS
+       ========================================================= */
+
+    .section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        margin-bottom: .85rem;
+    }
+
+    .section-heading-main {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    .section-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 30px;
+        border-radius: 9px;
+        background: #e8f6f4;
+        color: #087f7b;
+        font-size: .78rem;
+    }
+
+    .section-heading h3 {
+        margin: 0;
+        color: #18323a;
+        font-size: .88rem;
+        font-weight: 800;
+    }
+
+    .section-heading small {
+        color: #94a3b8;
+        font-size: .68rem;
+    }
+
+    /* =========================================================
+       MAIN RECONCILIATION FORM
+       ========================================================= */
+
+    .reconciliation-field {
+        height: 100%;
+    }
+
+    .reconciliation-field > label {
+        display: block;
+        margin-bottom: .3rem;
+        color: #334155;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+
+    .reconciliation-field .form-control,
+    .reconciliation-field .form-select,
+    .reconciliation-field input[type="text"],
+    .reconciliation-field input[type="number"],
+    .reconciliation-field input[type="date"],
+    .reconciliation-field input[type="datetime-local"],
+    .reconciliation-field input[type="email"],
+    .reconciliation-field input[type="time"],
+    .reconciliation-field select,
+    .reconciliation-field textarea {
+        width: 100%;
+        min-height: 38px;
+        border: 1px solid #dce5e2;
+        border-radius: 9px;
+        background: #fff;
+        color: #334155;
+        font-size: .78rem;
+        box-shadow: none;
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .reconciliation-field textarea {
+        min-height: 72px;
+        resize: vertical;
+    }
+
+    .reconciliation-field .form-control:focus,
+    .reconciliation-field .form-select:focus,
+    .reconciliation-field input:focus,
+    .reconciliation-field select:focus,
+    .reconciliation-field textarea:focus {
+        border-color: #087f7b;
+        box-shadow: 0 0 0 3px rgba(8, 127, 123, .09);
+        outline: none;
+    }
+
+    .reconciliation-field .form-text {
+        margin-top: .25rem;
+        color: #94a3b8;
+        font-size: .66rem;
+    }
+
+    .reconciliation-field .invalid-feedback {
+        margin-top: .25rem;
+        font-size: .67rem;
+    }
+
+    /* =========================================================
+       CHECKBOX / BOOLEAN FIELD
+       ========================================================= */
+
+    .reconciliation-switch {
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+        padding: .35rem .65rem;
+        border: 1px solid #dce5e2;
+        border-radius: 9px;
+        background: #f9fbfa;
+    }
+
+    .reconciliation-switch input[type="checkbox"] {
+        width: 2.15rem;
+        height: 1.15rem;
+        margin: 0 .5rem 0 0;
+        cursor: pointer;
+        flex: 0 0 auto;
+    }
+
+    .reconciliation-switch input[type="checkbox"]:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+    .reconciliation-switch label {
+        margin: 0 !important;
+        color: #334155;
+        font-size: .72rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    /* =========================================================
+       RECONCILING ITEMS
+       ========================================================= */
+
+    /*
+       IMPORTANT:
+       Do NOT use a hard-coded Type / Amount / Description header.
+       Django's actual form field order is used below, and each
+       label is rendered directly above its own input.
+    */
+
+    .recon-item {
+        position: relative;
+        padding: .7rem;
+        margin-top: .5rem;
+        border: 1px solid #edf2f0;
+        border-radius: 10px;
+        background: #fff;
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease,
+            transform .2s ease;
+        animation: reconItemIn .3s ease both;
+    }
+
+    .recon-item:first-of-type {
+        margin-top: 0;
+    }
+
+    .recon-item:hover {
+        border-color: #d7e8e4;
+        box-shadow: 0 5px 14px rgba(15, 23, 42, .045);
+        transform: translateY(-1px);
+    }
+
+    @keyframes reconItemIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .recon-form-field {
+        height: 100%;
+    }
+
+    /*
+       This is the key fix:
+       labels are ALWAYS visible and are generated from the
+       actual Django form field.
+    */
+    .recon-form-field > label {
+        display: block;
+        margin-bottom: .25rem;
+        color: #64748b;
+        font-size: .64rem;
+        font-weight: 800;
+        letter-spacing: .02em;
+    }
+
+    .recon-form-field .form-control,
+    .recon-form-field .form-select,
+    .recon-form-field input,
+    .recon-form-field select,
+    .recon-form-field textarea {
+        width: 100%;
+        min-height: 36px;
+        border: 1px solid #dce5e2;
+        border-radius: 8px;
+        background: #fff;
+        color: #334155;
+        font-size: .75rem;
+        box-shadow: none;
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .recon-form-field textarea {
+        min-height: 62px;
+        resize: vertical;
+    }
+
+    .recon-form-field .form-control:focus,
+    .recon-form-field .form-select:focus,
+    .recon-form-field input:focus,
+    .recon-form-field select:focus,
+    .recon-form-field textarea:focus {
+        border-color: #087f7b;
+        box-shadow: 0 0 0 3px rgba(8, 127, 123, .08);
+        outline: none;
+    }
+
+    .recon-form-field .form-text {
+        margin-top: .2rem;
+        color: #94a3b8;
+        font-size: .62rem;
+    }
+
+    .recon-form-field .invalid-feedback {
+        margin-top: .2rem;
+        font-size: .64rem;
+    }
+
+    /* =========================================================
+       DELETE / REMOVE
+       ========================================================= */
+
+    .recon-delete {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+    }
+
+    .recon-delete-box {
+        width: 100%;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        padding: .25rem .45rem;
+        border: 1px solid #f0d9d9;
+        border-radius: 8px;
+        background: #fffafa;
+    }
+
+    .recon-delete-label {
+        margin: 0 !important;
+        color: #b42318 !important;
+        font-size: .62rem !important;
+        font-weight: 700 !important;
+        cursor: pointer;
+    }
+
+    .recon-delete input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        margin: 0;
+        cursor: pointer;
+        accent-color: #dc3545;
+    }
+
+    /* =========================================================
+       EMPTY STATE
+       ========================================================= */
+
+    .recon-empty {
+        padding: 1.4rem 1rem;
+        text-align: center;
+        border: 1px dashed #dce5e2;
+        border-radius: 10px;
+        background: #fbfcfc;
+        color: #94a3b8;
+        font-size: .73rem;
+    }
+
+    .recon-empty-icon {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: .45rem;
+        border-radius: 50%;
+        background: #e8f6f4;
+        color: #087f7b;
+    }
+
+    .recon-empty strong {
+        display: block;
+        color: #475569;
+        font-size: .75rem;
+    }
+
+    .recon-empty span {
+        display: block;
+        margin-top: .15rem;
+    }
+
+    /* =========================================================
+       NON-FIELD ERRORS
+       ========================================================= */
+
+    .reconciliation-error {
+        padding: .7rem 1rem;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        font-size: .73rem;
+    }
+
+    /* =========================================================
+       ACTIONS
+       ========================================================= */
+
+    .reconciliation-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .5rem;
+        padding: .9rem 1rem;
+        border-top: 1px solid #edf2f0;
+        background: #fbfcfc;
+    }
+
+    .reconciliation-actions .btn {
+        min-height: 36px;
+        border-radius: 9px;
+        font-size: .75rem;
+        font-weight: 700;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .reconciliation-actions .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 767.98px) {
+
+        .reconciliation-hero {
+            padding: 1rem;
+        }
+
+        .reconciliation-hero .d-flex {
+            flex-direction: column;
+            align-items: stretch !important;
+        }
+
+        .reconciliation-back {
+            width: 100%;
+            margin-top: .75rem;
+            text-align: center;
+        }
+
+        .reconciliation-title {
+            font-size: 1.12rem;
+        }
+
+        .reconciliation-description {
+            max-width: 100%;
+        }
+
+        .reconciliation-section {
+            padding: .85rem;
+        }
+
+        .section-heading {
+            align-items: flex-start;
+        }
+
+        .section-heading > small {
+            display: none;
+        }
+
+        .recon-item {
+            padding: .75rem;
+        }
+
+        .recon-item .row {
+            row-gap: .65rem !important;
+        }
+
+        .recon-form-field > label {
+            margin-bottom: .2rem;
+            font-size: .63rem;
+            text-transform: uppercase;
+        }
+
+        .recon-delete {
+            justify-content: flex-start;
+        }
+
+        .recon-delete-box {
+            justify-content: flex-start;
+            width: auto;
+            padding-right: .7rem;
+        }
+
+        .reconciliation-actions {
+            flex-direction: column-reverse;
+        }
+
+        .reconciliation-actions .btn {
+            width: 100%;
+        }
+    }
+
+    /* =========================================================
+       REDUCED MOTION
+       ========================================================= */
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .reconciliation-page,
+        .recon-item {
+            animation: none !important;
+        }
+
+        .reconciliation-back,
+        .recon-item,
+        .reconciliation-actions .btn,
+        .reconciliation-field .form-control,
+        .reconciliation-field .form-select,
+        .recon-form-field .form-control,
+        .recon-form-field .form-select {
+            transition: none !important;
+        }
+    }
+</style>
+
+
+<div class="reconciliation-page">
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <div class="reconciliation-hero mb-3">
+
+        <div class="reconciliation-hero-content">
+
+            <div class="d-flex justify-content-between align-items-center gap-3">
+
+                <div>
+
+                    <div class="reconciliation-eyebrow">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        Finance control
+                    </div>
+
+                    <h1 class="reconciliation-title">
+                        Bank reconciliation
+                    </h1>
+
+                    <p class="reconciliation-description">
+                        {{ cash_book.name }}
+                        · Reconcile statement balance to the cash book.
+                    </p>
+
+                </div>
+
+                <a
+                    href="{% url 'finance:cashbook_detail' cash_book.pk %}"
+                    class="btn btn-outline-light reconciliation-back"
+                >
+                    <i class="fa-solid fa-arrow-left me-1"></i>
+                    Cash book
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         RECONCILIATION CARD
+         ===================================================== -->
+
+    <div class="card reconciliation-card">
+
+        <form method="post">
+
+            {% csrf_token %}
+
+
+            <!-- =================================================
+                 MAIN FORM ERRORS
+                 ================================================= -->
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger reconciliation-error">
+                    <i class="fa-solid fa-circle-exclamation me-1"></i>
+
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+
+            <!-- =================================================
+                 RECONCILIATION DETAILS
+                 ================================================= -->
+
+            <div class="reconciliation-section">
+
+                <div class="section-heading">
+
+                    <div class="section-heading-main">
+
+                        <span class="section-icon">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </span>
+
+                        <div>
+                            <h3>Reconciliation details</h3>
+                        </div>
+
+                    </div>
+
+                    <small>
+                        Statement information
+                    </small>
+
+                </div>
+
+
+                <div class="row g-3">
+
+                    {% for field in form %}
+
+                        <div class="col-12 col-md-6">
+
+                            <div class="reconciliation-field">
+
+                                {% if field.field.widget.input_type == "checkbox" %}
+
+                                    <div class="reconciliation-switch">
+
+                                        {{ field }}
+
+                                        <label
+                                            for="{{ field.id_for_label }}"
+                                        >
+                                            {{ field.label }}
+
+                                            {% if field.field.required %}
+                                                <span class="text-danger">*</span>
+                                            {% endif %}
+                                        </label>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <label for="{{ field.id_for_label }}">
+
+                                        {{ field.label }}
+
+                                        {% if field.field.required %}
+                                            <span class="text-danger">*</span>
+                                        {% endif %}
+
+                                    </label>
+
+                                    {{ field }}
+
+                                {% endif %}
+
+
+                                {% if field.help_text %}
+                                    <div class="form-text">
+                                        {{ field.help_text }}
+                                    </div>
+                                {% endif %}
+
+
+                                {% if field.errors %}
+                                    <div class="invalid-feedback d-block">
+
+                                        {% for error in field.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+
+                                    </div>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 RECONCILING ITEMS
+                 ================================================= -->
+
+            <div class="reconciliation-section">
+
+                <div class="section-heading">
+
+                    <div class="section-heading-main">
+
+                        <span class="section-icon">
+                            <i class="fa-solid fa-list-check"></i>
+                        </span>
+
+                        <div>
+                            <h3>Reconciling items</h3>
+                        </div>
+
+                    </div>
+
+                    <small>
+                        Adjustments between records
+                    </small>
+
+                </div>
+
+
+                {# Keep management form outside the item rows. #}
+                {{ formset.management_form }}
+
+
+                {% for item in formset %}
+
+                    <div class="recon-item">
+
+                        {# Hidden primary-key field for existing formset records #}
+                        {{ item.id }}
+
+                        <div class="row g-2 align-items-end">
+
+                            {% for field in item.visible_fields %}
+
+                                {% if field.name == "DELETE" %}
+
+                                    <!-- Remove field -->
+
+                                    <div class="col-12 col-md-auto recon-delete">
+
+                                        <div class="recon-delete-box">
+
+                                            <label
+                                                for="{{ field.id_for_label }}"
+                                                class="recon-delete-label"
+                                            >
+                                                Remove
+                                            </label>
+
+                                            {{ field }}
+
+                                        </div>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <!-- Actual Django form field -->
+
+                                    <div class="col-12 col-md-4">
+
+                                        <div class="reconciliation-field recon-form-field">
+
+                                            <label for="{{ field.id_for_label }}">
+
+                                                {{ field.label }}
+
+                                                {% if field.field.required %}
+                                                    <span class="text-danger">*</span>
+                                                {% endif %}
+
+                                            </label>
+
+                                            {{ field }}
+
+
+                                            {% if field.help_text %}
+                                                <div class="form-text">
+                                                    {{ field.help_text }}
+                                                </div>
+                                            {% endif %}
+
+
+                                            {% if field.errors %}
+                                                <div class="invalid-feedback d-block">
+
+                                                    {% for error in field.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+
+                                                </div>
+                                            {% endif %}
+
+                                        </div>
+
+                                    </div>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+                {% empty %}
+
+                    <div class="recon-empty">
+
+                        <div class="recon-empty-icon">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+
+                        <strong>
+                            No reconciling items
+                        </strong>
+
+                        <span>
+                            No adjustments have been added to this reconciliation.
+                        </span>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- =================================================
+                 ACTIONS
+                 ================================================= -->
+
+            <div class="reconciliation-actions">
+
+                <a
+                    href="{% url 'finance:cashbook_detail' cash_book.pk %}"
+                    class="btn btn-light border"
+                >
+                    <i class="fa-solid fa-xmark me-1"></i>
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary px-4"
+                >
+                    <i class="fa-solid fa-check me-1"></i>
+                    Save reconciliation
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

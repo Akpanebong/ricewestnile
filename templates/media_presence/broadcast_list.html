@@ -1,0 +1,964 @@
+
+{% extends "communication/base.html" %}
+
+{% block title %}Broadcasts | Media Presence{% endblock %}
+
+{% block media_content %}
+
+{% include "media_presence/includes/media_header.html" %}
+
+
+<!-- =========================================================
+     PAGE HEADER
+========================================================= -->
+
+<div class="broadcast-page-header">
+
+    <div>
+        <div class="media-eyebrow text-success">
+            <span class="broadcast-live-dot"></span>
+            On air and scheduled
+        </div>
+
+        <h2 class="broadcast-page-title">
+            Broadcast appearances
+        </h2>
+
+        <p class="broadcast-page-subtitle">
+            Live and scheduled media appearances from RICE West Nile.
+        </p>
+    </div>
+
+
+    <div class="broadcast-stat">
+        <strong>{{ broadcasts|length }}</strong>
+        <span>published</span>
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     BROADCAST GRID
+========================================================= -->
+
+<div class="row g-3 broadcast-grid">
+
+    {% for broadcast in broadcasts %}
+
+    <div
+        class="col-md-6 col-xl-4 broadcast-column"
+        style="--broadcast-index: {{ forloop.counter0 }};"
+    >
+
+        <article class="card media-card broadcast-card h-100">
+
+            <!-- =================================================
+                 COVER
+            ================================================== -->
+
+            <div class="broadcast-cover">
+
+                {% if broadcast.cover_image %}
+
+                    <img
+                        src="{{ broadcast.cover_image.url }}"
+                        class="broadcast-image"
+                        alt="{{ broadcast.title }}"
+                        loading="lazy"
+                    >
+
+                {% else %}
+
+                    <div class="media-cover-placeholder broadcast-placeholder">
+                        <i class="fa-solid fa-tower-broadcast"></i>
+
+                        <span>
+                            Media Broadcast
+                        </span>
+                    </div>
+
+                {% endif %}
+
+
+                <!-- Image overlay -->
+
+                <div class="broadcast-image-overlay"></div>
+
+
+                <!-- Status -->
+
+                <div class="broadcast-status">
+
+                    {% if broadcast.is_live %}
+
+                        <span class="broadcast-badge broadcast-live">
+                            <span class="live-pulse"></span>
+                            LIVE
+                        </span>
+
+                    {% else %}
+
+                        <span class="broadcast-badge broadcast-scheduled">
+                            {{ broadcast.status_label }}
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- Broadcast icon -->
+
+                <div class="broadcast-floating-icon">
+                    <i class="fa-solid fa-tower-broadcast"></i>
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 CONTENT
+            ================================================== -->
+
+            <div class="card-body broadcast-body">
+
+                <h5 class="broadcast-title">
+                    {{ broadcast.title }}
+                </h5>
+
+                <p class="broadcast-summary">
+                    {{ broadcast.summary|truncatewords:24 }}
+                </p>
+
+
+                <div class="broadcast-date">
+
+                    <span class="broadcast-date-icon">
+                        <i class="fa-regular fa-calendar"></i>
+                    </span>
+
+                    <span>
+                        {{ broadcast.starts_at|date:"M d, Y · H:i" }}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ACTION
+            ================================================== -->
+
+            <div class="card-footer broadcast-footer">
+
+                <a
+                    class="btn broadcast-watch-btn"
+                    href="{{ broadcast.youtube_url }}"
+                    target="_blank"
+                    rel="noopener"
+                >
+
+                    <span class="youtube-icon">
+                        <i class="fa-brands fa-youtube"></i>
+                    </span>
+
+                    <span>
+                        Watch on YouTube
+                    </span>
+
+                    <i class="fa-solid fa-arrow-up-right-from-square broadcast-arrow"></i>
+
+                </a>
+
+            </div>
+
+        </article>
+
+    </div>
+
+
+    {% empty %}
+
+    <!-- =====================================================
+         EMPTY STATE
+    ====================================================== -->
+
+    <div class="col-12">
+
+        <div class="broadcast-empty">
+
+            <div class="broadcast-empty-icon">
+                <i class="fa-solid fa-tower-broadcast"></i>
+            </div>
+
+            <h4>No broadcasts yet</h4>
+
+            <p>
+                No broadcasts have been published.
+            </p>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+
+<style>
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.broadcast-page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    margin-bottom: 1rem;
+
+    animation:
+        broadcastHeaderEnter
+        .55s
+        cubic-bezier(.2,.8,.2,1)
+        both;
+}
+
+.broadcast-page-title {
+    margin: 0;
+
+    color: #18323a;
+
+    font-size: 1.25rem;
+    font-weight: 750;
+
+    letter-spacing: -.025em;
+}
+
+.broadcast-page-subtitle {
+    margin: .3rem 0 0;
+
+    color: #74847f;
+
+    font-size: .76rem;
+}
+
+.broadcast-live-dot {
+    width: 6px;
+    height: 6px;
+
+    display: inline-block;
+
+    margin-right: .35rem;
+
+    border-radius: 50%;
+
+    background: #198754;
+
+    animation: broadcastDotPulse 2s infinite;
+}
+
+
+/* =========================================================
+   STAT
+========================================================= */
+
+.broadcast-stat {
+    min-width: 70px;
+
+    padding: .55rem .75rem;
+
+    text-align: center;
+
+    border: 1px solid rgba(8,127,123,.10);
+    border-radius: 10px;
+
+    background: #fff;
+
+    box-shadow:
+        0 4px 14px rgba(20,40,50,.045);
+}
+
+.broadcast-stat strong {
+    display: block;
+
+    color: #087f7b;
+
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.broadcast-stat span {
+    display: block;
+
+    margin-top: .25rem;
+
+    color: #8a9995;
+
+    font-size: .58rem;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+
+/* =========================================================
+   BROADCAST CARD
+========================================================= */
+
+.broadcast-column {
+    animation:
+        broadcastCardEnter
+        .6s
+        cubic-bezier(.2,.8,.2,1)
+        both;
+
+    animation-delay:
+        calc(var(--broadcast-index) * 70ms);
+}
+
+.broadcast-card {
+    overflow: hidden;
+
+    border: 1px solid rgba(24,50,58,.07);
+    border-radius: 15px;
+
+    background: #fff;
+
+    box-shadow:
+        0 5px 18px rgba(20,40,50,.055);
+
+    transition:
+        transform .3s cubic-bezier(.2,.8,.2,1),
+        box-shadow .3s ease,
+        border-color .3s ease;
+}
+
+.broadcast-card:hover {
+    transform: translateY(-5px);
+
+    border-color: rgba(8,127,123,.14);
+
+    box-shadow:
+        0 16px 32px rgba(20,40,50,.11);
+}
+
+
+/* =========================================================
+   COVER
+========================================================= */
+
+.broadcast-cover {
+    position: relative;
+
+    height: 165px;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            #075c63,
+            #087f7b
+        );
+}
+
+.broadcast-image {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+
+    transition:
+        transform .6s cubic-bezier(.2,.8,.2,1),
+        filter .4s ease;
+}
+
+.broadcast-card:hover .broadcast-image {
+    transform: scale(1.055);
+
+    filter: brightness(.9);
+}
+
+
+/* =========================================================
+   IMAGE OVERLAY
+========================================================= */
+
+.broadcast-image-overlay {
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0,0,0,.08),
+            transparent 45%,
+            rgba(0,0,0,.48)
+        );
+
+    opacity: .85;
+
+    transition: opacity .3s ease;
+}
+
+.broadcast-card:hover .broadcast-image-overlay {
+    opacity: 1;
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.broadcast-placeholder {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: .45rem;
+
+    color: rgba(255,255,255,.82);
+
+    background:
+        radial-gradient(
+            circle at 30% 20%,
+            rgba(255,255,255,.12),
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #075c63,
+            #087f7b
+        );
+}
+
+.broadcast-placeholder i {
+    font-size: 2rem;
+
+    opacity: .8;
+
+    animation:
+        broadcastIconFloat
+        3s
+        ease-in-out
+        infinite;
+}
+
+.broadcast-placeholder span {
+    font-size: .65rem;
+    font-weight: 700;
+
+    letter-spacing: .08em;
+    text-transform: uppercase;
+
+    opacity: .65;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.broadcast-status {
+    position: absolute;
+
+    top: .75rem;
+    left: .75rem;
+
+    z-index: 2;
+}
+
+.broadcast-badge {
+    display: inline-flex;
+    align-items: center;
+
+    gap: .35rem;
+
+    padding: .35rem .55rem;
+
+    border-radius: 999px;
+
+    font-size: .58rem;
+    font-weight: 800;
+
+    letter-spacing: .06em;
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.12);
+}
+
+.broadcast-live {
+    background: #dc3545;
+    color: #fff;
+}
+
+.broadcast-scheduled {
+    background: rgba(255,255,255,.92);
+    color: #18323a;
+
+    backdrop-filter: blur(7px);
+}
+
+.live-pulse {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: #fff;
+
+    box-shadow:
+        0 0 0 0 rgba(255,255,255,.7);
+
+    animation:
+        livePulse
+        1.7s
+        infinite;
+}
+
+
+/* =========================================================
+   FLOATING ICON
+========================================================= */
+
+.broadcast-floating-icon {
+    position: absolute;
+
+    right: .75rem;
+    bottom: .7rem;
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 9px;
+
+    background: rgba(0,0,0,.18);
+
+    color: #fff;
+
+    font-size: .7rem;
+
+    backdrop-filter: blur(7px);
+
+    opacity: .8;
+
+    transform: translateY(3px);
+
+    transition:
+        transform .3s ease,
+        opacity .3s ease;
+}
+
+.broadcast-card:hover .broadcast-floating-icon {
+    opacity: 1;
+    transform: translateY(0) rotate(-4deg);
+}
+
+
+/* =========================================================
+   CARD CONTENT
+========================================================= */
+
+.broadcast-body {
+    padding: 1rem 1rem .8rem;
+}
+
+.broadcast-title {
+    margin: 0 0 .4rem;
+
+    color: #18323a;
+
+    font-size: .94rem;
+    font-weight: 750;
+
+    line-height: 1.35;
+
+    letter-spacing: -.015em;
+}
+
+.broadcast-summary {
+    margin: 0 0 .75rem;
+
+    color: #71807c;
+
+    font-size: .73rem;
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   DATE
+========================================================= */
+
+.broadcast-date {
+    display: inline-flex;
+    align-items: center;
+
+    gap: .45rem;
+
+    color: #7c8b87;
+
+    font-size: .67rem;
+}
+
+.broadcast-date-icon {
+    width: 25px;
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 7px;
+
+    background: rgba(8,127,123,.075);
+
+    color: #087f7b;
+
+    font-size: .65rem;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.broadcast-footer {
+    padding: 0 1rem 1rem;
+
+    border: 0;
+
+    background: #fff;
+}
+
+
+/* =========================================================
+   WATCH BUTTON
+========================================================= */
+
+.broadcast-watch-btn {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: .5rem;
+
+    padding: .55rem .65rem;
+
+    border: 1px solid rgba(220,53,69,.13);
+    border-radius: 9px;
+
+    background: rgba(220,53,69,.055);
+
+    color: #dc3545;
+
+    font-size: .7rem;
+    font-weight: 700;
+
+    text-align: left;
+
+    transition:
+        transform .25s ease,
+        background-color .25s ease,
+        color .25s ease,
+        box-shadow .25s ease;
+}
+
+.broadcast-watch-btn:hover {
+    transform: translateY(-2px);
+
+    background: #dc3545;
+
+    color: #fff;
+
+    box-shadow:
+        0 7px 16px rgba(220,53,69,.18);
+}
+
+.youtube-icon {
+    width: 25px;
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 7px;
+
+    background: rgba(220,53,69,.10);
+
+    font-size: .72rem;
+
+    transition:
+        background-color .25s ease,
+        color .25s ease;
+}
+
+.broadcast-watch-btn:hover .youtube-icon {
+    background: rgba(255,255,255,.18);
+    color: #fff;
+}
+
+.broadcast-arrow {
+    margin-left: auto;
+
+    font-size: .6rem;
+
+    opacity: .45;
+
+    transition:
+        transform .25s ease,
+        opacity .25s ease;
+}
+
+.broadcast-watch-btn:hover .broadcast-arrow {
+    opacity: 1;
+    transform: translate(2px,-2px);
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.broadcast-empty {
+    padding: 2.5rem 1.5rem;
+
+    text-align: center;
+
+    border: 1px dashed rgba(8,127,123,.18);
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(8,127,123,.025),
+            rgba(8,127,123,.01)
+        );
+
+    animation:
+        broadcastCardEnter
+        .6s
+        ease
+        both;
+}
+
+.broadcast-empty-icon {
+    width: 50px;
+    height: 50px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto .8rem;
+
+    border-radius: 13px;
+
+    background: rgba(8,127,123,.08);
+
+    color: #087f7b;
+
+    font-size: 1.1rem;
+}
+
+.broadcast-empty h4 {
+    margin-bottom: .3rem;
+
+    color: #18323a;
+
+    font-size: .95rem;
+}
+
+.broadcast-empty p {
+    margin: 0;
+
+    color: #84918e;
+
+    font-size: .72rem;
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes broadcastHeaderEnter {
+
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+@keyframes broadcastCardEnter {
+
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+@keyframes broadcastDotPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(25,135,84,.35);
+    }
+
+    50% {
+        box-shadow: 0 0 0 5px rgba(25,135,84,0);
+    }
+
+}
+
+@keyframes livePulse {
+
+    0% {
+        box-shadow:
+            0 0 0 0 rgba(255,255,255,.7);
+    }
+
+    70% {
+        box-shadow:
+            0 0 0 5px rgba(255,255,255,0);
+    }
+
+    100% {
+        box-shadow:
+            0 0 0 0 rgba(255,255,255,0);
+    }
+
+}
+
+@keyframes broadcastIconFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-4px);
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .broadcast-page-header,
+    .broadcast-column,
+    .broadcast-placeholder i,
+    .broadcast-live-dot,
+    .live-pulse {
+        animation: none !important;
+    }
+
+    .broadcast-card,
+    .broadcast-image,
+    .broadcast-floating-icon,
+    .broadcast-watch-btn,
+    .broadcast-arrow {
+        transition: none !important;
+    }
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .broadcast-page-header {
+        align-items: center;
+    }
+
+    .broadcast-page-subtitle {
+        display: none;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 575.98px) {
+
+    .broadcast-page-header {
+        margin-bottom: .8rem;
+    }
+
+    .broadcast-page-title {
+        font-size: 1.08rem;
+    }
+
+    .broadcast-stat {
+        min-width: 62px;
+        padding: .45rem .6rem;
+    }
+
+    .broadcast-stat strong {
+        font-size: 1rem;
+    }
+
+    .broadcast-cover {
+        height: 145px;
+    }
+
+    .broadcast-body {
+        padding: .9rem .9rem .7rem;
+    }
+
+    .broadcast-footer {
+        padding: 0 .9rem .9rem;
+    }
+
+}
+</style>
+
+{% endblock %}

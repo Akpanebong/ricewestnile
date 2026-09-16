@@ -48,6 +48,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/enterprise.css' %}">
 
+<style>
+    /* =====================================================
+   SIDEBAR LINKS — REMOVE UNDERLINES
+===================================================== */
+
+.sidebar-dashboard,
+.sidebar-dashboard:hover,
+.sidebar-dashboard:focus,
+.sidebar-dashboard:active,
+.sidebar-submenu a,
+.sidebar-submenu a:hover,
+.sidebar-submenu a:focus,
+.sidebar-submenu a:active {
+    text-decoration: none !important;
+}
+</style>
 {% block extra_head %}{% endblock %}
 
 </head>
@@ -366,6 +382,7 @@
          RIGHT SIDE: NOTIFICATIONS & ACCOUNT
     ================================================== -->
 
+
     <div class="app-header-end d-flex align-items-center gap-2">
 
         <!-- NOTIFICATIONS -->
@@ -373,62 +390,77 @@
         <div class="dropdown flex-shrink-0">
 
             <button
-                class="btn-icon header-icon-btn position-relative"
+                class="btn text-white position-relative"
                 data-bs-toggle="dropdown"
                 type="button"
-                aria-label="Notifications"
             >
 
-                <i class="fa-solid fa-bell"></i>
+                <i class="fa fa-bell fa-lg"></i>
 
                 {% if notification_unread_count %}
-                <span class="header-notif-dot"></span>
+
+                <span
+                    class="badge bg-danger position-absolute"
+                    style="top:-6px; right:-6px;"
+                >
+                    {{ notification_unread_count }}
+                </span>
+
                 {% endif %}
 
             </button>
 
 
-            <div class="dropdown-menu dropdown-menu-end header-dropdown header-notif-dropdown p-0">
+            <div
+                class="dropdown-menu dropdown-menu-end shadow p-0"
+                style="min-width:300px;"
+            >
 
-                <div class="header-dropdown-head">
+                <div class="p-3 border-bottom d-flex justify-content-between">
+
                     <strong>Notifications</strong>
-                    {% if notification_unread_count %}
-                    <span class="badge-outline header-dropdown-count">{{ notification_unread_count }} unread</span>
-                    {% endif %}
+
+                    <a
+                        href="{% url 'notifications:list' %}"
+                        class="small text-decoration-none"
+                    >
+                        View All
+                    </a>
+
                 </div>
 
-                <div class="header-notif-list">
 
-                    {% for note in notification_unread|slice:":6" %}
-                    <a href="{% url 'notifications:detail' note.notification.pk %}" class="header-notif-item">
-                        <span class="hub-list-icon
-                            {% if note.notification.category == 'critical' or note.notification.category == 'error' %}metric-icon-tint is-danger
-                            {% elif note.notification.category == 'warning' %}metric-icon-tint is-pending
-                            {% elif note.notification.category == 'success' %}metric-icon-tint is-success
-                            {% else %}metric-icon-tint is-info{% endif %}">
-                            <i class="fa-solid
-                                {% if note.notification.category == 'critical' or note.notification.category == 'error' %}fa-circle-exclamation
-                                {% elif note.notification.category == 'warning' %}fa-triangle-exclamation
-                                {% elif note.notification.category == 'success' %}fa-circle-check
-                                {% else %}fa-circle-info{% endif %}"></i>
-                        </span>
-                        <span class="header-notif-copy">
-                            <span class="title">{{ note.notification.title }}</span>
-                            <span class="meta">{{ note.notification.created_at|timesince }} ago</span>
-                        </span>
-                    </a>
-                    {% empty %}
-                    <div class="header-notif-empty">
-                        <i class="fa-solid fa-circle-check"></i>
-                        You're all caught up
+                <div style="max-height:300px; overflow:auto;">
+
+                    {% for note in notification_unread %}
+
+                    <div class="px-3 py-2 border-bottom">
+
+                        <small class="text-muted">
+                            {{ note.created_at }}
+                        </small>
+
+                        <div>
+
+                            <a
+                                href="{% url 'notifications:detail' note.notification.pk %}"
+                            >
+                                {{ note.message }}
+                            </a>
+
+                        </div>
+
                     </div>
+
+                    {% empty %}
+
+                    <div class="px-3 py-3 text-muted text-center">
+                        No notifications
+                    </div>
+
                     {% endfor %}
 
                 </div>
-
-                <a href="{% url 'notifications:list' %}" class="header-dropdown-foot">
-                    View all notifications
-                </a>
 
             </div>
 
@@ -439,24 +471,27 @@
 
         <div class="dropdown flex-shrink-0">
 
-            <button
-                type="button"
-                class="header-profile-trigger"
+            <a
+                href="#"
+                class="text-white text-decoration-none d-flex align-items-center"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
             >
-                <span class="avatar-circle header-avatar">{{ request.user.first_name|first|upper|default:request.user.username|first|upper }}{{ request.user.last_name|first|upper }}</span>
-                <i class="fa-solid fa-chevron-down header-profile-caret"></i>
-            </button>
+
+                <i class="fa fa-user-circle fa-2x"></i>
+
+            </a>
 
 
-            <ul class="dropdown-menu dropdown-menu-end header-dropdown header-profile-dropdown p-0">
+            <ul class="dropdown-menu dropdown-menu-end">
 
                 <li class="header-profile-head">
-                    <span class="avatar-circle header-avatar size-lg">{{ request.user.first_name|first|upper|default:request.user.username|first|upper }}{{ request.user.last_name|first|upper }}</span>
+                    <span class="avatar-circle header-avatar size-lg">
+                        {{ request.user.first_name|first|upper|default:request.user.username }}
+                        {{ request.user.last_name|first|upper|default:request.user.username }}
+                    </span>
                     <span class="header-profile-info">
-                        <span class="name">{{ request.user.get_full_name|default:request.user.username }}</span>
-                        <span class="role">{{ request.user.profile_type|default:"Staff" }}</span>
+                        <span class="role">{{ request.user.get_full_name|upper|default:request.user.username|upper }} | {{ request.user.profile_type|default:"Staff" }}</span>
                     </span>
                 </li>
 
@@ -488,11 +523,23 @@
                     </a>
                 </li>
 
+
+
+
+
+
+
             </ul>
 
         </div>
 
     </div>
+
+
+
+
+
+
 
 </header>
 
@@ -1618,6 +1665,27 @@ const body =
 
 </script>
 
+
+<script>
+    // Use the user's actual browser timezone, not the server's timezone.
+    // IANA names handle DST and regional rules correctly.
+    (function () {
+        try {
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (timezone) {
+                const current = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('user_timezone='));
+                const encoded = encodeURIComponent(timezone);
+                if (!current || current.split('=')[1] !== encoded) {
+                    document.cookie = 'user_timezone=' + encoded + '; Path=/; Max-Age=31536000; SameSite=Lax';
+                }
+            }
+        } catch (error) {
+            // Keep the configured project timezone if browser detection fails.
+        }
+    })();
+</script>
 
 {% block scripts %}
 {% endblock %}

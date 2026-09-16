@@ -199,7 +199,7 @@
             <td>{{ item.details }}</td>
             <td class="text-right">{{ item.amount_received|money:request }}</td>
             <td class="text-right">{{ item.amount_spent|money:request }}</td>
-            <td class="text-right">{{ item.balance }}</td>
+                        <td class="text-right">{{ item.balance|accounting_money:request }}</td>
         </tr>
         {% endfor %}
     </tbody>

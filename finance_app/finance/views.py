@@ -1,33 +1,36 @@
-import json
-from datetime import date
 from decimal import Decimal, InvalidOperation
-from openpyxl import Workbook
-from django.core.paginator import Paginator
+from datetime import date, timedelta
+import json
+
+import pandas as pd
+from django.db.models import Q, Count, ProtectedError
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
-from django.db.models.deletion import ProtectedError
-from django.db.models import Sum, ExpressionWrapper, F, DecimalField, Value, Q, Count
+from django.db.models import Sum, ExpressionWrapper, F, DecimalField, Value
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseForbidden
 from django.urls import reverse
 from account.models import Department
+from assets.assetapp.models import AssetMaintenance, Asset
 from core.project_models import Project, ProjectBudget
-from finance_app.finance.models import (
-    AccountingForm, AdminExpenseNote, CashRequisition, CashRequisitionItem,
-    ApprovalLog, AccountingItem, FinancialTransaction, FinancialCategory,
-    JournalEntry, JournalEntryLine,
-)
-
+from finance_app.finance.models import AccountingForm, AdminExpenseNote, CashRequisition, CashRequisitionItem, ApprovalLog, AccountingItem
+from openpyxl import Workbook
 from .utils.workflow import advance_workflow, user_can_approve
 from .utils.pdf import render_to_pdf
 from .permissions import is_finance_staff as _is_finance_staff, can_manage_chart_of_accounts as _can_manage_chart_of_accounts
 from django.db.models.functions import Coalesce
 from account.templatetags.custom_tags import has_group
 from procurement.procureapp.models import Requisition, PurchaseOrder
-from assets.assetapp.models import Asset, AssetMaintenance
-import pandas as pd
-from core.services import normalize_currency, get_base_currency, convert_amount, get_latest_usd_rates, CURRENCY_LABELS, SUPPORTED_CURRENCIES
+from core.services import user_amount_to_ugx, CURRENCY_LABELS, normalize_currency, get_latest_usd_rates
+from .forms import FinanceBudgetForm, BudgetLineFormSet, BudgetPerformanceForm, CashBookForm, CashBookEntryForm, BankReconciliationForm, BankReconciliationItemFormSet
+from .models import (
+    FinanceBudget, BudgetPerformance, CashBook, BankReconciliation,
+    FinancialCategory, FinancialTransaction, JournalEntry, JournalEntryLine,
+)
+from core.services import SUPPORTED_CURRENCIES, get_base_currency, convert_amount
+from .permissions import finance_editor_required, is_finance_editor as _can_manage_chart_of_accounts
+from .exports import budget_xlsx, performance_xlsx, cashbook_xlsx, reconciliation_xlsx
 
 
 @login_required(login_url="login")
@@ -93,12 +96,138 @@ def dashboard(request):
         "total_admin_expenses": total_admin_expenses,
         "total_received": accounting_totals["total_received"],
         "total_spent": accounting_totals["total_spent"],
+        "finance_budgets": FinanceBudget.objects.select_related("project").all()[:8],
+        "cash_books": CashBook.objects.select_related("project").all()[:8],
     }
 
     return render(request, "finance/dashboard.html", context)
 
 
 @login_required(login_url="login")
+def budget_list(request):
+    return render(request, "finance/budget_list.html", {"budgets": FinanceBudget.objects.select_related("project", "created_by").all()})
+
+
+@login_required(login_url="login")
+def budget_detail(request, pk):
+    budget = get_object_or_404(FinanceBudget.objects.select_related("project").prefetch_related("lines", "performance_records__line"), pk=pk)
+    return render(request, "finance/budget_detail.html", {"budget": budget})
+
+
+@login_required(login_url="login")
+@finance_editor_required
+def budget_create(request, pk=None):
+    instance = get_object_or_404(FinanceBudget, pk=pk) if pk else None
+    form = FinanceBudgetForm(request.POST or None, instance=instance)
+    formset = BudgetLineFormSet(request.POST or None, instance=instance)
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        budget = form.save(commit=False)
+        if not budget.pk:
+            budget.created_by = request.user
+        budget.save()
+        formset.instance = budget
+        formset.save()
+        messages.success(request, "Budget saved successfully.")
+        return redirect("finance:budget_detail", pk=budget.pk)
+    return render(request, "finance/budget_form.html", {"form": form, "formset": formset, "budget": instance})
+
+
+@login_required(login_url="login")
+@finance_editor_required
+def budget_delete(request, pk):
+    budget = get_object_or_404(FinanceBudget, pk=pk)
+    if request.method == "POST":
+        budget.delete(); messages.success(request, "Budget deleted."); return redirect("finance:budget_list")
+    return render(request, "finance/confirm_delete.html", {"object": budget, "cancel_url": reverse("finance:budget_detail", args=[budget.pk])})
+
+
+@login_required(login_url="login")
+def performance_list(request):
+    records = BudgetPerformance.objects.select_related("budget", "line").all()
+    return render(request, "finance/budget_performance_list.html", {"records": records})
+
+
+@login_required(login_url="login")
+@finance_editor_required
+def performance_create(request):
+    form = BudgetPerformanceForm(request.POST or None)
+    if form.is_valid():
+        record = form.save(commit=False); record.created_by = request.user; record.save(); messages.success(request, "Budget performance record saved."); return redirect("finance:performance_list")
+    return render(request, "finance/budget_performance_form.html", {"form": form})
+
+
+@login_required(login_url="login")
+def cashbook_list(request):
+    return render(request, "finance/cashbook_list.html", {"cash_books": CashBook.objects.select_related("project", "created_by").all()})
+
+
+@login_required(login_url="login")
+def cashbook_detail(request, pk):
+    cash_book = get_object_or_404(CashBook.objects.select_related("project").prefetch_related("entries", "bank_reconciliation"), pk=pk)
+    form = CashBookEntryForm()
+    if request.method == "POST":
+        form = CashBookEntryForm(request.POST)
+        if not (request.user.is_superuser or request.user.groups.filter(name__iexact="Finance").exists()):
+            messages.error(request, "Only Finance staff or a superuser can add cash book entries.")
+        elif form.is_valid():
+            entry = form.save(commit=False); entry.cash_book = cash_book; entry.created_by = request.user; entry.save(); messages.success(request, "Cash book entry added."); return redirect("finance:cashbook_detail", pk=pk)
+    return render(request, "finance/cashbook_detail.html", {"cash_book": cash_book, "form": form})
+
+
+@login_required(login_url="login")
+@finance_editor_required
+def cashbook_create(request):
+    form = CashBookForm(request.POST or None)
+    if form.is_valid():
+        obj = form.save(commit=False); obj.created_by = request.user; obj.save(); messages.success(request, "Cash book created."); return redirect("finance:cashbook_detail", pk=obj.pk)
+    return render(request, "finance/cashbook_form.html", {"form": form})
+
+
+@login_required(login_url="login")
+@finance_editor_required
+def cashbook_delete(request, pk):
+    obj = get_object_or_404(CashBook, pk=pk)
+    if request.method == "POST":
+        obj.delete(); messages.success(request, "Cash book deleted."); return redirect("finance:cashbook_list")
+    return render(request, "finance/confirm_delete.html", {"object": obj, "cancel_url": reverse("finance:cashbook_detail", args=[obj.pk])})
+
+
+@login_required(login_url="login")
+@finance_editor_required
+def reconciliation_create(request, cash_book_pk):
+    cash_book = get_object_or_404(CashBook, pk=cash_book_pk)
+    reconciliation = getattr(cash_book, "bank_reconciliation", None)
+    form = BankReconciliationForm(request.POST or None, instance=reconciliation)
+    formset = BankReconciliationItemFormSet(request.POST or None, instance=reconciliation)
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        obj = form.save(commit=False); obj.cash_book = cash_book; obj.prepared_by = request.user; obj.save(); formset.instance = obj; formset.save(); messages.success(request, "Bank reconciliation saved."); return redirect("finance:reconciliation_detail", pk=obj.pk)
+    return render(request, "finance/reconciliation_form.html", {"form": form, "formset": formset, "cash_book": cash_book})
+
+
+@login_required(login_url="login")
+def reconciliation_detail(request, pk):
+    obj = get_object_or_404(BankReconciliation.objects.select_related("cash_book").prefetch_related("items"), pk=pk)
+    return render(request, "finance/reconciliation_detail.html", {"reconciliation": obj})
+
+
+@login_required(login_url="login")
+def export_budget(request, pk): return budget_xlsx(get_object_or_404(FinanceBudget, pk=pk), request=request)
+
+
+@login_required(login_url="login")
+def export_performance(request, pk): return performance_xlsx(get_object_or_404(FinanceBudget, pk=pk), request=request)
+
+
+@login_required(login_url="login")
+def export_cashbook(request, pk): return cashbook_xlsx(get_object_or_404(CashBook.objects.prefetch_related("entries"), pk=pk), request=request)
+
+
+@login_required(login_url="login")
+def export_reconciliation(request, pk): return reconciliation_xlsx(get_object_or_404(BankReconciliation.objects.select_related("cash_book").prefetch_related("items"), pk=pk), request=request)
+
+
+@login_required(login_url="login")
+@finance_editor_required
 def create_cash_requisition(request):
     if request.method == "POST":
         with transaction.atomic():
@@ -118,15 +247,6 @@ def create_cash_requisition(request):
                     requisition_id=procurement_requisition_id
                 ).order_by("-sent", "-issue_date", "-created_at", "-pk").first()
 
-            # The currency this requisition is actually being raised in —
-            # captured once for the whole form, rather than assumed from
-            # the submitting user's own display-currency preference.
-            currency = normalize_currency(request.POST.get("currency"))
-            # rate_used only depends on `currency` (not the amount passed in),
-            # so a placeholder amount is fine here — this just captures the
-            # base-currency rate snapshot for the requisition as a whole.
-            _, rate_used = FinancialTransaction.convert_to_base_currency(Decimal("0"), currency)
-
             obj = CashRequisition.objects.create(
                 procurement_requisition_id=procurement_requisition_id,
                 purchase_order=purchase_order,
@@ -137,38 +257,29 @@ def create_cash_requisition(request):
                 date=request.POST.get("date"),
                 to="Executive Director",
                 attachment=request.FILES.get("attachment"),
-                currency=currency,
-                exchange_rate_used=rate_used,
             )
 
             index = 0
             while f"items[{index}][activity_code]" in request.POST:
-                raw_unit_cost = (request.POST.get(f"items[{index}][unit_cost]") or "0").replace(",", "").strip()
-                try:
-                    original_unit_cost = Decimal(raw_unit_cost)
-                except InvalidOperation:
-                    original_unit_cost = Decimal("0")
-                unit_cost, _ = FinancialTransaction.convert_to_base_currency(original_unit_cost, currency)
                 CashRequisitionItem.objects.create(
                     requisition=obj,
                     activity_code=request.POST.get(f"items[{index}][activity_code]"),
                     program_code=request.POST.get(f"items[{index}][program_code]"),
                     particulars=request.POST.get(f"items[{index}][particulars]"),
                     quantity=request.POST.get(f"items[{index}][quantity]") or 0,
-                    unit_cost=unit_cost,
-                    original_unit_cost=original_unit_cost,
+                    unit_cost=user_amount_to_ugx(request.POST.get(f"items[{index}][unit_cost]") or 0, request)
                 )
                 index += 1
 
         return redirect(reverse("finance:requisition_detail", kwargs={'pk': obj.pk, 'slug': obj.slug}))
 
     return render(request, "finance/create_cash_requisition.html", {
-        "procurement_requisitions": Requisition.objects.filter(status="Approved").order_by("-date"),
-        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "procurement_requisitions": Requisition.objects.filter(status="Approved").order_by("-date")
     })
 
 
 @login_required(login_url="login")
+@finance_editor_required
 def create_cash_requisition_from_procurement(request, req_pk):
     procurement_req = get_object_or_404(Requisition, pk=req_pk, status="Approved")
     purchase_order = get_object_or_404(
@@ -197,9 +308,7 @@ def create_cash_requisition_from_procurement(request, req_pk):
 @login_required(login_url="login")
 def requisition_list(request):
     qs = CashRequisition.objects.all().order_by("-created_at")
-    paginator = Paginator(qs, 25)
-    page_obj = paginator.get_page(request.GET.get("page"))
-    return render(request, "finance/req_list.html", {"objects": page_obj, "page_obj": page_obj})
+    return render(request, "finance/req_list.html", {"objects": qs})
 
 
 @login_required(login_url="login")
@@ -215,6 +324,7 @@ def requisition_detail(request, pk, slug):
 
 
 @login_required(login_url="login")
+@finance_editor_required
 def submit_requisition(request, pk, slug):
     obj = get_object_or_404(CashRequisition, pk=pk,  slug=slug, created_by=request.user)
 
@@ -229,6 +339,7 @@ def submit_requisition(request, pk, slug):
 
 
 @login_required(login_url="login")
+@finance_editor_required
 def approve_requisition(request, pk, slug):
     obj = get_object_or_404(CashRequisition, pk=pk,  slug=slug)
 
@@ -240,9 +351,6 @@ def approve_requisition(request, pk, slug):
         return redirect(reverse("finance:requisition_detail", kwargs={'pk': obj.pk, 'slug': obj.slug}))
 
     obj.save()
-
-    if obj.status == "approved":
-        FinancialTransaction.record_cash_advance(obj, request.user)
 
     # AUDIT LOG
     ApprovalLog.objects.create(
@@ -275,6 +383,7 @@ def requisition_pdf(request, pk, slug):
 
 
 @login_required(login_url="login")
+@finance_editor_required
 def reject_requisition(request, pk, slug):
     obj = get_object_or_404(CashRequisition, pk=pk,  slug=slug)
 
@@ -301,6 +410,7 @@ def reject_requisition(request, pk, slug):
 
 @login_required(login_url="login")
 @transaction.atomic
+@finance_editor_required
 def save_accounting(request, slug=None, pk=None, req_slug=None, req_pk=None):
 
     obj = None
@@ -321,13 +431,6 @@ def save_accounting(request, slug=None, pk=None, req_slug=None, req_pk=None):
     if request.method == "POST":
         description = request.POST.get("description")
         date_of_return = request.POST.get("date_of_return")
-        # The currency this retirement is actually being accounted in —
-        # captured once for the whole form, rather than assumed from the
-        # submitting user's own display-currency preference.
-        currency = normalize_currency(request.POST.get("currency"))
-        # rate_used only depends on `currency`, so a placeholder amount is
-        # fine here — this just snapshots the base-currency rate for the form.
-        _, rate_used = FinancialTransaction.convert_to_base_currency(Decimal("0"), currency)
 
         if not obj:
             obj = AccountingForm.objects.create(
@@ -336,15 +439,11 @@ def save_accounting(request, slug=None, pk=None, req_slug=None, req_pk=None):
                 donor_code=requisition.donor_code,
                 description=description,
                 date_of_return=date_of_return,
-                status="submitted",
-                currency=currency,
-                exchange_rate_used=rate_used,
+                status="submitted"
             )
         else:
             obj.description = description
             obj.date_of_return = date_of_return
-            obj.currency = currency
-            obj.exchange_rate_used = rate_used
             obj.save()
             obj.items.all().delete()
 
@@ -355,27 +454,15 @@ def save_accounting(request, slug=None, pk=None, req_slug=None, req_pk=None):
         received = request.POST.getlist("received[]")
         spent = request.POST.getlist("spent[]")
 
-        def _to_decimal(raw):
-            try:
-                return Decimal(str(raw or "0").replace(",", "").strip())
-            except InvalidOperation:
-                return Decimal("0")
-
         items = []
         for a, p, d, r, s in zip(activities, programs, details, received, spent):
-            original_amount_received = _to_decimal(r)
-            original_amount_spent = _to_decimal(s)
-            amount_received, _ = FinancialTransaction.convert_to_base_currency(original_amount_received, currency)
-            amount_spent, _ = FinancialTransaction.convert_to_base_currency(original_amount_spent, currency)
             items.append(AccountingItem(
                 form=obj,
                 activity_code=a,
                 program_code=p,
                 details=d,
-                amount_received=amount_received,
-                amount_spent=amount_spent,
-                original_amount_received=original_amount_received,
-                original_amount_spent=original_amount_spent,
+                amount_received=user_amount_to_ugx(r or 0, request),
+                amount_spent=user_amount_to_ugx(s or 0, request),
             ))
 
         AccountingItem.objects.bulk_create(items)
@@ -388,12 +475,12 @@ def save_accounting(request, slug=None, pk=None, req_slug=None, req_pk=None):
     return render(request, "finance/account_form.html", {
         "form_obj": obj,
         "requisition": requisition or getattr(obj, "requisition", None),
-        "items": obj.items.all() if obj else [],
-        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
+        "items": obj.items.all() if obj else []
     })
 
 
 @login_required(login_url="login")
+@finance_editor_required
 def approve_account_form(request, pk, slug):
     obj = get_object_or_404(AccountingForm, pk=pk,  slug=slug)
 
@@ -403,9 +490,6 @@ def approve_account_form(request, pk, slug):
     else:
         messages.warning(request, "Unauthorized action")
         return redirect(reverse("finance:accounting_detail", kwargs={'pk': obj.pk, 'slug': obj.slug}))
-
-    if obj.status == "approved":
-        FinancialTransaction.record_accounting_expense(obj, request.user)
 
     return redirect(reverse("finance:accounting_detail", kwargs={"pk": obj.pk, "slug": obj.slug}))
 
@@ -462,17 +546,10 @@ def accounting_pdf(request, pk, slug):
 
 
 @login_required(login_url="login")
+@finance_editor_required
 def create_admin_expense(request, slug, pk):
     cash_req = get_object_or_404(CashRequisition, slug=slug, pk=pk)
     if request.method == "POST":
-        currency = normalize_currency(request.POST.get("currency"))
-        raw_budget = (request.POST.get("proposed_budget") or "0").replace(",", "").strip()
-        try:
-            original_proposed_budget = Decimal(raw_budget)
-        except InvalidOperation:
-            original_proposed_budget = Decimal("0")
-        proposed_budget, rate_used = FinancialTransaction.convert_to_base_currency(original_proposed_budget, currency)
-
         obj = AdminExpenseNote.objects.create(
             cash_req=cash_req,
             department_id=request.POST.get("department"),
@@ -483,10 +560,7 @@ def create_admin_expense(request, slug, pk):
             location=request.POST.get("location"),
             objectives=request.POST.get("objectives"),
             expected_outputs=request.POST.get("expected_outputs"),
-            proposed_budget=proposed_budget,
-            currency=currency,
-            original_proposed_budget=original_proposed_budget,
-            exchange_rate_used=rate_used,
+            proposed_budget=user_amount_to_ugx(request.POST.get("proposed_budget") or 0, request),
             service_providers=request.POST.get("service_providers"),
             created_by=request.user,
             status="draft",
@@ -497,9 +571,7 @@ def create_admin_expense(request, slug, pk):
                   {
                       "cash_req": cash_req,
                       "departments": Department.objects.all(),
-                      "projects": Project.objects.all(),
-                      "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
-                  }
+                      "projects": Project.objects.all()}
                   )
 
 
@@ -511,6 +583,7 @@ def admin_expense_detail(request, pk, slug):
 
 
 @login_required(login_url="login")
+@finance_editor_required
 def submit_admin_expense(request, pk, slug):
     obj = get_object_or_404(AdminExpenseNote, pk=pk,  slug=slug)
 
@@ -524,6 +597,7 @@ def submit_admin_expense(request, pk, slug):
 
 
 @login_required(login_url="login")
+@finance_editor_required
 def approve_admin_expense(request, pk, slug):
     obj = get_object_or_404(AdminExpenseNote, pk=pk, slug=slug)
 
@@ -552,7 +626,6 @@ def approve_admin_expense(request, pk, slug):
                 obj.status = "approved"
                 obj.approved_by = user
                 obj.save()
-                FinancialTransaction.record_admin_expense(obj, user)
                 messages.success(request, "Expense approved successfully.")
             else:
                 messages.error(request, "Only Finance or Operations can approve.")
@@ -579,6 +652,10 @@ def admin_expense_pdf(request, pk, slug):
 
     return response
 
+
+# ---------------------------------------------------------------------------
+# Double-entry ledger and reporting views
+# ---------------------------------------------------------------------------
 
 DECIMAL_ZERO = DecimalField(max_digits=16, decimal_places=2)
 
@@ -616,7 +693,8 @@ def _filter_ledger(request):
 
 @login_required(login_url="login")
 def financial_ledger(request):
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can view the organization-wide ledger.")
         return redirect(reverse("finance:dashboard"))
 
@@ -690,7 +768,8 @@ def financial_ledger(request):
 
 @login_required(login_url="login")
 def financial_ledger_export(request):
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can export the organization-wide ledger.")
         return redirect(reverse("finance:dashboard"))
 
@@ -815,7 +894,8 @@ def _build_account_tree(only_groups=False, as_of_date=None, report_currency=None
 
 @login_required(login_url="login")
 def chart_of_accounts(request):
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can view the chart of accounts.")
         return redirect(reverse("finance:dashboard"))
 
@@ -992,7 +1072,8 @@ def reports_home(request):
     live instead of each one getting its own line in the sidebar. New
     report types get added here as cards, not as more sidebar entries.
     """
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1067,7 +1148,8 @@ def general_ledger_report(request):
     itself, so it stays lightweight (no report computation here) and the
     report gets the whole screen instead of sharing it with a filter form.
     """
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1126,7 +1208,8 @@ def general_ledger_report_view(request):
     can reuse — they're mostly a different groupby/pivot over the same
     per-transaction DataFrame.
     """
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1309,7 +1392,8 @@ def income_statement_report(request):
     """Filter form for the Income Statement — same period/dept/project/
     currency shape as the General Ledger's filter page, opening the actual
     report in its own full page on submit."""
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1332,7 +1416,8 @@ def income_statement_report_view(request):
     temporary accounts that measure what happened during the period, not a
     running position.
     """
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1372,7 +1457,8 @@ def income_statement_report_view(request):
 def budget_vs_actual_report(request):
     """Filter form for Budget vs Actual — pick a fiscal year (matching
     ProjectBudget entries) and the period to measure actual spend against."""
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1406,7 +1492,8 @@ def budget_vs_actual_report_view(request):
     reports a total including all their prior quarters, which is a
     reasonable summary as long as budgets are entered consistently.
     """
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1461,7 +1548,8 @@ def budget_vs_actual_report_view(request):
 def balance_sheet_report(request):
     """Filter form for the Balance Sheet — a point-in-time snapshot, so it
     only needs an "as of" date and a currency, not a date range."""
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1507,7 +1595,8 @@ def balance_sheet_report_view(request):
     measure of how much financial activity isn't yet tied to a specific
     balance-sheet account.
     """
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1587,7 +1676,8 @@ def balance_sheet_report_view(request):
 
 @login_required(login_url="login")
 def journal_entry_list(request):
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can view journal entries.")
         return redirect(reverse("finance:dashboard"))
 
@@ -1603,7 +1693,8 @@ def journal_entry_list(request):
 
 @login_required(login_url="login")
 def journal_entry_detail(request, pk):
-    if not _is_finance_staff(request.user):
+    is_finance = has_group(request.user, 'Finance')
+    if not is_finance:
         messages.error(request, "Only Finance and Operations staff can view journal entries.")
         return redirect(reverse("finance:dashboard"))
 

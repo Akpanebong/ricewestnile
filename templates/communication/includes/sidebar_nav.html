@@ -1,6 +1,6 @@
 {% load custom_tags %}
-{% with current_url=request.resolver_match.url_name %}
 
+{% with current_url=request.resolver_match.url_name %}
 
 <!-- =====================================================
      DASHBOARD
@@ -258,6 +258,16 @@
     </span>
 
 </div>
+
+<a href="{% url 'media_presence:broadcasts' %}" class="sidebar-dashboard {% if request.resolver_match.namespace == 'media_presence' and 'broadcast' in request.resolver_match.url_name %}active{% endif %}">
+    <span class="sidebar-nav-icon"><i class="fa-solid fa-tower-broadcast"></i></span>
+    <span class="sidebar-nav-text">Live broadcasts</span>
+</a>
+
+<a href="{% url 'media_presence:galleries' %}" class="sidebar-dashboard {% if request.resolver_match.namespace == 'media_presence' and 'galler' in request.resolver_match.url_name %}active{% endif %}">
+    <span class="sidebar-nav-icon"><i class="fa-solid fa-images"></i></span>
+    <span class="sidebar-nav-text">Project galleries</span>
+</a>
 
 
 <!-- =====================================================

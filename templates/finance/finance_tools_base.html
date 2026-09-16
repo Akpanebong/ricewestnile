@@ -1,0 +1,444 @@
+
+{% extends "finance/base.html" %}
+
+{% block extra_head %}
+
+<style>
+    /* =========================================================
+       FINANCE SYSTEM SHELL
+       ========================================================= */
+
+    .finance-shell {
+        width: 100%;
+        max-width: 1450px;
+        margin: 0 auto;
+    }
+
+    .finance-main {
+        padding-top: 1.25rem;
+        padding-bottom: 1.5rem;
+    }
+
+    /* =========================================================
+       FINANCE CARDS
+       ========================================================= */
+
+    .finance-card {
+        overflow: hidden;
+        border: 1px solid #e7eeeb !important;
+        border-radius: 14px !important;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(15, 23, 42, .045);
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease,
+            border-color .2s ease;
+    }
+
+    .finance-card:hover {
+        border-color: #dce9e5 !important;
+    }
+
+    /* =========================================================
+       HERO
+       ========================================================= */
+
+    .finance-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 1.25rem 1.4rem;
+        border-radius: 17px;
+        background: linear-gradient(135deg, #073b3a, #0f766e);
+        color: #fff;
+        box-shadow: 0 10px 26px rgba(7, 59, 58, .12);
+    }
+
+    .finance-hero::before,
+    .finance-hero::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: #fff;
+        opacity: .055;
+        pointer-events: none;
+    }
+
+    .finance-hero::before {
+        width: 170px;
+        height: 170px;
+        right: -75px;
+        top: -100px;
+    }
+
+    .finance-hero::after {
+        width: 90px;
+        height: 90px;
+        right: 120px;
+        bottom: -60px;
+    }
+
+    .finance-hero > * {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* =========================================================
+       FORMS
+       ========================================================= */
+
+    .finance-form {
+        width: 100%;
+    }
+
+    .finance-form label {
+        display: block;
+        margin: .7rem 0 .3rem;
+        color: #334155;
+        font-size: .73rem;
+        font-weight: 700;
+    }
+
+    .finance-form input,
+    .finance-form select,
+    .finance-form textarea {
+        width: 100%;
+        min-height: 38px;
+        padding: .55rem .75rem;
+        border: 1px solid #dce5e2;
+        border-radius: 9px;
+        background: #fff;
+        color: #334155;
+        font-size: .78rem;
+        box-shadow: none;
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .finance-form textarea {
+        min-height: 72px;
+        resize: vertical;
+    }
+
+    .finance-form input:focus,
+    .finance-form select:focus,
+    .finance-form textarea:focus {
+        border-color: #087f7b;
+        box-shadow: 0 0 0 3px rgba(8, 127, 123, .08);
+        outline: none;
+    }
+
+    .finance-form .form-text {
+        margin-top: .2rem;
+        color: #94a3b8;
+        font-size: .65rem;
+    }
+
+    .finance-form .errorlist {
+        margin: .25rem 0 .35rem;
+        padding: 0;
+        color: #b91c1c;
+        list-style: none;
+        font-size: .68rem;
+    }
+
+    .finance-form .invalid-feedback {
+        font-size: .68rem;
+    }
+
+    /* =========================================================
+       CHECKBOXES / BOOLEAN FIELDS
+       ========================================================= */
+
+    .finance-form .form-check {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        min-height: 38px;
+    }
+
+    .finance-form .form-check-input {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .finance-form .form-check-input:checked {
+        background-color: #087f7b;
+        border-color: #087f7b;
+    }
+
+    .finance-form .form-check-label {
+        margin: 0;
+        cursor: pointer;
+    }
+
+    /* =========================================================
+       BUTTONS
+       ========================================================= */
+
+    .finance-shell .btn {
+        border-radius: 9px;
+        font-size: .74rem;
+        font-weight: 700;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .finance-shell .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .finance-shell .btn-primary {
+        border-color: #087f7b;
+        background-color: #087f7b;
+    }
+
+    .finance-shell .btn-primary:hover,
+    .finance-shell .btn-primary:focus {
+        border-color: #075c63;
+        background-color: #075c63;
+    }
+
+    /* =========================================================
+       TABLES
+       ========================================================= */
+
+    .finance-table {
+        margin-bottom: 0;
+        min-width: 720px;
+    }
+
+    .finance-table thead th {
+        padding: .65rem .75rem;
+        border-bottom: 0;
+        background: #087f7b;
+        color: #fff;
+        font-size: .63rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .finance-table tbody td {
+        padding: .65rem .75rem;
+        border-color: #edf2f0;
+        color: #475569;
+        font-size: .72rem;
+        vertical-align: middle;
+    }
+
+    .finance-table tbody tr {
+        transition: background-color .18s ease;
+    }
+
+    .finance-table tbody tr:hover {
+        background: #fbfdfc;
+    }
+
+    .finance-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    /* =========================================================
+       KPI
+       ========================================================= */
+
+    .finance-kpi {
+        height: 100%;
+        border-left: 3px solid #2dd4bf !important;
+    }
+
+    .finance-kpi small {
+        display: block;
+        margin-bottom: .25rem;
+        color: #64748b;
+        font-size: .65rem;
+        font-weight: 600;
+    }
+
+    .finance-kpi strong {
+        display: block;
+        color: #18323a;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+
+    /* =========================================================
+       BADGES
+       ========================================================= */
+
+    .finance-shell .badge {
+        border-radius: 6px;
+        font-size: .61rem;
+        font-weight: 800;
+    }
+
+    /* =========================================================
+       ALERTS / MESSAGES
+       ========================================================= */
+
+    .finance-message {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .75rem;
+        padding: .65rem .8rem;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        font-size: .72rem;
+        animation: financeMessageIn .3s ease both;
+    }
+
+    @keyframes financeMessageIn {
+        from {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .finance-message.alert-success {
+        border-color: #cce9dc;
+    }
+
+    .finance-message.alert-danger {
+        border-color: #f2cccc;
+    }
+
+    .finance-message.alert-warning {
+        border-color: #f2e1b8;
+    }
+
+    .finance-message.alert-info {
+        border-color: #cce7eb;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 991.98px) {
+
+        .finance-shell {
+            max-width: 100%;
+        }
+
+        .finance-main {
+            padding-top: 1rem;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+
+        .finance-main {
+            padding: .85rem .7rem 1.25rem;
+        }
+
+        .finance-hero {
+            padding: 1rem;
+            border-radius: 14px;
+        }
+
+        .finance-card {
+            border-radius: 12px !important;
+        }
+
+        .finance-table {
+            min-width: 700px;
+        }
+
+        .finance-table thead th,
+        .finance-table tbody td {
+            padding: .6rem;
+        }
+
+        .finance-shell .btn {
+            min-height: 35px;
+        }
+    }
+
+    /* =========================================================
+       REDUCED MOTION
+       ========================================================= */
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .finance-message {
+            animation: none !important;
+        }
+
+        .finance-card,
+        .finance-shell .btn,
+        .finance-table tbody tr,
+        .finance-form input,
+        .finance-form select,
+        .finance-form textarea {
+            transition: none !important;
+        }
+    }
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<main class="finance-main container-fluid px-3 px-lg-4">
+
+    <div class="finance-shell">
+
+        <!-- =================================================
+             SYSTEM MESSAGES
+             ================================================= -->
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <div
+                    class="alert alert-{{ message.tags|default:'info' }} finance-message"
+                    role="alert"
+                >
+
+                    {% if message.tags == "success" %}
+                        <i class="fa-solid fa-circle-check"></i>
+
+                    {% elif message.tags == "error" or message.tags == "danger" %}
+                        <i class="fa-solid fa-circle-exclamation"></i>
+
+                    {% elif message.tags == "warning" %}
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+
+                    {% else %}
+                        <i class="fa-solid fa-circle-info"></i>
+                    {% endif %}
+
+                    <span>{{ message }}</span>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+
+        <!-- =================================================
+             FINANCE PAGE CONTENT
+             ================================================= -->
+
+        {% block finance_content %}
+        {% endblock %}
+
+    </div>
+
+</main>
+
+{% endblock %}

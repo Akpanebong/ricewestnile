@@ -125,14 +125,38 @@ class PurchaseOrderForm(forms.ModelForm):
 
 
 class ProductForm(forms.ModelForm):
+    other_category = forms.CharField(
+        label='Specify category',
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter the product category',
+            'autocomplete': 'off',
+        }),
+    )
+
     class Meta:
         model = Product
         fields = '__all__'
         widgets = {
             'est_unit_cost': forms.NumberInput(attrs={'class': 'form-control','placeholder':'Product price'}),
             'name': forms.TextInput(attrs={'class': 'form-control','placeholder':'Product name'}),
-            'category': forms.TextInput(attrs={'class': 'form-control','placeholder':'Product category'}),
+            'category': forms.Select(attrs={'class': 'form-control','placeholder':'Product category'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        category = cleaned_data.get('category')
+        other_category = (cleaned_data.get('other_category') or '').strip()
+
+        if category == 'OTHER' and not other_category:
+            self.add_error('other_category', 'Specify the product category when Other is selected.')
+        elif category != 'OTHER':
+            cleaned_data['other_category'] = ''
+        else:
+            cleaned_data['other_category'] = other_category
+
+        return cleaned_data
 
 
 class SupplierRegistrationForm(forms.ModelForm):

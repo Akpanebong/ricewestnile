@@ -1,0 +1,27 @@
+{% extends "admin/base.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+    // Django admin calculates its timezone warning before page scripts run.
+    // Seed the browser timezone cookie, then reload once so admin uses it.
+    (function () {
+        try {
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (!timezone) return;
+
+            const encoded = encodeURIComponent(timezone);
+            const current = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('user_timezone='));
+
+            if (!current || current.split('=')[1] !== encoded) {
+                document.cookie = 'user_timezone=' + encoded + '; Path=/; Max-Age=31536000; SameSite=Lax';
+                window.location.reload();
+            }
+        } catch (error) {
+            // Keep the configured project timezone if detection is unavailable.
+        }
+    })();
+</script>
+{% endblock %}

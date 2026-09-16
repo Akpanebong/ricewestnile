@@ -1,0 +1,540 @@
+
+{% extends "finance/finance_tools_base.html" %}
+
+{% block title %}Add Performance | Finance{% endblock %}
+
+{% block finance_content %}
+
+<div class="performance-form-page">
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+    <div class="performance-form-header mb-3">
+
+        <div>
+            <div class="performance-eyebrow">
+                <i class="fa-solid fa-chart-line me-1"></i>
+                Finance control
+            </div>
+
+            <h1 class="performance-form-title">
+                Monthly performance record
+            </h1>
+
+            <p class="performance-form-subtitle">
+                Record monthly budget execution, funding and expenditure.
+            </p>
+        </div>
+
+        <a href="{% url 'finance:performance_list' %}"
+           class="btn btn-outline-secondary performance-back">
+            <i class="fa-solid fa-arrow-left me-1"></i>
+            Back
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         FORM CARD
+         ===================================================== -->
+    <div class="row justify-content-center">
+
+        <div class="col-12 col-xl-9">
+
+            <div class="card performance-form-card">
+
+                <div class="performance-form-card-header">
+
+                    <div class="form-heading">
+
+                        <span class="form-heading-icon">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </span>
+
+                        <div>
+                            <h2>Performance details</h2>
+                            <p>Enter the figures for the selected reporting period.</p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card-body p-3 p-md-4">
+
+                    <form method="post" class="performance-form">
+
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger small py-2 mb-3">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+
+                        <!-- =================================================
+                             TWO-COLUMN FORM
+                             ================================================= -->
+                        <div class="row g-3">
+
+                            {% for field in form %}
+
+                                <div class="col-12 col-md-6">
+
+                                    <div class="performance-field">
+
+                                        {% if field.field.widget.input_type == "checkbox" %}
+
+                                            <div class="performance-boolean">
+
+                                                <div class="boolean-info">
+
+                                                    <span class="boolean-icon">
+                                                        <i class="fa-solid fa-toggle-on"></i>
+                                                    </span>
+
+                                                    <div>
+                                                        <label
+                                                            for="{{ field.id_for_label }}"
+                                                            class="boolean-label">
+                                                            {{ field.label }}
+                                                        </label>
+
+                                                        {% if field.help_text %}
+                                                            <small>
+                                                                {{ field.help_text }}
+                                                            </small>
+                                                        {% endif %}
+                                                    </div>
+
+                                                </div>
+
+                                                <div class="form-check form-switch">
+                                                    {{ field }}
+                                                </div>
+
+                                            </div>
+
+                                        {% else %}
+
+                                            <label
+                                                for="{{ field.id_for_label }}"
+                                                class="form-label">
+
+                                                {{ field.label }}
+
+                                                {% if field.field.required %}
+                                                    <span class="text-danger">*</span>
+                                                {% endif %}
+
+                                            </label>
+
+                                            {{ field }}
+
+                                            {% if field.help_text %}
+                                                <div class="form-text">
+                                                    {{ field.help_text }}
+                                                </div>
+                                            {% endif %}
+
+                                        {% endif %}
+
+
+                                        {% if field.errors %}
+
+                                            <div class="invalid-feedback d-block">
+
+                                                {% for error in field.errors %}
+                                                    <div>
+                                                        <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                                        {{ error }}
+                                                    </div>
+                                                {% endfor %}
+
+                                            </div>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+
+                        <!-- =================================================
+                             FORM ACTIONS
+                             ================================================= -->
+                        <div class="performance-form-actions">
+
+                            <a href="{% url 'finance:performance_list' %}"
+                               class="btn btn-light action-cancel">
+                                Cancel
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-primary action-save">
+
+                                <i class="fa-solid fa-floppy-disk me-1"></i>
+                                Save record
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.performance-form-page {
+    animation: performanceFormFade .35s ease both;
+}
+
+@keyframes performanceFormFade {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.performance-form-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.performance-eyebrow {
+    margin-bottom: .25rem;
+    color: #198754;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.performance-form-title {
+    margin: 0;
+    color: #18323a;
+    font-size: 1.25rem;
+    font-weight: 750;
+    letter-spacing: -.02em;
+}
+
+.performance-form-subtitle {
+    margin: .25rem 0 0;
+    color: #71807b;
+    font-size: .76rem;
+}
+
+.performance-back {
+    border-radius: 9px;
+    padding: .45rem .75rem;
+    font-size: .76rem;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.performance-form-card {
+    overflow: hidden;
+    border: 1px solid #e5ece9;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(20, 55, 45, .05);
+}
+
+.performance-form-card-header {
+    padding: .8rem 1rem;
+    border-bottom: 1px solid #e8efec;
+    background: linear-gradient(135deg, #f8fbfa, #fff);
+}
+
+.form-heading {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+}
+
+.form-heading-icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(25, 135, 84, .09);
+    color: #198754;
+    font-size: .8rem;
+}
+
+.form-heading h2 {
+    margin: 0;
+    color: #18323a;
+    font-size: .92rem;
+    font-weight: 750;
+}
+
+.form-heading p {
+    margin: .08rem 0 0;
+    color: #81908b;
+    font-size: .68rem;
+}
+
+
+/* =========================================================
+   FIELDS
+   ========================================================= */
+
+.performance-field {
+    height: 100%;
+}
+
+.performance-field .form-label {
+    margin-bottom: .35rem;
+    color: #344640;
+    font-size: .75rem;
+    font-weight: 700;
+}
+
+.performance-field .form-control,
+.performance-field .form-select {
+    min-height: 40px;
+    padding: .48rem .7rem;
+    border: 1px solid #dce5e1;
+    border-radius: 9px;
+    background: #fff;
+    color: #263b35;
+    font-size: .8rem;
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+.performance-field textarea.form-control {
+    min-height: 82px;
+    resize: vertical;
+}
+
+.performance-field .form-control:focus,
+.performance-field .form-select:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 .18rem rgba(25, 135, 84, .10);
+}
+
+.performance-field .form-text {
+    margin-top: .3rem;
+    color: #81908b;
+    font-size: .67rem;
+}
+
+.performance-field .invalid-feedback {
+    margin-top: .3rem;
+    font-size: .69rem;
+}
+
+
+/* =========================================================
+   BOOLEAN FIELD
+   ========================================================= */
+
+.performance-boolean {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .48rem .7rem;
+    border: 1px solid #dce5e1;
+    border-radius: 9px;
+    background: #fff;
+}
+
+.boolean-info {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.boolean-icon {
+    width: 27px;
+    height: 27px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: #f1f6f4;
+    color: #198754;
+    font-size: .68rem;
+}
+
+.boolean-label {
+    display: block;
+    margin: 0;
+    color: #344640;
+    font-size: .74rem;
+    font-weight: 700;
+}
+
+.boolean-info small {
+    display: block;
+    margin-top: .08rem;
+    color: #81908b;
+    font-size: .64rem;
+}
+
+.performance-boolean .form-check {
+    margin: 0;
+    padding: 0;
+}
+
+.performance-boolean .form-check-input {
+    width: 2.05rem;
+    height: 1.12rem;
+    margin: 0;
+    cursor: pointer;
+}
+
+.performance-boolean .form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.performance-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .55rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid #edf1ef;
+}
+
+.action-cancel,
+.action-save {
+    border-radius: 8px;
+    padding: .48rem .85rem;
+    font-size: .76rem;
+    font-weight: 700;
+}
+
+.action-save {
+    box-shadow: 0 4px 12px rgba(25, 135, 84, .12);
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.action-save:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 16px rgba(25, 135, 84, .17);
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .performance-form-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .performance-form-title {
+        font-size: 1.08rem;
+    }
+
+    .performance-form-subtitle {
+        line-height: 1.45;
+    }
+
+    .performance-back {
+        width: 100%;
+        text-align: center;
+    }
+
+    .performance-form-card-header {
+        padding: .7rem .85rem;
+    }
+
+    .performance-form-card .card-body {
+        padding: 1rem !important;
+    }
+
+    .performance-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .action-cancel,
+    .action-save {
+        width: 100%;
+        text-align: center;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .performance-form-page {
+        animation: none;
+    }
+
+    .action-save,
+    .performance-field .form-control,
+    .performance-field .form-select {
+        transition: none;
+    }
+
+}
+
+</style>
+
+{% endblock %}

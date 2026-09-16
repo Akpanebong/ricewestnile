@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block header_home_url %}{% url 'comm:dashboard' %}{% endblock %}
 {% block system_name %}Communication Management{% endblock %}
 {% block sidebar_desktop %}
@@ -6,4 +7,7 @@
 {% endblock %}
 {% block sidebar_mobile %}
 {% include "communication/includes/sidebar_nav.html" %}
+{% endblock %}
+{% block content %}
+{% block media_content %}{% endblock %}
 {% endblock %}

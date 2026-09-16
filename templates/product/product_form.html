@@ -110,6 +110,16 @@
 
                             {{ form.category }}
 
+                            <div id="otherCategoryField" class="mt-3" {% if form.category.value != 'OTHER' %}hidden{% endif %}>
+                                <label class="form-label fw-semibold" for="{{ form.other_category.id_for_label }}">
+                                    Specify category
+                                </label>
+                                {{ form.other_category }}
+                                {% if form.other_category.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.other_category.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+
                         </div>
 
                         <!-- ABPC -->
@@ -195,5 +205,25 @@
 }
 
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const category = document.getElementById('{{ form.category.id_for_label }}');
+        const otherCategoryField = document.getElementById('otherCategoryField');
+        const otherCategoryInput = document.getElementById('{{ form.other_category.id_for_label }}');
+
+        if (!category || !otherCategoryField || !otherCategoryInput) return;
+
+        function toggleOtherCategory() {
+            const isOther = category.value === 'OTHER';
+            otherCategoryField.hidden = !isOther;
+            otherCategoryInput.required = isOther;
+            if (!isOther) otherCategoryInput.value = '';
+        }
+
+        category.addEventListener('change', toggleOtherCategory);
+        toggleOtherCategory();
+    });
+</script>
 
 {% endblock %}

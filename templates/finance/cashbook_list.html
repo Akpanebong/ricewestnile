@@ -1,0 +1,632 @@
+
+{% extends "finance/finance_tools_base.html" %}
+
+{% block title %}Cash Books | Finance{% endblock %}
+
+{% block finance_content %}
+
+<div class="cashbooks-page">
+
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
+    <div class="cashbooks-header mb-3">
+
+        <div>
+            <div class="cashbooks-eyebrow">
+                <i class="fa-solid fa-wallet me-1"></i>
+                Finance control
+            </div>
+
+            <h1 class="cashbooks-title">
+                Cash books
+            </h1>
+
+            <p class="cashbooks-subtitle">
+                Manage cash balances and financial records.
+                Balances displayed in {{ display_currency }}.
+            </p>
+        </div>
+
+        <a href="{% url 'finance:cashbook_create' %}"
+           class="btn btn-primary cashbook-add">
+            <i class="fa-solid fa-plus me-1"></i>
+            New cash book
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY
+         ===================================================== -->
+    <div class="cashbook-summary mb-3">
+
+        <div class="cashbook-stat">
+
+            <span class="cashbook-stat-icon">
+                <i class="fa-solid fa-book-open"></i>
+            </span>
+
+            <div>
+                <span class="cashbook-stat-label">Cash books</span>
+                <strong>{{ cash_books|length }}</strong>
+            </div>
+
+        </div>
+
+        <div class="cashbook-stat">
+
+            <span class="cashbook-stat-icon">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+            </span>
+
+            <div>
+                <span class="cashbook-stat-label">Currency</span>
+                <strong>{{ display_currency }}</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CASH BOOK GRID
+         ===================================================== -->
+    <div class="row g-3">
+
+        {% for book in cash_books %}
+
+        <div class="col-12 col-md-6 col-xl-4">
+
+            <div class="card cashbook-card h-100">
+
+                <!-- Card top -->
+                <div class="cashbook-card-top">
+
+                    <div class="cashbook-icon">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+
+                    <span class="cashbook-period">
+                        <i class="fa-regular fa-calendar me-1"></i>
+                        {{ book.period_start }} – {{ book.period_end }}
+                    </span>
+
+                </div>
+
+
+                <!-- Card body -->
+                <div class="card-body">
+
+                    <h2 class="cashbook-name">
+                        {{ book.name }}
+                    </h2>
+
+                    <div class="cashbook-project">
+
+                        <span class="project-icon">
+                            <i class="fa-solid fa-diagram-project"></i>
+                        </span>
+
+                        <span>
+                            {{ book.project|default:"Organization-wide" }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Balance -->
+                    <div class="cashbook-balance">
+
+                        <div>
+                            <span class="balance-label">
+                                Closing balance
+                            </span>
+
+                            <small>
+                                {{ display_currency }}
+                            </small>
+                        </div>
+
+                        <strong>
+                            {{ book.closing_balance|accounting_money:request }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Actions -->
+                <div class="cashbook-footer">
+
+                    <a href="{% url 'finance:cashbook_detail' book.pk %}"
+                       class="btn btn-outline-primary btn-sm cashbook-open">
+
+                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>
+                        Open cash book
+
+                    </a>
+
+                    <a href="{% url 'finance:cashbook_export' book.pk %}"
+                       class="btn btn-outline-success btn-sm cashbook-export"
+                       title="Export cash book"
+                       aria-label="Export cash book">
+
+                        <i class="fa-solid fa-file-excel"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <div class="col-12">
+
+            <div class="cashbook-empty">
+
+                <div class="empty-icon">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+
+                <h3>No cash books recorded</h3>
+
+                <p>
+                    Create your first cash book to begin tracking
+                    financial balances.
+                </p>
+
+                <a href="{% url 'finance:cashbook_create' %}"
+                   class="btn btn-primary btn-sm">
+
+                    <i class="fa-solid fa-plus me-1"></i>
+                    New cash book
+
+                </a>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+
+<style>
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.cashbooks-page {
+    animation: cashbookFade .35s ease both;
+}
+
+@keyframes cashbookFade {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.cashbooks-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.cashbooks-eyebrow {
+    margin-bottom: .25rem;
+    color: #198754;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.cashbooks-title {
+    margin: 0;
+    color: #18323a;
+    font-size: 1.25rem;
+    font-weight: 750;
+    letter-spacing: -.02em;
+}
+
+.cashbooks-subtitle {
+    margin: .25rem 0 0;
+    color: #71807b;
+    font-size: .76rem;
+}
+
+.cashbook-add {
+    border-radius: 9px;
+    padding: .48rem .8rem;
+    font-size: .77rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, .12);
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.cashbook-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 18px rgba(25, 135, 84, .18);
+}
+
+
+/* =========================================================
+   SUMMARY
+   ========================================================= */
+
+.cashbook-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+}
+
+.cashbook-stat {
+    min-width: 145px;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem .75rem;
+    border: 1px solid #e5ece9;
+    border-radius: 11px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(20, 55, 45, .035);
+}
+
+.cashbook-stat-icon {
+    width: 31px;
+    height: 31px;
+    flex: 0 0 31px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(25, 135, 84, .09);
+    color: #198754;
+    font-size: .75rem;
+}
+
+.cashbook-stat-label {
+    display: block;
+    color: #81908b;
+    font-size: .61rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.cashbook-stat strong {
+    display: block;
+    margin-top: .05rem;
+    color: #18323a;
+    font-size: .8rem;
+    font-weight: 750;
+}
+
+
+/* =========================================================
+   CASH BOOK CARD
+   ========================================================= */
+
+.cashbook-card {
+    overflow: hidden;
+    border: 1px solid #e4ebe8;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 5px 17px rgba(20, 55, 45, .045);
+    animation: cardIn .4s ease both;
+    transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        border-color .22s ease;
+}
+
+.cashbook-card:hover {
+    transform: translateY(-3px);
+    border-color: #d5e3dc;
+    box-shadow: 0 10px 25px rgba(20, 55, 45, .08);
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cashbook-card:nth-child(1) { animation-delay: .03s; }
+.cashbook-card:nth-child(2) { animation-delay: .06s; }
+.cashbook-card:nth-child(3) { animation-delay: .09s; }
+.cashbook-card:nth-child(4) { animation-delay: .12s; }
+.cashbook-card:nth-child(5) { animation-delay: .15s; }
+.cashbook-card:nth-child(6) { animation-delay: .18s; }
+
+
+/* =========================================================
+   CARD TOP
+   ========================================================= */
+
+.cashbook-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .75rem .85rem;
+    border-bottom: 1px solid #edf1ef;
+    background: linear-gradient(135deg, #f8fbfa, #fff);
+}
+
+.cashbook-icon {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: rgba(25, 135, 84, .10);
+    color: #198754;
+    font-size: .78rem;
+}
+
+.cashbook-period {
+    padding: .25rem .45rem;
+    border-radius: 6px;
+    background: #f0f5f3;
+    color: #687873;
+    font-size: .61rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   CARD BODY
+   ========================================================= */
+
+.cashbook-card .card-body {
+    padding: 1rem;
+}
+
+.cashbook-name {
+    margin: 0;
+    color: #263b35;
+    font-size: .95rem;
+    font-weight: 750;
+    line-height: 1.3;
+}
+
+.cashbook-project {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .35rem;
+    color: #7a8984;
+    font-size: .7rem;
+}
+
+.project-icon {
+    color: #198754;
+    font-size: .65rem;
+}
+
+
+/* =========================================================
+   BALANCE
+   ========================================================= */
+
+.cashbook-balance {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: .75rem;
+    border: 1px solid #e5eee9;
+    border-radius: 10px;
+    background: #f8fbfa;
+}
+
+.balance-label {
+    display: block;
+    color: #71807b;
+    font-size: .65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .035em;
+}
+
+.cashbook-balance small {
+    color: #99a49f;
+    font-size: .59rem;
+}
+
+.cashbook-balance strong {
+    color: #18323a;
+    font-size: .95rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.cashbook-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .7rem .85rem;
+    border-top: 1px solid #edf1ef;
+    background: #fff;
+}
+
+.cashbook-open,
+.cashbook-export {
+    border-radius: 7px;
+    font-size: .68rem;
+    font-weight: 700;
+}
+
+.cashbook-open {
+    padding: .4rem .65rem;
+}
+
+.cashbook-export {
+    width: 31px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition:
+        transform .2s ease,
+        background-color .2s ease;
+}
+
+.cashbook-export:hover {
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.cashbook-empty {
+    padding: 3rem 1rem;
+    border: 1px solid #e5ece9;
+    border-radius: 15px;
+    background: #fff;
+    text-align: center;
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto .75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    background: #f1f6f4;
+    color: #198754;
+    font-size: 1rem;
+}
+
+.cashbook-empty h3 {
+    margin: 0;
+    color: #344640;
+    font-size: .9rem;
+    font-weight: 750;
+}
+
+.cashbook-empty p {
+    max-width: 390px;
+    margin: .35rem auto 1rem;
+    color: #81908b;
+    font-size: .72rem;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .cashbooks-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .cashbooks-title {
+        font-size: 1.08rem;
+    }
+
+    .cashbooks-subtitle {
+        line-height: 1.45;
+    }
+
+    .cashbook-add {
+        width: 100%;
+        text-align: center;
+    }
+
+    .cashbook-summary {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cashbook-stat {
+        min-width: 0;
+    }
+
+    .cashbook-card .card-body {
+        padding: .9rem;
+    }
+
+    .cashbook-period {
+        font-size: .57rem;
+    }
+
+    .cashbook-balance strong {
+        font-size: .86rem;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .cashbooks-page,
+    .cashbook-card {
+        animation: none;
+    }
+
+    .cashbook-card,
+    .cashbook-add,
+    .cashbook-export {
+        transition: none;
+    }
+
+}
+
+</style>
+
+{% endblock %}

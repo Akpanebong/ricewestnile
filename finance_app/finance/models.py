@@ -2,17 +2,17 @@ import uuid
 from decimal import Decimal
 from django.utils.text import slugify
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django.conf import settings
 from django.db.models import DecimalField, Sum, F, ExpressionWrapper, Value
 from django.db.models.functions import Coalesce, Cast
-
 from account.models import Department
+from assets.assetapp.models import AssetMaintenance, Asset
 from core.project_models import Project
-from core.models import CurrencyRate
-from core.services import SUPPORTED_CURRENCIES, convert_amount, get_usd_rate, quantize_money, get_base_currency, normalize_currency
+from core.services import SUPPORTED_CURRENCIES, get_base_currency, quantize_money, convert_amount, get_usd_rate, \
+    normalize_currency
 from procurement.procureapp.models import PurchaseOrder
-from assets.assetapp.models import Asset, AssetMaintenance
-
 User = settings.AUTH_USER_MODEL
 
 
@@ -55,18 +55,8 @@ class CashRequisition(ApprovalMixin):
     amount_in_words = models.CharField(max_length=255, blank=True)
     attachment = models.FileField(upload_to='cash_requisitions/attachments/', blank=True, null=True)
     slug = models.SlugField(null=True, blank=True, unique=True, editable=False)
-
-    # The currency this requisition was actually raised in, plus the
-    # base-currency exchange rate captured at submission time. `unit_cost`
-    # on each item keeps storing the base-currency-equivalent value (so
-    # total_amount() and every existing report/template stay unchanged) —
-    # these two fields, together with CashRequisitionItem.original_unit_cost,
-    # let the ledger recover the true original figure once approved.
     currency = models.CharField(max_length=3, default=get_base_currency, help_text="The currency this requisition was actually raised in.")
-    exchange_rate_used = models.DecimalField(
-        max_digits=18, decimal_places=6, null=True, blank=True,
-        help_text="Base-currency units per 1 unit of `currency`, as used to convert item costs at submission time.",
-    )
+    exchange_rate_used = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True, help_text="Base-currency units per 1 unit of `currency`, as used to convert item costs at submission time.")
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -74,21 +64,10 @@ class CashRequisition(ApprovalMixin):
         return super(CashRequisition, self).save(*args, **kwargs)
 
     def total_amount(self):
-        """Base-currency-equivalent total — unchanged behavior, still what
-        every existing template/report/ledger entry expects."""
         return sum(item.total_cost for item in self.items.all())
 
     def original_total_amount(self):
-        """The requisition's true total in its own original `currency`
-        (no conversion) — falls back to total_amount() for rows created
-        before original_unit_cost was captured, so historical data (which
-        was entered in what was, at the time, the base currency) stays
-        self-consistent."""
-        total = sum(
-            (item.original_unit_cost if item.original_unit_cost is not None else item.unit_cost) * (item.quantity or 0)
-            for item in self.items.all()
-        )
-        return total
+        return sum((item.original_unit_cost if item.original_unit_cost is not None else item.unit_cost) * (item.quantity or 0) for item in self.items.all())
 
     def __str__(self):
         return f'{self.donor_code} - {self.purpose}'
@@ -117,10 +96,7 @@ class CashRequisitionItem(models.Model):
     particulars = models.TextField()
     quantity = models.IntegerField()
     unit_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    original_unit_cost = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True,
-        help_text="Unit cost in the parent requisition's own currency, before conversion to the base currency.",
-    )
+    original_unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Unit cost in the parent requisition's own currency, before conversion to the base currency.")
 
     @property
     def total_cost(self):
@@ -144,20 +120,9 @@ class AdminExpenseNote(ApprovalMixin):
     proposed_budget = models.DecimalField(max_digits=12, decimal_places=2)
     service_providers = models.TextField()
     slug = models.SlugField(null=True, blank=True, unique=True, editable=False)
-
-    # Same pattern as CashRequisition: proposed_budget keeps storing the
-    # base-currency-equivalent figure (unchanged for every existing
-    # template/report), while these two capture the true original amount
-    # so the ledger can recover it once approved.
     currency = models.CharField(max_length=3, default=get_base_currency, help_text="The currency this expense note was actually raised in.")
-    original_proposed_budget = models.DecimalField(
-        max_digits=12, decimal_places=2, null=True, blank=True,
-        help_text="Proposed budget in the note's own `currency`, before conversion to the base currency.",
-    )
-    exchange_rate_used = models.DecimalField(
-        max_digits=18, decimal_places=6, null=True, blank=True,
-        help_text="Base-currency units per 1 unit of `currency`, as used to convert proposed_budget at submission time.",
-    )
+    original_proposed_budget = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Proposed budget in the note's own `currency`, before conversion to the base currency.")
+    exchange_rate_used = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True, help_text="Base-currency units per 1 unit of `currency`, as used to convert proposed_budget at submission time.")
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -165,9 +130,6 @@ class AdminExpenseNote(ApprovalMixin):
         return super(AdminExpenseNote, self).save(*args, **kwargs)
 
     def original_total_amount(self):
-        """The note's true budget in its own original `currency` (no
-        conversion) — falls back to proposed_budget for rows created
-        before original_proposed_budget was captured."""
         return self.original_proposed_budget if self.original_proposed_budget is not None else self.proposed_budget
 
 
@@ -180,16 +142,8 @@ class AccountingForm(ApprovalMixin):
     description = models.TextField(help_text="Receipts and expenditures for: ......")
     # amount_spent_words = models.CharField(max_length=255)
     slug = models.SlugField(null=True, blank=True, unique=True, editable=False)
-
-    # Same pattern as CashRequisition/AdminExpenseNote: amount_received/
-    # amount_spent on each item keep storing base-currency-equivalent
-    # figures (unchanged for every existing template/report), while these
-    # two capture the currency/rate actually used at retirement time.
     currency = models.CharField(max_length=3, default=get_base_currency, help_text="The currency this retirement was actually accounted in.")
-    exchange_rate_used = models.DecimalField(
-        max_digits=18, decimal_places=6, null=True, blank=True,
-        help_text="Base-currency units per 1 unit of `currency`, as used to convert item amounts at retirement time.",
-    )
+    exchange_rate_used = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True, help_text="Base-currency units per 1 unit of `currency`, as used to convert item amounts at retirement time.")
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -218,14 +172,7 @@ class AccountingForm(ApprovalMixin):
         return self.total_received - self.total_spent
 
     def original_total_spent(self):
-        """The retirement's true spend in its own original `currency` (no
-        conversion) — falls back to each item's base-currency amount_spent
-        for rows created before original_amount_spent was captured."""
-        total = sum(
-            (item.original_amount_spent if item.original_amount_spent is not None else item.amount_spent)
-            for item in self.items.all()
-        )
-        return total
+        return sum((item.original_amount_spent if item.original_amount_spent is not None else item.amount_spent) for item in self.items.all())
 
 
 class AccountingItem(models.Model):
@@ -235,14 +182,8 @@ class AccountingItem(models.Model):
     details = models.TextField()
     amount_received = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     amount_spent = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    original_amount_received = models.DecimalField(
-        max_digits=12, decimal_places=2, null=True, blank=True,
-        help_text="Amount received in the parent form's own currency, before conversion to the base currency.",
-    )
-    original_amount_spent = models.DecimalField(
-        max_digits=12, decimal_places=2, null=True, blank=True,
-        help_text="Amount spent in the parent form's own currency, before conversion to the base currency.",
-    )
+    original_amount_received = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Amount received in the parent form's own currency, before conversion to the base currency.")
+    original_amount_spent = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Amount spent in the parent form's own currency, before conversion to the base currency.")
 
     @property
     def balance(self):
@@ -255,6 +196,191 @@ class ApprovalLog(models.Model):
     form_type = models.CharField(max_length=50)
     object_id = models.IntegerField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class FinanceBudget(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        ACTIVE = "active", "Active"
+        CLOSED = "closed", "Closed"
+
+    name = models.CharField(max_length=200)
+    project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name="finance_budgets", null=True, blank=True)
+    donor = models.CharField(max_length=200, blank=True)
+    period_start = models.DateField()
+    period_end = models.DateField()
+    currency = models.CharField(max_length=10, default="UGX")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
+    notes = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="finance_budgets_created")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-period_start", "name")
+
+    def clean(self):
+        if self.period_end and self.period_start and self.period_end < self.period_start:
+            raise ValidationError("Budget end date cannot be before its start date.")
+
+    @property
+    def total_amount(self):
+        return sum((line.total for line in self.lines.all()), Decimal("0.00"))
+
+    def __str__(self):
+        return self.name
+
+
+class FinanceBudgetLine(models.Model):
+    budget = models.ForeignKey(FinanceBudget, on_delete=models.CASCADE, related_name="lines")
+    code = models.CharField(max_length=50)
+    outcome = models.CharField(max_length=255, blank=True)
+    activity = models.CharField(max_length=255, blank=True)
+    description = models.TextField()
+    unit = models.CharField(max_length=100, blank=True)
+    price_per_unit = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    units = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    frequency = models.DecimalField(max_digits=12, decimal_places=2, default=1)
+    justification = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("code", "id")
+        constraints = [models.UniqueConstraint(fields=("budget", "code"), name="unique_budget_line_code")]
+
+    @property
+    def total(self):
+        return (self.price_per_unit or 0) * (self.units or 0) * (self.frequency or 0)
+
+    def __str__(self):
+        return f"{self.code} - {self.description}"
+
+
+class BudgetPerformance(models.Model):
+    budget = models.ForeignKey(FinanceBudget, on_delete=models.CASCADE, related_name="performance_records")
+    line = models.ForeignKey(FinanceBudgetLine, on_delete=models.PROTECT, related_name="performance_records")
+    period = models.DateField(help_text="Use the first day of the reporting month")
+    funds_received = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    expenditure = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    comment = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="budget_performance_created")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-period", "line__code")
+        constraints = [models.UniqueConstraint(fields=("budget", "line", "period"), name="unique_budget_performance_period")]
+
+    @property
+    def budget_amount(self):
+        return self.line.total
+
+    @property
+    def variance(self):
+        return self.budget_amount - self.expenditure
+
+    @property
+    def donor_balance(self):
+        return self.budget_amount - self.funds_received
+
+    @property
+    def burn_rate(self):
+        return (self.expenditure / self.funds_received * 100) if self.funds_received else Decimal("0.00")
+
+    @property
+    def absorption_rate(self):
+        return (self.expenditure / self.budget_amount * 100) if self.budget_amount else Decimal("0.00")
+
+
+class CashBook(models.Model):
+    name = models.CharField(max_length=200, default="Main Cash Book")
+    project = models.ForeignKey(Project, on_delete=models.PROTECT, null=True, blank=True, related_name="cash_books")
+    donor = models.CharField(max_length=200, blank=True)
+    period_start = models.DateField()
+    period_end = models.DateField()
+    opening_balance = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="cash_books_created")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-period_start", "name")
+
+    @property
+    def total_receipts(self):
+        return self.entries.aggregate(total=Coalesce(Sum("receipt"), Value(0, output_field=DecimalField(max_digits=16, decimal_places=2))))["total"]
+
+    @property
+    def total_payments(self):
+        return self.entries.aggregate(total=Coalesce(Sum("payment"), Value(0, output_field=DecimalField(max_digits=16, decimal_places=2))))["total"]
+
+    @property
+    def closing_balance(self):
+        return self.opening_balance + self.total_receipts - self.total_payments
+
+    def __str__(self):
+        return self.name
+
+
+class CashBookEntry(models.Model):
+    cash_book = models.ForeignKey(CashBook, on_delete=models.CASCADE, related_name="entries")
+    date = models.DateField(default=timezone.now)
+    pv_number = models.CharField(max_length=80, blank=True)
+    budget_line = models.CharField(max_length=80, blank=True)
+    cheque_number = models.CharField(max_length=80, blank=True)
+    payee = models.CharField(max_length=255, blank=True)
+    description = models.TextField()
+    receipt = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    payment = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    comments = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="cash_book_entries_created")
+
+    class Meta:
+        ordering = ("date", "id")
+
+    @property
+    def running_balance(self):
+        prior = self.cash_book.entries.filter(
+            models.Q(date__lt=self.date) | models.Q(date=self.date, id__lt=self.id)
+        ).aggregate(
+            receipts=Coalesce(Sum("receipt"), Value(0, output_field=DecimalField(max_digits=16, decimal_places=2))),
+            payments=Coalesce(Sum("payment"), Value(0, output_field=DecimalField(max_digits=16, decimal_places=2))),
+        )
+        return self.cash_book.opening_balance + prior["receipts"] - prior["payments"] + self.receipt - self.payment
+
+
+class BankReconciliation(models.Model):
+    cash_book = models.OneToOneField(CashBook, on_delete=models.CASCADE, related_name="bank_reconciliation")
+    statement_balance = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    prepared_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="bank_reconciliations_prepared")
+    prepared_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+
+    @property
+    def total_unpresented_payments(self):
+        return self.items.filter(item_type="payment").aggregate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField(max_digits=16, decimal_places=2))))["total"]
+
+    @property
+    def total_uncredited_receipts(self):
+        return self.items.filter(item_type="receipt").aggregate(total=Coalesce(Sum("amount"), Value(0, output_field=DecimalField(max_digits=16, decimal_places=2))))["total"]
+
+    @property
+    def adjusted_balance(self):
+        return self.statement_balance - self.total_unpresented_payments + self.total_uncredited_receipts
+
+    @property
+    def difference(self):
+        return self.adjusted_balance - self.cash_book.closing_balance
+
+
+class BankReconciliationItem(models.Model):
+    ITEM_TYPES = (("payment", "Payment in cash book, not on statement"), ("receipt", "Receipt on statement, not in cash book"))
+    reconciliation = models.ForeignKey(BankReconciliation, on_delete=models.CASCADE, related_name="items")
+    item_type = models.CharField(max_length=20, choices=ITEM_TYPES)
+    date = models.DateField(null=True, blank=True)
+    reference = models.CharField(max_length=80, blank=True)
+    payee = models.CharField(max_length=255, blank=True)
+    amount = models.DecimalField(max_digits=16, decimal_places=2, default=0)
+    notes = models.TextField(blank=True)
+
 
 
 class FinancialCategory(models.Model):

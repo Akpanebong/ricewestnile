@@ -1,0 +1,848 @@
+
+{% extends "finance/finance_tools_base.html" %}
+
+{% block title %}{{ cash_book.name }} | Finance{% endblock %}
+
+{% block finance_content %}
+
+<style>
+    /* =========================================================
+       CASH BOOK DETAIL
+       ========================================================= */
+
+    .cashbook-detail-page {
+        animation: cashbookPageIn .45s ease both;
+    }
+
+    @keyframes cashbookPageIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Header */
+    .cashbook-detail-header {
+        position: relative;
+        overflow: hidden;
+        padding: 1.15rem 1.35rem;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #087f7b, #075c63);
+        color: #fff;
+        box-shadow: 0 10px 26px rgba(7, 92, 99, .12);
+    }
+
+    .cashbook-detail-header::before,
+    .cashbook-detail-header::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: .08;
+        background: #fff;
+    }
+
+    .cashbook-detail-header::before {
+        width: 150px;
+        height: 150px;
+        right: -65px;
+        top: -80px;
+    }
+
+    .cashbook-detail-header::after {
+        width: 90px;
+        height: 90px;
+        right: 90px;
+        bottom: -55px;
+    }
+
+    .cashbook-header-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .cashbook-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.72);
+        margin-bottom: .3rem;
+    }
+
+    .cashbook-title {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -.025em;
+    }
+
+    .cashbook-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem .85rem;
+        margin-top: .35rem;
+        color: rgba(255,255,255,.72);
+        font-size: .78rem;
+    }
+
+    .cashbook-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .cashbook-actions {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        gap: .45rem;
+        flex-wrap: wrap;
+    }
+
+    .cashbook-actions .btn {
+        border-radius: 9px;
+        font-size: .75rem;
+        font-weight: 700;
+        padding: .48rem .7rem;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .cashbook-actions .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    /* KPI cards */
+    .cashbook-kpi {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #e7eeeb !important;
+        border-radius: 14px !important;
+        background: #fff;
+        padding: .9rem 1rem !important;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .cashbook-kpi:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, .07);
+    }
+
+    .cashbook-kpi::after {
+        content: "";
+        position: absolute;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        right: -20px;
+        top: -20px;
+        background: rgba(8, 127, 123, .055);
+    }
+
+    .cashbook-kpi-label {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        color: #64748b;
+        font-size: .69rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .cashbook-kpi-label i {
+        color: #087f7b;
+    }
+
+    .cashbook-kpi strong {
+        display: block;
+        margin-top: .2rem;
+        color: #18323a;
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    /* Ledger */
+    .cashbook-ledger {
+        overflow: hidden;
+        border: 1px solid #e7eeeb !important;
+        border-radius: 16px !important;
+        box-shadow: 0 5px 18px rgba(15, 23, 42, .035);
+    }
+
+    .cashbook-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: .85rem 1rem;
+        background: #fff;
+        border-bottom: 1px solid #edf2f0;
+    }
+
+    .cashbook-section-title {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        margin: 0;
+        color: #18323a;
+        font-size: .9rem;
+        font-weight: 800;
+    }
+
+    .cashbook-section-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        color: #087f7b;
+        background: #e8f6f4;
+        font-size: .78rem;
+    }
+
+    .cashbook-entry-count {
+        padding: .25rem .55rem;
+        border-radius: 999px;
+        background: #f1f5f4;
+        color: #64748b;
+        font-size: .68rem;
+        font-weight: 700;
+    }
+
+    .cashbook-table-wrap {
+        overflow-x: auto;
+    }
+
+    .cashbook-table {
+        min-width: 1050px;
+        margin: 0;
+        font-size: .76rem;
+    }
+
+    .cashbook-table thead th {
+        padding: .65rem .7rem;
+        background: #f7faf9;
+        color: #64748b;
+        border-bottom: 1px solid #e7eeeb;
+        font-size: .65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .045em;
+        white-space: nowrap;
+    }
+
+    .cashbook-table tbody td {
+        padding: .62rem .7rem;
+        vertical-align: middle;
+        border-color: #eef2f1;
+        color: #334155;
+    }
+
+    .cashbook-table tbody tr {
+        transition: background-color .18s ease, transform .18s ease;
+        animation: ledgerRowIn .35s ease both;
+    }
+
+    .cashbook-table tbody tr:hover {
+        background: #f8fcfb;
+    }
+
+    @keyframes ledgerRowIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .cashbook-table .opening-row {
+        background: #f0f8f6;
+        color: #075c63;
+        font-weight: 700;
+    }
+
+    .cashbook-table .opening-row td {
+        color: #075c63;
+        border-color: #dcefeb;
+    }
+
+    .pv-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: .25rem .45rem;
+        border-radius: 6px;
+        background: #f1f5f4;
+        color: #475569;
+        font-size: .68rem;
+        font-weight: 700;
+    }
+
+    .budget-line-text {
+        color: #075c63;
+        font-weight: 700;
+    }
+
+    .receipt-value {
+        color: #198754;
+        font-weight: 700;
+    }
+
+    .payment-value {
+        color: #dc3545;
+        font-weight: 700;
+    }
+
+    .balance-value {
+        color: #18323a;
+        font-weight: 800;
+    }
+
+    /* Empty state */
+    .cashbook-empty {
+        padding: 2.5rem 1rem;
+        text-align: center;
+        color: #94a3b8;
+    }
+
+    .cashbook-empty-icon {
+        width: 44px;
+        height: 44px;
+        margin: 0 auto .7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: #f1f5f4;
+        color: #087f7b;
+        font-size: 1rem;
+    }
+
+    .cashbook-empty strong {
+        display: block;
+        color: #475569;
+        font-size: .85rem;
+    }
+
+    .cashbook-empty span {
+        display: block;
+        margin-top: .2rem;
+        font-size: .74rem;
+    }
+
+    /* Add transaction */
+    .cashbook-form-card {
+        overflow: hidden;
+        border: 1px solid #e7eeeb !important;
+        border-radius: 16px !important;
+        box-shadow: 0 5px 18px rgba(15, 23, 42, .035);
+    }
+
+    .cashbook-form-body {
+        padding: 1rem;
+    }
+
+    .cashbook-form-field label {
+        display: block;
+        margin-bottom: .3rem;
+        color: #334155;
+        font-size: .73rem;
+        font-weight: 700;
+    }
+
+    .cashbook-form-field .form-control,
+    .cashbook-form-field .form-select {
+        min-height: 38px;
+        border-radius: 9px;
+        border-color: #dce5e2;
+        font-size: .78rem;
+        box-shadow: none;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .cashbook-form-field textarea.form-control {
+        min-height: 76px;
+        resize: vertical;
+    }
+
+    .cashbook-form-field .form-control:focus,
+    .cashbook-form-field .form-select:focus {
+        border-color: #087f7b;
+        box-shadow: 0 0 0 3px rgba(8, 127, 123, .09);
+    }
+
+    .cashbook-form-field .form-text {
+        margin-top: .25rem;
+        color: #94a3b8;
+        font-size: .67rem;
+    }
+
+    .cashbook-form-field .invalid-feedback {
+        font-size: .68rem;
+    }
+
+    .cashbook-switch {
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+        padding: .35rem .65rem;
+        border: 1px solid #dce5e2;
+        border-radius: 9px;
+        background: #f9fbfa;
+    }
+
+    .cashbook-switch input[type="checkbox"] {
+        width: 2.15rem;
+        height: 1.15rem;
+        margin: 0 .5rem 0 0;
+        cursor: pointer;
+    }
+
+    .cashbook-switch input[type="checkbox"]:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+    .cashbook-form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .5rem;
+        margin-top: 1rem;
+        padding-top: .9rem;
+        border-top: 1px solid #edf2f0;
+    }
+
+    .cashbook-form-actions .btn {
+        border-radius: 9px;
+        font-size: .76rem;
+        font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 767.98px) {
+        .cashbook-detail-header {
+            padding: 1rem;
+        }
+
+        .cashbook-detail-header .d-flex {
+            flex-direction: column;
+            align-items: stretch !important;
+        }
+
+        .cashbook-actions {
+            margin-top: .8rem;
+        }
+
+        .cashbook-actions .btn {
+            flex: 1;
+        }
+
+        .cashbook-title {
+            font-size: 1.15rem;
+        }
+
+        .cashbook-meta {
+            font-size: .7rem;
+        }
+
+        .cashbook-kpi {
+            padding: .75rem .85rem !important;
+        }
+
+        .cashbook-form-body {
+            padding: .85rem;
+        }
+
+        .cashbook-form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .cashbook-form-actions .btn {
+            width: 100%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .cashbook-detail-page,
+        .cashbook-table tbody tr {
+            animation: none !important;
+        }
+
+        .cashbook-kpi,
+        .cashbook-actions .btn,
+        .cashbook-table tbody tr {
+            transition: none !important;
+        }
+    }
+</style>
+
+<div class="cashbook-detail-page">
+
+    <!-- Header -->
+    <div class="cashbook-detail-header mb-3">
+        <div class="cashbook-header-content">
+            <div class="d-flex justify-content-between align-items-center gap-3">
+
+                <div>
+                    <div class="cashbook-eyebrow">
+                        <i class="fa-solid fa-book-open"></i>
+                        Finance control
+                    </div>
+
+                    <h1 class="cashbook-title">
+                        {{ cash_book.name }}
+                    </h1>
+
+                    <div class="cashbook-meta">
+                        <span>
+                            <i class="fa-regular fa-calendar"></i>
+                            {{ cash_book.period_start }} – {{ cash_book.period_end }}
+                        </span>
+
+                        <span>
+                            <i class="fa-solid fa-diagram-project"></i>
+                            {{ cash_book.project|default:"Organization-wide" }}
+                        </span>
+
+                        <span>
+                            <i class="fa-solid fa-coins"></i>
+                            {{ display_currency }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="cashbook-actions">
+                    <a
+                        class="btn btn-light"
+                        href="{% url 'finance:cashbook_export' cash_book.pk %}"
+                    >
+                        <i class="fa-solid fa-file-excel me-1"></i>
+                        Export
+                    </a>
+
+                    <a
+                        class="btn btn-outline-light"
+                        href="{% url 'finance:reconciliation_create' cash_book.pk %}"
+                    >
+                        <i class="fa-solid fa-scale-balanced me-1"></i>
+                        Reconcile
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Financial KPIs -->
+    <div class="row g-2 mb-3">
+
+        <div class="col-12 col-md-4">
+            <div class="card finance-card cashbook-kpi h-100">
+                <div class="cashbook-kpi-label">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    Opening balance
+                </div>
+
+                <strong>
+                    {{ cash_book.opening_balance|accounting_money:request }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card finance-card cashbook-kpi h-100">
+                <div class="cashbook-kpi-label">
+                    <i class="fa-solid fa-arrow-down-to-line"></i>
+                    Total receipts
+                </div>
+
+                <strong>
+                    {{ cash_book.total_receipts|accounting_money:request }}
+                </strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card finance-card cashbook-kpi h-100">
+                <div class="cashbook-kpi-label">
+                    <i class="fa-solid fa-wallet"></i>
+                    Closing balance
+                </div>
+
+                <strong>
+                    {{ cash_book.closing_balance|accounting_money:request }}
+                </strong>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Ledger -->
+    <div class="card cashbook-ledger mb-3">
+
+        <div class="cashbook-card-header">
+            <div class="cashbook-section-title">
+                <span class="cashbook-section-icon">
+                    <i class="fa-solid fa-list"></i>
+                </span>
+                Cash book ledger
+            </div>
+
+            <span class="cashbook-entry-count">
+                {{ cash_book.entries.count }} entries
+            </span>
+        </div>
+
+        <div class="cashbook-table-wrap">
+            <table class="table cashbook-table table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>PV</th>
+                        <th>Budget line</th>
+                        <th>Payee</th>
+                        <th>Description</th>
+                        <th>Receipt</th>
+                        <th>Payment</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <!-- Opening balance -->
+                    <tr class="opening-row">
+
+                        <td colspan="7">
+                            <i class="fa-solid fa-arrow-turn-down-right me-1"></i>
+                            Balance b/d
+                        </td>
+
+                        <td class="balance-value">
+                            {{ cash_book.opening_balance|accounting_money:request }}
+                        </td>
+
+                    </tr>
+
+
+                    {% for entry in cash_book.entries.all %}
+
+                        <tr>
+
+                            <td class="text-nowrap">
+                                <i class="fa-regular fa-calendar text-muted me-1"></i>
+                                {{ entry.date }}
+                            </td>
+
+                            <td>
+                                {% if entry.pv_number %}
+                                    <span class="pv-badge">
+                                        {{ entry.pv_number }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span class="budget-line-text">
+                                    {{ entry.budget_line }}
+                                </span>
+                            </td>
+
+                            <td class="fw-semibold">
+                                {{ entry.payee }}
+                            </td>
+
+                            <td>
+                                {{ entry.description }}
+                            </td>
+
+                            <td class="receipt-value text-nowrap">
+                                {{ entry.receipt|accounting_money:request }}
+                            </td>
+
+                            <td class="payment-value text-nowrap">
+                                {{ entry.payment|accounting_money:request }}
+                            </td>
+
+                            <td class="balance-value text-nowrap">
+                                {{ entry.running_balance|accounting_money:request }}
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="8">
+
+                                <div class="cashbook-empty">
+
+                                    <div class="cashbook-empty-icon">
+                                        <i class="fa-solid fa-receipt"></i>
+                                    </div>
+
+                                    <strong>No transactions recorded</strong>
+
+                                    <span>
+                                        Add the first transaction using the form below.
+                                    </span>
+
+                                </div>
+
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+    </div>
+
+
+    <!-- Add Transaction -->
+    <div class="card cashbook-form-card">
+
+        <div class="cashbook-card-header">
+
+            <div class="cashbook-section-title">
+                <span class="cashbook-section-icon">
+                    <i class="fa-solid fa-plus"></i>
+                </span>
+
+                Add transaction
+            </div>
+
+            <small class="text-muted">
+                New cash book entry
+            </small>
+
+        </div>
+
+        <div class="cashbook-form-body">
+
+            <form method="post" class="cashbook-form">
+
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-2 small mb-3">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+
+                <div class="row g-3">
+
+                    {% for field in form %}
+
+                        <div class="col-12 col-md-6">
+
+                            <div class="cashbook-form-field">
+
+                                {% if field.field.widget.input_type == "checkbox" %}
+
+                                    <div class="cashbook-switch">
+                                        {{ field }}
+
+                                        <label
+                                            for="{{ field.id_for_label }}"
+                                            class="mb-0"
+                                        >
+                                            {{ field.label }}
+
+                                            {% if field.field.required %}
+                                                <span class="text-danger">*</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+
+                                {% else %}
+
+                                    <label
+                                        for="{{ field.id_for_label }}"
+                                        class="form-label"
+                                    >
+                                        {{ field.label }}
+
+                                        {% if field.field.required %}
+                                            <span class="text-danger">*</span>
+                                        {% endif %}
+                                    </label>
+
+                                    {{ field }}
+
+                                {% endif %}
+
+
+                                {% if field.help_text %}
+                                    <div class="form-text">
+                                        {{ field.help_text }}
+                                    </div>
+                                {% endif %}
+
+
+                                {% if field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in field.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="cashbook-form-actions">
+
+                    <button
+                        type="reset"
+                        class="btn btn-light border"
+                    >
+                        <i class="fa-solid fa-rotate-left me-1"></i>
+                        Reset
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary px-4"
+                    >
+                        <i class="fa-solid fa-plus me-1"></i>
+                        Add entry
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

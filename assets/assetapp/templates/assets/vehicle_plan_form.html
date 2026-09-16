@@ -1,0 +1,236 @@
+
+{% extends "asset/base.html" %}
+
+{% block title %}Create Vehicle Plan | RICE WN{% endblock %}
+
+
+{% block breadcrumb %}
+<div class="breadcrumb-block">
+    <div class="breadcrumb-card">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+
+                <li class="breadcrumb-item">
+                    <a href="{% url 'system_home' %}">
+                        <i class="fa-solid fa-house me-1"></i>
+                        RICE WN Hub
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item">
+                    <a href="{% url 'asset:dashboard' %}">
+                        <i class="fa-solid fa-boxes-stacked me-1"></i>
+                        Asset Management
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item">
+                    <a href="{% url 'asset:vehicle_plan_list' %}">
+                        <i class="fa-solid fa-calendar-week me-1"></i>
+                        Weekly Vehicle Plans
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item active" aria-current="page">
+                    Create Plan
+                </li>
+
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="py-2">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+    <div class="d-flex flex-column flex-md-row
+                justify-content-between align-items-md-center
+                gap-3 mb-4">
+
+        <div>
+
+            <div class="d-flex align-items-center gap-2 mb-1">
+
+                <span class="text-primary fs-4">
+                    <i class="fa-solid fa-calendar-plus"></i>
+                </span>
+
+                <h3 class="fw-bold mb-0">
+                    Create Vehicle Plan
+                </h3>
+
+            </div>
+
+            <p class="text-muted mb-0">
+                Create a weekly plan for vehicle assignments.
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <a
+                href="{% url 'asset:vehicle_plan_list' %}"
+                class="btn btn-light border"
+            >
+                <i class="fa-solid fa-arrow-left me-1"></i>
+                Back to Plans
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FORM
+    ====================================================== -->
+    <div class="row justify-content-center">
+
+        <div class="col-12 col-xl-8">
+
+            <div class="card border-0 shadow-sm">
+
+                <!-- Card Header -->
+                <div class="card-header bg-white border-bottom py-3">
+
+                    <div class="d-flex align-items-center">
+
+                        <div
+                            class="rounded-3 bg-primary-subtle
+                                   text-primary p-2 me-3"
+                        >
+                            <i class="fa-solid fa-calendar-week"></i>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-bold mb-0">
+                                New Weekly Vehicle Plan
+                            </h5>
+
+                            <small class="text-muted">
+                                Select the starting date for the weekly plan.
+                            </small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Card Body -->
+                <div class="card-body p-4">
+
+                    <div class="alert alert-info border-0
+                                d-flex align-items-start mb-4">
+
+                        <i class="fa-solid fa-circle-info me-2 mt-1"></i>
+
+                        <div>
+                            <strong>Planning period</strong>
+                            <div class="small mt-1">
+                                Vehicle plans begin on Monday and cover
+                                the corresponding weekly planning period.
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <form method="post" novalidate>
+
+                        {% csrf_token %}
+
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i>
+
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+
+                        {% for field in form %}
+
+                            <div class="mb-4">
+
+                                <label
+                                    for="{{ field.id_for_label }}"
+                                    class="form-label fw-semibold"
+                                >
+                                    {{ field.label }}
+
+                                    {% if field.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+
+
+                                {{ field }}
+
+
+                                {% if field.help_text %}
+                                    <div class="form-text">
+                                        {{ field.help_text }}
+                                    </div>
+                                {% endif %}
+
+
+                                {% for error in field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+                        {% endfor %}
+
+
+                        <!-- Actions -->
+                        <div class="d-flex flex-column flex-sm-row
+                                    justify-content-end gap-2
+                                    pt-3 border-top">
+
+                            <a
+                                href="{% url 'asset:vehicle_plan_list' %}"
+                                class="btn btn-light border"
+                            >
+                                <i class="fa-solid fa-xmark me-1"></i>
+                                Cancel
+                            </a>
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                <i class="fa-solid fa-calendar-plus me-1"></i>
+                                Create Plan
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

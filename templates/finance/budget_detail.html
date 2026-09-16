@@ -1,0 +1,825 @@
+
+{% extends "finance/finance_tools_base.html" %}
+
+{% block title %}{{ budget.name }} | Finance{% endblock %}
+
+{% block finance_content %}
+
+<style>
+    /* =========================================================
+       BUDGET DETAIL — ENTERPRISE FINANCE
+    ========================================================= */
+
+    .budget-detail-page {
+        animation: budgetDetailIn .4s ease both;
+    }
+
+
+    /* =========================================================
+       HEADER
+    ========================================================= */
+
+    .budget-detail-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .budget-detail-main {
+        min-width: 0;
+    }
+
+    .budget-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .3rem .58rem;
+        border-radius: 999px;
+        font-size: .63rem;
+        font-weight: 750;
+        line-height: 1;
+    }
+
+    .budget-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .status-active {
+        color: #087443;
+        background: #eaf8f0;
+    }
+
+    .status-closed {
+        color: #667085;
+        background: #f0f2f4;
+    }
+
+    .status-other {
+        color: #9a6700;
+        background: #fff7df;
+    }
+
+    .budget-detail-title {
+        margin: .45rem 0 .2rem;
+        color: #18323a;
+        font-size: 1.35rem;
+        font-weight: 750;
+        letter-spacing: -.025em;
+    }
+
+    .budget-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .4rem .75rem;
+        margin: 0;
+        color: #7a8580;
+        font-size: .73rem;
+    }
+
+    .budget-meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+    }
+
+    .budget-meta-item i {
+        color: #98a49e;
+        font-size: .65rem;
+    }
+
+    .budget-meta-divider {
+        color: #c5ccc8;
+    }
+
+
+    /* =========================================================
+       ACTIONS
+    ========================================================= */
+
+    .budget-actions {
+        display: flex;
+        gap: .45rem;
+        flex-shrink: 0;
+    }
+
+    .budget-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        border-radius: 8px;
+        padding: .48rem .7rem;
+        font-size: .7rem;
+        font-weight: 700;
+        white-space: nowrap;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .budget-actions .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .budget-actions .btn-outline-success:hover {
+        box-shadow: 0 5px 14px rgba(25, 135, 84, .12);
+    }
+
+    .budget-actions .btn-primary:hover {
+        box-shadow: 0 5px 14px rgba(13, 110, 253, .15);
+    }
+
+
+    /* =========================================================
+       KPI CARDS
+    ========================================================= */
+
+    .budget-kpi {
+        position: relative;
+        overflow: hidden;
+        min-height: 88px;
+        padding: .9rem 1rem !important;
+        border: 1px solid #e7ece9 !important;
+        border-radius: 14px !important;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(20, 40, 30, .045);
+        animation: kpiIn .45s ease both;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .budget-kpi:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(20, 40, 30, .07);
+    }
+
+    .budget-kpi-icon {
+        position: absolute;
+        right: .85rem;
+        top: .85rem;
+        width: 31px;
+        height: 31px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        background: #f0f7f4;
+        color: #087f7b;
+        font-size: .75rem;
+    }
+
+    .budget-kpi-label {
+        display: block;
+        margin-bottom: .28rem;
+        color: #7a8580;
+        font-size: .65rem;
+        font-weight: 650;
+    }
+
+    .budget-kpi-value {
+        display: block;
+        padding-right: 2.3rem;
+        color: #18323a;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .budget-kpi:nth-child(2) {
+        animation-delay: .06s;
+    }
+
+    .budget-kpi:nth-child(3) {
+        animation-delay: .12s;
+    }
+
+
+    /* =========================================================
+       BUDGET LINES CARD
+    ========================================================= */
+
+    .budget-lines-card {
+        overflow: hidden;
+        border: 1px solid #e7ece9;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(20, 40, 30, .055);
+    }
+
+    .budget-lines-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .85rem 1rem;
+        border-bottom: 1px solid #e8eeeb;
+        background: #fbfcfc;
+    }
+
+    .lines-title {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        color: #263a33;
+        font-size: .78rem;
+        font-weight: 750;
+    }
+
+    .lines-title-icon {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(8, 127, 123, .09);
+        color: #087f7b;
+        font-size: .7rem;
+    }
+
+    .lines-count {
+        padding: .27rem .5rem;
+        border-radius: 999px;
+        background: #eef5f2;
+        color: #5f7069;
+        font-size: .62rem;
+        font-weight: 700;
+    }
+
+
+    /* =========================================================
+       TABLE
+    ========================================================= */
+
+    .budget-lines-table {
+        margin: 0;
+    }
+
+    .budget-lines-table thead th {
+        padding: .7rem .8rem;
+        border-bottom: 1px solid #e5ebe8;
+        background: #f8faf9;
+        color: #68756f;
+        font-size: .62rem;
+        font-weight: 800;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .budget-lines-table tbody tr {
+        animation: lineRowIn .4s ease both;
+        transition: background-color .2s ease;
+    }
+
+    .budget-lines-table tbody tr:hover {
+        background: #fbfdfc;
+    }
+
+    .budget-lines-table tbody td {
+        padding: .72rem .8rem;
+        border-color: #edf1ef;
+        color: #45524c;
+        font-size: .72rem;
+        vertical-align: middle;
+    }
+
+
+    /* =========================================================
+       CODE
+    ========================================================= */
+
+    .line-code {
+        display: inline-flex;
+        align-items: center;
+        padding: .28rem .45rem;
+        border-radius: 6px;
+        background: #f2f5f3;
+        color: #52625a;
+        font-family: monospace;
+        font-size: .65rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       OUTCOME / ACTIVITY
+    ========================================================= */
+
+    .line-outcome {
+        display: block;
+        max-width: 220px;
+        color: #263a33;
+        font-weight: 700;
+    }
+
+    .line-activity {
+        display: block;
+        max-width: 220px;
+        margin-top: .15rem;
+        color: #89938e;
+        font-size: .66rem;
+    }
+
+
+    /* =========================================================
+       DESCRIPTION
+    ========================================================= */
+
+    .line-description {
+        min-width: 180px;
+        max-width: 280px;
+        color: #69756f;
+        line-height: 1.45;
+    }
+
+
+    /* =========================================================
+       NUMERIC VALUES
+    ========================================================= */
+
+    .line-number {
+        color: #526059;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .line-cost {
+        color: #526059;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .line-total {
+        color: #18323a;
+        font-size: .76rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       EMPTY STATE
+    ========================================================= */
+
+    .budget-lines-empty {
+        padding: 3rem 1rem !important;
+        text-align: center;
+    }
+
+    .budget-lines-empty-icon {
+        width: 45px;
+        height: 45px;
+        margin: 0 auto .7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: #f1f7f5;
+        color: #84948c;
+    }
+
+    .budget-lines-empty strong {
+        display: block;
+        color: #34413b;
+        font-size: .8rem;
+    }
+
+    .budget-lines-empty span {
+        display: block;
+        margin-top: .2rem;
+        color: #89938e;
+        font-size: .68rem;
+    }
+
+
+    /* =========================================================
+       ANIMATIONS
+    ========================================================= */
+
+    @keyframes budgetDetailIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes kpiIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes lineRowIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+
+    {% for line in budget.lines.all %}
+    .budget-lines-table tbody tr:nth-child({{ forloop.counter }}) {
+        animation-delay: {{ forloop.counter0 }}0ms;
+    }
+    {% endfor %}
+
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 768px) {
+
+        .budget-detail-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .budget-actions {
+            width: 100%;
+        }
+
+        .budget-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .budget-detail-title {
+            font-size: 1.2rem;
+        }
+
+        .budget-lines-card {
+            overflow-x: auto;
+        }
+
+        .budget-lines-table {
+            min-width: 950px;
+        }
+
+    }
+
+
+    @media (max-width: 576px) {
+
+        .budget-actions {
+            flex-wrap: wrap;
+        }
+
+        .budget-actions .btn {
+            flex: 1 1 45%;
+        }
+
+        .budget-meta {
+            display: block;
+        }
+
+        .budget-meta-item {
+            margin-right: .6rem;
+            margin-bottom: .25rem;
+        }
+
+        .budget-lines-header {
+            padding: .75rem;
+        }
+
+    }
+
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .budget-detail-page,
+        .budget-kpi,
+        .budget-lines-table tbody tr {
+            animation: none !important;
+        }
+
+        .budget-kpi,
+        .budget-actions .btn {
+            transition: none !important;
+        }
+
+    }
+</style>
+
+
+<div class="container-fluid budget-detail-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="budget-detail-header">
+
+        <div class="budget-detail-main">
+
+            <!-- Status -->
+            {% if budget.status == "active" %}
+
+                <span class="budget-status status-active">
+                    <span class="budget-status-dot"></span>
+                    {{ budget.get_status_display }}
+                </span>
+
+            {% elif budget.status == "closed" %}
+
+                <span class="budget-status status-closed">
+                    <span class="budget-status-dot"></span>
+                    {{ budget.get_status_display }}
+                </span>
+
+            {% else %}
+
+                <span class="budget-status status-other">
+                    <span class="budget-status-dot"></span>
+                    {{ budget.get_status_display }}
+                </span>
+
+            {% endif %}
+
+
+            <h1 class="budget-detail-title">
+                {{ budget.name }}
+            </h1>
+
+
+            <div class="budget-meta">
+
+                <span class="budget-meta-item">
+                    <i class="fa-solid fa-diagram-project"></i>
+
+                    {% if budget.project %}
+                        {{ budget.project }}
+                    {% else %}
+                        Organization-wide
+                    {% endif %}
+                </span>
+
+                <span class="budget-meta-divider">•</span>
+
+                <span class="budget-meta-item">
+                    <i class="fa-regular fa-calendar"></i>
+                    {{ budget.period_start }} – {{ budget.period_end }}
+                </span>
+
+                {% if budget.donor %}
+                    <span class="budget-meta-divider">•</span>
+
+                    <span class="budget-meta-item">
+                        <i class="fa-solid fa-hand-holding-heart"></i>
+                        {{ budget.donor }}
+                    </span>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Actions -->
+        <div class="budget-actions">
+
+            <a href="{% url 'finance:budget_export' budget.pk %}"
+               class="btn btn-outline-success">
+
+                <i class="fa-solid fa-file-excel"></i>
+                Export
+
+            </a>
+
+
+            <a href="{% url 'finance:budget_edit' budget.pk %}"
+               class="btn btn-primary">
+
+                <i class="fa-solid fa-pen-to-square"></i>
+                Edit
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         KPIs
+    ====================================================== -->
+
+    <div class="row g-3 mb-3">
+
+        <div class="col-md-4">
+
+            <div class="budget-kpi">
+
+                <div class="budget-kpi-icon">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+
+                <span class="budget-kpi-label">
+                    Budget total ({{ display_currency }})
+                </span>
+
+                <strong class="budget-kpi-value">
+                    {{ budget.total_amount|accounting_money:request }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="budget-kpi">
+
+                <div class="budget-kpi-icon">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+
+                <span class="budget-kpi-label">
+                    Budget lines
+                </span>
+
+                <strong class="budget-kpi-value">
+                    {{ budget.lines.count }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         BUDGET LINES
+    ====================================================== -->
+
+    <div class="budget-lines-card">
+
+        <div class="budget-lines-header">
+
+            <div class="lines-title">
+
+                <div class="lines-title-icon">
+                    <i class="fa-solid fa-table-list"></i>
+                </div>
+
+                Budget line items
+
+            </div>
+
+
+            <span class="lines-count">
+                {{ budget.lines.count }} item{{ budget.lines.count|pluralize }}
+            </span>
+
+        </div>
+
+
+        <div class="table-responsive">
+
+            <table class="table budget-lines-table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+                        <th>Code</th>
+                        <th>Outcome / Activity</th>
+                        <th>Description</th>
+                        <th>Unit cost ({{ display_currency }})</th>
+                        <th>Units</th>
+                        <th>Freq.</th>
+                        <th>Total ({{ display_currency }})</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for line in budget.lines.all %}
+
+                        <tr>
+
+                            <!-- Code -->
+                            <td>
+                                <span class="line-code">
+                                    {{ line.code }}
+                                </span>
+                            </td>
+
+
+                            <!-- Outcome / Activity -->
+                            <td>
+
+                                <span class="line-outcome">
+                                    {{ line.outcome }}
+                                </span>
+
+                                <small class="line-activity">
+                                    {{ line.activity }}
+                                </small>
+
+                            </td>
+
+
+                            <!-- Description -->
+                            <td>
+                                <div class="line-description">
+                                    {{ line.description }}
+                                </div>
+                            </td>
+
+
+                            <!-- Unit cost -->
+                            <td>
+                                <span class="line-cost">
+                                    {{ line.price_per_unit|accounting_money:request }}
+                                </span>
+                            </td>
+
+
+                            <!-- Units -->
+                            <td>
+                                <span class="line-number">
+                                    {{ line.units|floatformat:2 }}
+                                </span>
+                            </td>
+
+
+                            <!-- Frequency -->
+                            <td>
+                                <span class="line-number">
+                                    {{ line.frequency|floatformat:2 }}
+                                </span>
+                            </td>
+
+
+                            <!-- Total -->
+                            <td>
+                                <span class="line-total">
+                                    {{ line.total|accounting_money:request }}
+                                </span>
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="7" class="budget-lines-empty">
+
+                                <div class="budget-lines-empty-icon">
+                                    <i class="fa-solid fa-list"></i>
+                                </div>
+
+                                <strong>
+                                    No budget lines recorded
+                                </strong>
+
+                                <span>
+                                    This budget does not have any activity lines yet.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

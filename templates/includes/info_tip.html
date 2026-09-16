@@ -1,4 +1,14 @@
-<span class="info-tip{% if align == "end" %} align-end{% endif %}" tabindex="0" aria-label="{{ text }}">
-    <i class="fa-solid fa-info" aria-hidden="true"></i>
-    <span class="info-tip-bubble" role="tooltip" aria-hidden="true" hidden>{{ text }}</span>
+
+<span
+    class="info-tip{% if align == 'end' %} align-end{% endif %}"
+    tabindex="0"
+    role="button"
+    aria-label="{{ text }}"
+>
+    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+
+    <span class="info-tip-bubble" role="tooltip" hidden="">
+        {{ text }}
+    </span>
 </span>
+

@@ -1,0 +1,489 @@
+
+{% extends "asset/base.html" %}
+
+{% block title %}Vehicle Plan — {{ plan.week_start }} | RICE WN{% endblock %}
+
+
+{% block breadcrumb %}
+<div class="breadcrumb-block">
+    <div class="breadcrumb-card">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+
+                <li class="breadcrumb-item">
+                    <a href="{% url 'system_home' %}">
+                        <i class="fa-solid fa-house me-1"></i>
+                        RICE WN Hub
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item">
+                    <a href="{% url 'asset:dashboard' %}">
+                        <i class="fa-solid fa-boxes-stacked me-1"></i>
+                        Asset Management
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item">
+                    <a href="{% url 'asset:vehicle_plan_list' %}">
+                        <i class="fa-solid fa-calendar-week me-1"></i>
+                        Weekly Vehicle Plans
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item active" aria-current="page">
+                    Week of {{ plan.week_start }}
+                </li>
+
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="py-2">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+    <div class="d-flex flex-column flex-md-row
+                justify-content-between align-items-md-center
+                gap-3 mb-4">
+
+        <div>
+
+            <div class="d-flex align-items-center gap-2 mb-1">
+
+                <span class="text-primary fs-4">
+                    <i class="fa-solid fa-calendar-week"></i>
+                </span>
+
+                <h3 class="fw-bold mb-0">
+                    Week of {{ plan.week_start }}
+                </h3>
+
+            </div>
+
+            <p class="text-muted mb-0">
+                Manage vehicle assignments for this weekly plan.
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <a
+                href="{% url 'asset:vehicle_plan_list' %}"
+                class="btn btn-light border"
+            >
+                <i class="fa-solid fa-arrow-left me-1"></i>
+                All Plans
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY
+    ====================================================== -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body d-flex align-items-center">
+
+                    <div
+                        class="rounded-3 bg-primary-subtle
+                               text-primary p-3 me-3"
+                    >
+                        <i class="fa-solid fa-car fa-lg"></i>
+                    </div>
+
+                    <div>
+
+                        <small class="text-muted d-block">
+                            Assignments
+                        </small>
+
+                        <h4 class="fw-bold mb-0">
+                            {{ plan.assignments.count }}
+                        </h4>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body d-flex align-items-center">
+
+                    <div
+                        class="rounded-3 bg-success-subtle
+                               text-success p-3 me-3"
+                    >
+                        <i class="fa-solid fa-calendar-check fa-lg"></i>
+                    </div>
+
+                    <div>
+
+                        <small class="text-muted d-block">
+                            Planning Week
+                        </small>
+
+                        <h6 class="fw-bold mb-0">
+                            {{ plan.week_start }}
+                        </h6>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="row g-4">
+
+
+        <!-- =================================================
+             ASSIGNMENTS
+        ================================================== -->
+        <div class="col-12 col-xl-8">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-header bg-white border-bottom py-3">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-center">
+
+                        <div>
+
+                            <h5 class="fw-bold mb-1">
+                                <i class="fa-solid fa-list-check
+                                          text-primary me-2"></i>
+                                Vehicle Assignments
+                            </h5>
+
+                            <small class="text-muted">
+                                Vehicles assigned for this planning period.
+                            </small>
+
+                        </div>
+
+                        <span class="badge bg-primary-subtle text-primary">
+                            {{ plan.assignments.count }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card-body p-0">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover
+                                      align-middle mb-0">
+
+                            <thead class="table-light">
+
+                                <tr>
+
+                                    <th class="ps-4">
+                                        Vehicle
+                                    </th>
+
+                                    <th>
+                                        Driver
+                                    </th>
+
+                                    <th>
+                                        Location
+                                    </th>
+
+                                    <th>
+                                        Purpose
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                {% for item in plan.assignments.all %}
+
+                                    <tr>
+
+                                        <td class="ps-4">
+
+                                            <div class="d-flex
+                                                        align-items-center">
+
+                                                <div
+                                                    class="rounded-2
+                                                           bg-primary-subtle
+                                                           text-primary
+                                                           p-2 me-2"
+                                                >
+                                                    <i class="fa-solid fa-car"></i>
+                                                </div>
+
+                                                <div>
+
+                                                    <strong>
+                                                        {{ item.vehicle.asset_no }}
+                                                    </strong>
+
+                                                    <small class="d-block
+                                                                  text-muted">
+                                                        Vehicle
+                                                    </small>
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <div class="d-flex
+                                                        align-items-center">
+
+                                                <i class="fa-solid fa-user
+                                                          text-muted me-2"></i>
+
+                                                <span>
+                                                    {{ item.driver.get_full_name|default:item.driver.username }}
+                                                </span>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span class="text-muted">
+
+                                                <i class="fa-solid
+                                                          fa-location-dot
+                                                          me-1"></i>
+
+                                                {{ item.location|default:"—" }}
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span>
+                                                {{ item.purpose|default:"—" }}
+                                            </span>
+
+                                        </td>
+
+                                    </tr>
+
+                                {% empty %}
+
+                                    <tr>
+
+                                        <td colspan="4"
+                                            class="text-center py-5">
+
+                                            <div class="text-muted">
+
+                                                <i class="fa-solid
+                                                          fa-car-side
+                                                          fa-2x mb-3"></i>
+
+                                                <h6 class="fw-bold">
+                                                    No Assignments Yet
+                                                </h6>
+
+                                                <p class="small mb-0">
+                                                    Use the assignment form
+                                                    to add a vehicle to this
+                                                    weekly plan.
+                                                </p>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ASSIGN VEHICLE
+        ================================================== -->
+        <div class="col-12 col-xl-4">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-header bg-white border-bottom py-3">
+
+                    <div class="d-flex align-items-center">
+
+                        <div
+                            class="rounded-3 bg-primary-subtle
+                                   text-primary p-2 me-3"
+                        >
+                            <i class="fa-solid fa-car-side"></i>
+                        </div>
+
+                        <div>
+
+                            <h5 class="fw-bold mb-0">
+                                Assign Vehicle
+                            </h5>
+
+                            <small class="text-muted">
+                                Add a vehicle to this weekly plan.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card-body p-4">
+
+                    {% if form.non_field_errors %}
+
+                        <div class="alert alert-danger border-0">
+
+                            <i class="fa-solid fa-circle-exclamation
+                                      me-1"></i>
+
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <form method="post" novalidate>
+
+                        {% csrf_token %}
+
+
+                        {% for field in form %}
+
+                            <div class="mb-3">
+
+                                <label
+                                    for="{{ field.id_for_label }}"
+                                    class="form-label fw-semibold"
+                                >
+
+                                    {{ field.label }}
+
+                                    {% if field.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+
+                                </label>
+
+
+                                {{ field }}
+
+
+                                {% if field.help_text %}
+
+                                    <div class="form-text">
+                                        {{ field.help_text }}
+                                    </div>
+
+                                {% endif %}
+
+
+                                {% for error in field.errors %}
+
+                                    <div class="invalid-feedback d-block">
+
+                                        <i class="fa-solid
+                                                  fa-circle-exclamation
+                                                  me-1"></i>
+
+                                        {{ error }}
+
+                                    </div>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endfor %}
+
+
+                        <div class="pt-3 mt-3 border-top">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary w-100"
+                            >
+                                <i class="fa-solid fa-plus me-1"></i>
+                                Add Assignment
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -46,6 +46,13 @@
 
 </a>
 
+<a href="{% url 'disposal_queue' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'disposal_queue' %}active{% endif %}">
+    <span class="sidebar-nav-icon"><i class="fa-solid fa-box-open"></i></span>
+    <span class="sidebar-nav-text">Asset disposal queue</span>
+</a>
+
 
 <!-- =====================================================
      PROCUREMENT INITIATION

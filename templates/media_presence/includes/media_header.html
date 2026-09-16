@@ -1,0 +1,820 @@
+
+<div class="media-shell">
+
+    <!-- =====================================================
+         COMPACT MEDIA PRESENCE HERO
+    ====================================================== -->
+    <section class="media-hero media-command-hero mb-4">
+
+        <div class="media-hero-orb media-hero-orb-one"></div>
+        <div class="media-hero-orb media-hero-orb-two"></div>
+        <div class="media-hero-grid"></div>
+
+        <div class="position-relative z-1 w-100">
+
+            <div class="row align-items-center g-3">
+
+                <!-- BRAND / INTRO -->
+                <div class="col-lg-8">
+
+                    <div class="media-hero-content">
+
+                        <div class="media-eyebrow media-eyebrow-light">
+                            <span class="eyebrow-pulse"></span>
+                            Communication platform
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2 mb-1">
+
+                            <div class="media-hero-icon">
+                                <i class="fa-solid fa-broadcast-tower"></i>
+                            </div>
+
+                            <h1 class="h2 fw-bold mb-0">
+                                Media Presence
+                            </h1>
+
+                        </div>
+
+                        <p class="media-hero-description mb-0">
+                            Share live broadcasts and preserve the story
+                            of every project.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ACTIONS -->
+                <div class="col-lg-4">
+
+                    <div class="media-hero-actions">
+
+                        <a
+                            class="btn media-primary-action"
+                            href="{% url 'media_presence:broadcast_create' %}"
+                        >
+                            <span class="media-action-icon">
+                                <i class="fa-solid fa-tower-broadcast"></i>
+                            </span>
+
+                            <span>
+                                <strong>Broadcast</strong>
+                                <small>Go live</small>
+                            </span>
+
+                            <i class="fa-solid fa-arrow-right action-arrow"></i>
+                        </a>
+
+
+                        <a
+                            class="btn media-secondary-action"
+                            href="{% url 'media_presence:gallery_create' %}"
+                        >
+                            <span class="media-action-icon">
+                                <i class="fa-solid fa-images"></i>
+                            </span>
+
+                            <span>
+                                <strong>Gallery</strong>
+                                <small>Add project photos</small>
+                            </span>
+
+                            <i class="fa-solid fa-arrow-right action-arrow"></i>
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         SUCCESS / SYSTEM MESSAGES
+    ====================================================== -->
+    {% if messages %}
+
+        <div class="media-message-stack">
+
+            {% for message in messages %}
+
+                <div
+                    class="media-message
+                    {% if message.tags %}
+                        {{ message.tags }}
+                    {% else %}
+                        success
+                    {% endif %}"
+                    role="alert"
+                >
+
+                    <div class="media-message-icon">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+
+                    <div class="flex-grow-1">
+
+                        <strong class="d-block mb-1">
+                            Success
+                        </strong>
+
+                        <span>
+                            {{ message }}
+                        </span>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="media-message-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"
+                    >
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+<style>
+
+/* =========================================================
+   COMPACT MEDIA COMMAND HERO
+========================================================= */
+
+.media-command-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+
+    /* REDUCED */
+    min-height: 100px;
+    padding: 1.35rem 1.6rem;
+
+    display: flex;
+    align-items: center;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            125deg,
+            #075c63 0%,
+            #087f7b 48%,
+            #096b70 100%
+        );
+
+    box-shadow:
+        0 12px 32px rgba(7, 92, 99, 0.17);
+
+    animation:
+        mediaHeroEnter
+        0.65s
+        cubic-bezier(.2,.8,.2,1)
+        both;
+}
+
+
+/* =========================================================
+   BACKGROUND GRID
+========================================================= */
+
+.media-hero-grid {
+    position: absolute;
+    inset: 0;
+
+    opacity: .055;
+
+    pointer-events: none;
+
+    background-image:
+        linear-gradient(
+            rgba(255,255,255,.7) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.7) 1px,
+            transparent 1px
+        );
+
+    background-size: 34px 34px;
+
+    mask-image:
+        linear-gradient(
+            to right,
+            transparent,
+            black 25%,
+            black 75%,
+            transparent
+        );
+
+    animation: gridDrift 18s linear infinite;
+}
+
+
+/* =========================================================
+   AMBIENT ORBS
+========================================================= */
+
+.media-hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(2px);
+}
+
+.media-hero-orb-one {
+    width: 220px;
+    height: 220px;
+
+    top: -140px;
+    right: 8%;
+
+    background: rgba(255,255,255,.075);
+
+    animation: orbFloatOne 8s ease-in-out infinite;
+}
+
+.media-hero-orb-two {
+    width: 160px;
+    height: 160px;
+
+    left: 34%;
+    bottom: -125px;
+
+    background: rgba(255,255,255,.045);
+
+    animation: orbFloatTwo 10s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   HERO CONTENT
+========================================================= */
+
+.media-hero-content {
+    animation:
+        contentReveal
+        .7s
+        .08s
+        cubic-bezier(.2,.8,.2,1)
+        both;
+}
+
+.media-eyebrow-light {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+
+    margin-bottom: .55rem;
+
+    color: rgba(255,255,255,.72);
+
+    font-size: .62rem;
+    font-weight: 800;
+
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.eyebrow-pulse {
+    width: 6px;
+    height: 6px;
+
+    display: inline-block;
+
+    border-radius: 50%;
+
+    background: #8de5df;
+
+    box-shadow:
+        0 0 0 0 rgba(141,229,223,.55);
+
+    animation: eyebrowPulse 2s infinite;
+}
+
+
+/* =========================================================
+   HERO ICON
+========================================================= */
+
+.media-hero-icon {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 11px;
+
+    background: rgba(255,255,255,.09);
+
+    color: #fff;
+
+    backdrop-filter: blur(7px);
+
+    font-size: .9rem;
+
+    transition:
+        transform .3s ease,
+        background-color .3s ease;
+}
+
+.media-command-hero:hover .media-hero-icon {
+    transform: rotate(-4deg) translateY(-1px);
+    background: rgba(255,255,255,.15);
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.media-command-hero h1 {
+    color: #fff;
+    letter-spacing: -.025em;
+    font-size: 1.55rem;
+}
+
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.media-hero-description {
+    max-width: 600px;
+
+    margin-left: 48px;
+
+    color: rgba(255,255,255,.68);
+
+    font-size: .78rem;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   ACTION AREA
+========================================================= */
+
+.media-hero-actions {
+    display: flex;
+    flex-direction: column;
+
+    gap: .45rem;
+
+    animation:
+        actionsReveal
+        .7s
+        .15s
+        cubic-bezier(.2,.8,.2,1)
+        both;
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+
+.media-primary-action,
+.media-secondary-action {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    gap: .6rem;
+
+    padding: .48rem .6rem;
+
+    text-align: left;
+
+    border-radius: 10px;
+
+    transition:
+        transform .25s cubic-bezier(.2,.8,.2,1),
+        box-shadow .25s ease,
+        background-color .25s ease;
+}
+
+
+/* PRIMARY */
+
+.media-primary-action {
+    border: 1px solid rgba(255,255,255,.75);
+
+    background: #fff;
+
+    color: #18323a;
+}
+
+.media-primary-action:hover {
+    transform: translateX(-3px);
+
+    background: #fff;
+    color: #075c63;
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.14);
+}
+
+
+/* SECONDARY */
+
+.media-secondary-action {
+    border: 1px solid rgba(255,255,255,.16);
+
+    background: rgba(255,255,255,.075);
+
+    color: #fff;
+
+    backdrop-filter: blur(7px);
+}
+
+.media-secondary-action:hover {
+    transform: translateX(-3px);
+
+    background: rgba(255,255,255,.14);
+
+    color: #fff;
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.10);
+}
+
+
+/* =========================================================
+   ACTION ICON
+========================================================= */
+
+.media-action-icon {
+    width: 31px;
+    height: 31px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 8px;
+
+    background: rgba(8,127,123,.09);
+
+    font-size: .75rem;
+}
+
+.media-secondary-action .media-action-icon {
+    background: rgba(255,255,255,.09);
+}
+
+
+/* =========================================================
+   ACTION TEXT
+========================================================= */
+
+.media-hero-actions strong {
+    display: block;
+
+    font-size: .76rem;
+    line-height: 1.2;
+}
+
+.media-hero-actions small {
+    display: block;
+
+    margin-top: 1px;
+
+    opacity: .6;
+
+    font-size: .61rem;
+}
+
+
+/* =========================================================
+   ARROW
+========================================================= */
+
+.action-arrow {
+    margin-left: auto;
+
+    font-size: .65rem;
+
+    opacity: .45;
+
+    transition:
+        transform .2s ease,
+        opacity .2s ease;
+}
+
+.media-primary-action:hover .action-arrow,
+.media-secondary-action:hover .action-arrow {
+    opacity: 1;
+    transform: translateX(3px);
+}
+
+
+/* =========================================================
+   MESSAGES
+========================================================= */
+
+.media-message-stack {
+    display: flex;
+    flex-direction: column;
+
+    gap: .5rem;
+
+    margin-bottom: 1rem;
+}
+
+.media-message {
+    display: flex;
+    align-items: center;
+
+    gap: .65rem;
+
+    padding: .65rem .8rem;
+
+    border: 1px solid rgba(25,135,84,.13);
+
+    border-radius: 10px;
+
+    background: rgba(25,135,84,.055);
+
+    color: #31514c;
+
+    box-shadow:
+        0 5px 16px rgba(20,40,50,.04);
+
+    animation:
+        messageEnter
+        .45s
+        cubic-bezier(.2,.8,.2,1)
+        both;
+}
+
+.media-message-icon {
+    width: 29px;
+    height: 29px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 8px;
+
+    background: rgba(25,135,84,.09);
+
+    color: #198754;
+
+    font-size: .75rem;
+}
+
+.media-message strong {
+    color: #18323a;
+    font-size: .72rem;
+}
+
+.media-message span {
+    font-size: .76rem;
+}
+
+.media-message-close {
+    width: 27px;
+    height: 27px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border: 0;
+    border-radius: 7px;
+
+    background: transparent;
+
+    color: #74847f;
+
+    transition:
+        background-color .2s ease,
+        color .2s ease;
+}
+
+.media-message-close:hover {
+    background: rgba(0,0,0,.05);
+    color: #18323a;
+}
+
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes mediaHeroEnter {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes contentReveal {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes actionsReveal {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes messageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes eyebrowPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(141,229,223,.55);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(141,229,223,0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(141,229,223,0);
+    }
+}
+
+@keyframes orbFloatOne {
+    0%, 100% {
+        transform: translate(0,0);
+    }
+
+    50% {
+        transform: translate(-18px,15px);
+    }
+}
+
+@keyframes orbFloatTwo {
+    0%, 100% {
+        transform: translate(0,0);
+    }
+
+    50% {
+        transform: translate(18px,-14px);
+    }
+}
+
+@keyframes gridDrift {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(34px);
+    }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .media-command-hero,
+    .media-hero-grid,
+    .media-hero-orb,
+    .media-hero-content,
+    .media-hero-actions,
+    .media-message,
+    .eyebrow-pulse {
+        animation: none !important;
+    }
+
+    .media-primary-action,
+    .media-secondary-action,
+    .media-hero-icon,
+    .action-arrow,
+    .media-message-close {
+        transition: none !important;
+    }
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 991.98px) {
+
+    .media-command-hero {
+        min-height: auto;
+        padding: 1.25rem 1.4rem;
+    }
+
+    .media-hero-description {
+        margin-left: 0;
+    }
+
+    .media-hero-actions {
+        flex-direction: row;
+    }
+
+    .media-primary-action,
+    .media-secondary-action {
+        flex: 1;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 575.98px) {
+
+    .media-command-hero {
+        padding: 1.15rem;
+        border-radius: 15px;
+    }
+
+    .media-command-hero h1 {
+        font-size: 1.3rem;
+    }
+
+    .media-hero-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+    }
+
+    .media-hero-description {
+        font-size: .74rem;
+    }
+
+    .media-hero-actions {
+        flex-direction: column;
+    }
+
+    .media-primary-action,
+    .media-secondary-action {
+        padding: .5rem .5rem;
+    }
+
+    .media-action-icon {
+        width: 29px;
+        height: 29px;
+    }
+}
+
+</style>

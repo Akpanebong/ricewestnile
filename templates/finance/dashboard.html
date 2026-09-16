@@ -1,250 +1,851 @@
 {% extends "finance/base.html" %}
 {% load humanize %}
+
 {% block title %}Accounting Dashboard{% endblock %}
+
 {% block content %}
 <main class="ttr-wrapper">
-<div class="container-fluid py-4">
+    <div class="container-fluid py-4 accounting-dashboard">
 
-    <!-- HEADER -->
-    <div class="page-header">
-        <div>
-            <span class="page-header-eyebrow">Accounting</span>
-            <h1 class="page-header-title">
-                Accounting Dashboard
-                {% include "includes/info_tip.html" with text="An overview of fund requisitions, administrative expenses, and retirements — everything raised, approved, and accounted for moves through this workflow before it lands in the Financial Ledger." %}
-            </h1>
-            <p class="page-header-subtitle">Procurement &amp; Expense Workflow Overview</p>
-        </div>
+        <!-- =========================================================
+             PAGE HEADER
+        ========================================================== -->
+        <div class="page-header mb-4">
+            <div class="page-header-copy">
+                <span class="page-header-eyebrow">
+                    <i class="fa-solid fa-calculator me-1"></i>
+                    Accounting
+                </span>
 
-        <div class="page-header-actions">
-            <a href="{% url 'finance:create_cash_req' %}" class="btn btn-primary shadow-sm">
-                + New Requisition
-            </a>
-        </div>
-    </div>
+                <h1 class="page-header-title">
+                    Accounting Dashboard
+                    {% include "includes/info_tip.html" with text="An overview of fund requisitions, administrative expenses, and retirements — everything raised, approved, and accounted for moves through this workflow before it lands in the Financial Ledger." %}
+                </h1>
 
-    <!-- KPI CARDS -->
-    <div class="row g-3 mb-4 stagger-grid">
-
-        <div class="col-md-3">
-            <a href="{% url 'finance:list_cash_req' %}" class="kpi-card interactive-card">
-                <div class="kpi-card-top">
-                    <span class="metric-icon-tint is-pending"><i class="fa-solid fa-hourglass-half"></i></span>
-                    <span class="kpi-card-sub">{{ total_pending_amount|money:request }}</span>
-                </div>
-                <p class="kpi-card-value" data-counter="{{ pending_requisitions.count|default:0 }}">{{ pending_requisitions.count }}</p>
-                <p class="kpi-card-label">Pending Requests
-                    {% include "includes/info_tip.html" with text="Fund requisitions submitted but not yet fully approved through the Finance / Operations / ED workflow. Click to view the queue." %}
+                <p class="page-header-subtitle mb-0">
+                    Procurement &amp; Expense Workflow Overview
                 </p>
-            </a>
-        </div>
+            </div>
 
-        <div class="col-md-3">
-            <a href="{% url 'finance:list_cash_req' %}" class="kpi-card interactive-card">
-                <div class="kpi-card-top">
-                    <span class="metric-icon-tint is-success"><i class="fa-solid fa-circle-check"></i></span>
-                    <span class="kpi-card-sub">{{ total_approved_amount|money:request }}</span>
-                </div>
-                <p class="kpi-card-value" data-counter="{{ approved_requisitions.count|default:0 }}">{{ approved_requisitions.count }}</p>
-                <p class="kpi-card-label">Approved Requests
-                    {% include "includes/info_tip.html" with text="Fully approved requisitions. Approval automatically records a fund advance in the Financial Ledger." %}
-                </p>
-            </a>
-        </div>
-
-        <div class="col-md-3">
-            <div class="kpi-card interactive-card">
-                <div class="kpi-card-top">
-                    <span class="metric-icon-tint is-info"><i class="fa-solid fa-file-invoice-dollar"></i></span>
-                    <span class="kpi-card-sub">{{ total_admin_expenses|money:request }}</span>
-                </div>
-                <p class="kpi-card-value" data-counter="{{ admin_expenses.count|default:0 }}">{{ admin_expenses.count }}</p>
-                <p class="kpi-card-label">Admin Expenses
-                    {% include "includes/info_tip.html" with text="Administrative expense notes raised against an approved requisition, for costs that are not tracked as line-item purchases." align="end" %}
-                </p>
+            <div class="page-header-actions">
+                <a href="{% url 'finance:create_cash_req' %}"
+                   class="btn btn-primary shadow-sm">
+                    <i class="fa-solid fa-plus me-2"></i>
+                    New Requisition
+                </a>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="kpi-card interactive-card">
-                <div class="kpi-card-top">
-                    <span class="metric-icon-tint is-neutral"><i class="fa-solid fa-book"></i></span>
-                </div>
-                <p class="kpi-card-value" data-counter="{{ accountings.count|default:0 }}">{{ accountings.count }}</p>
-                <p class="kpi-card-label">Accounting Records
-                    {% include "includes/info_tip.html" with text="Fund retirements — the record of how a released advance was actually received and spent, reconciled against the original requisition." align="end" %}
-                </p>
+
+        <!-- =========================================================
+             KPI CARDS
+        ========================================================== -->
+        <div class="row g-3 mb-4 stagger-grid">
+
+            <!-- Pending -->
+            <div class="col-12 col-sm-6 col-xl-3">
+                <a href="{% url 'finance:list_cash_req' %}"
+                   class="kpi-card interactive-card h-100 text-decoration-none">
+
+                    <div class="kpi-card-top">
+                        <span class="metric-icon-tint is-pending">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </span>
+
+                        <span class="kpi-card-sub">
+                            {{ total_pending_amount|money:request }}
+                        </span>
+                    </div>
+
+                    <p class="kpi-card-value"
+                       data-counter="{{ pending_requisitions.count|default:0 }}">
+                        {{ pending_requisitions.count|default:0 }}
+                    </p>
+
+                    <p class="kpi-card-label mb-0">
+                        Pending Requests
+                        {% include "includes/info_tip.html" with text="Fund requisitions submitted but not yet fully approved through the Finance / Operations / ED workflow. Click to view the queue." %}
+                    </p>
+                </a>
             </div>
+
+
+            <!-- Approved -->
+            <div class="col-12 col-sm-6 col-xl-3">
+                <a href="{% url 'finance:list_cash_req' %}"
+                   class="kpi-card interactive-card h-100 text-decoration-none">
+
+                    <div class="kpi-card-top">
+                        <span class="metric-icon-tint is-success">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </span>
+
+                        <span class="kpi-card-sub">
+                            {{ total_approved_amount|money:request }}
+                        </span>
+                    </div>
+
+                    <p class="kpi-card-value"
+                       data-counter="{{ approved_requisitions.count|default:0 }}">
+                        {{ approved_requisitions.count|default:0 }}
+                    </p>
+
+                    <p class="kpi-card-label mb-0">
+                        Approved Requests
+                        {% include "includes/info_tip.html" with text="Fully approved requisitions. Approval automatically records a fund advance in the Financial Ledger." %}
+                    </p>
+                </a>
+            </div>
+
+
+            <!-- Admin Expenses -->
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="kpi-card interactive-card h-100">
+
+                    <div class="kpi-card-top">
+                        <span class="metric-icon-tint is-info">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </span>
+
+                        <span class="kpi-card-sub">
+                            {{ total_admin_expenses|money:request }}
+                        </span>
+                    </div>
+
+                    <p class="kpi-card-value"
+                       data-counter="{{ admin_expenses.count|default:0 }}">
+                        {{ admin_expenses.count|default:0 }}
+                    </p>
+
+                    <p class="kpi-card-label mb-0">
+                        Admin Expenses
+                        {% include "includes/info_tip.html" with text="Administrative expense notes raised against an approved requisition, for costs that are not tracked as line-item purchases." align="end" %}
+                    </p>
+                </div>
+            </div>
+
+
+            <!-- Accounting Records -->
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="kpi-card interactive-card h-100">
+
+                    <div class="kpi-card-top">
+                        <span class="metric-icon-tint is-neutral">
+                            <i class="fa-solid fa-book-open"></i>
+                        </span>
+
+                        <span class="kpi-card-sub">
+                            Ledger
+                        </span>
+                    </div>
+
+                    <p class="kpi-card-value"
+                       data-counter="{{ accountings.count|default:0 }}">
+                        {{ accountings.count|default:0 }}
+                    </p>
+
+                    <p class="kpi-card-label mb-0">
+                        Accounting Records
+                        {% include "includes/info_tip.html" with text="Fund retirements — the record of how a released advance was actually received and spent, reconciled against the original requisition." align="end" %}
+                    </p>
+                </div>
+            </div>
+
         </div>
 
-    </div>
 
-    <!-- PENDING REQUISITIONS -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white fw-bold">Pending Cash Requisitions</div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Donor Code</th>
-                        <th>Purpose</th>
-                        <th>Status</th>
-                        <th>Created By</th>
-                        <th>Date</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for req in pending_requisitions %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td><a href="{% url 'finance:requisition_detail' req.id req.slug %}">
-                            {{ req.donor_code }}</a></td>
-                        <td>{{ req.purpose|truncatechars:40 }}</td>
-                        <td>
-                            <span class="badge
-                                {% if req.status == 'submitted' %}bg-secondary
-                                {% elif req.status == 'finance_review' %}bg-warning text-dark
-                                {% elif req.status == 'operations_review' %}bg-info text-dark
-                                {% else %}bg-light text-dark
-                                {% endif %}">
-                                {{ req.get_status_display }}
-                            </span>
-                        </td>
-                        <td>{{ req.created_by }}</td>
-                        <td>{{ req.created_at|date:"M d, Y" }}</td>
-                        <td class="text-end">
-                            <a href="{% url 'finance:requisition_detail' req.id req.slug %}" class="btn btn-sm btn-success">
-                                Process
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-3">No pending requisitions</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+        <!-- =========================================================
+             PENDING REQUISITIONS
+        ========================================================== -->
+        <section class="dashboard-section card shadow-sm border-0 mb-4">
 
-    <!-- APPROVED REQUISITIONS -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white fw-bold">Approved Cash Requisitions</div>
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Donor Code</th>
-                        <th>Purpose</th>
-                        <th>Total</th>
-                        <th>Approved By</th>
-                        <th>Date</th>
-                        <th class="text-end">PDF</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for req in approved_requisitions %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td><a href="{% url 'finance:requisition_detail' req.id req.slug %}">{{ req.donor_code }}</a></td>
-                        <td>{{ req.purpose|truncatechars:40 }}</td>
-                        <td class="fw-bold">{{ req.total_amount|money:request }}</td>
-                        <td>{{ req.approved_by }}</td>
-                        <td>{{ req.date|date:"M d, Y" }}</td>
-                        <td class="text-end">
-                            <a href="{% url 'finance:cash_req_pdf' req.id req.slug %}" class="btn btn-sm btn-outline-dark">
-                                Download
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-3">No approved requisitions</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+            <div class="card-header dashboard-card-header">
+                <div>
+                    <span class="section-kicker">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                        Workflow Queue
+                    </span>
 
-    <!-- ADMIN EXPENSES -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white fw-bold">Administrative Expenses</div>
-        <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Department</th>
-                        <th>Project</th>
-                        <th>Purpose</th>
-                        <th>Budget</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for exp in admin_expenses %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td><a href="{% url 'finance:admin_expense_detail' exp.id exp.slug %}"> {{ exp.department }}</a></td>
-                        <td>{{ exp.project|default:"-" }}</td>
-                        <td>{{ exp.purpose|truncatechars:50 }}</td>
-                        <td>{{ exp.proposed_budget|money:request }}</td>
-                        <td>{{ exp.get_status_display }}</td>
-                        <td>{{ exp.created_at|date:"M d, Y" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-3">No admin expenses</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+                    <h2 class="section-title mb-0">
+                        Pending Cash Requisitions
+                    </h2>
+                </div>
 
-    <!-- ACCOUNTING RECORDS -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white fw-bold">Accounting Records</div>
-        <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Reference</th>
-                        <th>Linked Requisition</th>
-                        <th>Amount Received</th>
-                        <th>Amount Spent</th>
-                        <th>Balance</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for acc in accountings %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td><a href="{% url 'finance:accounting_detail' acc.id  acc.slug %}"> {{ acc.reference }}</a></td>
-                        <td>{% if acc.requisition %}{{ acc.requisition.donor_code }}{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
-                        <td class="text-primary fw-bold">{{ acc.total_received|money:request }}</td>
-                        <td class="text-danger fw-bold">{{ acc.total_spent|money:request }}</td>
-                            <td class="text-success fw-bold">{{ acc.total_balance|money:request }}</td>
-                        <td>{{ acc.created_at|date:"M d, Y" }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-3">No accounting records</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+                <a href="{% url 'finance:list_cash_req' %}"
+                   class="btn btn-sm btn-light border">
+                    View All
+                    <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
 
-</div>
+            <div class="table-responsive">
+                <table class="table enterprise-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Donor Code</th>
+                            <th>Purpose</th>
+                            <th>Status</th>
+                            <th>Created By</th>
+                            <th>Date</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for req in pending_requisitions %}
+                        <tr>
+                            <td class="text-muted fw-semibold">
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td>
+                                <a href="{% url 'finance:requisition_detail' req.id req.slug %}"
+                                   class="table-primary-link">
+                                    {{ req.donor_code }}
+                                </a>
+                            </td>
+
+                            <td>
+                                <span class="text-body">
+                                    {{ req.purpose|truncatechars:40 }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="status-pill
+                                    {% if req.status == 'submitted' %}
+                                        is-secondary
+                                    {% elif req.status == 'finance_review' %}
+                                        is-warning
+                                    {% elif req.status == 'operations_review' %}
+                                        is-info
+                                    {% else %}
+                                        is-neutral
+                                    {% endif %}">
+                                    <span class="status-dot"></span>
+                                    {{ req.get_status_display }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="small fw-medium">
+                                    {{ req.created_by }}
+                                </span>
+                            </td>
+
+                            <td class="text-muted small">
+                                {{ req.created_at|date:"M d, Y" }}
+                            </td>
+
+                            <td class="text-end">
+                                <a href="{% url 'finance:requisition_detail' req.id req.slug %}"
+                                   class="btn btn-sm btn-success">
+                                    <i class="fa-solid fa-arrow-right me-1"></i>
+                                    Process
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="dashboard-empty-state">
+                                    <span class="empty-icon">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </span>
+                                    <strong>No pending requisitions</strong>
+                                    <span>All current cash requisitions have moved through the queue.</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <!-- =========================================================
+             APPROVED REQUISITIONS
+        ========================================================== -->
+        <section class="dashboard-section card shadow-sm border-0 mb-4">
+
+            <div class="card-header dashboard-card-header">
+                <div>
+                    <span class="section-kicker">
+                        <i class="fa-solid fa-circle-check"></i>
+                        Approved Funds
+                    </span>
+
+                    <h2 class="section-title mb-0">
+                        Approved Cash Requisitions
+                    </h2>
+                </div>
+
+                <span class="section-count">
+                    {{ approved_requisitions.count|default:0 }}
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table enterprise-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Donor Code</th>
+                            <th>Purpose</th>
+                            <th>Total</th>
+                            <th>Approved By</th>
+                            <th>Date</th>
+                            <th class="text-end">PDF</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for req in approved_requisitions %}
+                        <tr>
+                            <td class="text-muted fw-semibold">
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td>
+                                <a href="{% url 'finance:requisition_detail' req.id req.slug %}"
+                                   class="table-primary-link">
+                                    {{ req.donor_code }}
+                                </a>
+                            </td>
+
+                            <td>
+                                {{ req.purpose|truncatechars:40 }}
+                            </td>
+
+                            <td class="fw-bold text-nowrap">
+                                {{ req.total_amount|money:request }}
+                            </td>
+
+                            <td>
+                                {{ req.approved_by }}
+                            </td>
+
+                            <td class="text-muted small">
+                                {{ req.date|date:"M d, Y" }}
+                            </td>
+
+                            <td class="text-end">
+                                <a href="{% url 'finance:cash_req_pdf' req.id req.slug %}"
+                                   class="btn btn-sm btn-outline-dark">
+                                    <i class="fa-solid fa-file-pdf me-1"></i>
+                                    PDF
+                                </a>
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="dashboard-empty-state">
+                                    <span class="empty-icon">
+                                        <i class="fa-solid fa-file-circle-xmark"></i>
+                                    </span>
+                                    <strong>No approved requisitions</strong>
+                                    <span>Approved cash requisitions will appear here.</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <!-- =========================================================
+             ADMINISTRATIVE EXPENSES
+        ========================================================== -->
+        <section class="dashboard-section card shadow-sm border-0 mb-4">
+
+            <div class="card-header dashboard-card-header">
+                <div>
+                    <span class="section-kicker">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        Expenses
+                    </span>
+
+                    <h2 class="section-title mb-0">
+                        Administrative Expenses
+                    </h2>
+                </div>
+
+                <span class="section-count">
+                    {{ admin_expenses.count|default:0 }}
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table enterprise-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Department</th>
+                            <th>Project</th>
+                            <th>Purpose</th>
+                            <th>Budget</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for exp in admin_expenses %}
+                        <tr>
+                            <td class="text-muted fw-semibold">
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td>
+                                <a href="{% url 'finance:admin_expense_detail' exp.id exp.slug %}"
+                                   class="table-primary-link">
+                                    {{ exp.department }}
+                                </a>
+                            </td>
+
+                            <td>
+                                {{ exp.project|default:"-" }}
+                            </td>
+
+                            <td>
+                                {{ exp.purpose|truncatechars:50 }}
+                            </td>
+
+                            <td class="fw-semibold text-nowrap">
+                                {{ exp.proposed_budget|money:request }}
+                            </td>
+
+                            <td>
+                                <span class="status-pill is-neutral">
+                                    <span class="status-dot"></span>
+                                    {{ exp.get_status_display }}
+                                </span>
+                            </td>
+
+                            <td class="text-muted small">
+                                {{ exp.created_at|date:"M d, Y" }}
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="dashboard-empty-state">
+                                    <span class="empty-icon">
+                                        <i class="fa-solid fa-receipt"></i>
+                                    </span>
+                                    <strong>No admin expenses</strong>
+                                    <span>Administrative expense records will appear here.</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <!-- =========================================================
+             ACCOUNTING RECORDS
+        ========================================================== -->
+        <section class="dashboard-section card shadow-sm border-0 mb-4">
+
+            <div class="card-header dashboard-card-header">
+                <div>
+                    <span class="section-kicker">
+                        <i class="fa-solid fa-book-open"></i>
+                        Financial Records
+                    </span>
+
+                    <h2 class="section-title mb-0">
+                        Accounting Records
+                    </h2>
+                </div>
+
+                <span class="section-count">
+                    {{ accountings.count|default:0 }}
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table enterprise-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Reference</th>
+                            <th>Linked Requisition</th>
+                            <th>Amount Received</th>
+                            <th>Amount Spent</th>
+                            <th>Balance</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for acc in accountings %}
+                        <tr>
+                            <td class="text-muted fw-semibold">
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td>
+                                <a href="{% url 'finance:accounting_detail' acc.id acc.slug %}"
+                                   class="table-primary-link">
+                                    {{ acc.reference }}
+                                </a>
+                            </td>
+
+                            <td>
+                                {% if acc.requisition %}
+                                    <span class="fw-medium">
+                                        {{ acc.requisition.donor_code }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-primary fw-bold text-nowrap">
+                                {{ acc.total_received|money:request }}
+                            </td>
+
+                            <td class="text-danger fw-bold text-nowrap">
+                                {{ acc.total_spent|money:request }}
+                            </td>
+
+                            <td class="text-success fw-bold text-nowrap">
+                                {{ acc.total_balance|money:request }}
+                            </td>
+
+                            <td class="text-muted small">
+                                {{ acc.created_at|date:"M d, Y" }}
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="dashboard-empty-state">
+                                    <span class="empty-icon">
+                                        <i class="fa-solid fa-book-open"></i>
+                                    </span>
+                                    <strong>No accounting records</strong>
+                                    <span>Fund retirement records will appear here once created.</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
 </main>
+
+
+<!-- =============================================================
+     PAGE-SPECIFIC STYLES
+============================================================== -->
+<style>
+    .accounting-dashboard {
+        --accounting-radius: 14px;
+    }
+
+    /* ---------------------------------------------------------
+       HEADER
+    --------------------------------------------------------- */
+    .accounting-dashboard .page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1.5rem;
+    }
+
+    .accounting-dashboard .page-header-copy {
+        min-width: 0;
+    }
+
+    .accounting-dashboard .page-header-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        margin-bottom: .35rem;
+        color: var(--enterprise-accent);
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .accounting-dashboard .page-header-title {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .45rem;
+        margin: 0;
+    }
+
+    .accounting-dashboard .page-header-subtitle {
+        margin-top: .35rem;
+    }
+
+    /* ---------------------------------------------------------
+       KPI
+    --------------------------------------------------------- */
+    .accounting-dashboard .kpi-card {
+        min-height: 156px;
+        border-radius: var(--accounting-radius);
+    }
+
+    .accounting-dashboard .kpi-card-top {
+        min-width: 0;
+    }
+
+    .accounting-dashboard .kpi-card-sub {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70%;
+    }
+
+    /* ---------------------------------------------------------
+       DASHBOARD SECTIONS
+    --------------------------------------------------------- */
+    .accounting-dashboard .dashboard-section {
+        overflow: hidden;
+        border-radius: var(--accounting-radius);
+    }
+
+    .accounting-dashboard .dashboard-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.15rem;
+        background: var(--surface, #fff);
+        border-bottom: 1px solid var(--border-subtle, #e9ecef);
+    }
+
+    .accounting-dashboard .section-kicker {
+        display: block;
+        margin-bottom: .2rem;
+        color: var(--enterprise-muted);
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .accounting-dashboard .section-kicker i {
+        margin-right: .3rem;
+        color: var(--enterprise-accent);
+    }
+
+    .accounting-dashboard .section-title {
+        font-size: 1rem;
+        font-weight: 750;
+    }
+
+    .accounting-dashboard .section-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 28px;
+        padding: 0 .55rem;
+        border: 1px solid var(--enterprise-border);
+        border-radius: 999px;
+        background: var(--enterprise-accent-soft);
+        color: var(--enterprise-accent);
+        font-size: .75rem;
+        font-weight: 800;
+    }
+
+    /* ---------------------------------------------------------
+       TABLE
+    --------------------------------------------------------- */
+    .accounting-dashboard .enterprise-table {
+        min-width: 850px;
+        font-size: .86rem;
+    }
+
+    .accounting-dashboard .enterprise-table thead th {
+        padding: .72rem .85rem;
+        border-bottom: 1px solid var(--border-subtle, #e9ecef);
+        background: var(--surface-muted, #f8f9fa);
+        color: var(--enterprise-muted);
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .accounting-dashboard .enterprise-table tbody td {
+        padding: .78rem .85rem;
+        border-color: var(--border-subtle, #edf0f2);
+    }
+
+    .accounting-dashboard .enterprise-table tbody tr {
+        transition: background .16s ease;
+    }
+
+    .accounting-dashboard .enterprise-table tbody tr:hover {
+        background: var(--enterprise-accent-soft);
+    }
+
+    .accounting-dashboard .table-primary-link {
+        color: var(--enterprise-accent);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .accounting-dashboard .table-primary-link:hover {
+        text-decoration: underline;
+    }
+
+    /* ---------------------------------------------------------
+       STATUS PILLS
+    --------------------------------------------------------- */
+    .accounting-dashboard .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .3rem .55rem;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        font-size: .68rem;
+        font-weight: 750;
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+
+    .accounting-dashboard .status-dot {
+        width: 6px;
+        height: 6px;
+        flex: 0 0 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .accounting-dashboard .status-pill.is-secondary {
+        background: rgba(108, 117, 125, .10);
+        border-color: rgba(108, 117, 125, .18);
+        color: #6c757d;
+    }
+
+    .accounting-dashboard .status-pill.is-warning {
+        background: rgba(255, 193, 7, .12);
+        border-color: rgba(255, 193, 7, .22);
+        color: #9a7200;
+    }
+
+    .accounting-dashboard .status-pill.is-info {
+        background: rgba(13, 202, 240, .11);
+        border-color: rgba(13, 202, 240, .20);
+        color: #087990;
+    }
+
+    .accounting-dashboard .status-pill.is-neutral {
+        background: var(--surface-muted, #f8f9fa);
+        border-color: var(--border-subtle, #e9ecef);
+        color: var(--enterprise-muted);
+    }
+
+    /* ---------------------------------------------------------
+       EMPTY STATES
+    --------------------------------------------------------- */
+    .accounting-dashboard .dashboard-empty-state {
+        display: flex;
+        min-height: 105px;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: .15rem;
+        padding: 1.5rem;
+        text-align: center;
+        color: var(--enterprise-muted);
+    }
+
+    .accounting-dashboard .dashboard-empty-state .empty-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        margin-bottom: .35rem;
+        border-radius: 50%;
+        background: var(--enterprise-accent-soft);
+        color: var(--enterprise-accent);
+    }
+
+    .accounting-dashboard .dashboard-empty-state strong {
+        color: var(--enterprise-text);
+        font-size: .86rem;
+    }
+
+    .accounting-dashboard .dashboard-empty-state span:last-child {
+        font-size: .75rem;
+    }
+
+    /* ---------------------------------------------------------
+       RESPONSIVE
+    --------------------------------------------------------- */
+    @media (max-width: 767.98px) {
+        .accounting-dashboard {
+            padding-top: 1rem !important;
+        }
+
+        .accounting-dashboard .page-header {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .accounting-dashboard .page-header-actions .btn {
+            width: 100%;
+        }
+
+        .accounting-dashboard .dashboard-card-header {
+            align-items: flex-start;
+        }
+
+        .accounting-dashboard .dashboard-card-header > .btn {
+            flex-shrink: 0;
+        }
+
+        .accounting-dashboard .enterprise-table {
+            min-width: 780px;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .accounting-dashboard .dashboard-card-header {
+            flex-direction: column;
+        }
+
+        .accounting-dashboard .dashboard-card-header > .btn {
+            width: 100%;
+        }
+
+        .accounting-dashboard .kpi-card {
+            min-height: 145px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .accounting-dashboard .enterprise-table tbody tr {
+            transition: none;
+        }
+    }
+</style>
 {% endblock %}

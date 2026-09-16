@@ -1,0 +1,1223 @@
+
+{% extends "finance/finance_tools_base.html" %}
+
+{% block title %}Budget | Finance{% endblock %}
+
+{% block finance_content %}
+
+<style>
+    /* =========================================================
+       BUDGET FORM — ENTERPRISE FINANCE
+    ========================================================= */
+
+    .budget-form-page {
+        animation: budgetFormIn .4s ease both;
+    }
+
+    /* ---------------------------------------------------------
+       PAGE HEADER
+    --------------------------------------------------------- */
+
+    .budget-form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .budget-form-eyebrow {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        margin-bottom: .25rem;
+        color: #198754;
+        font-size: .64rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .budget-form-eyebrow i {
+        font-size: .58rem;
+    }
+
+    .budget-form-title {
+        margin: 0;
+        color: #18323a;
+        font-size: 1.3rem;
+        font-weight: 750;
+        letter-spacing: -.02em;
+    }
+
+    .budget-form-subtitle {
+        margin: .25rem 0 0;
+        color: #7a8580;
+        font-size: .73rem;
+    }
+
+
+    /* ---------------------------------------------------------
+       CARDS
+    --------------------------------------------------------- */
+
+    .budget-form-card {
+        overflow: hidden;
+        border: 1px solid #e7ece9 !important;
+        border-radius: 15px !important;
+        background: #fff;
+        box-shadow: 0 5px 20px rgba(20, 40, 30, .045);
+    }
+
+    .budget-form-card .card-body {
+        padding: 1rem !important;
+    }
+
+    .budget-section-header {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        margin-bottom: .9rem;
+    }
+
+    .budget-section-icon {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(8, 127, 123, .09);
+        color: #087f7b;
+        font-size: .72rem;
+    }
+
+    .budget-section-title {
+        margin: 0;
+        color: #263a33;
+        font-size: .8rem;
+        font-weight: 750;
+    }
+
+
+    /* ---------------------------------------------------------
+       MAIN FORM
+    --------------------------------------------------------- */
+
+    .budget-main-form .form-field {
+        margin-bottom: .85rem;
+    }
+
+    .budget-main-form .form-label {
+        margin-bottom: .35rem;
+        color: #46534d;
+        font-size: .7rem;
+        font-weight: 700;
+    }
+
+    .budget-main-form input,
+    .budget-main-form select,
+    .budget-main-form textarea {
+        width: 100%;
+        border: 1px solid #dfe6e2;
+        border-radius: 8px;
+        padding: .48rem .65rem;
+        color: #34413b;
+        font-size: .75rem;
+        background: #fff;
+        box-shadow: none;
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .budget-main-form textarea {
+        min-height: 75px;
+        resize: vertical;
+    }
+
+    .budget-main-form input:focus,
+    .budget-main-form select:focus,
+    .budget-main-form textarea:focus {
+        border-color: #087f7b;
+        box-shadow: 0 0 0 .16rem rgba(8, 127, 123, .1);
+        outline: none;
+    }
+
+    .budget-main-form .form-help {
+        margin-top: .25rem;
+        color: #89938e;
+        font-size: .64rem;
+    }
+
+    .budget-field-error {
+        margin-top: .25rem;
+        color: #b42318;
+        font-size: .65rem;
+    }
+
+
+    /* ---------------------------------------------------------
+       FORMSET HEADER
+    --------------------------------------------------------- */
+
+    .budget-lines-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .85rem 1rem;
+        border-bottom: 1px solid #e7ece9;
+        background: #fbfcfc;
+    }
+
+    .budget-lines-heading {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    .budget-lines-heading-icon {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(8, 127, 123, .09);
+        color: #087f7b;
+        font-size: .72rem;
+    }
+
+    .budget-lines-title {
+        margin: 0;
+        color: #263a33;
+        font-size: .8rem;
+        font-weight: 750;
+    }
+
+    .budget-lines-help {
+        display: block;
+        margin-top: .12rem;
+        color: #89938e;
+        font-size: .64rem;
+    }
+
+    .add-line-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        border-radius: 8px;
+        padding: .42rem .65rem;
+        font-size: .68rem;
+        font-weight: 700;
+        white-space: nowrap;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .add-line-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 13px rgba(13, 110, 253, .1);
+    }
+
+
+    /* ---------------------------------------------------------
+       LINE TABLE
+    --------------------------------------------------------- */
+
+    .budget-lines-table {
+        min-width: 1180px;
+        margin: 0;
+    }
+
+    .budget-lines-table thead th {
+        padding: .65rem .55rem;
+        border-bottom: 1px solid #e5ebe8;
+        background: #f8faf9;
+        color: #68756f;
+        font-size: .59rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .budget-lines-table tbody tr {
+        animation: lineIn .3s ease both;
+        transition: background-color .2s ease;
+    }
+
+    .budget-lines-table tbody tr:hover {
+        background: #fbfdfc;
+    }
+
+    .budget-lines-table tbody td {
+        padding: .5rem .45rem;
+        border-color: #edf1ef;
+        vertical-align: middle;
+    }
+
+
+    /* ---------------------------------------------------------
+       FORMSET CONTROLS
+    --------------------------------------------------------- */
+
+    .budget-lines-table input,
+    .budget-lines-table select,
+    .budget-lines-table textarea {
+        min-width: 65px;
+        border: 1px solid #dfe6e2;
+        border-radius: 7px;
+        padding: .4rem .48rem;
+        color: #34413b;
+        font-size: .68rem;
+        background: #fff;
+        box-shadow: none;
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .budget-lines-table textarea {
+        min-width: 135px;
+        min-height: 48px;
+        resize: vertical;
+    }
+
+    .budget-lines-table input:focus,
+    .budget-lines-table select:focus,
+    .budget-lines-table textarea:focus {
+        border-color: #087f7b;
+        box-shadow: 0 0 0 .14rem rgba(8, 127, 123, .08);
+        outline: none;
+    }
+
+    .budget-lines-table .line-total {
+        min-width: 105px;
+        border-color: #dce8e2;
+        background: #f5f9f7;
+        color: #18323a;
+        font-weight: 800;
+        text-align: right;
+    }
+
+    .budget-lines-table .field-error {
+        margin-top: .2rem;
+        color: #b42318;
+        font-size: .58rem;
+        line-height: 1.3;
+    }
+
+
+    /* ---------------------------------------------------------
+       DELETE / REMOVE
+    --------------------------------------------------------- */
+
+    .line-actions {
+        min-width: 42px;
+        text-align: center;
+    }
+
+    .remove-budget-line {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border-radius: 7px;
+        font-size: .68rem;
+        transition:
+            transform .2s ease,
+            background-color .2s ease;
+    }
+
+    .remove-budget-line:hover {
+        transform: scale(1.05);
+    }
+
+    .delete-field {
+        display: none;
+    }
+
+
+    /* ---------------------------------------------------------
+       FORMSET FOOTER
+    --------------------------------------------------------- */
+
+    .budget-form-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .85rem 1rem;
+        border-top: 1px solid #e7ece9;
+        background: #fff;
+    }
+
+    .budget-total-label {
+        color: #68756f;
+        font-size: .7rem;
+        font-weight: 700;
+    }
+
+    .budget-total-value {
+        margin-left: .3rem;
+        color: #18323a;
+        font-size: 1rem;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .save-budget-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        border-radius: 8px;
+        padding: .5rem .85rem;
+        font-size: .7rem;
+        font-weight: 750;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .save-budget-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(13, 110, 253, .15);
+    }
+
+
+    /* ---------------------------------------------------------
+       NON-FIELD ERRORS
+    --------------------------------------------------------- */
+
+    .budget-alert {
+        border-radius: 9px;
+        padding: .6rem .75rem;
+        margin-bottom: .85rem;
+        font-size: .7rem;
+    }
+
+
+    /* ---------------------------------------------------------
+       ANIMATIONS
+    --------------------------------------------------------- */
+
+    @keyframes budgetFormIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes lineIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+
+    /* ---------------------------------------------------------
+       RESPONSIVE
+    --------------------------------------------------------- */
+
+    @media (max-width: 768px) {
+
+        .budget-form-header {
+            align-items: flex-start;
+        }
+
+        .budget-form-title {
+            font-size: 1.15rem;
+        }
+
+        .budget-lines-header {
+            align-items: flex-start;
+        }
+
+        .budget-form-footer {
+            align-items: stretch;
+        }
+
+    }
+
+
+    @media (max-width: 576px) {
+
+        .budget-form-title {
+            font-size: 1.08rem;
+        }
+
+        .budget-form-subtitle {
+            font-size: .68rem;
+        }
+
+        .budget-lines-header {
+            flex-direction: column;
+        }
+
+        .add-line-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .budget-form-footer {
+            flex-direction: column;
+        }
+
+        .save-budget-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+    }
+
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .budget-form-page,
+        .budget-lines-table tbody tr {
+            animation: none !important;
+        }
+
+        .add-line-btn,
+        .remove-budget-line,
+        .save-budget-btn {
+            transition: none !important;
+        }
+
+    }
+</style>
+
+
+<div class="container-fluid budget-form-page">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="budget-form-header">
+
+        <div>
+
+            <div class="budget-form-eyebrow">
+                <i class="fa-solid fa-chart-pie"></i>
+                Finance control
+            </div>
+
+            <h1 class="budget-form-title">
+                {% if budget %}
+                    Update budget
+                {% else %}
+                    Create budget
+                {% endif %}
+            </h1>
+
+            <p class="budget-form-subtitle">
+                Use the organization’s activity-based budget structure.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <form method="post"
+          class="finance-form"
+          id="budget-form">
+
+        {% csrf_token %}
+
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger budget-alert">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+
+        <!-- =================================================
+             BUDGET INFORMATION
+        ================================================== -->
+
+        
+<div class="card budget-card mb-4">
+    <div class="card-header budget-section-header">
+        <div>
+            <div class="section-icon">
+                <i class="fa-solid fa-sliders"></i>
+            </div>
+            <div>
+                <h3 class="section-title">Budget information</h3>
+                <p class="section-subtitle">Set the budget period, donor and project details.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body p-3 p-md-4">
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 small mb-3">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="row g-3">
+
+            {% for field in form %}
+                <div class="col-12 col-md-6">
+
+                    <div class="budget-form-field">
+
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                            {% endif %}
+                        </label>
+
+                        {% if field.field.widget.input_type == "checkbox" %}
+
+                            <div class="form-check form-switch budget-switch">
+                                {{ field }}
+                                <label class="form-check-label" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+                            </div>
+
+                        {% else %}
+
+                            {{ field }}
+
+                        {% endif %}
+
+                        {% if field.help_text %}
+                            <div class="form-text">
+                                {{ field.help_text }}
+                            </div>
+                        {% endif %}
+
+                        {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in field.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+</div>
+
+
+
+
+        <!-- =================================================
+             BUDGET LINES
+        ================================================== -->
+
+        <div class="card budget-form-card">
+
+            <div class="budget-lines-header">
+
+                <div class="budget-lines-heading">
+
+                    <div class="budget-lines-heading-icon">
+                        <i class="fa-solid fa-table-list"></i>
+                    </div>
+
+                    <div>
+
+                        <h2 class="budget-lines-title">
+                            Budget lines
+                        </h2>
+
+                        <small class="budget-lines-help">
+                            Price × units × frequency = line total
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button"
+                        class="btn btn-outline-primary btn-sm add-line-btn"
+                        id="add-budget-line">
+
+                    <i class="fa-solid fa-plus"></i>
+                    Add budget line
+
+                </button>
+
+            </div>
+
+
+            <div class="table-responsive">
+
+                <table class="table budget-lines-table align-middle">
+
+                    <thead>
+
+                        <tr>
+                            <th>Code</th>
+                            <th>Outcome</th>
+                            <th>Activity</th>
+                            <th>Description</th>
+                            <th>Unit</th>
+                            <th>Price</th>
+                            <th>Units</th>
+                            <th>Freq.</th>
+                            <th>Line total</th>
+                            <th>Justification</th>
+                            <th></th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="budget-lines-body">
+
+                        {{ formset.management_form }}
+
+
+                        {% for line in formset %}
+
+                            <tr class="budget-line-row">
+
+                                <!-- Hidden ID -->
+                                {% if line.id %}
+                                    {{ line.id }}
+                                {% endif %}
+
+
+                                <!-- Code -->
+                                <td>
+                                    {{ line.code }}
+
+                                    {% for error in line.code.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Outcome -->
+                                <td>
+                                    {{ line.outcome }}
+
+                                    {% for error in line.outcome.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Activity -->
+                                <td>
+                                    {{ line.activity }}
+
+                                    {% for error in line.activity.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Description -->
+                                <td>
+                                    {{ line.description }}
+
+                                    {% for error in line.description.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Unit -->
+                                <td>
+                                    {{ line.unit }}
+
+                                    {% for error in line.unit.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Price -->
+                                <td>
+                                    {{ line.price_per_unit }}
+
+                                    {% for error in line.price_per_unit.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Units -->
+                                <td>
+                                    {{ line.units }}
+
+                                    {% for error in line.units.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Frequency -->
+                                <td>
+                                    {{ line.frequency }}
+
+                                    {% for error in line.frequency.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Calculated total -->
+                                <td>
+                                    <input type="text"
+                                           class="form-control line-total"
+                                           readonly
+                                           tabindex="-1"
+                                           aria-label="Calculated line total">
+                                </td>
+
+
+                                <!-- Justification -->
+                                <td>
+                                    {{ line.justification }}
+
+                                    {% for error in line.justification.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Actions -->
+                                <td class="line-actions">
+
+                                    {% if line.DELETE %}
+                                        <span class="delete-field">
+                                            {{ line.DELETE }}
+                                        </span>
+                                    {% endif %}
+
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-sm remove-budget-line"
+                                            title="Remove line"
+                                            aria-label="Remove budget line">
+
+                                        <i class="fa-solid fa-xmark"></i>
+
+                                    </button>
+
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr class="budget-empty-row">
+
+                                <td colspan="11"
+                                    class="text-center py-4 text-muted">
+
+                                    <i class="fa-solid fa-list-check d-block mb-2"></i>
+
+                                    <small>
+                                        No budget lines yet. Click
+                                        <strong>Add budget line</strong>
+                                        to begin.
+                                    </small>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <div class="budget-form-footer">
+
+                <div>
+
+                    <span class="budget-total-label">
+                        Budget total:
+                    </span>
+
+                    <span id="budget-grand-total"
+                          class="budget-total-value">
+
+                        0.00
+
+                    </span>
+
+                </div>
+
+
+                <button type="submit"
+                        class="btn btn-primary save-budget-btn">
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    {% if budget %}
+                        Update budget
+                    {% else %}
+                        Save budget
+                    {% endif %}
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+
+    <!-- =====================================================
+         EMPTY FORM TEMPLATE
+    ====================================================== -->
+
+    <template id="empty-budget-line">
+
+        <tr class="budget-line-row">
+
+            {{ formset.empty_form.id }}
+
+            <td>{{ formset.empty_form.code }}</td>
+
+            <td>{{ formset.empty_form.outcome }}</td>
+
+            <td>{{ formset.empty_form.activity }}</td>
+
+            <td>{{ formset.empty_form.description }}</td>
+
+            <td>{{ formset.empty_form.unit }}</td>
+
+            <td>{{ formset.empty_form.price_per_unit }}</td>
+
+            <td>{{ formset.empty_form.units }}</td>
+
+            <td>{{ formset.empty_form.frequency }}</td>
+
+            <td>
+                <input type="text"
+                       class="form-control line-total"
+                       readonly
+                       tabindex="-1">
+            </td>
+
+            <td>{{ formset.empty_form.justification }}</td>
+
+            <td class="line-actions">
+
+                {% if formset.empty_form.DELETE %}
+                    <span class="delete-field">
+                        {{ formset.empty_form.DELETE }}
+                    </span>
+                {% endif %}
+
+                <button type="button"
+                        class="btn btn-outline-danger btn-sm remove-budget-line"
+                        title="Remove line"
+                        aria-label="Remove budget line">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </td>
+
+        </tr>
+
+    </template>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block scripts %}
+
+{{ block.super }}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const body = document.getElementById("budget-lines-body");
+    const addButton = document.getElementById("add-budget-line");
+    const template = document.getElementById("empty-budget-line");
+    const totalForms = document.getElementById("id_lines-TOTAL_FORMS");
+    const grandTotal = document.getElementById("budget-grand-total");
+
+    if (!body || !addButton || !template || !totalForms || !grandTotal) {
+        return;
+    }
+
+
+    /* =========================================================
+       FORMAT NUMBER
+    ========================================================= */
+
+    function formatMoney(value) {
+        return value.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+
+    /* =========================================================
+       CALCULATE LINE TOTALS
+       Price × Units × Frequency
+    ========================================================= */
+
+    function calculateTotals() {
+
+        let total = 0;
+
+        body.querySelectorAll(".budget-line-row").forEach(function (row) {
+
+            if (
+                row.style.display === "none" ||
+                row.classList.contains("budget-empty-row")
+            ) {
+                return;
+            }
+
+            const priceField =
+                row.querySelector('[name$="-price_per_unit"]');
+
+            const unitsField =
+                row.querySelector('[name$="-units"]');
+
+            const frequencyField =
+                row.querySelector('[name$="-frequency"]');
+
+            const output =
+                row.querySelector(".line-total");
+
+
+            const price =
+                parseFloat(priceField?.value) || 0;
+
+            const units =
+                parseFloat(unitsField?.value) || 0;
+
+            const frequency =
+                parseFloat(frequencyField?.value) || 0;
+
+
+            const lineTotal =
+                price * units * frequency;
+
+
+            if (output) {
+                output.value = formatMoney(lineTotal);
+            }
+
+
+            total += lineTotal;
+
+        });
+
+
+        grandTotal.textContent = formatMoney(total);
+
+    }
+
+
+    /* =========================================================
+       ADD BUDGET LINE
+    ========================================================= */
+
+    addButton.addEventListener("click", function () {
+
+        const index = parseInt(totalForms.value, 10);
+
+        const html =
+            template.innerHTML.replaceAll(
+                "__prefix__",
+                index
+            );
+
+
+        /*
+         * Remove the empty-state row if it exists.
+         */
+        const emptyRow =
+            body.querySelector(".budget-empty-row");
+
+        if (emptyRow) {
+            emptyRow.remove();
+        }
+
+
+        body.insertAdjacentHTML(
+            "beforeend",
+            html
+        );
+
+
+        totalForms.value = index + 1;
+
+
+        const newRow =
+            body.lastElementChild;
+
+        if (newRow) {
+
+            newRow.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest"
+            });
+
+            const firstField =
+                newRow.querySelector("input, select, textarea");
+
+            if (firstField) {
+                setTimeout(function () {
+                    firstField.focus();
+                }, 120);
+            }
+
+        }
+
+
+        calculateTotals();
+
+    });
+
+
+    /* =========================================================
+       REMOVE / DELETE BUDGET LINE
+    ========================================================= */
+
+    body.addEventListener("click", function (event) {
+
+        const button =
+            event.target.closest(".remove-budget-line");
+
+        if (!button) {
+            return;
+        }
+
+
+        const row =
+            button.closest(".budget-line-row");
+
+        if (!row) {
+            return;
+        }
+
+
+        const deleteField =
+            row.querySelector(
+                'input[name$="-DELETE"]'
+            );
+
+
+        /*
+         * Existing formset row:
+         * mark DELETE instead of physically removing it.
+         */
+        if (deleteField) {
+
+            deleteField.checked = true;
+
+            row.style.display = "none";
+
+        }
+
+        /*
+         * Newly-added row:
+         * physically remove it.
+         *
+         * We intentionally do NOT decrease TOTAL_FORMS,
+         * because Django formsets expect indexes to remain valid.
+         */
+        else {
+
+            row.remove();
+
+        }
+
+
+        calculateTotals();
+
+    });
+
+
+    /* =========================================================
+       LIVE CALCULATION
+    ========================================================= */
+
+    body.addEventListener(
+        "input",
+        calculateTotals
+    );
+
+    body.addEventListener(
+        "change",
+        calculateTotals
+    );
+
+
+    /* =========================================================
+       INITIAL CALCULATION
+    ========================================================= */
+
+    calculateTotals();
+
+});
+</script>
+
+{% endblock %}

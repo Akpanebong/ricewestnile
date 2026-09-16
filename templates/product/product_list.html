@@ -231,7 +231,11 @@
 
                                 <span class="category-badge">
 
-                                    {{ pro.category|default:"Uncategorized" }}
+                                    {% if pro.category == 'OTHER' and pro.other_category %}
+                                        {{ pro.other_category }}
+                                    {% else %}
+                                        {{ pro.get_category_display|default:"Uncategorized" }}
+                                    {% endif %}
 
                                 </span>
 

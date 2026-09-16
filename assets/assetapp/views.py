@@ -2,12 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 
-from .models import Asset
-from .forms import AssetForm
-from .utils import export_assets_to_excel
+from .models import Asset, AssetDisposalRequest, WeeklyVehiclePlan, VehicleAssignment
+from .forms import AssetForm, AssetDisposalForm, WeeklyVehiclePlanForm, VehicleAssignmentForm
+from .utils import export_assets_to_excel, notify_procurement_of_disposal
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
 from .models import Asset, AssetMaintenance, AuditLog
 from .utils import get_client_ip
 
@@ -100,6 +99,61 @@ def asset_create(request):
 def asset_detail(request, pk, slug):
     asset = get_object_or_404(Asset, pk=pk, slug=slug)
     return render(request, 'assets/asset_detail.html', {'asset': asset})
+
+
+@login_required
+def declare_disposal(request, pk, slug):
+    asset = get_object_or_404(Asset, pk=pk, slug=slug)
+    if hasattr(asset, "disposal_request"):
+        messages.info(request, "This asset has already been declared for disposal.")
+        return redirect("asset:asset_detail", pk=asset.pk, slug=asset.slug)
+    form = AssetDisposalForm(request.POST or None)
+    if form.is_valid():
+        disposal = form.save(commit=False)
+        disposal.asset, disposal.declared_by = asset, request.user
+        disposal.save()
+        _, recipient_count = notify_procurement_of_disposal(request, disposal)
+        if recipient_count:
+            messages.success(request, "Asset declared for disposal. Procurement has been notified in-app and by email.")
+        else:
+            messages.warning(request, "Asset declared, but no procurement recipients were found. Please configure the Procurement group or department.")
+        return redirect("asset:asset_detail", pk=asset.pk, slug=asset.slug)
+    return render(request, "assets/disposal_form.html", {"asset": asset, "form": form})
+
+
+@login_required
+def vehicle_plan_list(request):
+    plans = WeeklyVehiclePlan.objects.prefetch_related("assignments__vehicle", "assignments__driver",)
+    return render(request, "assets/vehicle_plan_list.html", {"plans": plans})
+
+
+@login_required
+def vehicle_plan_create(request):
+    form = WeeklyVehiclePlanForm(request.POST or None)
+    if form.is_valid():
+        plan = form.save(commit=False)
+        plan.created_by = request.user
+        plan.save()
+        return redirect("asset:vehicle_plan_detail", pk=plan.pk)
+    return render(request, "assets/vehicle_plan_form.html", {"form": form})
+
+
+@login_required
+def vehicle_plan_detail(request, pk):
+    plan = get_object_or_404(WeeklyVehiclePlan.objects.prefetch_related
+                             ("assignments__vehicle", "assignments__driver",), pk=pk)
+    form = VehicleAssignmentForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        assignment = form.save(commit=False)
+        assignment.plan = plan
+        try:
+            assignment.full_clean()
+            assignment.save()
+            messages.success(request, "Vehicle assignment added.")
+            return redirect("asset:vehicle_plan_detail", pk=plan.pk)
+        except Exception as exc:
+            form.add_error(None, str(exc))
+    return render(request, "assets/vehicle_plan_detail.html", {"plan": plan, "form": form})
 
 
 @login_required

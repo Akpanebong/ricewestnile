@@ -22,6 +22,7 @@ urlpatterns = [
     path("asset/", include("assets.assetapp.urls")),
     path("notification/", include("notification.urls")),
     path("communication/", include("com_app.communication.urls")),
+    path("media/", include("com_app.media_presence.urls")),
     path("hr/dashboard/", include("hr_apps.HRapp.urls")),
     path("hr/recruitment/", include("hr_apps.vacancy.urls")),
     path("hr/performance/", include("hr_apps.appraisals.urls")),

@@ -1,0 +1,742 @@
+
+{% extends "finance/finance_tools_base.html" %}
+
+{% block title %}Budgets | Finance{% endblock %}
+
+{% block finance_content %}
+
+<style>
+    /* =========================================================
+       BUDGETS — ENTERPRISE FINANCE UI
+    ========================================================= */
+
+    .budgets-page {
+        animation: budgetPageIn .4s ease both;
+    }
+
+    /* ---------------------------------------------------------
+       HERO
+    --------------------------------------------------------- */
+
+    .budget-hero {
+        position: relative;
+        overflow: hidden;
+        min-height: 145px;
+        padding: 1.25rem 1.4rem;
+        border-radius: 18px;
+        background:
+            linear-gradient(135deg, #075c63 0%, #087f7b 55%, #198754 100%);
+        box-shadow: 0 10px 28px rgba(8, 92, 99, .16);
+        color: #fff;
+    }
+
+    .budget-hero::before,
+    .budget-hero::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .budget-hero::before {
+        width: 180px;
+        height: 180px;
+        right: -55px;
+        top: -90px;
+        background: rgba(255,255,255,.07);
+    }
+
+    .budget-hero::after {
+        width: 120px;
+        height: 120px;
+        right: 110px;
+        bottom: -75px;
+        background: rgba(255,255,255,.045);
+    }
+
+    .budget-hero-content,
+    .budget-hero-action {
+        position: relative;
+        z-index: 2;
+    }
+
+    .budget-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        margin-bottom: .25rem;
+        font-size: .64rem;
+        font-weight: 800;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,.68);
+    }
+
+    .budget-eyebrow i {
+        font-size: .58rem;
+    }
+
+    .budget-hero h1 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 750;
+        letter-spacing: -.025em;
+    }
+
+    .budget-hero p {
+        margin: .25rem 0 0;
+        font-size: .78rem;
+    }
+
+    .budget-new-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        border: 0;
+        border-radius: 9px;
+        padding: .55rem .8rem;
+        color: #075c63;
+        font-size: .75rem;
+        font-weight: 750;
+        box-shadow: 0 5px 15px rgba(0,0,0,.08);
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .budget-new-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,.13);
+        color: #075c63;
+    }
+
+
+    /* ---------------------------------------------------------
+       SUMMARY STRIP
+    --------------------------------------------------------- */
+
+    .budget-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: .85rem;
+    }
+
+    .budget-summary-label {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        color: #66736d;
+        font-size: .72rem;
+        font-weight: 650;
+    }
+
+    .budget-summary-label i {
+        color: #198754;
+    }
+
+    .budget-count {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .3rem .55rem;
+        border: 1px solid #e4ebe7;
+        border-radius: 999px;
+        background: #fff;
+        color: #475467;
+        font-size: .65rem;
+        font-weight: 700;
+    }
+
+    .budget-count strong {
+        color: #087f7b;
+    }
+
+
+    /* ---------------------------------------------------------
+       TABLE CARD
+    --------------------------------------------------------- */
+
+    .budget-card {
+        overflow: hidden;
+        border: 1px solid #e7ece9;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(20, 40, 30, .055);
+    }
+
+    .budget-table {
+        margin: 0;
+    }
+
+    .budget-table thead th {
+        padding: .72rem .85rem;
+        border-bottom: 1px solid #e5ebe8;
+        background: #f8faf9;
+        color: #68756f;
+        font-size: .65rem;
+        font-weight: 800;
+        letter-spacing: .055em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .budget-table tbody tr {
+        animation: budgetRowIn .4s ease both;
+        transition:
+            background-color .2s ease,
+            transform .2s ease;
+    }
+
+    .budget-table tbody tr:hover {
+        background: #fbfdfc;
+    }
+
+    .budget-table tbody td {
+        padding: .78rem .85rem;
+        border-color: #edf1ef;
+        color: #3f4b46;
+        font-size: .76rem;
+        vertical-align: middle;
+    }
+
+
+    /* ---------------------------------------------------------
+       BUDGET NAME
+    --------------------------------------------------------- */
+
+    .budget-name {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        min-width: 190px;
+    }
+
+    .budget-icon {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        background: rgba(8, 127, 123, .09);
+        color: #087f7b;
+        font-size: .78rem;
+    }
+
+    .budget-name a {
+        display: block;
+        max-width: 260px;
+        overflow: hidden;
+        color: #1d332c;
+        font-size: .78rem;
+        font-weight: 750;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        transition: color .2s ease;
+    }
+
+    .budget-name a:hover {
+        color: #087f7b;
+    }
+
+    .budget-donor {
+        display: block;
+        margin-top: .12rem;
+        color: #89938e;
+        font-size: .67rem;
+    }
+
+
+    /* ---------------------------------------------------------
+       PROJECT
+    --------------------------------------------------------- */
+
+    .budget-project {
+        color: #4d5b55;
+        font-size: .74rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .org-wide {
+        color: #7b8781;
+        font-weight: 500;
+        font-style: italic;
+    }
+
+
+    /* ---------------------------------------------------------
+       PERIOD
+    --------------------------------------------------------- */
+
+    .budget-period {
+        color: #66736d;
+        font-size: .7rem;
+        white-space: nowrap;
+    }
+
+    .period-icon {
+        margin-right: .3rem;
+        color: #98a49e;
+    }
+
+
+    /* ---------------------------------------------------------
+       STATUS
+    --------------------------------------------------------- */
+
+    .budget-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .3rem .55rem;
+        border-radius: 999px;
+        font-size: .63rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .budget-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .status-active {
+        color: #087443;
+        background: #eaf8f0;
+    }
+
+    .status-closed {
+        color: #667085;
+        background: #f0f2f4;
+    }
+
+    .status-other {
+        color: #9a6700;
+        background: #fff7df;
+    }
+
+
+    /* ---------------------------------------------------------
+       TOTAL
+    --------------------------------------------------------- */
+
+    .budget-total {
+        color: #18323a;
+        font-size: .8rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+
+    /* ---------------------------------------------------------
+       EXPORT
+    --------------------------------------------------------- */
+
+    .budget-export {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: .72rem;
+        transition:
+            transform .2s ease,
+            background-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .budget-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(25, 135, 84, .12);
+    }
+
+
+    /* ---------------------------------------------------------
+       EMPTY STATE
+    --------------------------------------------------------- */
+
+    .budget-empty {
+        padding: 3.25rem 1rem !important;
+        text-align: center;
+    }
+
+    .budget-empty-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto .75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: #f1f7f5;
+        color: #7f938a;
+        font-size: 1rem;
+    }
+
+    .budget-empty strong {
+        display: block;
+        color: #34413b;
+        font-size: .82rem;
+    }
+
+    .budget-empty span {
+        display: block;
+        margin-top: .2rem;
+        color: #8a9590;
+        font-size: .7rem;
+    }
+
+
+    /* ---------------------------------------------------------
+       ANIMATIONS
+    --------------------------------------------------------- */
+
+    @keyframes budgetPageIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes budgetRowIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+
+    /* Stagger table rows without external JS */
+    {% for budget in budgets %}
+    .budget-table tbody tr:nth-child({{ forloop.counter }}) {
+        animation-delay: {{ forloop.counter0 }}0ms;
+    }
+    {% endfor %}
+
+
+    /* ---------------------------------------------------------
+       RESPONSIVE
+    --------------------------------------------------------- */
+
+    @media (max-width: 992px) {
+
+        .budget-card {
+            overflow-x: auto;
+        }
+
+        .budget-table {
+            min-width: 900px;
+        }
+
+    }
+
+
+    @media (max-width: 576px) {
+
+        .budget-hero {
+            min-height: auto;
+            padding: 1rem;
+        }
+
+        .budget-hero h1 {
+            font-size: 1.15rem;
+        }
+
+        .budget-hero p {
+            font-size: .7rem;
+        }
+
+        .budget-new-btn {
+            padding: .48rem .65rem;
+            font-size: .68rem;
+        }
+
+        .budget-summary {
+            margin-bottom: .65rem;
+        }
+
+    }
+
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .budgets-page,
+        .budget-table tbody tr {
+            animation: none !important;
+        }
+
+        .budget-new-btn,
+        .budget-export,
+        .budget-table tbody tr {
+            transition: none !important;
+        }
+
+    }
+</style>
+
+
+<div class="container-fluid budgets-page">
+
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+    <div class="budget-hero mb-3">
+
+        <div class="d-flex justify-content-between align-items-center gap-3">
+
+            <div class="budget-hero-content">
+
+                <div class="budget-eyebrow">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    Finance control
+                </div>
+
+                <h1>
+                    Activity-based budgets
+                </h1>
+
+                <p class="text-white-50">
+                    Plan, monitor and export donor-ready budgets.
+                </p>
+
+            </div>
+
+
+            <div class="budget-hero-action">
+
+                <a href="{% url 'finance:budget_create' %}"
+                   class="btn btn-light budget-new-btn">
+
+                    <i class="fa-solid fa-plus"></i>
+                    New budget
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY
+    ====================================================== -->
+
+    <div class="budget-summary">
+
+        <div class="budget-summary-label">
+            <i class="fa-solid fa-layer-group"></i>
+            Budget register
+        </div>
+
+        <div class="budget-count">
+            <strong>{{ budgets|length }}</strong>
+            budget{{ budgets|length|pluralize }}
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         BUDGET TABLE
+    ====================================================== -->
+
+    <div class="budget-card">
+
+        <div class="table-responsive">
+
+            <table class="table budget-table table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Project</th>
+                        <th>Period</th>
+                        <th>Status</th>
+                        <th>Total ({{ display_currency }})</th>
+                        <th class="text-end">Export</th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+
+                    {% for budget in budgets %}
+
+                        <tr>
+
+                            <!-- Budget -->
+                            <td>
+
+                                <div class="budget-name">
+
+                                    <div class="budget-icon">
+                                        <i class="fa-solid fa-wallet"></i>
+                                    </div>
+
+                                    <div>
+
+                                        <a href="{% url 'finance:budget_detail' budget.pk %}"
+                                           class="text-decoration-none">
+
+                                            {{ budget.name }}
+
+                                        </a>
+
+                                        <small class="budget-donor">
+                                            <i class="fa-solid fa-hand-holding-heart me-1"></i>
+                                            {{ budget.donor }}
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- Project -->
+                            <td>
+
+                                {% if budget.project %}
+
+                                    <span class="budget-project">
+                                        {{ budget.project }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="budget-project org-wide">
+                                        Organization-wide
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Period -->
+                            <td>
+
+                                <span class="budget-period">
+
+                                    <i class="fa-regular fa-calendar period-icon"></i>
+
+                                    {{ budget.period_start }}
+                                    –
+                                    {{ budget.period_end }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- Status -->
+                            <td>
+
+                                {% if budget.status == "active" %}
+
+                                    <span class="budget-status status-active">
+                                        <span class="budget-status-dot"></span>
+                                        {{ budget.get_status_display }}
+                                    </span>
+
+                                {% elif budget.status == "closed" %}
+
+                                    <span class="budget-status status-closed">
+                                        <span class="budget-status-dot"></span>
+                                        {{ budget.get_status_display }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="budget-status status-other">
+                                        <span class="budget-status-dot"></span>
+                                        {{ budget.get_status_display }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Total -->
+                            <td>
+
+                                <span class="budget-total">
+                                    {{ budget.total_amount|accounting_money:request }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- Export -->
+                            <td class="text-end">
+
+                                <a href="{% url 'finance:budget_export' budget.pk %}"
+                                   class="btn btn-sm btn-outline-success budget-export"
+                                   title="Export budget"
+                                   aria-label="Export {{ budget.name }}">
+
+                                    <i class="fa-solid fa-file-excel"></i>
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="6" class="budget-empty">
+
+                                <div class="budget-empty-icon">
+                                    <i class="fa-solid fa-wallet"></i>
+                                </div>
+
+                                <strong>
+                                    No budgets recorded
+                                </strong>
+
+                                <span>
+                                    Create your first activity-based budget to begin planning and monitoring expenditure.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

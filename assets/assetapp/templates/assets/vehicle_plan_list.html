@@ -1,0 +1,254 @@
+
+{% extends "asset/base.html" %}
+
+{% block title %}Weekly Vehicle Plans | RICE WN{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcrumb-block">
+    <div class="breadcrumb-card">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'system_home' %}">
+                        <i class="fa-solid fa-house me-1"></i>
+                        RICE WN Hub
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item">
+                    <a href="{% url 'asset:dashboard' %}">
+                        <i class="fa-solid fa-boxes-stacked me-1"></i>
+                        Asset Management
+                    </a>
+                </li>
+
+                <li class="breadcrumb-item active" aria-current="page">
+                    Weekly Vehicle Plans
+                </li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="py-2">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+    <div class="d-flex flex-column flex-md-row
+                justify-content-between align-items-md-center
+                gap-3 mb-4">
+
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="text-primary fs-4">
+                    <i class="fa-solid fa-calendar-week"></i>
+                </span>
+
+                <h3 class="fw-bold mb-0">
+                    Weekly Vehicle Plans
+                </h3>
+            </div>
+
+            <p class="text-muted mb-0">
+                Plan and manage vehicle assignments for each week.
+            </p>
+        </div>
+
+        <div>
+            <a
+                href="{% url 'asset:vehicle_plan_create' %}"
+                class="btn btn-primary"
+            >
+                <i class="fa-solid fa-plus me-1"></i>
+                Create Plan
+            </a>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY
+    ====================================================== -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+
+                    <div class="rounded-3 bg-primary-subtle
+                                text-primary p-3 me-3">
+                        <i class="fa-solid fa-calendar-days fa-lg"></i>
+                    </div>
+
+                    <div>
+                        <small class="text-muted d-block">
+                            Weekly Plans
+                        </small>
+
+                        <h4 class="fw-bold mb-0">
+                            {{ plans|length }}
+                        </h4>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PLANS
+    ====================================================== -->
+    {% if plans %}
+
+        <div class="row g-3">
+
+            {% for plan in plans %}
+
+                <div class="col-12 col-md-6 col-xl-4">
+
+                    <a
+                        href="{% url 'asset:vehicle_plan_detail' plan.pk %}"
+                        class="text-decoration-none"
+                    >
+
+                        <div class="card border-0 shadow-sm h-100
+                                    vehicle-plan-card">
+
+                            <div class="card-body">
+
+                                <!-- Top -->
+                                <div class="d-flex
+                                            justify-content-between
+                                            align-items-start mb-3">
+
+                                    <div class="d-flex align-items-center">
+
+                                        <div class="rounded-3
+                                                    bg-primary-subtle
+                                                    text-primary p-2 me-2">
+                                            <i class="fa-solid fa-car"></i>
+                                        </div>
+
+                                        <div>
+                                            <small class="text-muted">
+                                                Vehicle Plan
+                                            </small>
+
+                                            <h5 class="fw-bold mb-0">
+                                                Week of {{ plan.week_start }}
+                                            </h5>
+                                        </div>
+
+                                    </div>
+
+                                    <i class="fa-solid fa-chevron-right
+                                              text-muted"></i>
+
+                                </div>
+
+
+                                <!-- Divider -->
+                                <hr class="my-3">
+
+
+                                <!-- Assignment information -->
+                                <div class="d-flex
+                                            justify-content-between
+                                            align-items-center">
+
+                                    <span class="text-muted">
+                                        <i class="fa-solid fa-list-check me-1"></i>
+                                        Assignments
+                                    </span>
+
+                                    <span class="badge
+                                                 bg-primary-subtle
+                                                 text-primary rounded-pill">
+                                        {{ plan.assignments.count }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <!-- =================================================
+             EMPTY STATE
+        ================================================== -->
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body text-center py-5">
+
+                <div class="mb-3">
+                    <span
+                        class="d-inline-flex align-items-center
+                               justify-content-center
+                               rounded-circle bg-light
+                               text-muted"
+                        style="width:72px;height:72px;"
+                    >
+                        <i class="fa-solid fa-calendar-xmark fa-2x"></i>
+                    </span>
+                </div>
+
+                <h5 class="fw-bold mb-2">
+                    No Weekly Vehicle Plans
+                </h5>
+
+                <p class="text-muted mb-4">
+                    There are currently no weekly vehicle plans.
+                    Create a plan to begin assigning vehicles.
+                </p>
+
+                <a
+                    href="{% url 'asset:vehicle_plan_create' %}"
+                    class="btn btn-primary"
+                >
+                    <i class="fa-solid fa-plus me-1"></i>
+                    Create First Plan
+                </a>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<style>
+    .vehicle-plan-card {
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease;
+    }
+
+    .vehicle-plan-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.65rem 1.5rem rgba(0, 0, 0, 0.10) !important;
+    }
+</style>
+{% endblock %}

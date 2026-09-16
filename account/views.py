@@ -819,10 +819,6 @@ def update_profile(request, slug):
         "employment_status",
     }
 
-    if user.is_superuser:
-        readonly_profile_fields = set()
-        readonly_employee_fields = set()
-
     employee = (
         Employee.objects
         .select_related("user", "department", "supervised_by")
@@ -901,7 +897,7 @@ def update_profile(request, slug):
         )
         # internship_form = InternshipUpdateForm(request.POST, instance=obj)
 
-        if profile_form.is_valid(): # and internship_form.is_valid()
+        if profile_form.is_valid(): # and internship_form.is_valid():
             with transaction.atomic():
                 profile_form.save()
                 # internship_form.save()
@@ -919,6 +915,7 @@ def update_profile(request, slug):
         "is_staff": False,
         "title": "My Profile",
     })
+
 
 
 

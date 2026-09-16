@@ -21,6 +21,11 @@
     <span>ASSET MANAGEMENT</span>
 </div>
 
+<a href="{% url 'asset:vehicle_plan_list' %}" class="sidebar-dashboard {% if current_url == 'vehicle_plan_list' or current_url == 'vehicle_plan_detail' %}active{% endif %}">
+    <span class="sidebar-nav-icon"><i class="fa-solid fa-car"></i></span>
+    <span class="sidebar-nav-text">Weekly vehicle plans</span>
+</a>
+
 
 <div class="sidebar-module
     {% if current_url == 'asset_list' or current_url == 'asset_create' %}

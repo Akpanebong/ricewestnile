@@ -1,0 +1,803 @@
+
+{% extends "finance/finance_tools_base.html" %}
+
+{% block title %}Budget Performance | Finance{% endblock %}
+
+{% block finance_content %}
+
+<div class="performance-page">
+
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
+    <div class="performance-header mb-3">
+
+        <div>
+            <div class="performance-eyebrow">
+                <i class="fa-solid fa-chart-line me-1"></i>
+                Finance control
+            </div>
+
+            <h1 class="performance-title">
+                Monthly budget performance
+            </h1>
+
+            <p class="performance-subtitle">
+                Monitor budget utilization, expenditure, funding and variance.
+                Amounts displayed in {{ display_currency }}.
+            </p>
+        </div>
+
+        <a href="{% url 'finance:performance_create' %}"
+           class="btn btn-primary performance-add">
+            <i class="fa-solid fa-plus me-1"></i>
+            Add performance
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY
+         ===================================================== -->
+    <div class="performance-summary mb-3">
+
+        <div class="performance-stat">
+            <div class="stat-icon">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+
+            <div>
+                <span class="stat-label">Records</span>
+                <strong class="stat-value">{{ records|length }}</strong>
+            </div>
+        </div>
+
+        <div class="performance-stat">
+            <div class="stat-icon">
+                <i class="fa-solid fa-calendar-days"></i>
+            </div>
+
+            <div>
+                <span class="stat-label">Reporting</span>
+                <strong class="stat-value">Monthly</strong>
+            </div>
+        </div>
+
+        <div class="performance-stat">
+            <div class="stat-icon">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+
+            <div>
+                <span class="stat-label">Currency</span>
+                <strong class="stat-value">{{ display_currency }}</strong>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PERFORMANCE TABLE
+         ===================================================== -->
+    <div class="card performance-card">
+
+        <div class="performance-card-header">
+
+            <div>
+                <div class="table-title">
+                    <span class="table-title-icon">
+                        <i class="fa-solid fa-chart-column"></i>
+                    </span>
+
+                    <div>
+                        <h2>Performance register</h2>
+                        <p>Budget execution by reporting period and activity.</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if records %}
+                <span class="record-count">
+                    {{ records|length }} record{{ records|length|pluralize }}
+                </span>
+            {% endif %}
+
+        </div>
+
+
+        <div class="table-responsive performance-table-wrap">
+
+            <table class="table performance-table align-middle mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Budget</th>
+                        <th>Code</th>
+                        <th class="text-end">
+                            Budget
+                            <small>({{ display_currency }})</small>
+                        </th>
+                        <th class="text-end">Received</th>
+                        <th class="text-end">Spent</th>
+                        <th class="text-end">Variance</th>
+                        <th class="text-center">Burn</th>
+                        <th class="text-center">Absorption</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item in records %}
+
+                    <tr class="performance-row">
+
+                        <!-- Period -->
+                        <td>
+                            <div class="period-cell">
+                                <span class="period-icon">
+                                    <i class="fa-regular fa-calendar"></i>
+                                </span>
+
+                                <div>
+                                    <strong>
+                                        {{ item.period|date:"M Y" }}
+                                    </strong>
+                                </div>
+                            </div>
+                        </td>
+
+
+                        <!-- Budget -->
+                        <td>
+                            <div class="budget-cell">
+                                <strong>
+                                    {{ item.budget.name }}
+                                </strong>
+                            </div>
+                        </td>
+
+
+                        <!-- Code -->
+                        <td>
+                            <span class="code-badge">
+                                {{ item.line.code }}
+                            </span>
+                        </td>
+
+
+                        <!-- Budget amount -->
+                        <td class="text-end amount-cell">
+                            {{ item.budget_amount|accounting_money:request }}
+                        </td>
+
+
+                        <!-- Funds received -->
+                        <td class="text-end amount-cell received">
+                            {{ item.funds_received|accounting_money:request }}
+                        </td>
+
+
+                        <!-- Expenditure -->
+                        <td class="text-end amount-cell spent">
+                            {{ item.expenditure|accounting_money:request }}
+                        </td>
+
+
+                        <!-- Variance -->
+                        <td class="text-end">
+
+                            <span class="
+                                variance-value
+                                {% if item.variance < 0 %}
+                                    variance-negative
+                                {% elif item.variance > 0 %}
+                                    variance-positive
+                                {% else %}
+                                    variance-neutral
+                                {% endif %}
+                            ">
+                                {% if item.variance < 0 %}
+                                    <i class="fa-solid fa-arrow-down me-1"></i>
+                                {% elif item.variance > 0 %}
+                                    <i class="fa-solid fa-arrow-up me-1"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-minus me-1"></i>
+                                {% endif %}
+
+                                {{ item.variance|accounting_money:request }}
+                            </span>
+
+                        </td>
+
+
+                        <!-- Burn rate -->
+                        <td class="text-center">
+
+                            <div class="percentage-cell">
+
+                                <span class="percentage-value">
+                                    {{ item.burn_rate|floatformat:1 }}%
+                                </span>
+
+                                <div class="mini-progress">
+                                    <span
+                                        class="mini-progress-fill"
+                                        style="width: {% if item.burn_rate > 100 %}100{% else %}{{ item.burn_rate }}{% endif %}%;">
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- Absorption -->
+                        <td class="text-center">
+
+                            <div class="percentage-cell">
+
+                                <span class="percentage-value">
+                                    {{ item.absorption_rate|floatformat:1 }}%
+                                </span>
+
+                                <div class="mini-progress">
+                                    <span
+                                        class="mini-progress-fill"
+                                        style="width: {% if item.absorption_rate > 100 %}100{% else %}{{ item.absorption_rate }}{% endif %}%;">
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="9">
+
+                            <div class="performance-empty">
+
+                                <div class="empty-icon">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                </div>
+
+                                <h3>No performance records</h3>
+
+                                <p>
+                                    Monthly budget performance records will
+                                    appear here once they are added.
+                                </p>
+
+                                <a href="{% url 'finance:performance_create' %}"
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-plus me-1"></i>
+                                    Add performance
+                                </a>
+
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+/* =========================================================
+   PERFORMANCE PAGE
+   ========================================================= */
+
+.performance-page {
+    animation: performanceFade .35s ease both;
+}
+
+@keyframes performanceFade {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.performance-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.performance-eyebrow {
+    margin-bottom: .25rem;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #198754;
+}
+
+.performance-title {
+    margin: 0;
+    color: #18323a;
+    font-size: 1.25rem;
+    font-weight: 750;
+    letter-spacing: -.02em;
+}
+
+.performance-subtitle {
+    margin: .25rem 0 0;
+    color: #71807b;
+    font-size: .76rem;
+}
+
+.performance-add {
+    white-space: nowrap;
+    border-radius: 9px;
+    padding: .48rem .8rem;
+    font-size: .78rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, .12);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.performance-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 18px rgba(25, 135, 84, .18);
+}
+
+
+/* =========================================================
+   SUMMARY CARDS
+   ========================================================= */
+
+.performance-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+}
+
+.performance-stat {
+    min-width: 150px;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .65rem .8rem;
+    border: 1px solid #e5ece9;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(20, 55, 45, .035);
+}
+
+.stat-icon {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: rgba(25, 135, 84, .09);
+    color: #198754;
+    font-size: .78rem;
+}
+
+.stat-label {
+    display: block;
+    color: #81908b;
+    font-size: .62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.stat-value {
+    display: block;
+    margin-top: .05rem;
+    color: #18323a;
+    font-size: .82rem;
+    font-weight: 750;
+}
+
+
+/* =========================================================
+   MAIN CARD
+   ========================================================= */
+
+.performance-card {
+    overflow: hidden;
+    border: 1px solid #e5ece9;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 5px 18px rgba(20, 55, 45, .045);
+}
+
+
+/* =========================================================
+   CARD HEADER
+   ========================================================= */
+
+.performance-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .75rem .9rem;
+    border-bottom: 1px solid #e8efec;
+    background: linear-gradient(135deg, #f8fbfa, #fff);
+}
+
+.table-title {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+}
+
+.table-title-icon {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: rgba(25, 135, 84, .09);
+    color: #198754;
+    font-size: .78rem;
+}
+
+.table-title h2 {
+    margin: 0;
+    color: #18323a;
+    font-size: .87rem;
+    font-weight: 750;
+}
+
+.table-title p {
+    margin: .08rem 0 0;
+    color: #81908b;
+    font-size: .67rem;
+}
+
+.record-count {
+    padding: .25rem .5rem;
+    border-radius: 20px;
+    background: #f0f5f3;
+    color: #60716b;
+    font-size: .65rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.performance-table {
+    min-width: 1050px;
+    font-size: .75rem;
+}
+
+.performance-table thead th {
+    padding: .65rem .7rem;
+    border-bottom: 1px solid #dfe8e4;
+    background: #f8faf9;
+    color: #63736d;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .035em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.performance-table thead th small {
+    display: block;
+    margin-top: .08rem;
+    color: #9aa6a2;
+    font-size: .55rem;
+    font-weight: 600;
+    text-transform: none;
+}
+
+.performance-table tbody td {
+    padding: .7rem;
+    border-color: #edf1ef;
+    color: #42534d;
+    vertical-align: middle;
+}
+
+.performance-row {
+    animation: rowIn .35s ease both;
+    transition: background-color .2s ease;
+}
+
+.performance-row:hover {
+    background: #fbfdfc;
+}
+
+.performance-row:nth-child(1) { animation-delay: .03s; }
+.performance-row:nth-child(2) { animation-delay: .06s; }
+.performance-row:nth-child(3) { animation-delay: .09s; }
+.performance-row:nth-child(4) { animation-delay: .12s; }
+.performance-row:nth-child(5) { animation-delay: .15s; }
+
+@keyframes rowIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================================
+   CELLS
+   ========================================================= */
+
+.period-cell {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+}
+
+.period-icon {
+    width: 27px;
+    height: 27px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: #f1f6f4;
+    color: #198754;
+    font-size: .68rem;
+}
+
+.period-cell strong {
+    color: #263b35;
+    font-size: .74rem;
+    white-space: nowrap;
+}
+
+.budget-cell {
+    max-width: 190px;
+}
+
+.budget-cell strong {
+    display: block;
+    color: #263b35;
+    font-size: .73rem;
+    font-weight: 700;
+}
+
+.code-badge {
+    display: inline-block;
+    padding: .22rem .4rem;
+    border: 1px solid #dce7e2;
+    border-radius: 5px;
+    background: #f7faf8;
+    color: #50625b;
+    font-family: monospace;
+    font-size: .67rem;
+    font-weight: 700;
+}
+
+.amount-cell {
+    color: #263b35 !important;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.received {
+    color: #198754 !important;
+}
+
+.spent {
+    color: #52635d !important;
+}
+
+
+/* =========================================================
+   VARIANCE
+   ========================================================= */
+
+.variance-value {
+    display: inline-flex;
+    align-items: center;
+    padding: .22rem .4rem;
+    border-radius: 6px;
+    font-size: .69rem;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.variance-negative {
+    background: #fff1f1;
+    color: #dc3545;
+}
+
+.variance-positive {
+    background: #edf8f1;
+    color: #198754;
+}
+
+.variance-neutral {
+    background: #f2f4f3;
+    color: #6c7773;
+}
+
+
+/* =========================================================
+   PERCENTAGES
+   ========================================================= */
+
+.percentage-cell {
+    min-width: 68px;
+}
+
+.percentage-value {
+    display: block;
+    margin-bottom: .28rem;
+    color: #3e514a;
+    font-size: .69rem;
+    font-weight: 750;
+}
+
+.mini-progress {
+    width: 100%;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #e9efec;
+}
+
+.mini-progress-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #198754;
+    transition: width .5s ease;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.performance-empty {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto .75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    background: #f1f6f4;
+    color: #198754;
+    font-size: 1rem;
+}
+
+.performance-empty h3 {
+    margin: 0;
+    color: #344640;
+    font-size: .9rem;
+    font-weight: 750;
+}
+
+.performance-empty p {
+    max-width: 390px;
+    margin: .35rem auto 1rem;
+    color: #81908b;
+    font-size: .72rem;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 767.98px) {
+
+    .performance-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .performance-title {
+        font-size: 1.05rem;
+    }
+
+    .performance-subtitle {
+        max-width: 95%;
+        line-height: 1.45;
+    }
+
+    .performance-add {
+        width: 100%;
+        text-align: center;
+    }
+
+    .performance-summary {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .performance-stat {
+        min-width: 0;
+    }
+
+    .performance-stat:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .performance-card-header {
+        align-items: flex-start;
+    }
+
+    .record-count {
+        margin-top: .1rem;
+    }
+
+    .performance-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .performance-table {
+        min-width: 1050px;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .performance-page,
+    .performance-row {
+        animation: none;
+    }
+
+    .performance-add,
+    .mini-progress-fill {
+        transition: none;
+    }
+
+}
+
+</style>
+
+{% endblock %}

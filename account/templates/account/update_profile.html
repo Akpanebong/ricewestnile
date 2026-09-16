@@ -1,17 +1,8 @@
 
-
-{% extends "base.html" %}
+{% extends "hr/base.html" %}
 {% load form_tags %}
 
 {% block title %}{{ title|default:"Update Employee Profile" }}{% endblock %}
-{% block system_name %}My Account{% endblock %}
-{% block header_home_url %}{% url 'system_home' %}{% endblock %}
-{% block sidebar_desktop %}
-{% include "account/includes/account_sidebar.html" %}
-{% endblock %}
-{% block sidebar_mobile %}
-{% include "account/includes/account_sidebar.html" %}
-{% endblock %}
 
 {% block content %}
 <div class="employee-self-service">
@@ -315,7 +306,7 @@
     margin: -12px -12px 0;
     padding: 24px 12px 34px;
     background:
-        var(--surface-muted), rgba(245, 246, 251, 0) 260px),
+        linear-gradient(180deg, rgba(10, 107, 58, 0.08), rgba(245, 246, 251, 0) 260px),
         #f5f6fb;
 }
 
@@ -348,7 +339,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #003333;
+    color: #0a6b3a;
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0;
@@ -399,7 +390,7 @@
     display: grid;
     place-items: center;
     border-radius: 8px;
-    background: #003333;
+    background: #0a6b3a;
     color: #ffffff;
     font-size: 1.2rem;
     font-weight: 800;
@@ -488,7 +479,7 @@
 
 .section-index a:hover {
     background: #edf7f1;
-    color: #003333;
+    color: #0a6b3a;
 }
 
 .section-index span {
@@ -498,7 +489,7 @@
     height: 28px;
     border-radius: 8px;
     background: #e8f4ed;
-    color: #003333;
+    color: #0a6b3a;
     font-size: 0.78rem;
     font-weight: 800;
 }
@@ -537,7 +528,7 @@
     height: 42px;
     border-radius: 8px;
     background: #f1f8f4;
-    color: #003333;
+    color: #0a6b3a;
 }
 
 .field-cluster {
@@ -615,7 +606,7 @@
 .smart-field textarea:focus,
 .smart-field select:focus,
 .smart-field input:not([type="checkbox"]):not([type="radio"]):focus {
-    border-color: #003333;
+    border-color: #0a6b3a;
     box-shadow: 0 0 0 0.18rem rgba(10, 107, 58, 0.15);
 }
 

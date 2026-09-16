@@ -27,6 +27,11 @@
     <span>CASH REQUISITIONS</span>
 </div>
 
+<div class="sidebar-section"><span>FINANCE CONTROL</span></div>
+<a href="{% url 'finance:budget_list' %}" class="sidebar-dashboard {% if current_url == 'budget_list' or current_url == 'budget_detail' or current_url == 'budget_create' %}active{% endif %}"><span class="sidebar-nav-icon"><i class="fa-solid fa-chart-pie"></i></span><span class="sidebar-nav-text">Budgets</span></a>
+<a href="{% url 'finance:performance_list' %}" class="sidebar-dashboard {% if current_url == 'performance_list' %}active{% endif %}"><span class="sidebar-nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="sidebar-nav-text">Budget performance</span></a>
+<a href="{% url 'finance:cashbook_list' %}" class="sidebar-dashboard {% if current_url == 'cashbook_list' or current_url == 'cashbook_detail' %}active{% endif %}"><span class="sidebar-nav-icon"><i class="fa-solid fa-book"></i></span><span class="sidebar-nav-text">Cash books</span></a>
+
 <a href="{% url 'finance:create_cash_req' %}"
    class="sidebar-dashboard
    {% if current_url == 'create_cash_req' %}active{% endif %}">

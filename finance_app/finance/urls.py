@@ -7,6 +7,23 @@ urlpatterns = [
 
     # DASHBOARD
     path("", views.dashboard, name="dashboard"),
+    path("budgets/", views.budget_list, name="budget_list"),
+    path("budgets/new/", views.budget_create, name="budget_create"),
+    path("budgets/<int:pk>/", views.budget_detail, name="budget_detail"),
+    path("budgets/<int:pk>/edit/", views.budget_create, name="budget_edit"),
+    path("budgets/<int:pk>/delete/", views.budget_delete, name="budget_delete"),
+    path("budgets/<int:pk>/export/", views.export_budget, name="budget_export"),
+    path("budgets/<int:pk>/performance/export/", views.export_performance, name="performance_export"),
+    path("performance/", views.performance_list, name="performance_list"),
+    path("performance/new/", views.performance_create, name="performance_create"),
+    path("cash-books/", views.cashbook_list, name="cashbook_list"),
+    path("cash-books/new/", views.cashbook_create, name="cashbook_create"),
+    path("cash-books/<int:pk>/", views.cashbook_detail, name="cashbook_detail"),
+    path("cash-books/<int:pk>/delete/", views.cashbook_delete, name="cashbook_delete"),
+    path("cash-books/<int:pk>/export/", views.export_cashbook, name="cashbook_export"),
+    path("cash-books/<int:cash_book_pk>/reconciliation/", views.reconciliation_create, name="reconciliation_create"),
+    path("reconciliations/<int:pk>/", views.reconciliation_detail, name="reconciliation_detail"),
+    path("reconciliations/<int:pk>/export/", views.export_reconciliation, name="reconciliation_export"),
 
     # =========================
     # CASH REQUISITION
@@ -38,6 +55,8 @@ urlpatterns = [
     path("accounting/<int:pk>/<slug:slug>/", views.accounting_detail, name="accounting_detail"),
     path("accounting/<int:pk>/pdf/<slug:slug>/", views.accounting_pdf, name="accounting_pdf"),
     path("accounting/<int:pk>/approval/<slug:slug>/", views.approve_account_form, name="approve_account_form"),
+
+
 
     # =========================
     # FINANCIAL LEDGER & REPORTING
