@@ -8,8 +8,27 @@ def seed_program_areas(apps, schema_editor):
     # Preserves the two values the old hardcoded PROGRAM_AREA choices offered,
     # as a starting point now that program areas are a real, editable table.
     ProgramArea = apps.get_model("account", "ProgramArea")
+    Profile = apps.get_model("account", "Profile")
+
+    legacy_values = {}
     for name in ["Arua Program Area", "Moyo Program Area"]:
-        ProgramArea.objects.get_or_create(name=name)
+        program_area, _ = ProgramArea.objects.get_or_create(name=name)
+        legacy_values[name.split()[0].upper()] = program_area.pk
+        legacy_values[name] = program_area.pk
+
+    # The old field stored choice codes (for example ``ARUA``), while the new
+    # field stores ProgramArea primary keys.  Convert those values before the
+    # ForeignKey is added; otherwise SQLite rejects the table rebuild because
+    # the copied values do not reference account_programarea.id.
+    for legacy_value, program_area_id in legacy_values.items():
+        Profile.objects.filter(program_area=legacy_value).update(
+            program_area=str(program_area_id)
+        )
+
+    # Do not allow any other legacy text value to survive into the FK column.
+    Profile.objects.exclude(program_area__isnull=True).exclude(
+        program_area__in=[str(value) for value in legacy_values.values()]
+    ).update(program_area=None)
 
 
 class Migration(migrations.Migration):
@@ -39,6 +58,7 @@ class Migration(migrations.Migration):
                 "ordering": ("name",),
             },
         ),
+        migrations.RunPython(seed_program_areas, migrations.RunPython.noop),
         migrations.AlterField(
             model_name="profile",
             name="program_area",
@@ -50,5 +70,4 @@ class Migration(migrations.Migration):
                 to="account.programarea",
             ),
         ),
-        migrations.RunPython(seed_program_areas, migrations.RunPython.noop),
     ]

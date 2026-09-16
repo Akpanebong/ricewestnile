@@ -1,36 +1,808 @@
+
 {% extends 'asset/base.html' %}
+
 {% block content %}
 
-<form class="row g-2 mb-3">
-  <div class="col-md-4">
-    <input type="date" name="start" class="form-control">
-  </div>
-  <div class="col-md-4">
-    <input type="date" name="end" class="form-control">
-  </div>
-  <div class="col-md-4">
-    <button class="btn btn-success">Filter</button>
-    <button name="export" value="1" class="btn btn-outline-success">
-        Export Excel
-    </button>
-  </div>
-</form>
+<style>
+    .asset-report {
+        max-width: 1500px;
+        margin: 0 auto;
+    }
 
-<table class="table table-bordered table-striped">
-<tr>
-    <th>Asset No</th>
-    <th>Category</th>
-    <th>Value</th>
-    <th>NBV</th>
-</tr>
-{% for a in assets %}
-<tr>
-    <td><a href="{% url 'asset:asset_detail' a.id a.slug %}">{{ a.asset_no }}</a></td>
-    <td>{{ a.category }}</td>
-    <td>{{ a.purchase_value }}</td>
-    <td>{{ a.net_book_value }}</td>
-</tr>
-{% endfor %}
-</table>
+    /* =========================================================
+       HERO
+    ========================================================== */
+    .report-hero {
+        position: relative;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(255,255,255,.13), transparent 30%),
+            linear-gradient(135deg, var(--sidebar-accent, #087f7b), #075c63);
+        color: #fff;
+        border-radius: 14px;
+        padding: 1.4rem 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 12px 30px rgba(15, 59, 56, .14);
+    }
+
+    .report-hero::after {
+        content: "";
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        right: -70px;
+        bottom: -100px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .report-kicker {
+        position: relative;
+        z-index: 1;
+        margin-bottom: .25rem;
+        color: rgba(255,255,255,.68);
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .report-hero h1 {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        font-size: clamp(1.35rem, 2vw, 1.8rem);
+        font-weight: 800;
+        letter-spacing: -.02em;
+    }
+
+    .report-hero p {
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+        margin: .4rem 0 0;
+        color: rgba(255,255,255,.76);
+        font-size: .86rem;
+        line-height: 1.6;
+    }
+
+
+    /* =========================================================
+       CARDS
+    ========================================================== */
+    .report-card {
+        background: var(--enterprise-surface, #fff);
+        border: 1px solid var(--enterprise-border, #e1ebe7);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .045);
+    }
+
+    .filter-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+
+    /* =========================================================
+       FILTERS
+    ========================================================== */
+    .filter-label {
+        display: block;
+        margin-bottom: .4rem;
+        color: var(--enterprise-text, #18323a);
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .filter-card .form-control {
+        min-height: 42px;
+        border-radius: 8px;
+        border-color: #d9e5e0;
+        color: #263b35;
+        font-size: .86rem;
+        box-shadow: none;
+    }
+
+    .filter-card .form-control:hover {
+        border-color: #bfd3cd;
+    }
+
+    .filter-card .form-control:focus {
+        border-color: var(--enterprise-accent, #087f7b);
+        box-shadow: 0 0 0 .18rem rgba(8, 127, 123, .12);
+    }
+
+    .filter-actions {
+        display: flex;
+        align-items: flex-end;
+        gap: .5rem;
+        height: 100%;
+    }
+
+    .filter-actions .btn {
+        min-height: 42px;
+        border-radius: 8px;
+        padding: .55rem .85rem;
+        font-size: .8rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .filter-actions .btn-success {
+        background: var(--enterprise-accent, #087f7b);
+        border-color: var(--enterprise-accent, #087f7b);
+    }
+
+    .filter-actions .btn-success:hover {
+        filter: brightness(.94);
+    }
+
+
+    /* =========================================================
+       TABLE HEADER
+    ========================================================== */
+    .report-table-card {
+        overflow: hidden;
+    }
+
+    .table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.1rem;
+        border-bottom: 1px solid #e7efeb;
+    }
+
+    .table-heading {
+        min-width: 0;
+    }
+
+    .table-title {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        color: var(--enterprise-text, #18323a);
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -.01em;
+    }
+
+    .table-title-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-grid;
+        place-items: center;
+        margin-right: .55rem;
+        border-radius: 8px;
+        background: #edf7f5;
+        color: var(--enterprise-accent, #087f7b);
+        font-size: .78rem;
+    }
+
+    .table-subtitle {
+        margin: .25rem 0 0;
+        color: var(--enterprise-muted, #64748b);
+        font-size: .77rem;
+    }
+
+    .record-count {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        flex-shrink: 0;
+        padding: .35rem .65rem;
+        border-radius: 999px;
+        background: #edf7f5;
+        color: var(--enterprise-accent, #087f7b);
+        font-size: .73rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       TABLE
+    ========================================================== */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .asset-table {
+        min-width: 980px;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .asset-table thead th {
+        padding: .78rem 1rem;
+        background: #f7faf9;
+        border-bottom: 1px solid #dfe9e5;
+        color: #536862;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .asset-table tbody td {
+        padding: .78rem 1rem;
+        color: #263b35;
+        vertical-align: middle;
+        border-bottom: 1px solid #edf2ef;
+        font-size: .82rem;
+    }
+
+    .asset-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .asset-table tbody tr {
+        transition: background .15s ease, box-shadow .15s ease;
+    }
+
+    .asset-table tbody tr:hover {
+        background: #f8fbfa;
+    }
+
+
+    /* =========================================================
+       ASSET NUMBER
+    ========================================================== */
+    .asset-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        color: var(--enterprise-accent, #087f7b);
+        font-weight: 800;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .asset-link:hover {
+        color: #075c63;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .asset-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 32px;
+        border-radius: 8px;
+        background: #edf7f5;
+        color: var(--enterprise-accent, #087f7b);
+        font-size: .76rem;
+    }
+
+
+    /* =========================================================
+       CATEGORY
+    ========================================================== */
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .25rem;
+        padding: .3rem .6rem;
+        border-radius: 999px;
+        background: #f1f5f4;
+        color: #3e5550;
+        font-size: .72rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       MONEY
+    ========================================================== */
+    .money,
+    .nbv-value {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .money {
+        color: #203a34;
+        font-weight: 750;
+    }
+
+    .nbv-value {
+        color: var(--enterprise-accent, #087f7b);
+        font-weight: 800;
+    }
+
+
+    /* =========================================================
+       DISPOSAL STATUS
+    ========================================================== */
+    .asset-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .32rem .62rem;
+        border-radius: 999px;
+        font-size: .69rem;
+        font-weight: 800;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    .asset-status.status-active {
+        background: #eaf7ef;
+        color: #18713b;
+    }
+
+    .asset-status.status-declared {
+        background: #fff5d9;
+        color: #8a6500;
+    }
+
+    .asset-status.status-review {
+        background: #fff0d9;
+        color: #9a5b00;
+    }
+
+    .asset-status.status-approved {
+        background: #fde8e8;
+        color: #a52d2d;
+    }
+
+    .asset-status.status-disposed {
+        background: #e9ecef;
+        color: #4f5963;
+    }
+
+    .asset-status.status-rejected {
+        background: #eaf7ef;
+        color: #18713b;
+    }
+
+    .disposal-date {
+        display: block;
+        margin-top: .25rem;
+        color: #71817b;
+        font-size: .68rem;
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       DISPOSAL ROW HIGHLIGHTING
+    ========================================================== */
+    .asset-table tbody tr.disposal-row {
+        background: #fffdf5;
+    }
+
+    .asset-table tbody tr.disposal-row:hover {
+        background: #fff9e8;
+    }
+
+    .asset-table tbody tr.disposed-row {
+        background: #f7f7f7;
+    }
+
+    .asset-table tbody tr.disposed-row:hover {
+        background: #f1f2f3;
+    }
+
+
+    /* =========================================================
+       EMPTY STATE
+    ========================================================== */
+    .empty-state {
+        padding: 3.2rem 1rem;
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 52px;
+        height: 52px;
+        display: inline-grid;
+        place-items: center;
+        margin-bottom: .75rem;
+        border-radius: 12px;
+        background: #edf7f5;
+        color: var(--enterprise-accent, #087f7b);
+        font-size: 1.15rem;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 .3rem;
+        color: #263b35;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .empty-state p {
+        max-width: 420px;
+        margin: 0 auto;
+        color: #71817b;
+        font-size: .8rem;
+        line-height: 1.55;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================== */
+    @media (max-width: 767px) {
+
+        .report-hero {
+            padding: 1.15rem;
+            border-radius: 12px;
+        }
+
+        .report-hero h1 {
+            font-size: 1.3rem;
+        }
+
+        .report-hero p {
+            font-size: .8rem;
+        }
+
+        .filter-card {
+            padding: .85rem;
+        }
+
+        .filter-actions {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .filter-actions .btn {
+            width: 100%;
+        }
+
+        .table-header {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: .9rem;
+        }
+
+        .record-count {
+            align-self: flex-start;
+        }
+
+        .asset-table thead th,
+        .asset-table tbody td {
+            padding-left: .75rem;
+            padding-right: .75rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .asset-table tbody tr {
+            transition: none;
+        }
+    }
+</style>
+
+
+<div class="asset-report">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+    <section class="report-hero">
+
+        <div class="report-kicker">
+            RICE West Nile · Asset Management
+        </div>
+
+        <h1>
+            <i class="fa-solid fa-chart-line me-2"></i>
+            Asset Valuation Report
+        </h1>
+
+        <p>
+            Review asset purchase values, net book values and disposal
+            status within a selected reporting period. Export the
+            register to Excel for reporting, finance and audit purposes.
+        </p>
+
+    </section>
+
+
+    <!-- =====================================================
+         FILTERS
+    ====================================================== -->
+    <section class="report-card filter-card">
+
+        <form method="get" class="row g-3">
+
+            <div class="col-12 col-md-4">
+
+                <label for="asset-report-start" class="filter-label">
+                    <i class="fa-solid fa-calendar-day me-1"></i>
+                    Start Date
+                </label>
+
+                <input
+                    id="asset-report-start"
+                    type="date"
+                    name="start"
+                    value="{{ request.GET.start|default:'' }}"
+                    class="form-control"
+                    aria-label="Start date"
+                >
+
+            </div>
+
+
+            <div class="col-12 col-md-4">
+
+                <label for="asset-report-end" class="filter-label">
+                    <i class="fa-solid fa-calendar-check me-1"></i>
+                    End Date
+                </label>
+
+                <input
+                    id="asset-report-end"
+                    type="date"
+                    name="end"
+                    value="{{ request.GET.end|default:'' }}"
+                    class="form-control"
+                    aria-label="End date"
+                >
+
+            </div>
+
+
+            <div class="col-12 col-md-4">
+
+                <div class="filter-actions">
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+                        <i class="fa-solid fa-filter me-1"></i>
+                        Apply Filter
+                    </button>
+
+                    <button
+                        type="submit"
+                        name="export"
+                        value="1"
+                        class="btn btn-outline-success"
+                    >
+                        <i class="fa-solid fa-file-excel me-1"></i>
+                        Export Excel
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- =====================================================
+         REPORT TABLE
+    ====================================================== -->
+    <section class="report-card report-table-card">
+
+        <div class="table-header">
+
+            <div class="table-heading">
+
+                <h2 class="table-title">
+
+                    <span class="table-title-icon">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </span>
+
+                    Asset Register
+
+                </h2>
+
+                <p class="table-subtitle">
+                    Asset valuation, net book value and disposal status.
+                </p>
+
+            </div>
+
+
+            <span class="record-count">
+                <i class="fa-solid fa-database"></i>
+                {{ assets|length }}
+                record{{ assets|length|pluralize }}
+            </span>
+
+        </div>
+
+
+        <div class="table-responsive">
+
+            <table class="table asset-table align-middle mb-0">
+
+                <thead>
+
+                    <tr>
+                        <th>Asset No</th>
+                        <th>Category</th>
+                        <th>Purchase Value</th>
+                        <th>Net Book Value</th>
+                        <th>Status</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for a in assets %}
+
+                        {# Determine row class from disposal status #}
+                        <tr
+                            {% if a.disposal_request %}
+                                {% if a.disposal_request.status == "DISPOSED" %}
+                                    class="disposed-row"
+                                {% else %}
+                                    class="disposal-row"
+                                {% endif %}
+                            {% endif %}
+                        >
+
+                            <!-- Asset Number -->
+                            <td>
+
+                                <a
+                                    href="{% url 'asset:asset_detail' a.id a.slug %}"
+                                    class="asset-link"
+                                >
+
+                                    <span class="asset-icon">
+                                        <i class="fa-solid fa-box"></i>
+                                    </span>
+
+                                    {{ a.asset_no }}
+
+                                </a>
+
+                            </td>
+
+
+                            <!-- Category -->
+                            <td>
+
+                                <span class="category-badge">
+
+                                    <i class="fa-solid fa-tag"></i>
+
+                                    {{ a.category|default:"Unclassified" }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- Purchase Value -->
+                            <td class="money">
+                                {{ a.purchase_value }}
+                            </td>
+
+
+                            <!-- Net Book Value -->
+                            <td class="nbv-value">
+                                {{ a.net_book_value }}
+                            </td>
+
+
+                            <!-- Disposal / Asset Status -->
+                            <td>
+
+                                {% if a.disposal_request %}
+
+                                    {% if a.disposal_request.status == "DECLARED" %}
+
+                                        <span class="asset-status status-declared">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                            Declared for Disposal
+                                        </span>
+
+                                    {% elif a.disposal_request.status == "UNDER_REVIEW" %}
+
+                                        <span class="asset-status status-review">
+                                            <i class="fa-solid fa-hourglass-half"></i>
+                                            Under Review
+                                        </span>
+
+                                    {% elif a.disposal_request.status == "APPROVED" %}
+
+                                        <span class="asset-status status-approved">
+                                            <i class="fa-solid fa-circle-exclamation"></i>
+                                            Approved for Disposal
+                                        </span>
+
+                                    {% elif a.disposal_request.status == "DISPOSED" %}
+
+                                        <span class="asset-status status-disposed">
+                                            <i class="fa-solid fa-box-archive"></i>
+                                            Disposed
+                                        </span>
+
+                                        {% if a.disposal_request.disposal_date %}
+                                            <span class="disposal-date">
+                                                {{ a.disposal_request.disposal_date|date:"d M Y" }}
+                                            </span>
+                                        {% endif %}
+
+                                    {% elif a.disposal_request.status == "REJECTED" %}
+
+                                        <span class="asset-status status-rejected">
+                                            <i class="fa-solid fa-circle-check"></i>
+                                            Disposal Rejected
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="asset-status status-declared">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                            Disposal Request
+                                        </span>
+
+                                    {% endif %}
+
+                                {% else %}
+
+                                    <span class="asset-status status-active">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        Active
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="5">
+
+                                <div class="empty-state">
+
+                                    <div class="empty-icon">
+                                        <i class="fa-solid fa-box-open"></i>
+                                    </div>
+
+                                    <h3>No assets found</h3>
+
+                                    <p>
+                                        No assets match the selected
+                                        reporting period.
+                                    </p>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</div>
 
 {% endblock %}

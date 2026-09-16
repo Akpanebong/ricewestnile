@@ -71,22 +71,33 @@ def dashboard(request):
 
 
 def asset_list(request):
-    assets = Asset.objects.all().order_by('-date_of_entry')
+    assets = (
+        Asset.objects
+        .select_related("disposal_request")
+        .all()
+        .order_by("-date_of_entry")
+    )
 
-    start = request.GET.get('start')
-    end = request.GET.get('end')
+    start = request.GET.get("start")
+    end = request.GET.get("end")
 
     if start and end:
         assets = assets.filter(date_of_entry__range=[start, end])
 
-    if 'export' in request.GET:
+    if "export" in request.GET:
         return export_assets_to_excel(assets)
 
     paginator = Paginator(assets, 25)
-    page_obj = paginator.get_page(request.GET.get('page'))
+    page_obj = paginator.get_page(request.GET.get("page"))
 
-    return render(request, 'assets/asset_list.html', {'assets': page_obj, 'page_obj': page_obj})
-
+    return render(
+        request,
+        "assets/asset_list.html",
+        {
+            "assets": page_obj,
+            "page_obj": page_obj,
+        },
+    )
 
 def asset_create(request):
     form = AssetForm(request.POST or None)
