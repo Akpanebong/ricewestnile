@@ -1113,6 +1113,10 @@ def employee_profile_update(request, pk, slug):
 
 @login_required
 def profile_delete(request, pk):
+    if not request.user.is_superuser:
+        messages.error(request, "Only a superuser can delete a profile.")
+        return redirect('profile_list')
+
     profile = get_object_or_404(Profile, pk=pk)
     if request.method == 'POST':
         profile.delete()
