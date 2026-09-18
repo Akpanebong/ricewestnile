@@ -1313,6 +1313,8 @@ const body =
             return;
         }
 
+        let previouslyFocused = null;
+
         const isMac = /Mac|iPhone|iPad/.test(window.navigator.platform || window.navigator.userAgent || '');
         if (hintKey) {
             hintKey.textContent = isMac ? '⌘ K' : 'Ctrl K';
@@ -1428,6 +1430,7 @@ const body =
             renderGroups(groups);
         }
 
+        const SEARCH_DEBOUNCE_MS = 180;
         let searchDebounce = null;
 
         function runSearch(term) {
@@ -1461,10 +1464,11 @@ const body =
                 .catch(function () {
                     renderGroups([{ label: 'Subsystems & Quick Actions', items: matchingLinks }]);
                 });
-            }, 180);
+            }, SEARCH_DEBOUNCE_MS);
         }
 
         function openPalette() {
+            previouslyFocused = document.activeElement;
             backdrop.hidden = false;
             document.body.classList.add('command-palette-open');
             showDefaultState();
@@ -1475,6 +1479,10 @@ const body =
         function closePalette() {
             backdrop.hidden = true;
             document.body.classList.remove('command-palette-open');
+            if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+                previouslyFocused.focus();
+            }
+            previouslyFocused = null;
         }
 
         document.addEventListener('keydown', function (event) {
