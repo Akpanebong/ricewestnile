@@ -581,6 +581,7 @@ a.kpi-card:hover {
     font-weight: 800;
     color: var(--text-primary);
     line-height: 1;
+    letter-spacing: -0.01em;
     margin: 0 0 0.2rem;
 }
 
@@ -596,11 +597,18 @@ a.kpi-card:hover {
 
 .interactive-card {
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .interactive-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+}
+
+.interactive-card:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.12);
+    transition-duration: 0.08s;
 }
 
 /* =========================================================
@@ -619,7 +627,13 @@ a.kpi-card:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .stagger-grid > * {
+    .stagger-grid > *,
+    .forum-badge,
+    .dropdown-menu.show,
+    .command-palette,
+    body.sidebar-collapsed .sidebar-module:hover > .sidebar-submenu,
+    body.sidebar-collapsed .sidebar-module:focus-within > .sidebar-submenu,
+    body.sidebar-collapsed .sidebar-dashboard:hover .sidebar-nav-text {
         animation: none !important;
     }
 }
@@ -1349,7 +1363,6 @@ textarea.is-invalid {
     border: 1px solid rgba(0, 0, 0, 0.08);
     box-shadow: var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.12));
     overflow: hidden;
-    backdrop-filter: blur(8px);
     transition: width var(--transition),
                 height var(--transition),
                 border-radius var(--transition),
@@ -1445,7 +1458,7 @@ textarea.is-invalid {
     justify-content: center;
     border: 2px solid white;
     z-index: 2;
-    animation: badgePulse 2s infinite ease-in-out;
+    animation: badgePulse 2s ease-in-out 3;
 }
 
 @keyframes badgePulse {
@@ -1522,6 +1535,13 @@ textarea.is-invalid {
 
 .command-palette-backdrop[hidden] {
     display: none !important;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .command-palette-backdrop {
+        background: rgba(10, 20, 20, 0.85);
+        backdrop-filter: none;
+    }
 }
 
 .command-palette {
@@ -1909,6 +1929,7 @@ body.sidebar-collapsed .sidebar-tag {
     color: var(--text-primary);
     margin: 0;
     line-height: 1.2;
+    letter-spacing: -0.01em;
 }
 
 .page-header-subtitle {
@@ -2107,6 +2128,7 @@ body.sidebar-collapsed .sidebar-tag {
    it, so the entrance animates smoothly without touching Popper's
    positioning. */
 .dropdown-menu.show {
+    transform-origin: top center;
     animation: headerDropdownIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
