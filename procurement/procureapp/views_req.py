@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import Group
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
@@ -12,12 +11,10 @@ from django.db.models import Sum, Q
 
 from account.models import Profile
 from core.project_models import Project
-from notification.models import Notification, NotificationRecipient
 from notification.utils import notify
 from procurement.procureapp.forms import RequisitionForm, RequisitionItemFormSet
 from procurement.procureapp.models import Requisition, RequisitionItem, Product
 from procurement.procureapp.utils import render_pdf, send_html_email
-from procurement.procureapp.views import _notify_next_stage, _notify_requester
 
 
 @login_required(login_url='login')

@@ -1,283 +1,1455 @@
+
 {% extends "procurement/base.html" %}
 {% load humanize %}
 {% load custom_tags %}
-{% block title %}PO {{ po.number }}{% endblock %}
-{% block content %}
-<main class="ttr-wrapper">
-  <div class="container-fluid">
-    <div class="widget-box">
 
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb bg-light shadow-sm px-3 py-2 rounded">
-        <li class="breadcrumb-item">
-          <a href="{% url 'req_list' %}"><i class="fa fa-home"></i> Procurement Requisitions</a>
-        </li>
-        <li class="breadcrumb-item active" aria-current="page">Plan#: {{ po.procurement.number }}</li>
-      </ol>
+{% block title %}PO {{ po.number }}{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       PURCHASE ORDER DETAIL
+    ========================================================== */
+
+    .po-page {
+        max-width: 1500px;
+        margin: 0 auto;
+    }
+
+    /* =========================================================
+       HERO
+    ========================================================== */
+
+    .po-hero {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        padding: 1.35rem 1.5rem;
+        border-radius: 14px;
+        color: #fff;
+        background:
+            radial-gradient(
+                circle at 92% 8%,
+                rgba(255,255,255,.13),
+                transparent 30%
+            ),
+            linear-gradient(
+                135deg,
+                var(--sidebar-accent, #087f7b),
+                #075c63
+            );
+        box-shadow: 0 12px 30px rgba(15, 59, 56, .14);
+    }
+
+    .po-hero::after {
+        content: "";
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        right: -75px;
+        bottom: -105px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .po-kicker {
+        position: relative;
+        z-index: 1;
+        margin-bottom: .3rem;
+        color: rgba(255,255,255,.68);
+        font-size: .69rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .po-title {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        font-size: clamp(1.3rem, 2vw, 1.8rem);
+        font-weight: 800;
+        letter-spacing: -.02em;
+    }
+
+    .po-meta {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin-top: .55rem;
+    }
+
+    .po-reference {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .3rem .6rem;
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 999px;
+        background: rgba(255,255,255,.09);
+        color: rgba(255,255,255,.88);
+        font-size: .72rem;
+        font-weight: 750;
+    }
+
+    .po-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .3rem .65rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,.95);
+        color: #087f7b;
+        font-size: .7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    /* =========================================================
+       BREADCRUMB
+    ========================================================== */
+
+    .po-breadcrumb {
+        margin-bottom: 1rem;
+    }
+
+    .po-breadcrumb .breadcrumb {
+        margin: 0;
+        padding: .65rem .85rem;
+        border: 1px solid #e1ebe7;
+        border-radius: 9px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(15,23,42,.035);
+        font-size: .75rem;
+    }
+
+    .po-breadcrumb a {
+        color: var(--enterprise-accent, #087f7b);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .po-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* =========================================================
+       CARDS
+    ========================================================== */
+
+    .po-card {
+        overflow: hidden;
+        margin-bottom: 1rem;
+        border: 1px solid var(--enterprise-border, #e1ebe7);
+        border-radius: 12px;
+        background: var(--enterprise-surface, #fff);
+        box-shadow: 0 8px 24px rgba(15,23,42,.045);
+    }
+
+    .po-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .9rem 1rem;
+        border-bottom: 1px solid #e7efeb;
+    }
+
+    .po-card-title {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        margin: 0;
+        color: #18323a;
+        font-size: .92rem;
+        font-weight: 800;
+    }
+
+    .po-card-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 30px;
+        border-radius: 8px;
+        background: #edf7f5;
+        color: var(--enterprise-accent, #087f7b);
+        font-size: .76rem;
+    }
+
+    .po-card-body {
+        padding: 1rem;
+    }
+
+    /* =========================================================
+       INFORMATION GRID
+    ========================================================== */
+
+    .po-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .75rem;
+    }
+
+    .po-info-item {
+        padding: .75rem;
+        border: 1px solid #e8efec;
+        border-radius: 9px;
+        background: #fbfdfc;
+    }
+
+    .po-info-label {
+        display: block;
+        margin-bottom: .25rem;
+        color: #71817b;
+        font-size: .66rem;
+        font-weight: 800;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+    }
+
+    .po-info-value {
+        color: #263b35;
+        font-size: .82rem;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    /* =========================================================
+       APPROVAL PROGRESS
+    ========================================================== */
+
+    .approval-list {
+        margin: 0;
+        border: 1px solid #e7efeb;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .approval-step {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .8rem .9rem;
+        border-bottom: 1px solid #edf2ef;
+        background: #fff;
+    }
+
+    .approval-step:last-child {
+        border-bottom: 0;
+    }
+
+    .approval-main {
+        min-width: 0;
+    }
+
+    .approval-title {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        color: #263b35;
+        font-size: .78rem;
+        font-weight: 800;
+    }
+
+    .approval-title-icon {
+        width: 25px;
+        height: 25px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 7px;
+        background: #f1f5f4;
+        color: #64756f;
+        font-size: .67rem;
+    }
+
+    .approval-detail {
+        display: block;
+        margin-top: .2rem;
+        color: #71817b;
+        font-size: .69rem;
+        line-height: 1.45;
+    }
+
+    .approval-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        flex-shrink: 0;
+        padding: .32rem .6rem;
+        border-radius: 999px;
+        font-size: .66rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .approval-complete {
+        background: #eaf7ef;
+        color: #18713b;
+    }
+
+    .approval-pending {
+        background: #fff5d9;
+        color: #8a6500;
+    }
+
+    .approval-rejected {
+        background: #fde8e8;
+        color: #a52d2d;
+    }
+
+    /* =========================================================
+       PROGRESS BAR
+    ========================================================== */
+
+    .progress-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: .9rem;
+        margin-bottom: .35rem;
+        color: #71817b;
+        font-size: .69rem;
+        font-weight: 700;
+    }
+
+    .po-progress {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e9efed;
+    }
+
+    .po-progress .progress-bar {
+        border-radius: inherit;
+        background: var(--enterprise-accent, #087f7b);
+        transition: width .25s ease;
+    }
+
+    /* =========================================================
+       ITEMS TABLE
+    ========================================================== */
+
+    .items-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .items-table {
+        min-width: 950px;
+        margin: 0;
+    }
+
+    .items-table thead th {
+        padding: .75rem .85rem;
+        background: #f7faf9;
+        border-bottom: 1px solid #dfe9e5;
+        color: #536862;
+        font-size: .66rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .items-table tbody td {
+        padding: .75rem .85rem;
+        border-bottom: 1px solid #edf2ef;
+        color: #263b35;
+        font-size: .79rem;
+        vertical-align: middle;
+    }
+
+    .items-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .items-table tbody tr:hover {
+        background: #f8fbfa;
+    }
+
+    .items-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .item-number {
+        width: 30px;
+        height: 30px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 7px;
+        background: #edf7f5;
+        color: var(--enterprise-accent, #087f7b);
+        font-size: .7rem;
+        font-weight: 800;
+    }
+
+    .item-description {
+        min-width: 190px;
+        color: #263b35;
+        font-weight: 750;
+    }
+
+    .item-specification {
+        min-width: 190px;
+        color: #64756f;
+        line-height: 1.45;
+    }
+
+    .code-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: .25rem .5rem;
+        border-radius: 6px;
+        background: #f1f5f4;
+        color: #40564f;
+        font-size: .68rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .qty-value,
+    .money-value {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .qty-value {
+        font-weight: 750;
+    }
+
+    .money-value {
+        color: #263b35;
+        font-weight: 700;
+    }
+
+    .line-total {
+        color: var(--enterprise-accent, #087f7b);
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .delivery-date {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        color: #536862;
+        font-size: .73rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    /* =========================================================
+       TOTAL
+    ========================================================== */
+
+    .po-total {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .7rem;
+        padding: .9rem 1rem;
+        border-top: 1px solid #dfe9e5;
+        background: #f7faf9;
+    }
+
+    .po-total-label {
+        color: #536862;
+        font-size: .76rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+    }
+
+    .po-total-value {
+        color: var(--enterprise-accent, #087f7b);
+        font-size: 1rem;
+        font-weight: 850;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    /* =========================================================
+       ACTION BAR
+    ========================================================== */
+
+    .po-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .po-actions .btn {
+        min-height: 38px;
+        border-radius: 8px;
+        padding: .5rem .8rem;
+        font-size: .75rem;
+        font-weight: 750;
+    }
+
+    .po-actions .btn-success {
+        background: var(--enterprise-accent, #087f7b);
+        border-color: var(--enterprise-accent, #087f7b);
+    }
+
+    /* =========================================================
+       EMPTY STATE
+    ========================================================== */
+
+    .po-empty {
+        padding: 3rem 1rem;
+        text-align: center;
+        color: #71817b;
+    }
+
+    .po-empty-icon {
+        width: 50px;
+        height: 50px;
+        display: inline-grid;
+        place-items: center;
+        margin-bottom: .7rem;
+        border-radius: 12px;
+        background: #edf7f5;
+        color: var(--enterprise-accent, #087f7b);
+        font-size: 1.1rem;
+    }
+
+    .po-empty strong {
+        display: block;
+        margin-bottom: .25rem;
+        color: #263b35;
+        font-size: .85rem;
+    }
+
+    .po-empty span {
+        font-size: .75rem;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================== */
+
+    @media (max-width: 991px) {
+        .po-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 767px) {
+
+        .po-hero {
+            padding: 1.1rem;
+        }
+
+        .po-title {
+            font-size: 1.3rem;
+        }
+
+        .po-hero-actions {
+            justify-content: flex-start;
+            margin-top: .8rem;
+        }
+
+        .approval-step {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .approval-badge {
+            align-self: flex-start;
+        }
+
+        .progress-summary {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: .15rem;
+        }
+
+        .po-total {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .po-actions {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .po-actions .btn {
+            width: 100%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .items-table tbody tr,
+        .po-progress .progress-bar {
+            transition: none;
+        }
+    }
+</style>
+
+
+<div class="po-page">
+
+    <!-- =====================================================
+         BREADCRUMB
+    ====================================================== -->
+    <nav
+        class="po-breadcrumb"
+        aria-label="Breadcrumb"
+    >
+        <ol class="breadcrumb">
+
+            <li class="breadcrumb-item">
+                <a href="{% url 'req_list' %}">
+                    <i class="fa-solid fa-house me-1"></i>
+                    Procurement Requisitions
+                </a>
+            </li>
+
+            <li
+                class="breadcrumb-item active"
+                aria-current="page"
+            >
+                Plan #{{ po.procurement.number }}
+            </li>
+
+        </ol>
     </nav>
 
-    <!-- PO Header -->
-    <div class="card shadow-sm border-0 mb-4">
-      <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fa fa-file-invoice"></i> Requisition #{{ po.number }}</h5>
-        <span class="badge bg-light text-success px-3 py-2">Status: {{ po.status|default:"Active" }}</span>
-      </div>
 
-      <div class="card-body">
-        <div class="row mb-3">
-          <div class="col-md-6 mb-3">
-                        <h4>Procurement: {{ po.procurement.number }}</h4>
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+    <section class="po-hero">
 
-            <strong>Requisition:</strong> {{ po }}<br/>
-            <strong>Date:</strong> {{ po.date }} <br />
-            <strong>Requester: </strong> {{ po.issued_by }}
-          </div>
+        <div class="row align-items-center g-3">
 
+            <div class="col-lg">
 
+                <div class="po-kicker">
+                    RICE West Nile · Procurement
+                </div>
 
-          <!-- Right Column: Approval Progress -->
-          <div class="col-lg-6">
-            <h6 class="text-secondary mb-3"><i class="fa fa-sitemap"></i> Approval Progress</h6>
+                <h1 class="po-title">
+                    <i class="fa-solid fa-file-invoice me-2"></i>
+                    Purchase Order / Requisition #{{ po.number }}
+                </h1>
 
-            <ul class="list-group list-group-flush shadow-sm rounded">
+                <div class="po-meta">
 
-    <!-- Project Head Review -->
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-            <strong>Project Head Review</strong><br>
+                    <span class="po-reference">
+                        <i class="fa-solid fa-diagram-project"></i>
+                        Procurement #{{ po.procurement.number }}
+                    </span>
 
-            {% if po.reviewed_by and po.status == 'Reviewed' or po.status == 'Approved' %}
-                <small class="text-muted">
-                    By {% if po.reviewed_by %}{{ po.reviewed_by.get_full_name|default:po.reviewed_by.username }}{% else %}Unknown{% endif %}
-                    {% if po.reviewed_at %}
-                        on {{ po.reviewed_at|date:"d M Y H:i" }}
-                    {% endif %}
-                </small>
-            {% else %}
-                <small class="text-muted">
-                    Pending review by {{ po.project_head }}
-                </small>
-            {% endif %}
+                    <span class="po-status">
+                        <i class="fa-solid fa-circle"></i>
+                        {{ po.status|default:"Active" }}
+                    </span>
+
+                </div>
+
+            </div>
+
         </div>
 
-        <span class="badge px-3 py-2 text-white
-            {% if po.status == 'Reviewed' or po.status == 'Checked' or po.status == 'Approved' %}
-                bg-success
-            {% else %}
-                bg-warning
-            {% endif %}
-        ">
-            {% if po.status == 'Reviewed' or po.status == 'Checked' or po.status == 'Approved' %}
-                Reviewed
-            {% else %}
-                Pending
-            {% endif %}
-        </span>
-    </li>
+    </section>
 
-    <!-- Project Accountant Check -->
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-            <strong>Project Accountant Check</strong><br>
 
-            {% if po.checked_by and po.status == 'Checked' or po.status == 'Approved'  %}
-                <small class="text-muted">
-                    By {% if po.checked_by %}{{ po.checked_by.get_full_name|default:po.checked_by.username }}{% else %}Unknown{% endif %}
-                    {% if po.checked_at %}
-                        on {{ po.checked_at|date:"d M Y H:i" }}
-                    {% endif %}
-                </small>
-            {% else %}
-                <small class="text-muted">
-                    Pending check by {{ po.project_accountant }}
-                </small>
-            {% endif %}
+    <!-- =====================================================
+         OVERVIEW + APPROVAL PROGRESS
+    ====================================================== -->
+    <div class="row g-3">
+
+        <!-- =================================================
+             PROCUREMENT INFORMATION
+        ================================================== -->
+        <div class="col-12 col-lg-6">
+
+            <section class="po-card h-100">
+
+                <div class="po-card-header">
+
+                    <h2 class="po-card-title">
+
+                        <span class="po-card-icon">
+                            <i class="fa-solid fa-circle-info"></i>
+                        </span>
+
+                        Procurement Information
+
+                    </h2>
+
+                </div>
+
+
+                <div class="po-card-body">
+
+                    <div class="po-info-grid">
+
+                        <div class="po-info-item">
+
+                            <span class="po-info-label">
+                                Procurement Plan
+                            </span>
+
+                            <div class="po-info-value">
+                                {{ po.procurement.number|default:"—" }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="po-info-item">
+
+                            <span class="po-info-label">
+                                Requisition
+                            </span>
+
+                            <div class="po-info-value">
+                                {{ po|default:"—" }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="po-info-item">
+
+                            <span class="po-info-label">
+                                Date
+                            </span>
+
+                            <div class="po-info-value">
+
+                                {% if po.date %}
+                                    <i class="fa-regular fa-calendar me-1 text-muted"></i>
+                                    {{ po.date|date:"d M Y" }}
+                                {% else %}
+                                    —
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="po-info-item">
+
+                            <span class="po-info-label">
+                                Requester
+                            </span>
+
+                            <div class="po-info-value">
+                                {{ po.issued_by|default:"—" }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
         </div>
 
-        <span class="badge px-3 py-2 text-white
-            {% if po.status == 'Checked' or po.status == 'Approved' %}
-                bg-success
-            {% else %}
-                bg-warning
-            {% endif %}
-        ">
-            {% if po.status == 'Checked' or po.status == 'Approved' %}
-                Checked
-            {% else %}
-                Pending
-            {% endif %}
-        </span>
-    </li>
 
-    <!-- Executive Director Approval -->
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-            <strong>Executive Director Approval</strong><br>
+        <!-- =================================================
+             APPROVAL PROGRESS
+        ================================================== -->
+        <div class="col-12 col-lg-6">
 
-            {% if po.approved_by and po.status == 'Approved' %}
-                <small class="text-muted">
-                    By {% if po.approved_by %}{{ po.approved_by.get_full_name|default:po.approved_by.username }}{% else %}Unknown{% endif %}
-                    {% if po.approved_at and po.status == 'Approved' %}
-                        on {{ po.approved_at|date:"d M Y H:i" }}
-                    {% endif %}
-                </small>
-            {% else %}
-                <small class="text-muted">
-                    Awaiting Executive Director approval
-                </small>
-            {% endif %}
+            <section class="po-card h-100">
+
+                <div class="po-card-header">
+
+                    <h2 class="po-card-title">
+
+                        <span class="po-card-icon">
+                            <i class="fa-solid fa-sitemap"></i>
+                        </span>
+
+                        Approval Progress
+
+                    </h2>
+
+                    <span class="small text-muted">
+                        {{ approvals }} / {{ total_stages }}
+                    </span>
+
+                </div>
+
+
+                <div class="po-card-body">
+
+                    <div class="approval-list">
+
+                        <!-- Project Head -->
+                        <div class="approval-step">
+
+                            <div class="approval-main">
+
+                                <div class="approval-title">
+
+                                    <span class="approval-title-icon">
+                                        <i class="fa-solid fa-user-tie"></i>
+                                    </span>
+
+                                    Project Head Review
+
+                                </div>
+
+
+                                {% if po.reviewed_by and po.status == 'Reviewed' or po.status == 'Approved' %}
+
+                                    <small class="approval-detail">
+
+                                        <i class="fa-solid fa-user-check me-1"></i>
+
+                                        By
+                                        {% if po.reviewed_by %}
+                                            {{ po.reviewed_by.get_full_name|default:po.reviewed_by.username }}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+
+                                        {% if po.reviewed_at %}
+                                            · {{ po.reviewed_at|date:"d M Y H:i" }}
+                                        {% endif %}
+
+                                    </small>
+
+                                {% else %}
+
+                                    <small class="approval-detail">
+                                        Pending review by {{ po.project_head|default:"Project Head" }}
+                                    </small>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            {% if po.status == 'Reviewed' or po.status == 'Checked' or po.status == 'Approved' %}
+
+                                <span class="approval-badge approval-complete">
+                                    <i class="fa-solid fa-check"></i>
+                                    Reviewed
+                                </span>
+
+                            {% else %}
+
+                                <span class="approval-badge approval-pending">
+                                    <i class="fa-solid fa-clock"></i>
+                                    Pending
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- Project Accountant -->
+                        <div class="approval-step">
+
+                            <div class="approval-main">
+
+                                <div class="approval-title">
+
+                                    <span class="approval-title-icon">
+                                        <i class="fa-solid fa-calculator"></i>
+                                    </span>
+
+                                    Project Accountant Check
+
+                                </div>
+
+
+                                {% if po.checked_by and po.status == 'Checked' or po.status == 'Approved' %}
+
+                                    <small class="approval-detail">
+
+                                        <i class="fa-solid fa-user-check me-1"></i>
+
+                                        By
+                                        {% if po.checked_by %}
+                                            {{ po.checked_by.get_full_name|default:po.checked_by.username }}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+
+                                        {% if po.checked_at %}
+                                            · {{ po.checked_at|date:"d M Y H:i" }}
+                                        {% endif %}
+
+                                    </small>
+
+                                {% else %}
+
+                                    <small class="approval-detail">
+                                        Pending check by {{ po.project_accountant|default:"Project Accountant" }}
+                                    </small>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            {% if po.status == 'Checked' or po.status == 'Approved' %}
+
+                                <span class="approval-badge approval-complete">
+                                    <i class="fa-solid fa-check"></i>
+                                    Checked
+                                </span>
+
+                            {% else %}
+
+                                <span class="approval-badge approval-pending">
+                                    <i class="fa-solid fa-clock"></i>
+                                    Pending
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- Executive Director -->
+                        <div class="approval-step">
+
+                            <div class="approval-main">
+
+                                <div class="approval-title">
+
+                                    <span class="approval-title-icon">
+                                        <i class="fa-solid fa-user-shield"></i>
+                                    </span>
+
+                                    Executive Director Approval
+
+                                </div>
+
+
+                                {% if po.approved_by and po.status == 'Approved' %}
+
+                                    <small class="approval-detail">
+
+                                        <i class="fa-solid fa-user-check me-1"></i>
+
+                                        By
+                                        {{ po.approved_by.get_full_name|default:po.approved_by.username }}
+
+                                        {% if po.approved_at %}
+                                            · {{ po.approved_at|date:"d M Y H:i" }}
+                                        {% endif %}
+
+                                    </small>
+
+                                {% else %}
+
+                                    <small class="approval-detail">
+                                        Awaiting Executive Director approval
+                                    </small>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            {% if po.status == 'Approved' %}
+
+                                <span class="approval-badge approval-complete">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    Approved
+                                </span>
+
+                            {% elif po.status == 'Rejected' %}
+
+                                <span class="approval-badge approval-rejected">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                    Rejected
+                                </span>
+
+                            {% else %}
+
+                                <span class="approval-badge approval-pending">
+                                    <i class="fa-solid fa-clock"></i>
+                                    Pending
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Progress -->
+                    <div class="progress-summary">
+
+                        <span>
+                            {{ approvals }} of {{ total_stages }} approval stages complete
+                        </span>
+
+                        <span>
+                            {% if po.status == 'Approved' %}
+                                Fully approved
+                            {% elif po.status == 'Rejected' %}
+                                Rejected
+                            {% else %}
+                                In progress
+                            {% endif %}
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="progress po-progress"
+                        role="progressbar"
+                        aria-valuenow="{{ progress_percent }}"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-label="Approval progress"
+                    >
+
+                        <div
+                            class="progress-bar"
+                            style="width: {{ progress_percent }}%;"
+                        >
+                            <span class="visually-hidden">
+                                {{ progress_percent }}%
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="text-end mt-1">
+                        <small class="text-muted">
+                            {{ progress_percent }}% complete
+                        </small>
+                    </div>
+
+                </div>
+
+            </section>
+
         </div>
 
-        <span class="badge px-3 py-2 text-white
-            {% if po.status == 'Approved' %}
-                bg-success
-            {% else %}
-                bg-warning
-            {% endif %}
-        ">
-            {% if po.status == 'Approved' %}
-                Approved
-            {% else %}
-                Pending
-            {% endif %}
-        </span>
-    </li>
-
-</ul>
-            <!-- Optional: visual progress bar -->
-            <!-- Progress bar (put this where you want the visual indicator) -->
-<div class="mt-3">
-  <div class="d-flex justify-content-between align-items-center mb-1">
-    <small class="text-muted">{{ approvals }} / {{ total_stages }} approvals complete</small>
-    <small class="text-muted">
-      {% if po.status == 'Approved' %}
-        Fully approved
-      {% elif po.status == 'Rejected' %}
-        Rejected
-      {% else %}
-        In progress
-      {% endif %}
-    </small>
-  </div>
-
-  <div class="progress" style="height: 15px; width: {{ progress_percent }}%">
-    <div class="progress-bar"
-         role="progressbar"
-         style="width: {{ progress_percent }}%; background-color:green;"
-         aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">{{ progress_percent }}%
     </div>
-  </div>
-</div>
 
-          </div>
 
+    <!-- =====================================================
+         PROCUREMENT ITEMS
+    ====================================================== -->
+    <section class="po-card">
+
+        <div class="po-card-header">
+
+            <h2 class="po-card-title">
+
+                <span class="po-card-icon">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </span>
+
+                Procurement Items
+
+            </h2>
+
+            <span class="badge rounded-pill text-bg-light">
+                {{ po.items.all|length }}
+                item{{ po.items.all|length|pluralize }}
+            </span>
 
         </div>
-      </div>
-      </div>
 
-      <table class="table table-sm table-striped">
-        <thead>
-        <tr><th>#</th>
-          <th>Subject of Procurement</th>
-          <th>Specification</th>
-          <th>Qty</th>
-          <th>Unit price</th>
-          <th>Line total ({{ display_currency }})</th>
-          <th>Delivery Date</th>
-        </tr></thead>
-        <tbody>
-          {% for it in po.items.all %}
-            <tr>
-              <td>{{ forloop.counter }}</td>
-              <td>{{ it.description }}</td>
-              <td>{{ it.procurement_item.product}}</td>
-              <td>{{ it.qty }}  {% if it.unit_measure %}{{ it.unit_measure }}{% else %}
-                {{it.procurement_item.unit_measure}}{%endif%}</td>
-              <td>{{ it.unit_price|money:request }}</td>
-              <td>{{ it.line_total|money:request }}</td>
-              <td>{% if it.delivery_date %}{{ it.delivery_date }}{% else %}
-                {{it.procurement_item.delivery_date}}{%endif%}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <p class="text-right"><strong>Total ({{ display_currency }}): </strong>{{ po.total|money:request }}</p>
-     {% if po.status != 'Approved' %}
-      <a class="btn btn-secondary" href="{% url 'po_update' po.pk %}">Edit Req.</a>
-      {%endif%}
 
-      {% if po.status == 'Approved' %}
-            <a href="?format=pdf" class="btn btn-danger btn-sm"><i class="fa fa-file-pdf"></i> Export PDF</a>
+        <div class="items-table-wrap">
+
+            <table class="table items-table align-middle mb-0">
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Subject of Procurement</th>
+                        <th>Specification</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Line Total ({{ display_currency }})</th>
+                        <th>Delivery Date</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for it in po.items.all %}
+
+                        <tr>
+
+                            <td>
+                                <span class="item-number">
+                                    {{ forloop.counter }}
+                                </span>
+                            </td>
+
+
+                            <td class="item-description">
+                                {{ it.description|default:"—" }}
+                            </td>
+
+
+                            <td class="item-specification">
+                                {{ it.procurement_item.product|default:"—" }}
+                            </td>
+
+
+                            <td>
+
+                                <span class="qty-value">
+                                    {{ it.qty }}
+
+                                    {% if it.unit_measure %}
+                                        {{ it.unit_measure }}
+                                    {% elif it.procurement_item.unit_measure %}
+                                        {{ it.procurement_item.unit_measure }}
+                                    {% endif %}
+                                </span>
+
+                            </td>
+
+
+                            <td class="money-value">
+                                {{ it.unit_price|money:request }}
+                            </td>
+
+
+                            <td class="line-total">
+                                {{ it.line_total|money:request }}
+                            </td>
+
+
+                            <td>
+
+                                {% if it.delivery_date %}
+
+                                    <span class="delivery-date">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        {{ it.delivery_date|date:"d M Y" }}
+                                    </span>
+
+                                {% elif it.procurement_item.delivery_date %}
+
+                                    <span class="delivery-date">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        {{ it.procurement_item.delivery_date|date:"d M Y" }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="7">
+
+                                <div class="po-empty">
+
+                                    <div class="po-empty-icon">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </div>
+
+                                    <strong>
+                                        No procurement items
+                                    </strong>
+
+                                    <span>
+                                        No items have been added to this requisition.
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- TOTAL -->
+        <div class="po-total">
+
+            <span class="po-total-label">
+                Total ({{ display_currency }})
+            </span>
+
+            <span class="po-total-value">
+                {{ po.total|money:request }}
+            </span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         DOCUMENT / RECORD ACTIONS
+    ====================================================== -->
+    <div class="po-actions">
+
+        {% if po.status != 'Approved' %}
+
+            <a
+                href="{% url 'po_update' po.pk %}"
+                class="btn btn-secondary"
+            >
+                <i class="fa-solid fa-pen-to-square me-1"></i>
+                Edit Requisition
+            </a>
+
+        {% endif %}
+
+
+        {% if po.status == 'Approved' %}
+
+            <a
+                href="?format=pdf"
+                class="btn btn-danger"
+            >
+                <i class="fa-solid fa-file-pdf me-1"></i>
+                Export PDF
+            </a>
+
+
             {% if not rfq %}
 
-          <a href="{% if rfq %}#{% else %}{% url 'plan_rfq' po.pk %} {% endif %}"
-             class="btn {% if not rfq %}btn-info {% else %}disabled{% endif %} btn-sm">
-              <i class="fa fa-file-pdf"></i> RFQ
-            </a>
+                <a
+                    href="{% url 'plan_rfq' po.pk %}"
+                    class="btn btn-info"
+                >
+                    <i class="fa-solid fa-file-circle-plus me-1"></i>
+                    Create RFQ
+                </a>
+
             {% endif %}
-          {%endif%}
+
+        {% endif %}
 
     </div>
-    <!-- Approval Buttons -->
+
+
+    <!-- =====================================================
+         APPROVAL ACTIONS
+    ====================================================== -->
     {% if user.is_authenticated %}
-    <div class="card shadow-sm border-0">
-      <div class="card-body text-center">
-       <form method="post" action="{% url 'req_approve' po.pk %}">
-    {% csrf_token %}
 
-    {% if request.user == po.procurement.project.project_head and po.status == 'Pending' %}
+        {% if request.user == po.procurement.project.project_head and po.status == 'Pending' %}
 
-        <button name="action" value="Reviewed" class="btn btn-success">
-            Review
-        </button>
+            <section class="po-card mt-3">
 
-        <button
-            type="button"
-            class="btn btn-danger"
-            data-bs-toggle="modal"
-            data-bs-target="#rejectModal"
-            data-action="{% url 'req_approve' po.pk %}">
-            Reject
-        </button>
+                <div class="po-card-header">
 
-    {% elif request.user == po.procurement.project.project_accountant and po.status == 'Reviewed' %}
+                    <h2 class="po-card-title">
 
-        <button name="action" value="Checked" class="btn btn-success">
-            Check
-        </button>
+                        <span class="po-card-icon">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </span>
 
-        <button
-            type="button"
-            class="btn btn-danger"
-            data-bs-toggle="modal"
-            data-bs-target="#rejectModal"
-            data-action="{% url 'req_approve' po.pk %}">
-            Reject
-        </button>
+                        Project Head Action
 
-    {% elif request.user|has_group:'ED' and po.status == 'Checked' %}
+                    </h2>
 
-        <button name="action" value="Approved" class="btn btn-success">
-            Approve
-        </button>
+                </div>
 
-        <button
-            type="button"
-            class="btn btn-danger"
-            data-bs-toggle="modal"
-            data-bs-target="#rejectModal"
-            data-action="{% url 'req_approve' po.pk %}">
-            Reject
-        </button>
+
+                <div class="po-card-body">
+
+                    <form
+                        method="post"
+                        action="{% url 'req_approve' po.pk %}"
+                        class="po-actions mt-0"
+                    >
+
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            name="action"
+                            value="Reviewed"
+                            class="btn btn-success"
+                        >
+                            <i class="fa-solid fa-check me-1"></i>
+                            Review Requisition
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="btn btn-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#rejectModal"
+                            data-action="{% url 'req_approve' po.pk %}"
+                        >
+                            <i class="fa-solid fa-xmark me-1"></i>
+                            Reject
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+        {% elif request.user == po.procurement.project.project_accountant and po.status == 'Reviewed' %}
+
+            <section class="po-card mt-3">
+
+                <div class="po-card-header">
+
+                    <h2 class="po-card-title">
+
+                        <span class="po-card-icon">
+                            <i class="fa-solid fa-calculator"></i>
+                        </span>
+
+                        Project Accountant Action
+
+                    </h2>
+
+                </div>
+
+
+                <div class="po-card-body">
+
+                    <form
+                        method="post"
+                        action="{% url 'req_approve' po.pk %}"
+                        class="po-actions mt-0"
+                    >
+
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            name="action"
+                            value="Checked"
+                            class="btn btn-success"
+                        >
+                            <i class="fa-solid fa-check-double me-1"></i>
+                            Check Requisition
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="btn btn-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#rejectModal"
+                            data-action="{% url 'req_approve' po.pk %}"
+                        >
+                            <i class="fa-solid fa-xmark me-1"></i>
+                            Reject
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+        {% elif request.user|has_group:'ED' and po.status == 'Checked' %}
+
+            <section class="po-card mt-3">
+
+                <div class="po-card-header">
+
+                    <h2 class="po-card-title">
+
+                        <span class="po-card-icon">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </span>
+
+                        Executive Director Action
+
+                    </h2>
+
+                </div>
+
+
+                <div class="po-card-body">
+
+                    <form
+                        method="post"
+                        action="{% url 'req_approve' po.pk %}"
+                        class="po-actions mt-0"
+                    >
+
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            name="action"
+                            value="Approved"
+                            class="btn btn-success"
+                        >
+                            <i class="fa-solid fa-circle-check me-1"></i>
+                            Approve Requisition
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="btn btn-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#rejectModal"
+                            data-action="{% url 'req_approve' po.pk %}"
+                        >
+                            <i class="fa-solid fa-xmark me-1"></i>
+                            Reject
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+        {% endif %}
 
     {% endif %}
-</form>
-      </div>
-    </div>
-    {% endif %}
 
-  </div>
-</main>
+</div>
+
 {% endblock %}

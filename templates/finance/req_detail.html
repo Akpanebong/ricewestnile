@@ -1,171 +1,1144 @@
+
 {% extends "finance/base.html" %}
 {% load custom_tags %}
 {% load humanize %}
+
 {% block title %}Fund Requisition Detail{% endblock %}
 
 {% block content %}
-<main class="ttr-wrapper">
-<div class="container-fluid py-4">
 
+<style>
+    /* =========================================================
+       FUND REQUISITION DETAIL
+    ========================================================== */
+
+    .requisition-page {
+        max-width: 1500px;
+        margin: 0 auto;
+    }
+
+    /* =========================================================
+       HERO / HEADER
+    ========================================================== */
+
+    .req-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 1.35rem 1.5rem;
+        margin-bottom: 1rem;
+        color: #fff;
+        border-radius: 14px;
+        background:
+            radial-gradient(
+                circle at 92% 8%,
+                rgba(255,255,255,.13),
+                transparent 28%
+            ),
+            linear-gradient(
+                135deg,
+                var(--sidebar-accent, #087f7b),
+                #075c63
+            );
+        box-shadow: 0 12px 30px rgba(15, 59, 56, .14);
+    }
+
+    .req-hero::after {
+        content: "";
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        right: -75px;
+        bottom: -105px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .req-kicker {
+        position: relative;
+        z-index: 1;
+        margin-bottom: .3rem;
+        color: rgba(255,255,255,.68);
+        font-size: .7rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .req-title {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        font-size: clamp(1.3rem, 2vw, 1.75rem);
+        font-weight: 800;
+        letter-spacing: -.02em;
+    }
+
+    .req-reference {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        margin-top: .45rem;
+        padding: .3rem .6rem;
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 999px;
+        background: rgba(255,255,255,.09);
+        color: rgba(255,255,255,.86);
+        font-size: .73rem;
+        font-weight: 700;
+    }
+
+    .req-hero-actions {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .5rem;
+        flex-wrap: wrap;
+    }
+
+    .req-hero-actions .btn {
+        min-height: 40px;
+        border-radius: 8px;
+        padding: .5rem .8rem;
+        font-size: .78rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .req-hero-actions .btn-light {
+        color: #18323a;
+    }
+
+    /* =========================================================
+       ALERT
+    ========================================================== */
+
+    .req-draft-alert {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        padding: .75rem .9rem;
+        margin-bottom: 1rem;
+        border: 1px solid #f0df9a;
+        border-radius: 10px;
+        background: #fff9e6;
+        color: #735c00;
+        font-size: .8rem;
+        line-height: 1.5;
+    }
+
+    .req-draft-alert i {
+        flex: 0 0 auto;
+        font-size: .95rem;
+    }
+
+    /* =========================================================
+       CARDS
+    ========================================================== */
+
+    .req-card {
+        overflow: hidden;
+        margin-bottom: 1rem;
+        border: 1px solid var(--enterprise-border, #e1ebe7);
+        border-radius: 12px;
+        background: var(--enterprise-surface, #fff);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .045);
+    }
+
+    .req-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .9rem 1rem;
+        border-bottom: 1px solid #e7efeb;
+    }
+
+    .req-card-title {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        margin: 0;
+        color: #18323a;
+        font-size: .92rem;
+        font-weight: 800;
+    }
+
+    .req-card-title-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 30px;
+        border-radius: 8px;
+        background: #edf7f5;
+        color: var(--enterprise-accent, #087f7b);
+        font-size: .76rem;
+    }
+
+    .req-card-body {
+        padding: 1rem;
+    }
+
+    /* =========================================================
+       INFORMATION GRID
+    ========================================================== */
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .75rem;
+    }
+
+    .info-item {
+        min-width: 0;
+        padding: .75rem;
+        border: 1px solid #e8efec;
+        border-radius: 9px;
+        background: #fbfdfc;
+    }
+
+    .info-label {
+        display: block;
+        margin-bottom: .25rem;
+        color: #71817b;
+        font-size: .67rem;
+        font-weight: 800;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+    }
+
+    .info-value {
+        color: #263b35;
+        font-size: .82rem;
+        font-weight: 700;
+        line-height: 1.45;
+        word-break: break-word;
+    }
+
+    .info-value.muted {
+        color: #84918c;
+        font-weight: 600;
+    }
+
+    .purpose-value {
+        font-weight: 650;
+    }
+
+    /* =========================================================
+       STATUS
+    ========================================================== */
+
+    .req-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .32rem .65rem;
+        border-radius: 999px;
+        font-size: .68rem;
+        font-weight: 800;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    .status-draft {
+        background: #f1f5f4;
+        color: #53635e;
+    }
+
+    .status-submitted,
+    .status-finance-review,
+    .status-operations-review {
+        background: #fff5d9;
+        color: #8a6500;
+    }
+
+    .status-approved {
+        background: #eaf7ef;
+        color: #18713b;
+    }
+
+    .status-rejected {
+        background: #fde8e8;
+        color: #a52d2d;
+    }
+
+    /* =========================================================
+       DOCUMENT / RELATED ACTIONS
+    ========================================================== */
+
+    .document-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-top: .85rem;
+        padding-top: .85rem;
+        border-top: 1px solid #edf2ef;
+    }
+
+    .document-actions .btn {
+        min-height: 36px;
+        border-radius: 8px;
+        font-size: .75rem;
+        font-weight: 700;
+    }
+
+    /* =========================================================
+       REJECTION
+    ========================================================== */
+
+    .rejection-card {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border: 1px solid #f1caca;
+        border-radius: 12px;
+        background: #fff7f7;
+    }
+
+    .rejection-title {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .45rem;
+        color: #a52d2d;
+        font-size: .84rem;
+        font-weight: 800;
+    }
+
+    .rejection-reason {
+        margin: 0;
+        color: #633b3b;
+        font-size: .8rem;
+        line-height: 1.6;
+        white-space: pre-line;
+    }
+
+    /* =========================================================
+       WORKFLOW
+    ========================================================== */
+
+    .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .65rem;
+    }
+
+    .workflow-step {
+        position: relative;
+        padding: .75rem;
+        border: 1px solid #e8efec;
+        border-radius: 9px;
+        background: #fbfdfc;
+    }
+
+    .workflow-step-label {
+        display: block;
+        margin-bottom: .25rem;
+        color: #71817b;
+        font-size: .64rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .workflow-step-value {
+        color: #263b35;
+        font-size: .78rem;
+        font-weight: 750;
+    }
+
+    .workflow-step.pending .workflow-step-value {
+        color: #9aa6a1;
+    }
+
+    /* =========================================================
+       ITEMS TABLE
+    ========================================================== */
+
+    .items-card {
+        overflow: hidden;
+    }
+
+    .items-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .items-table {
+        min-width: 900px;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .items-table thead th {
+        padding: .75rem .85rem;
+        background: #f7faf9;
+        border-bottom: 1px solid #dfe9e5;
+        color: #536862;
+        font-size: .67rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .items-table tbody td {
+        padding: .75rem .85rem;
+        border-bottom: 1px solid #edf2ef;
+        color: #263b35;
+        font-size: .8rem;
+        vertical-align: middle;
+    }
+
+    .items-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .items-table tbody tr:hover {
+        background: #f8fbfa;
+    }
+
+    .items-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .activity-code {
+        display: inline-flex;
+        align-items: center;
+        padding: .25rem .5rem;
+        border-radius: 6px;
+        background: #eef5f3;
+        color: #31564e;
+        font-size: .7rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .program-code {
+        color: #536862;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .particulars {
+        min-width: 220px;
+        color: #263b35;
+        font-weight: 650;
+    }
+
+    .quantity {
+        font-weight: 750;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .currency-value {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .item-total {
+        color: var(--enterprise-accent, #087f7b);
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    .items-table tfoot {
+        background: #f7faf9;
+    }
+
+    .items-table tfoot th {
+        padding: .9rem .85rem;
+        border-top: 1px solid #dfe9e5;
+        color: #263b35;
+        font-size: .8rem;
+    }
+
+    .grand-total-label {
+        color: #536862;
+    }
+
+    .grand-total-words {
+        display: block;
+        margin-top: .15rem;
+        color: #71817b;
+        font-size: .68rem;
+        font-weight: 600;
+    }
+
+    .grand-total-value {
+        color: var(--enterprise-accent, #087f7b) !important;
+        font-size: .95rem !important;
+        white-space: nowrap;
+    }
+
+    /* =========================================================
+       BOTTOM ACTION BAR
+    ========================================================== */
+
+    .workflow-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .workflow-actions .btn {
+        min-height: 40px;
+        border-radius: 8px;
+        padding: .5rem .85rem;
+        font-size: .78rem;
+        font-weight: 750;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================== */
+
+    @media (max-width: 991px) {
+        .workflow-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+
+        .req-hero {
+            padding: 1.1rem;
+        }
+
+        .req-hero-actions {
+            justify-content: flex-start;
+            margin-top: .9rem;
+        }
+
+        .req-hero-actions .btn {
+            flex: 1 1 auto;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .workflow-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .req-card-body {
+            padding: .85rem;
+        }
+
+        .workflow-actions {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .workflow-actions .btn {
+            width: 100%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .items-table tbody tr {
+            transition: none;
+        }
+    }
+</style>
+
+
+<div class="requisition-page">
+
+    <!-- =====================================================
+         DRAFT NOTICE
+    ====================================================== -->
     {% if obj.status == "draft" and obj.created_by == request.user %}
-    <marquee>Your fund requisition ({{obj}}) is yet to be submitted,
-        click the submit button to submit to Finance</marquee>
+        <div class="req-draft-alert" role="alert">
+            <i class="fa-solid fa-circle-info"></i>
+
+            <div>
+                <strong>{{ obj }}</strong> is still a draft and has not
+                been submitted to Finance.
+                Please submit the requisition to begin the approval workflow.
+            </div>
+        </div>
     {% endif %}
 
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold">Fund Requisition Detail</h4>
 
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+    <section class="req-hero">
 
-        <div class="d-flex gap-2">
-            {% if obj.status == "draft" and obj.created_by == request.user%}
-             <a href="{% url 'finance:submit_cash_req' obj.id obj.slug %}"
-               class="btn btn-success">
-                Submit
-            </a>
-            {% elif obj.status != "approved" and obj.status != 'rejected' %}
-             {% if request.user|has_group:"Finance" or request.user|has_group:"Operations" or request.user|has_group:"ED"  %}
-            <button type="button"
-                class="btn btn-success approve-btn"
-                data-url="{% url 'finance:approve_cash_req' obj.id obj.slug %}"
-                data-role="{% if obj.status == 'submitted' %}finance{% elif obj.status == 'finance_review' %}operations{% elif obj.status == 'operations_review' %}ed{% endif %}">
-                Advance Workflow
-            </button>
-             {% endif %}
-            {% endif %}
+        <div class="row align-items-center g-3">
 
-            {% if obj.status == "approved" %}
-            <a href="{% url 'finance:cash_req_pdf' obj.id obj.slug %}"
-               class="btn btn-dark">
-                Download PDF
-            </a>
-            {% endif %}
+            <div class="col-lg">
 
-        </div>
-          {% if obj.status != "approved" and obj.status != 'rejected' %}
-             <button type="button"
-                class="btn btn-danger reject-btn"
-                data-url="{% url 'finance:reject_cash_req' obj.id obj.slug %}">
-                Reject
-            </button>
-            {% endif %}
-    </div>
+                <div class="req-kicker">
+                    Finance · Fund Requisition
+                </div>
 
-    <!-- SUMMARY -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body row">
-            <div class="col-md-6">
-                <p><strong>Donor Code:</strong> {{ obj.donor_code }}</p>
-                <p><strong>Purpose:</strong> {{ obj.purpose }}</p>
-                <p><strong>Status:</strong>
-                    <span class="badge bg-{% if obj.status != 'rejected' %}info {% else %}danger{% endif %} text-white">{{ obj.status|upper }}</span>
+                <h1 class="req-title">
+                    Fund Requisition Detail
+                </h1>
 
-                </p>
-               {% if obj.attachment %}
-                <a href="{{ obj.attachment.url }}"
-                   class="btn btn-sm btn-primary"
-                   download>
-                    <i class="fa fa-download"></i>
-                    Download Invoice
-                </a>
-                {% endif %}
+                <div class="req-reference">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    {{ obj }}
+                </div>
+
             </div>
 
-            <div class="col-md-6">
-                <p><strong>Created By:</strong> {{ obj.created_by }}</p>
-                <p><strong>Checked By:</strong> {{ obj.checked_by }}</p>
-                <p><strong>Reviewed By:</strong> {{ obj.reviewed_by }}</p>
-                <p><strong>{% if obj.status != 'rejected' %}Approved{% else %}Rejected{% endif %} By:</strong> {{ obj.approved_by }}</p>
-                {% if obj.status == "submitted" and obj.created_by == request.user and not admin_expense %}
-                <a class="btn btn-info" href="{% url 'finance:create_admin_expense' obj.slug obj.id %}">
-                    <i class="fa fa-plus-circle"></i> Add Concept Note</a>
-                 {% elif obj.status == "approved" and obj.created_by == request.user and not accounting %}
-                <a class="btn btn-info" href="{% url 'finance:create_accounting' obj.slug obj.id %}">
-                    <i class="fa fa-plus-circle"></i> Accounting Form</a>
-                {% else %}
-                <a class="btn btn-secondary" href="{% if accounting %}{% url 'finance:accounting_detail' accounting.id accounting.slug %}{% endif %}">
-                    <i class="fa fa-eye"></i> Accounting Form</a>
-                <a class="btn btn-secondary" href="{% if admin_expense %}{% url 'finance:admin_expense_detail' admin_expense.id admin_expense.slug %}{% endif %}">
-                    <i class="fa fa-eye"></i> Admin Concept Note</a>
 
-                {% endif %}
+            <div class="col-lg-auto">
+
+                <div class="req-hero-actions">
+
+                    <!-- Submit Draft -->
+                    {% if obj.status == "draft" and obj.created_by == request.user %}
+
+                        <a
+                            href="{% url 'finance:submit_cash_req' obj.id obj.slug %}"
+                            class="btn btn-light"
+                        >
+                            <i class="fa-solid fa-paper-plane me-1"></i>
+                            Submit
+                        </a>
+
+                    {% endif %}
+
+
+                    <!-- Workflow Advancement -->
+                    {% if obj.status != "approved" and obj.status != "rejected" %}
+
+                        {% if request.user|has_group:"Finance" or request.user|has_group:"Operations" or request.user|has_group:"ED" %}
+
+                            <button
+                                type="button"
+                                class="btn btn-success approve-btn"
+                                data-url="{% url 'finance:approve_cash_req' obj.id obj.slug %}"
+                                data-role="{% if obj.status == 'submitted' %}finance{% elif obj.status == 'finance_review' %}operations{% elif obj.status == 'operations_review' %}ed{% endif %}"
+                            >
+                                <i class="fa-solid fa-forward-step me-1"></i>
+                                Advance Workflow
+                            </button>
+
+                        {% endif %}
+
+                    {% endif %}
+
+
+                    <!-- PDF -->
+                    {% if obj.status == "approved" %}
+
+                        <a
+                            href="{% url 'finance:cash_req_pdf' obj.id obj.slug %}"
+                            class="btn btn-light"
+                        >
+                            <i class="fa-solid fa-file-pdf me-1"></i>
+                            Download PDF
+                        </a>
+
+                    {% endif %}
+
+
+                    <!-- Reject -->
+                    {% if obj.status != "approved" and obj.status != "rejected" %}
+
+                        <button
+                            type="button"
+                            class="btn btn-danger reject-btn"
+                            data-url="{% url 'finance:reject_cash_req' obj.id obj.slug %}"
+                        >
+                            <i class="fa-solid fa-xmark me-1"></i>
+                            Reject
+                        </button>
+
+                    {% endif %}
+
+                </div>
+
             </div>
 
         </div>
-    </div>
 
-            {% if obj.status == "rejected" %}
-        <div class="alert alert-danger mt-3">
-            <strong>Rejection Reason:</strong><br>
-            {{ obj.reason_for_rejection }}
+    </section>
+
+
+    <!-- =====================================================
+         SUMMARY
+    ====================================================== -->
+    <section class="req-card">
+
+        <div class="req-card-header">
+
+            <h2 class="req-card-title">
+
+                <span class="req-card-title-icon">
+                    <i class="fa-solid fa-circle-info"></i>
+                </span>
+
+                Requisition Information
+
+            </h2>
+
         </div>
-        {% endif %}
-    <!-- ITEMS TABLE -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header fw-bold">Items
+
+
+        <div class="req-card-body">
+
+            <div class="info-grid">
+
+                <!-- Donor -->
+                <div class="info-item">
+
+                    <span class="info-label">
+                        Donor Code
+                    </span>
+
+                    <div class="info-value">
+                        {{ obj.donor_code|default:"—" }}
+                    </div>
+
+                </div>
+
+
+                <!-- Status -->
+                <div class="info-item">
+
+                    <span class="info-label">
+                        Status
+                    </span>
+
+                    <div class="info-value">
+
+                        {% if obj.status == "draft" %}
+
+                            <span class="req-status status-draft">
+                                <i class="fa-solid fa-file-pen"></i>
+                                Draft
+                            </span>
+
+                        {% elif obj.status == "submitted" %}
+
+                            <span class="req-status status-submitted">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                Submitted
+                            </span>
+
+                        {% elif obj.status == "finance_review" %}
+
+                            <span class="req-status status-finance-review">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                Finance Review
+                            </span>
+
+                        {% elif obj.status == "operations_review" %}
+
+                            <span class="req-status status-operations-review">
+                                <i class="fa-solid fa-user-check"></i>
+                                Operations Review
+                            </span>
+
+                        {% elif obj.status == "approved" %}
+
+                            <span class="req-status status-approved">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Approved
+                            </span>
+
+                        {% elif obj.status == "rejected" %}
+
+                            <span class="req-status status-rejected">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                                Rejected
+                            </span>
+
+                        {% else %}
+
+                            <span class="req-status status-draft">
+                                {{ obj.status|upper }}
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- Purpose -->
+                <div class="info-item">
+
+                    <span class="info-label">
+                        Purpose
+                    </span>
+
+                    <div class="info-value purpose-value">
+                        {{ obj.purpose|default:"—" }}
+                    </div>
+
+                </div>
+
+
+                <!-- Created By -->
+                <div class="info-item">
+
+                    <span class="info-label">
+                        Created By
+                    </span>
+
+                    <div class="info-value">
+                        {{ obj.created_by|default:"—" }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 APPROVAL TRAIL
+            ================================================== -->
+
+            <div class="mt-3">
+
+                <div class="small text-uppercase fw-bold text-muted mb-2"
+                     style="font-size:.68rem; letter-spacing:.04em;">
+                    Approval Trail
+                </div>
+
+                <div class="workflow-grid">
+
+                    <div class="workflow-step {% if not obj.checked_by %}pending{% endif %}">
+                        <span class="workflow-step-label">
+                            Checked By
+                        </span>
+
+                        <span class="workflow-step-value">
+                            {{ obj.checked_by|default:"Pending" }}
+                        </span>
+                    </div>
+
+
+                    <div class="workflow-step {% if not obj.reviewed_by %}pending{% endif %}">
+                        <span class="workflow-step-label">
+                            Reviewed By
+                        </span>
+
+                        <span class="workflow-step-value">
+                            {{ obj.reviewed_by|default:"Pending" }}
+                        </span>
+                    </div>
+
+
+                    <div class="workflow-step {% if not obj.approved_by %}pending{% endif %}">
+                        <span class="workflow-step-label">
+                            {% if obj.status == "rejected" %}
+                                Rejected By
+                            {% else %}
+                                Approved By
+                            {% endif %}
+                        </span>
+
+                        <span class="workflow-step-value">
+                            {{ obj.approved_by|default:"Pending" }}
+                        </span>
+                    </div>
+
+
+                    <div class="workflow-step">
+                        <span class="workflow-step-label">
+                            Currency
+                        </span>
+
+                        <span class="workflow-step-value">
+                            {{ display_currency|default:"—" }}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ATTACHMENT / RELATED DOCUMENTS
+            ================================================== -->
+
+            {% if obj.attachment or accounting or admin_expense %}
+
+                <div class="document-actions">
+
+                    {% if obj.attachment %}
+
+                        <a
+                            href="{{ obj.attachment.url }}"
+                            class="btn btn-primary"
+                            download
+                        >
+                            <i class="fa-solid fa-download me-1"></i>
+                            Download Invoice
+                        </a>
+
+                    {% endif %}
+
+
+                    {% if obj.status == "submitted" and obj.created_by == request.user and not admin_expense %}
+
+                        <a
+                            href="{% url 'finance:create_admin_expense' obj.slug obj.id %}"
+                            class="btn btn-info text-white"
+                        >
+                            <i class="fa-solid fa-plus-circle me-1"></i>
+                            Add Concept Note
+                        </a>
+
+                    {% elif obj.status == "approved" and obj.created_by == request.user and not accounting %}
+
+                        <a
+                            href="{% url 'finance:create_accounting' obj.slug obj.id %}"
+                            class="btn btn-info text-white"
+                        >
+                            <i class="fa-solid fa-plus-circle me-1"></i>
+                            Accounting Form
+                        </a>
+
+                    {% endif %}
+
+
+                    {% if accounting %}
+
+                        <a
+                            href="{% url 'finance:accounting_detail' accounting.id accounting.slug %}"
+                            class="btn btn-secondary"
+                        >
+                            <i class="fa-solid fa-eye me-1"></i>
+                            Accounting Form
+                        </a>
+
+                    {% endif %}
+
+
+                    {% if admin_expense %}
+
+                        <a
+                            href="{% url 'finance:admin_expense_detail' admin_expense.id admin_expense.slug %}"
+                            class="btn btn-secondary"
+                        >
+                            <i class="fa-solid fa-eye me-1"></i>
+                            Admin Concept Note
+                        </a>
+
+                    {% endif %}
+
+                </div>
+
+            {% endif %}
+
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle">
+    </section>
 
-                <thead class="table-light">
+
+    <!-- =====================================================
+         REJECTION REASON
+    ====================================================== -->
+    {% if obj.status == "rejected" %}
+
+        <section class="rejection-card">
+
+            <div class="rejection-title">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                Rejection Reason
+            </div>
+
+            <p class="rejection-reason">
+                {{ obj.reason_for_rejection|default:"No rejection reason was provided." }}
+            </p>
+
+        </section>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         ITEMS
+    ====================================================== -->
+    <section class="req-card items-card">
+
+        <div class="req-card-header">
+
+            <h2 class="req-card-title">
+
+                <span class="req-card-title-icon">
+                    <i class="fa-solid fa-list-check"></i>
+                </span>
+
+                Requisition Items
+
+            </h2>
+
+            <span class="badge rounded-pill text-bg-light">
+                {{ obj.items.all|length }} item{{ obj.items.all|length|pluralize }}
+            </span>
+
+        </div>
+
+
+        <div class="items-table-wrap">
+
+            <table class="table items-table align-middle mb-0">
+
+                <thead>
+
                     <tr>
                         <th>Activity Code</th>
                         <th>Program</th>
                         <th>Particulars</th>
-                        <th>Qty</th>
-                        <th>Unit Cost</th>
-                        <th>Total ({{ display_currency }})</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for item in obj.items.all %}
-                    <tr>
-                        <td>{{ item.activity_code }}</td>
-                        <td>{{ item.program_code }}</td>
-                        <td>{{ item.particulars }}</td>
-                        <td>{{ item.quantity }}</td>
-
-                        <td>{{ item.unit_cost|money:request }}</td>
-                        <td class="fw-bold">
-                            {{ item.total_cost|money:request }}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-
-                <tfoot>
-                    <tr>
-                        <th colspan="5" class="text-end">Grand Total:
-                            {{ obj.total_amount|num_to_words:request }}</th>
-                        <th class="fw-bold text-success">
-                            {{ obj.total_amount|money:request }}
+                        <th class="text-end">Qty</th>
+                        <th class="text-end">Unit Cost</th>
+                        <th class="text-end">
+                            Total ({{ display_currency }})
                         </th>
                     </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for item in obj.items.all %}
+
+                        <tr>
+
+                            <td>
+                                <span class="activity-code">
+                                    {{ item.activity_code|default:"—" }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="program-code">
+                                    {{ item.program_code|default:"—" }}
+                                </span>
+                            </td>
+
+                            <td class="particulars">
+                                {{ item.particulars|default:"—" }}
+                            </td>
+
+                            <td class="text-end quantity">
+                                {{ item.quantity }}
+                            </td>
+
+                            <td class="text-end currency-value">
+                                {{ item.unit_cost|money:request }}
+                            </td>
+
+                            <td class="text-end item-total">
+                                {{ item.total_cost|money:request }}
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                class="text-center text-muted py-5"
+                            >
+                                <i class="fa-solid fa-inbox d-block mb-2"
+                                   style="font-size:1.5rem;"></i>
+
+                                No requisition items have been added.
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+
+                <tfoot>
+
+                    <tr>
+
+                        <th colspan="5" class="text-end">
+
+                            <span class="grand-total-label">
+                                Grand Total
+                            </span>
+
+                            <span class="grand-total-words">
+                                {{ obj.total_amount|num_to_words:request }}
+                            </span>
+
+                        </th>
+
+                        <th class="text-end grand-total-value">
+                            {{ obj.total_amount|money:request }}
+                        </th>
+
+                    </tr>
+
                 </tfoot>
 
             </table>
+
         </div>
-    </div>
+
+    </section>
 
 
+    <!-- =====================================================
+         WORKFLOW ACTION
+    ====================================================== -->
 
-{% if obj.status != 'approved' and obj.status != 'rejected' %}
-{% include 'finance/approval_confirmation.html' %}
-    <a href="javascript:void(0);"
-   class="btn btn-success approve-btn"
-   data-url="{% url 'finance:approve_cash_req' obj.pk obj.slug %}"
-   data-role="
-   {% if obj.status == 'submitted' %}finance
-   {% elif obj.status == 'finance_review' %}operations
-   {% elif obj.status == 'operations_review' %}ed
-   {% endif %}
-   ">
-   Approve
-</a>
-{% endif %}
+    {% if obj.status != "approved" and obj.status != "rejected" %}
+
+        {% include 'finance/approval_confirmation.html' %}
+
+        <div class="workflow-actions">
+
+            {% if request.user|has_group:"Finance" or request.user|has_group:"Operations" or request.user|has_group:"ED" %}
+
+                <button
+                    type="button"
+                    class="btn btn-success approve-btn"
+                    data-url="{% url 'finance:approve_cash_req' obj.pk obj.slug %}"
+                    data-role="{% if obj.status == 'submitted' %}finance{% elif obj.status == 'finance_review' %}operations{% elif obj.status == 'operations_review' %}ed{% endif %}"
+                >
+                    <i class="fa-solid fa-check me-1"></i>
+                    Advance Workflow
+                </button>
+
+            {% endif %}
+
+
+            <button
+                type="button"
+                class="btn btn-danger reject-btn"
+                data-url="{% url 'finance:reject_cash_req' obj.id obj.slug %}"
+            >
+                <i class="fa-solid fa-xmark me-1"></i>
+                Reject Requisition
+            </button>
+
+        </div>
+
+    {% endif %}
 
 </div>
-</main>
+
 {% endblock %}
