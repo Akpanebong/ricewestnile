@@ -164,10 +164,7 @@ def req_approve(request, pk):
     # =========================
     # PROJECT HEAD REVIEW
     # =========================
-    if (
-        user == project_head
-        and po.status == "Pending"
-    ):
+    if user == project_head and po.status == "Pending":
 
         if action == "Reviewed":
 
@@ -206,10 +203,7 @@ def req_approve(request, pk):
     # =========================
     # PROJECT ACCOUNTANT CHECK
     # =========================
-    elif (
-        user == project_accountant
-        and po.status == "Reviewed"
-    ):
+    elif user == project_accountant and po.status == "Reviewed":
 
         if action == "Checked":
 
@@ -237,10 +231,7 @@ def req_approve(request, pk):
     # =========================
     # EXECUTIVE DIRECTOR APPROVAL
     # =========================
-    elif (
-        user.groups.filter(name="ED").exists()
-        and po.status == "Checked"
-    ):
+    elif user.groups.filter(name="ED").exists() and po.status == "Checked":
 
         if action == "Approved":
 

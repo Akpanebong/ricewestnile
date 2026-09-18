@@ -231,6 +231,7 @@ def export_reconciliation(request, pk): return reconciliation_xlsx(get_object_or
 def create_cash_requisition(request):
     if request.method == "POST":
         with transaction.atomic():
+            currency = normalize_currency(request.POST.get("currency") or get_base_currency())
             procurement_requisition_id = request.POST.get("procurement_requisition") or None
             purchase_order_id = request.POST.get("purchase_order") or None
             purchase_order = None
@@ -256,25 +257,29 @@ def create_cash_requisition(request):
                 status="draft",
                 date=request.POST.get("date"),
                 to="Executive Director",
+                currency=currency,
                 attachment=request.FILES.get("attachment"),
             )
 
             index = 0
             while f"items[{index}][activity_code]" in request.POST:
+                original_unit_cost = request.POST.get(f"items[{index}][unit_cost]") or 0
                 CashRequisitionItem.objects.create(
                     requisition=obj,
                     activity_code=request.POST.get(f"items[{index}][activity_code]"),
                     program_code=request.POST.get(f"items[{index}][program_code]"),
                     particulars=request.POST.get(f"items[{index}][particulars]"),
                     quantity=request.POST.get(f"items[{index}][quantity]") or 0,
-                    unit_cost=user_amount_to_ugx(request.POST.get(f"items[{index}][unit_cost]") or 0, request)
+                    unit_cost=convert_amount(original_unit_cost, currency, get_base_currency()),
+                    original_unit_cost=original_unit_cost,
                 )
                 index += 1
 
         return redirect(reverse("finance:requisition_detail", kwargs={'pk': obj.pk, 'slug': obj.slug}))
 
     return render(request, "finance/create_cash_requisition.html", {
-        "procurement_requisitions": Requisition.objects.filter(status="Approved").order_by("-date")
+        "procurement_requisitions": Requisition.objects.filter(status="Approved").order_by("-date"),
+        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
     })
 
 
@@ -301,6 +306,7 @@ def create_cash_requisition_from_procurement(request, req_pk):
             "po": purchase_order,
             "initial_items": initial_items,
             "procurement_requisitions": Requisition.objects.filter(status="Approved").order_by("-date"),
+            "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
         },
     )
 
