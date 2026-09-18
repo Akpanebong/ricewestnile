@@ -143,16 +143,18 @@
                 type="button"
                 id="quickAccessDropdown"
                 data-bs-toggle="dropdown"
+                aria-haspopup="true"
                 aria-expanded="false"
+                aria-label="Quick Access"
             >
 
-                <i class="fa-solid fa-table-cells-large"></i>
+                <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>
 
-                <span class="d-none d-md-inline">
+                <span class="d-none d-md-inline" aria-hidden="true">
                     Quick Access
                 </span>
 
-                <i class="fa-solid fa-chevron-down d-none d-md-inline"></i>
+                <i class="fa-solid fa-chevron-down d-none d-md-inline" aria-hidden="true"></i>
 
             </button>
 
@@ -393,15 +395,19 @@
                 class="btn text-white position-relative"
                 data-bs-toggle="dropdown"
                 type="button"
+                aria-label="Notifications{% if notification_unread_count %}, {{ notification_unread_count }} unread{% endif %}"
+                aria-haspopup="true"
+                aria-expanded="false"
             >
 
-                <i class="fa fa-bell fa-lg"></i>
+                <i class="fa fa-bell fa-lg" aria-hidden="true"></i>
 
                 {% if notification_unread_count %}
 
                 <span
                     class="badge bg-danger position-absolute"
                     style="top:-6px; right:-6px;"
+                    aria-hidden="true"
                 >
                     {{ notification_unread_count }}
                 </span>
@@ -475,10 +481,13 @@
                 href="#"
                 class="text-white text-decoration-none d-flex align-items-center"
                 data-bs-toggle="dropdown"
+                role="button"
+                aria-haspopup="true"
                 aria-expanded="false"
+                aria-label="User menu"
             >
 
-                <i class="fa fa-user-circle fa-2x"></i>
+                <i class="fa fa-user-circle fa-2x" aria-hidden="true"></i>
 
             </a>
 
