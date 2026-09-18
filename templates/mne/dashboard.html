@@ -111,132 +111,17 @@
   </div>
 
   <div class="row g-3 mb-3 stagger-grid">
+    {% for card in kpi_cards %}
     <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#0f766e">
+      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:{{ card.accent }}">
         <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-mars"></i></span>
+          <span class="metric-icon-tint meal-icon-tint"><i class="fa {{ card.icon }}"></i></span>
         </div>
-        <p class="kpi-card-value counter" data-kpi="refugee_male" data-target="{{ refugee_male }}">0</p>
-        <p class="kpi-card-label mb-0">Refugee Male</p>
+        <p class="kpi-card-value counter" data-kpi="{{ card.key }}" data-target="{{ card.value }}">0</p>
+        <p class="kpi-card-label mb-0">{{ card.label }}</p>
       </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#16a34a">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-mars"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="national_male" data-target="{{ national_male }}">0</p>
-        <p class="kpi-card-label mb-0">National Male</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#db2777">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-venus"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="refugee_female" data-target="{{ refugee_female }}">0</p>
-        <p class="kpi-card-label mb-0">Refugee Female</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#f59e0b">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-venus"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="national_female" data-target="{{ national_female }}">0</p>
-        <p class="kpi-card-label mb-0">National Female</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#334155">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-wheelchair"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="pwd_total" data-target="{{ pwd_total }}">0</p>
-        <p class="kpi-card-label mb-0">PWD Reached</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#0d9488">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-flag"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="pwd_nationals" data-target="{{ pwd_nationals }}">0</p>
-        <p class="kpi-card-label mb-0">PWD Nationals</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#b91c1c">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-users"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="pwd_refugees" data-target="{{ pwd_refugees }}">0</p>
-        <p class="kpi-card-label mb-0">PWD Refugees</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#1d4ed8">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-mars"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="pwd_national_males" data-target="{{ pwd_national_males }}">0</p>
-        <p class="kpi-card-label mb-0">PWD National Males</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#dc2626">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-mars"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="pwd_refugee_males" data-target="{{ pwd_refugee_males }}">0</p>
-        <p class="kpi-card-label mb-0">PWD Refugee Males</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#0891b2">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-venus"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="pwd_national_females" data-target="{{ pwd_national_females }}">0</p>
-        <p class="kpi-card-label mb-0">PWD National Females</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#db2777">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-venus"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="pwd_refugee_females" data-target="{{ pwd_refugee_females }}">0</p>
-        <p class="kpi-card-label mb-0">PWD Refugee Females</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#059669">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-flag"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="national_total" data-target="{{ national_total }}">0</p>
-        <p class="kpi-card-label mb-0">Total Nationals</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#dc2626">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-users"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="refugee_total" data-target="{{ refugee_total }}">0</p>
-        <p class="kpi-card-label mb-0">Total Refugees</p>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card interactive-card meal-kpi-card h-100" style="--metric-accent:#7c3aed">
-        <div class="kpi-card-top">
-          <span class="metric-icon-tint meal-icon-tint"><i class="fa fa-chart-simple"></i></span>
-        </div>
-        <p class="kpi-card-value counter" data-kpi="total_participants" data-target="{{ total_male|add:total_female }}">0</p>
-        <p class="kpi-card-label mb-0">Total Participants</p>
-      </div>
-    </div>
+    {% endfor %}
   </div>
 
   <div class="row g-3">

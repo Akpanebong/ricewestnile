@@ -22,6 +22,24 @@ QUARTERS = [
     ("4", "Q4 (Oct-Dec)"),
 ]
 
+# (metric key, label, icon class, accent color) for each MEAL dashboard KPI card.
+DASHBOARD_KPI_CARDS = [
+    ("refugee_male", "Refugee Male", "fa-mars", "#0f766e"),
+    ("national_male", "National Male", "fa-mars", "#16a34a"),
+    ("refugee_female", "Refugee Female", "fa-venus", "#db2777"),
+    ("national_female", "National Female", "fa-venus", "#f59e0b"),
+    ("pwd_total", "PWD Reached", "fa-wheelchair", "#334155"),
+    ("pwd_nationals", "PWD Nationals", "fa-flag", "#0d9488"),
+    ("pwd_refugees", "PWD Refugees", "fa-users", "#b91c1c"),
+    ("pwd_national_males", "PWD National Males", "fa-mars", "#1d4ed8"),
+    ("pwd_refugee_males", "PWD Refugee Males", "fa-mars", "#dc2626"),
+    ("pwd_national_females", "PWD National Females", "fa-venus", "#0891b2"),
+    ("pwd_refugee_females", "PWD Refugee Females", "fa-venus", "#db2777"),
+    ("national_total", "Total Nationals", "fa-flag", "#059669"),
+    ("refugee_total", "Total Refugees", "fa-users", "#dc2626"),
+    ("total_participants", "Total Participants", "fa-chart-simple", "#7c3aed"),
+]
+
 
 def _monitoring_route(request, name):
     namespace = getattr(getattr(request, "resolver_match", None), "namespace", "") or "monitoring"
@@ -171,6 +189,15 @@ def dashboard(request):
     enterprise_national = [(i["national_male"] or 0) + (i["national_female"] or 0) for i in enterprise_qs]
     enterprise_refugee = [(i["refugee_male"] or 0) + (i["refugee_female"] or 0) for i in enterprise_qs]
 
+    metrics_with_total = {
+        **metrics,
+        "total_participants": metrics["total_male"] + metrics["total_female"],
+    }
+    kpi_cards = [
+        {"key": key, "label": label, "icon": icon, "accent": accent, "value": metrics_with_total.get(key, 0)}
+        for key, label, icon, accent in DASHBOARD_KPI_CARDS
+    ]
+
     context = {
 
         "years": years,
@@ -187,6 +214,7 @@ def dashboard(request):
 
         "current_year": current_year,
 
+        "kpi_cards": kpi_cards,
         **metrics,
 
         "enterprise_types": DataEntry._meta.get_field("enterprise_type").choices,
