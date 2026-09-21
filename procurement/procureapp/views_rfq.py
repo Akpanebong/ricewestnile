@@ -123,6 +123,7 @@ def send_rfq_to_supplier(request, reference_no):
 
     sent_to = []
     errors = []
+    rate_limit_hit = False
 
     connection = get_connection()
 
@@ -158,7 +159,6 @@ def send_rfq_to_supplier(request, reference_no):
                         RICE West Nile Procurement Team
                         """,
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        # from_email=settings.DEFAULT_FROM_EMAIL,
                         to=[supplier.email],
                         connection=connection,
                     )
@@ -186,9 +186,25 @@ def send_rfq_to_supplier(request, reference_no):
                     )
 
                 except Exception as e:
+                    error_text = str(e)
+                    if "daily user sending limit exceeded" in error_text.lower() or "5.4.5" in error_text:
+                        rate_limit_hit = True
+                        errors.append(
+                            f"{supplier} ({supplier.email}): Gmail daily sending limit reached."
+                        )
+                        break
                     errors.append(
-                        f"{supplier} ({supplier.email}): {str(e)}"
+                        f"{supplier} ({supplier.email}): {error_text}"
                     )
+
+    except Exception as e:
+        error_text = str(e)
+        rate_limit_hit = "daily user sending limit exceeded" in error_text.lower() or "5.4.5" in error_text
+        errors.append(
+            "Gmail daily sending limit reached."
+            if rate_limit_hit
+            else f"Email connection failed: {error_text}"
+        )
 
     finally:
         connection.close()
@@ -204,16 +220,19 @@ def send_rfq_to_supplier(request, reference_no):
         )
 
     if errors:
-        messages.warning(
-            request,
-            "Some emails failed: " + "; ".join(errors)
-        )
+        if rate_limit_hit:
+            messages.error(
+                request,
+                "Gmail's daily sending limit has been reached. "
+                "No further supplier emails were sent; configure another SMTP provider "
+                "or wait for Gmail's limit to reset."
+            )
+        else:
+            messages.warning(request, "Some emails failed: " + "; ".join(errors))
 
     if not sent_to:
-        messages.error(
-            request,
-            "No emails were sent."
-        )
+        if not rate_limit_hit:
+            messages.error(request, "No emails were sent.")
 
     return redirect("rfq_list")
 
