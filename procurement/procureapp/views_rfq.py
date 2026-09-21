@@ -13,6 +13,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import get_connection, EmailMessage
 from django.conf import settings
 from xhtml2pdf import pisa
+
+from hr_apps.HRapp.templatetags.group_tags import has_group
 from procurement.procureapp.forms import RFQForm
 from procurement.procureapp.models import Requisition, RFQ, RFQSendLog, ProcurementPlan, PurchaseOrder
 from procurement.procureapp.utils import render_pdf, head_of_procurement_required
@@ -27,6 +29,10 @@ def create_rfq(request, pk):
 
     if not plan or plan.status != 'Approved':
         messages.error(request, "Related procurement plan is not approved.")
+        return redirect('rfq_list')
+
+    if not has_group(request.user, 'Procurement'):
+        messages.error(request, "You are not authorized to create RFQs.")
         return redirect('rfq_list')
 
     reference_no = (
@@ -88,25 +94,20 @@ def create_rfq(request, pk):
 # @head_of_procurement_required
 def send_rfq_to_supplier(request, reference_no):
 
-    rfq = get_object_or_404(
-        RFQ.objects.prefetch_related('supplier'),
-        reference_no=reference_no
-    )
+    rfq = get_object_or_404(RFQ.objects.prefetch_related('supplier'), reference_no=reference_no)
+
+    if not has_group(request.user, 'Procurement'):
+        messages.error(request, "You are not authorized to send RFQs to suppliers.")
+        return redirect('rfq_list')
 
     plan = rfq.req.procurement
 
-    request_id = hashlib.sha256(
-        f"rfq-{reference_no}".encode()
-    ).hexdigest()
+    request_id = hashlib.sha256(f"rfq-{reference_no}".encode()).hexdigest()
 
     if RFQSendLog.objects.filter(request_id=request_id, rfq=rfq
                                  ).exists() and rfq.status == "Sent":
         messages.warning(request, "RFQ already sent.")
-        return redirect(
-            "rfq_detail",
-            slug=rfq.slug,
-            reference_no=reference_no
-        )
+        return redirect("rfq_detail", slug=rfq.slug, reference_no=reference_no)
 
     if not rfq.file:
         messages.warning(request,"Generate the RFQ PDF before sending.")
@@ -157,6 +158,7 @@ def send_rfq_to_supplier(request, reference_no):
                         RICE West Nile Procurement Team
                         """,
                         from_email=settings.DEFAULT_FROM_EMAIL,
+                        # from_email=settings.DEFAULT_FROM_EMAIL,
                         to=[supplier.email],
                         connection=connection,
                     )

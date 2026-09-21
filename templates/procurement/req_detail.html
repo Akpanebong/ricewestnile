@@ -1227,7 +1227,7 @@
     ====================================================== -->
     <div class="po-actions">
 
-        {% if po.status != 'Approved' %}
+        {% if po.status != 'Approved' and po.status == "Pending"  %}
 
             <a
                 href="{% url 'po_update' po.pk %}"
@@ -1452,4 +1452,5 @@
 
 </div>
 
+{% include "procurement/reject_procurement.html" %}
 {% endblock %}

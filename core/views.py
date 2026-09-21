@@ -6,7 +6,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
 from django.db.models import Avg, Count, Q
+from django.core.paginator import Paginator
 from django.db.models.functions import TruncDay
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -159,6 +161,31 @@ def set_currency(request):
         request.session["display_currency"] = currency
         messages.success(request, "Display currency changed.")
     return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("system_home"))
+
+
+@login_required
+def system_activity_log(request):
+    """Daily system activity report available only to ED and superusers."""
+    if not (request.user.is_superuser or has_group(request.user, "ED")):
+        raise PermissionDenied("Only ED members and superusers may view the system activity log.")
+
+    selected_date = timezone.localdate()
+    date_value = request.GET.get("date")
+    if date_value:
+        try:
+            selected_date = datetime.strptime(date_value, "%Y-%m-%d").date()
+        except ValueError:
+            selected_date = timezone.localdate()
+
+    activity_queryset = SystemActivity.objects.filter(
+        created_at__date=selected_date,
+    ).select_related("actor")
+    page_obj = Paginator(activity_queryset, 100).get_page(request.GET.get("page"))
+
+    return render(request, "core/system_activity_log.html", {
+        "page_obj": page_obj,
+        "selected_date": selected_date,
+    })
 
 
 class LocationListView(MealTeamAccessMixin, ListView):

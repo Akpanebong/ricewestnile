@@ -12,10 +12,11 @@ from hr_apps.HRapp.models import Employee
 from hr_apps.HRapp.templatetags.group_tags import has_group
 from django.db import transaction
 from django.db.models import Q
+from django.contrib.auth.models import Group
 from hr_apps.HRapp.views import is_supervisor
 from hr_apps.HRapp.utils import employee_leave_balances
-from .models import Department, Profile, ExitProcess, ExitStepType, ExitStepStatus, Unit, ProgramArea, PROFILE_TYPE
-from .forms import DepartmentForm, ProfileForm, EmployeeUpdateForm, ExitProcessStepFormSet, get_employee_profile_form_sections, UnitForm, ProgramAreaForm
+from .models import Department, EditAccessGrant, EditAccessRequest, Profile, ExitProcess, ExitStepType, ExitStepStatus, Unit, ProgramArea, PROFILE_TYPE
+from .forms import DepartmentForm, EditAccessRequestForm, ProfileForm, EmployeeUpdateForm, ExitProcessStepFormSet, get_employee_profile_form_sections, UnitForm, ProgramAreaForm
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.conf import settings
@@ -23,7 +24,7 @@ from .permissions import is_hr, is_cmt
 from .utils import generate_strong_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib import messages
@@ -36,6 +37,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 from datetime import date as dt_date
 from hr_apps.HRapp.employee_models import (BankDetail, Dependant, EducationHistory, EmergencyContact, EmployeeAddress, EmployeeContact, EmployeePersonalInfo, WorkExperience)
+from notification.models import Notification
+from notification.utils import notify
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -459,8 +462,6 @@ def projects_for_unit(request):
     return JsonResponse({'projects': [{'id': project.id, 'name': project.name} for project in projects]})
 
 
-
-
 @login_required
 def profile_create(request):
     current_user = request.user
@@ -803,6 +804,139 @@ def import_employees(request):
 
 
 @login_required(login_url='login')
+def edit_access_apply(request):
+    """Allow staff to request temporary edit access."""
+    if request.user.is_superuser or has_group(request.user, "ED"):
+        messages.info(request, "You already have permanent edit access.")
+        return redirect("system_home")
+
+    pending = EditAccessRequest.objects.filter(
+        applicant=request.user,
+        status=EditAccessRequest.Status.PENDING,
+    ).first()
+    if pending:
+        messages.info(request, "You already have a pending edit-access request.")
+        return render(request, "account/edit_access_apply.html", {"form": None, "pending": pending})
+
+    form = EditAccessRequestForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        access_request = form.save(commit=False)
+        access_request.applicant = request.user
+        access_request.save()
+
+        ed_users = Profile.objects.filter(
+            Q(groups__name__iexact="ED") | Q(is_superuser=True),
+            is_active=True,
+        ).distinct()
+        notify(
+            title="Edit access request received",
+            message=f"{request.user} has requested temporary edit access.",
+            request=request,
+            users=ed_users,
+            category=Notification.Category.INFO,
+            source_app=Notification.Source.HR,
+            action_url=reverse("edit_access_requests"),
+        )
+        ed_emails = [user.email for user in ed_users if user.email]
+        if ed_emails:
+            approval_url = request.build_absolute_uri(reverse("edit_access_requests"))
+            try:
+                send_mail(
+                    subject="New temporary edit-access request",
+                    message=(
+                        f"{request.user} has requested {access_request.requested_minutes} minutes of edit access.\n\n"
+                        f"Open the approval queue to review and approve or deny this request:\n{approval_url}"
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=ed_emails,
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception("Unable to email ED reviewers about edit-access request %s", access_request.pk)
+        messages.success(request, "Your edit-access request was submitted for ED approval.")
+        return redirect("edit_access_apply")
+
+    return render(request, "account/edit_access_apply.html", {"form": form, "pending": None})
+
+
+@login_required(login_url="login")
+def edit_access_requests(request):
+    """ED approval queue for temporary edit-access applications."""
+    if not (request.user.is_superuser or has_group(request.user, "ED")):
+        raise PermissionDenied("Only ED members and superusers may review edit-access requests.")
+
+    requests = EditAccessRequest.objects.select_related("applicant", "reviewed_by").all()
+    return render(request, "account/edit_access_requests.html", {"requests": requests})
+
+
+@login_required(login_url="login")
+def edit_access_decision(request, pk):
+    if not (request.user.is_superuser or has_group(request.user, "ED")):
+        raise PermissionDenied("Only ED members and superusers may review edit-access requests.")
+    if request.method != "POST":
+        return redirect("edit_access_requests")
+
+    with transaction.atomic():
+        access_request = get_object_or_404(
+            EditAccessRequest.objects.select_for_update().select_related("applicant"),
+            pk=pk,
+        )
+        if access_request.status != EditAccessRequest.Status.PENDING:
+            messages.info(request, "This request has already been reviewed.")
+            return redirect("edit_access_requests")
+
+        decision = request.POST.get("decision")
+        access_request.reviewed_by = request.user
+        access_request.reviewed_at = timezone.now()
+        access_request.decision_notes = request.POST.get("decision_notes", "").strip()
+
+        if decision == "approve":
+            expires_at = timezone.now() + datetime.timedelta(minutes=access_request.requested_minutes)
+            edit_group, _ = Group.objects.get_or_create(name="Edit")
+            access_request.applicant.groups.add(edit_group)
+            EditAccessGrant.objects.update_or_create(
+                user=access_request.applicant,
+                defaults={"granted_by": request.user, "expires_at": expires_at,},)
+            access_request.status = EditAccessRequest.Status.APPROVED
+            subject = "Temporary edit access approved"
+            local_expires_at = timezone.localtime(expires_at)
+            message = f"Your request for {access_request.requested_minutes} minutes of edit access was approved. Access expires at {local_expires_at:%Y-%m-%d %H:%M} ({settings.TIME_ZONE})."
+            category = Notification.Category.SUCCESS
+            messages.success(request, f"Edit access approved for {access_request.applicant}.")
+        elif decision == "deny":
+            access_request.status = EditAccessRequest.Status.DENIED
+            subject = "Temporary edit access request denied"
+            message = "Your request for temporary edit access was denied."
+            category = Notification.Category.WARNING
+            messages.warning(request, f"Edit access denied for {access_request.applicant}.")
+        else:
+            messages.error(request, "Choose either approve or deny.")
+            return redirect("edit_access_requests")
+
+        access_request.save(update_fields=["status", "reviewed_by", "reviewed_at", "decision_notes"])
+        notify(
+            title=subject,
+            message=message,
+            request=request,
+            users=[access_request.applicant],
+            category=category,
+            source_app=Notification.Source.HR,
+            action_url=reverse("edit_access_apply"),
+        )
+        if access_request.applicant.email:
+            print(access_request.applicant.email)
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[access_request.applicant.email],
+                fail_silently=True,
+            )
+
+    return redirect("edit_access_requests")
+
+
+@login_required(login_url='login')
 def update_profile(request, slug):
     user = request.user
     readonly_profile_fields = {
@@ -832,6 +966,7 @@ def update_profile(request, slug):
                 request.FILES,
                 instance=user,
                 readonly_fields=readonly_profile_fields,
+                require_signature=True,
             )
             employee_form = EmployeeUpdateForm(
                 request.POST,
@@ -873,7 +1008,11 @@ def update_profile(request, slug):
                 return redirect("update_employee", slug=user.slug)
             messages.error(request, "Please correct the errors below.")
         else:
-            profile_form = ProfileForm(instance=user, readonly_fields=readonly_profile_fields)
+            profile_form = ProfileForm(
+                instance=user,
+                readonly_fields=readonly_profile_fields,
+                require_signature=True,
+            )
             employee_form = EmployeeUpdateForm(instance=employee, readonly_fields=readonly_employee_fields)
             single_forms, formsets, employee_sections = get_employee_profile_form_sections(employee=employee)
 
@@ -894,6 +1033,7 @@ def update_profile(request, slug):
             request.FILES,
             instance=user,
             readonly_fields=readonly_profile_fields,
+            require_signature=True,
         )
         # internship_form = InternshipUpdateForm(request.POST, instance=obj)
 
@@ -905,7 +1045,11 @@ def update_profile(request, slug):
             return redirect("update_employee", slug=user.slug)
         messages.error(request, "Please correct the errors below.")
     else:
-        profile_form = ProfileForm(instance=user, readonly_fields=readonly_profile_fields)
+        profile_form = ProfileForm(
+            instance=user,
+            readonly_fields=readonly_profile_fields,
+            require_signature=True,
+        )
         # internship_form = InternshipUpdateForm(instance=obj)
 
     return render(request, "account/update_profile.html", {

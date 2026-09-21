@@ -3,6 +3,7 @@ import json
 
 from django.test import TestCase
 from django.urls import reverse
+from django.contrib.auth.models import Group
 
 from account.models import Profile
 from risk_apps.governance.models import Policy
@@ -12,6 +13,7 @@ from risk_apps.risk.models import Impact, Likelihood, Risk, RiskCategory
 class RiskViewTests(TestCase):
     def setUp(self):
         self.user = Profile.objects.create_user(username="risk", password="pass12345")
+        self.user.groups.add(Group.objects.get(name="Edit"))
         self.client.force_login(self.user)
         self.category = RiskCategory.objects.create(name="Operational", risk_owner="Ops", status="active")
         self.likelihood = Likelihood.objects.create(rating=3, descriptor="Possible", definition="Possible event")

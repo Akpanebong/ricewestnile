@@ -116,6 +116,9 @@ class Profile(AbstractUser):
     class Meta:
         verbose_name = "Profile"
         ordering = ("first_name", "last_name", "username")
+        permissions = [
+            ("can_edit_records", "Can edit, update, and delete records through temporary Edit access"),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -150,6 +153,58 @@ class Profile(AbstractUser):
 
     def __str__(self):
         return self.get_full_name() or self.username
+
+
+class EditAccessGrant(models.Model):
+    """A temporary grant attached to membership of the Edit group."""
+
+    user = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name="edit_access_grant")
+    granted_by = models.ForeignKey(
+        Profile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="edit_access_grants_issued",
+    )
+    granted_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-granted_at",)
+        indexes = [models.Index(fields=("expires_at",))]
+
+    def __str__(self):
+        return f"Edit access for {self.user} until {timezone.localtime(self.expires_at):%Y-%m-%d %H:%M}"
+
+
+class EditAccessRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        DENIED = "denied", "Denied"
+
+    applicant = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="edit_access_requests")
+    requested_minutes = models.PositiveIntegerField(default=30)
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True)
+    reviewed_by = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, blank=True, related_name="edit_access_requests_reviewed")
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    decision_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("applicant",),
+                condition=models.Q(status="pending"),
+                name="one_pending_edit_request_per_applicant",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.applicant} - {self.get_status_display()} edit access request"
 
 
 class ExitStepStatus(models.TextChoices):

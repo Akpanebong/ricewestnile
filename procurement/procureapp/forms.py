@@ -2,7 +2,6 @@ from django import forms
 from django.forms import inlineformset_factory
 from django.contrib.auth import get_user_model
 
-from account.models import Profile
 from core.project_models import ProjectBudget, Project
 from .models import (
     ProcurementPlan, ProcurementPlanItem, Supplier, SupplierSpendReport,
@@ -192,11 +191,15 @@ class RequisitionForm(forms.ModelForm):
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        queryset = ProcurementPlan.objects.filter(status="Approved", project__project_officer=self.user)
+        queryset = ProcurementPlan.objects.filter(status="Approved")
 
-        if self.user and not self.user.is_superuser:
-            profile = Profile.objects.get(user=self.user)
-            queryset = queryset.filter(project__project_officer=profile)
+        if not self.user:
+            queryset = queryset.none()
+        elif not self.user.is_superuser:
+            # Profile is the project's AUTH_USER_MODEL, not a wrapper with a
+            # separate ``user`` relation. Filter directly by the authenticated
+            # user to support every staff account consistently.
+            queryset = queryset.filter(project__project_officer=self.user)
 
         self.fields["procurement"].queryset = queryset.select_related("project",
             "project__project_officer",)

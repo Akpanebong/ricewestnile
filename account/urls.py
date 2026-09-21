@@ -47,6 +47,9 @@ urlpatterns = [
 
     # Profile URLs
     path('update_profile/<slug:slug>/', views.update_profile, name='update_employee'),
+    path('edit-access/apply/', views.edit_access_apply, name='edit_access_apply'),
+    path('edit-access/requests/', views.edit_access_requests, name='edit_access_requests'),
+    path('edit-access/requests/<int:pk>/decision/', views.edit_access_decision, name='edit_access_decision'),
     path('profiles/', views.profile_list, name='profile_list'),
     path('profiles/create/', views.profile_create, name='profile_create'),
     path('profiles/import/', views.import_employees, name='import_employees'),

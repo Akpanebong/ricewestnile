@@ -16,7 +16,6 @@ from procurement.procureapp.forms import RequisitionForm, RequisitionItemFormSet
 from procurement.procureapp.models import Requisition, RequisitionItem, Product
 from procurement.procureapp.utils import render_pdf, send_html_email
 
-
 @login_required(login_url='login')
 def req_create(request):
     if not request.user.is_superuser and not Project.objects.filter(project_officer=request.user).exists():
@@ -101,6 +100,10 @@ def req_update(request, pk):
                                 f' hence cannot be edited.')
         return redirect('po_detail', po.pk)
 
+    if request.user != po.issued_by:
+        messages.warning(request, f'Oops! You are not the owner of this requisition.')
+        return redirect('po_detail', po.pk)
+
     if request.method == 'POST':
         form = RequisitionForm(request.POST, instance=po, user=request.user)
         formset = RequisitionItemFormSet(request.POST, instance=po, prefix='items')
@@ -142,8 +145,42 @@ def req_approve(request, pk):
 
     po = get_object_or_404(Requisition, pk=pk)
 
-    action = request.POST.get("action")
+    raw_action = (
+        request.POST.get("action")
+        or request.POST.get("decision")
+        or request.POST.get("approval_action")
+        or ""
+    ).strip().lower().replace(" ", "_")
+    action = {
+        "review": "Reviewed",
+        "reviewed": "Reviewed",
+        "review_requisition": "Reviewed",
+        "check": "Checked",
+        "checked": "Checked",
+        "check_requisition": "Checked",
+        "approve": "Approved",
+        "approved": "Approved",
+        "approve_requisition": "Approved",
+        "reject": "Rejected",
+        "rejected": "Rejected",
+        "confirm_rejection": "Rejected",
+    }.get(raw_action)
     reason = request.POST.get("reason", "")
+
+    # Some older rendered forms submitted the approval endpoint without the
+    # button's name/value pair. Recover the intended stage action instead of
+    # rejecting an otherwise valid approval submission.
+    if action is None:
+        project = po.procurement.project if po.procurement else None
+        user = request.user
+        if reason.strip():
+            action = "Rejected"
+        elif user == (project.project_head if project else None) and po.status == "Pending":
+            action = "Reviewed"
+        elif user == (project.project_accountant if project else None) and po.status == "Reviewed":
+            action = "Checked"
+        elif user.groups.filter(name__iexact="ED").exists() and po.status == "Checked":
+            action = "Approved"
 
     if action not in ["Reviewed", "Checked", "Approved", "Rejected"]:
         messages.error(request, "Invalid action.")
@@ -273,10 +310,8 @@ def req_approve(request, pk):
         f"Requisition {po.number} {po.status.lower()} successfully."
     )
 
-    return redirect(
-        "po_detail",
-        pk=po.pk
-    )
+    return redirect("po_detail", pk=po.pk)
+
 
 def req_notify_requester(po, message):
 
@@ -415,8 +450,7 @@ class RequisitionDetailView(DetailView):
             'po': requisition,
             'project_head': project.project_head if project else None,
             'project_accountant': project.project_accountant if project else None,
-            'ed': Profile.objects.get(groups__name__iexact='ED'),
-            # 'ed': Group.objects.get(name__iexact='ED'),
+            'ed': Profile.objects.filter(groups__name__iexact='ED').order_by('id').first(),
             'approvals': approvals,
             'progress_percent': progress_percent,
             'total_stages': total_stages,

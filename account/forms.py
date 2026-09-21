@@ -1,6 +1,6 @@
 from django import forms
 from django.core.validators import RegexValidator
-from .models import Profile, Department, ExitProcessStep, Unit, ProgramArea
+from .models import EditAccessRequest, Profile, Department, ExitProcessStep, Unit, ProgramArea
 from django.forms import CheckboxInput
 from hr_apps.HRapp.employee_models import (BankDetail, Dependant, EducationHistory,EmergencyContact, Employee, EmployeeAddress, EmployeeContact, EmployeePersonalInfo, WorkExperience,)
 from django.forms import inlineformset_factory, modelformset_factory
@@ -34,6 +34,24 @@ class ProgramAreaForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class EditAccessRequestForm(forms.ModelForm):
+    class Meta:
+        model = EditAccessRequest
+        fields = ["requested_minutes", "reason"]
+        widgets = {
+            "requested_minutes": forms.Select(choices=((5, "5 minutes"), (10, "10 minutes"), (15, "15 minutes"), (20, "20 minutes")),
+                                              attrs={'class': 'form-control'}),
+            "reason": forms.Textarea(attrs={"rows": 4, "placeholder": "Explain why temporary edit access is needed.",
+                                            "class": "form-control"}),
+        }
+
+    def clean_requested_minutes(self):
+        minutes = self.cleaned_data["requested_minutes"]
+        if minutes not in {5, 10, 15, 20}:
+            raise forms.ValidationError("Choose a valid access duration.")
+        return minutes
 
 
 class EmployeeUpdateForm(forms.ModelForm):
@@ -365,7 +383,8 @@ class ProfileForm(forms.ModelForm):
             'username', 'title', 'first_name', 'last_name',
             'email', 'program_area', 'phone',
             'profile_type', 'status', 'probation_starts', 'probation_ends',
-             'department',  'unit', 'project', "is_CMT", 'can_review', 'address'
+             'department',  'unit', 'project', "is_CMT", 'can_review', 'address',
+            'signature',
         ]
         widgets = {
             "probation_starts": forms.DateInput(attrs={"type": "date"}),
@@ -375,7 +394,13 @@ class ProfileForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         readonly_fields = set(kwargs.pop("readonly_fields", ()))
+        require_signature = kwargs.pop("require_signature", False)
         super().__init__(*args, **kwargs)
+        self.require_signature = require_signature
+
+        if require_signature and not self.instance.signature:
+            self.fields["signature"].required = True
+            self.fields["signature"].help_text = "Upload your signature. This is required before you can save your profile."
 
         for name, field in self.fields.items():
             if field.widget.__class__.__name__ == "CheckboxInput":
@@ -423,6 +448,9 @@ class ProfileForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
+        if self.require_signature and not cleaned.get("signature") and not self.errors.get("signature"):
+            self.add_error("signature", "A signature is required and cannot be removed.")
+
         status = cleaned.get("status")
         probation_starts = cleaned.get("probation_starts")
         probation_ends = cleaned.get("probation_ends")
@@ -443,6 +471,7 @@ class ProfileForm(forms.ModelForm):
             "Personal Info": ["first_name", "last_name", "title", "is_CMT"],
             "Work Info": ["department", "program_area", "profile_type", "status", "probation_starts", "probation_ends"],
             "Contact Info": ["phone", "address"],
+            "Signature": ["signature"],
         }
 
 
@@ -460,9 +489,4 @@ class ExitProcessStepUpdateForm(forms.ModelForm):
         self.fields["attachment"].widget.attrs.update({"class": "form-control"})
 
 
-ExitProcessStepFormSet = modelformset_factory(
-    ExitProcessStep,
-    form=ExitProcessStepUpdateForm,
-    extra=0,
-    can_delete=False,
-)
+ExitProcessStepFormSet = modelformset_factory(ExitProcessStep, form=ExitProcessStepUpdateForm, extra=0, can_delete=False,)

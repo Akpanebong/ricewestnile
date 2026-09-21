@@ -28,7 +28,12 @@ def is_finance_editor(user):
 def finance_editor_required(view):
     @wraps(view)
     def wrapped(request, *args, **kwargs):
-        if not is_finance_editor(request.user):
+        url_name = getattr(getattr(request, "resolver_match", None), "url_name", "") or ""
+        is_edit_route = any(action in url_name.lower() for action in ("update", "edit", "delete", "trash"))
+        from account.permissions import can_delete_or_trash, can_update_or_edit
+        is_delete_route = any(action in url_name.lower() for action in ("delete", "trash"))
+        temporary_access = can_delete_or_trash(request.user) if is_delete_route else can_update_or_edit(request.user)
+        if not is_finance_editor(request.user) and not (is_edit_route and temporary_access):
             messages.error(request, "Only Finance staff or a superuser can make changes in Finance.")
             return redirect("finance:dashboard")
         return view(request, *args, **kwargs)

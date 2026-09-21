@@ -49,6 +49,11 @@ def superuser_required(view_func):
         if not request.user.is_authenticated:
             return redirect("login")
         if not request.user.is_superuser:
+            url_name = getattr(getattr(request, "resolver_match", None), "url_name", "") or ""
+            is_edit_route = any(action in url_name.lower() for action in ("update", "edit", "delete", "trash"))
+            from .permissions import can_edit_or_delete
+            if is_edit_route and can_edit_or_delete(request.user):
+                return view_func(request, *args, **kwargs)
             return redirect("monitoring:dashboard")
         return view_func(request, *args, **kwargs)
 

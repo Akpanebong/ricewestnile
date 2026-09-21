@@ -1167,7 +1167,8 @@ class TrainingUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return obj
 
     def test_func(self):
-        return self.request.user.is_staff
+        from account.permissions import can_edit_or_delete
+        return self.request.user.is_staff or can_edit_or_delete(self.request.user)
 
     def form_valid(self, form):
         participants = form.cleaned_data['participants']

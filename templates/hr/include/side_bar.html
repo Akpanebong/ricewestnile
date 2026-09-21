@@ -21,6 +21,39 @@
 </a>
 
 
+{% if request.user.is_superuser or request.user|has_group:"ED" %}
+<a href="{% url 'edit_access_requests' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'edit_access_requests' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-user-check"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Edit Access Approvals
+    </span>
+
+</a>
+{% else %}
+
+<a href="{% url 'edit_access_apply' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'edit_access_apply' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-key"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Request Edit Access
+    </span>
+
+</a>
+
+{% endif %}
+
+
 <!-- =====================================================
      WORKFORCE MANAGEMENT
 ===================================================== -->
@@ -438,6 +471,23 @@ module-open
     </span>
 
 </a>
+
+
+{% if request.user.is_superuser or request.user|has_group:"ED" %}
+<a href="{% url 'system_activity_log' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'system_activity_log' %}active{% endif %}">
+
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-list-check"></i>
+    </span>
+
+    <span class="sidebar-nav-text">
+        Daily System Activity
+    </span>
+
+</a>
+{% endif %}
 
 
 <!-- =====================================================

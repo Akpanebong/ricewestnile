@@ -27,7 +27,10 @@ class NotificationAdminMixin(UserPassesTestMixin):
     """
 
     def test_func(self):
-        return self.request.user.is_superuser
+        from account.permissions import can_update_or_edit
+        url_name = getattr(getattr(self.request, "resolver_match", None), "url_name", "") or ""
+        is_edit_route = any(action in url_name.lower() for action in ("update", "edit", "delete", "trash"))
+        return self.request.user.is_superuser or (is_edit_route and can_update_or_edit(self.request.user))
 
 
 class NotificationListView(NotificationRecipientMixin, ListView):
@@ -135,7 +138,8 @@ class NotificationUpdateView(NotificationAdminMixin, LoginRequiredMixin, UpdateV
 
 def notification_delete(request, pk):
 
-    if not request.user.is_superuser:
+    from account.permissions import can_delete_or_trash
+    if not can_delete_or_trash(request.user):
 
         messages.error(
             request,

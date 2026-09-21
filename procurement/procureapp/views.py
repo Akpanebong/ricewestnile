@@ -104,10 +104,6 @@ def get_project_budget_data():
 
 @login_required(login_url='login')
 def dashboard(request):
-    if not (has_group(request.user, 'Procurement') or has_group(request.user, 'ED')  or request.user.is_superuser):
-        messages.error(request, "Only Procurement staff, ED, or a superuser can access the Procurement dashboard.")
-        return redirect(reverse_lazy("system_home"))
-
     money_field = DecimalField(max_digits=18, decimal_places=2)
     zero_money = Value(0, output_field=money_field)
 
@@ -648,7 +644,7 @@ class ProcurementPlanDetailView(DetailView):
             "approvals": approvals,
             "total_stages": total_stages,
             "progress_percent": progress_percent,
-            'ed': Profile.objects.get(groups__name__iexact='ED'),
+            'ed': Profile.objects.filter(groups__name__iexact='ED').order_by('id').first(),
             "programs_head": get_object_or_404(Department, name="Programs").head if get_object_or_404(Department, name="Programs").head else None,
             "organization_name": "RICE West Nile",
             "total_amount": procurement.total_amount,

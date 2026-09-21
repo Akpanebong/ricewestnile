@@ -19,6 +19,7 @@ urlpatterns = [
     # "M&E Currency"), when both pointed at the exact same view and data.
     path("settings/currency/", core_views.currency_settings, name="currency_settings"),
     path("settings/currency/set/", core_views.set_currency, name="set_currency"),
+    path("audit/activity/", core_views.system_activity_log, name="system_activity_log"),
     path("asset/", include("assets.assetapp.urls")),
     path("notification/", include("notification.urls")),
     path("communication/", include("com_app.communication.urls")),

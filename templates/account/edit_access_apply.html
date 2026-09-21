@@ -1,0 +1,41 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Request Edit Access | RICE WN{% endblock %}
+{% block system_name %}Edit Access Request{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <span class="text-uppercase text-muted small fw-semibold">Temporary permission</span>
+                    <h1 class="h3 mt-2">Request edit access</h1>
+                    <p class="text-muted">Submit a request to ED when you need to update or delete an existing record. Access is temporary and is consumed after a successful edit.</p>
+
+                    {% if pending %}
+                        <div class="alert alert-info mb-0">
+                            Your request is pending ED review. Requested duration: <strong>{{ pending.requested_minutes }} minutes</strong>.
+                        </div>
+                    {% elif form %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label" for="id_requested_minutes">Requested access duration</label>
+                                {{ form.requested_minutes }}
+                                {% for error in form.requested_minutes.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="id_reason">Reason</label>
+                                {{ form.reason }}
+                                {% for error in form.reason.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                            </div>
+                            <button class="btn btn-primary" type="submit">Submit request</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

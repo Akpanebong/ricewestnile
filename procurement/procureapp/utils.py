@@ -87,6 +87,15 @@ def head_of_procurement_required(view_func):
         if user.is_superuser:
             return view_func(request, *args, **kwargs)
 
+        url_name = getattr(getattr(request, "resolver_match", None), "url_name", "") or ""
+        is_edit_route = any(action in url_name.lower() for action in ("update", "edit", "delete", "trash"))
+        if is_edit_route:
+            is_delete_route = any(action in url_name.lower() for action in ("delete", "trash"))
+            from account.permissions import can_delete_or_trash, can_update_or_edit
+            allowed = can_delete_or_trash(user) if is_delete_route else can_update_or_edit(user)
+            if allowed:
+                return view_func(request, *args, **kwargs)
+
         # Department check
         is_operations = (
             hasattr(user, "department")

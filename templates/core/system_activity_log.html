@@ -1,0 +1,65 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Daily System Activity | RICE WN{% endblock %}
+{% block system_name %}Daily System Activity{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <span class="text-uppercase text-muted small fw-semibold">ED Assurance</span>
+            <h1 class="h3 mb-1">Daily System Activity</h1>
+            <p class="text-muted mb-0">Activity recorded for {{ selected_date|date:"l, d F Y" }}.</p>
+        </div>
+        <form method="get" class="d-flex gap-2 align-items-end">
+            <div>
+                <label for="activity-date" class="form-label small mb-1">Activity date</label>
+                <input id="activity-date" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-control">
+            </div>
+            <button class="btn btn-primary" type="submit">View day</button>
+        </form>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th>Path</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in page_obj %}
+                    <tr>
+                        <td>{{ activity.created_at|date:"H:i:s" }}</td>
+                        <td>{{ activity.actor|default:"System" }}</td>
+                        <td>{{ activity.module|title }}</td>
+                        <td><span class="badge text-bg-secondary">{{ activity.action }}</span></td>
+                        <td class="text-break">{{ activity.path|default:"—" }}</td>
+                        <td>{{ activity.status_code }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-5">No activity recorded for this date.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Activity pages">
+                <ul class="pagination mb-0">
+                    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?date={{ selected_date|date:'Y-m-d' }}&page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+                    <li class="page-item active"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?date={{ selected_date|date:'Y-m-d' }}&page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
