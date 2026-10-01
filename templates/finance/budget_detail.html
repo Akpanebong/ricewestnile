@@ -523,6 +523,26 @@
         }
 
     }
+
+    .bva-summary-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 0.9rem 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .bva-summary-label {
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+    .bva-summary-value {
+        font-size: 1.3rem;
+        font-weight: 800;
+    }
 </style>
 
 
@@ -707,13 +727,21 @@
                 <thead>
 
                     <tr>
-                        <th>Code</th>
+                        <th>Account</th>
                         <th>Outcome / Activity</th>
-                        <th>Description</th>
-                        <th>Unit cost ({{ display_currency }})</th>
-                        <th>Units</th>
-                        <th>Freq.</th>
-                        <th>Total ({{ display_currency }})</th>
+                        <th>Jan</th>
+                        <th>Feb</th>
+                        <th>Mar</th>
+                        <th>Apr</th>
+                        <th>May</th>
+                        <th>Jun</th>
+                        <th>Jul</th>
+                        <th>Aug</th>
+                        <th>Sep</th>
+                        <th>Oct</th>
+                        <th>Nov</th>
+                        <th>Dec</th>
+                        <th>Yearly ({{ display_currency }})</th>
                     </tr>
 
                 </thead>
@@ -725,10 +753,10 @@
 
                         <tr>
 
-                            <!-- Code -->
+                            <!-- Account -->
                             <td>
                                 <span class="line-code">
-                                    {{ line.code }}
+                                    {{ line.category.code }} — {{ line.category.name }}
                                 </span>
                             </td>
 
@@ -747,39 +775,17 @@
                             </td>
 
 
-                            <!-- Description -->
-                            <td>
-                                <div class="line-description">
-                                    {{ line.description }}
-                                </div>
-                            </td>
-
-
-                            <!-- Unit cost -->
-                            <td>
-                                <span class="line-cost">
-                                    {{ line.price_per_unit|accounting_money:request }}
-                                </span>
-                            </td>
-
-
-                            <!-- Units -->
+                            <!-- Monthly amounts -->
+                            {% for month_number, amount in line.monthly_amounts %}
                             <td>
                                 <span class="line-number">
-                                    {{ line.units|floatformat:2 }}
+                                    {{ amount|accounting_money:request }}
                                 </span>
                             </td>
+                            {% endfor %}
 
 
-                            <!-- Frequency -->
-                            <td>
-                                <span class="line-number">
-                                    {{ line.frequency|floatformat:2 }}
-                                </span>
-                            </td>
-
-
-                            <!-- Total -->
+                            <!-- Yearly total -->
                             <td>
                                 <span class="line-total">
                                     {{ line.total|accounting_money:request }}
@@ -792,7 +798,7 @@
 
                         <tr>
 
-                            <td colspan="7" class="budget-lines-empty">
+                            <td colspan="15" class="budget-lines-empty">
 
                                 <div class="budget-lines-empty-icon">
                                     <i class="fa-solid fa-list"></i>
@@ -816,6 +822,100 @@
 
             </table>
 
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         BUDGET VS ACTUAL
+         Actual is read live from FinancialTransaction (via
+         FinanceBudgetLine.actual_for_month/actual_total) — never
+         hand-typed, so it can't drift from the ledger.
+    ====================================================== -->
+
+    <div class="budget-lines-card mt-4">
+
+        <div class="budget-lines-header">
+
+            <div class="lines-title">
+                <div class="lines-title-icon">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                Budget vs Actual
+            </div>
+
+            <span class="lines-count">{{ budget.period_start.year }}</span>
+
+        </div>
+
+        <div class="row g-3 p-3">
+            <div class="col-sm-4">
+                <div class="bva-summary-card">
+                    <span class="bva-summary-label">Yearly Budget</span>
+                    <span class="bva-summary-value">{{ yearly_budget_total|accounting_money:request }}</span>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="bva-summary-card">
+                    <span class="bva-summary-label">Yearly Actual</span>
+                    <span class="bva-summary-value">{{ yearly_actual_total|accounting_money:request }}</span>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="bva-summary-card">
+                    <span class="bva-summary-label">Variance</span>
+                    <span class="bva-summary-value {% if yearly_variance_total < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ yearly_variance_total|accounting_money:request }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle budget-lines-table">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+                        <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+                        <th>Yearly Budget</th>
+                        <th>Yearly Actual</th>
+                        <th>Variance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in lines_vs_actual %}
+                    <tr>
+                        <td>
+                            <span class="line-code">{{ row.line.category.code }} — {{ row.line.category.name }}</span>
+                        </td>
+                        {% for cell in row.monthly %}
+                        <td>
+                            <div>{{ cell.budget|accounting_money:request }}</div>
+                            <small class="{% if cell.variance < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                {{ cell.actual|accounting_money:request }}
+                            </small>
+                        </td>
+                        {% endfor %}
+                        <td>{{ row.yearly_budget|accounting_money:request }}</td>
+                        <td>{{ row.yearly_actual|accounting_money:request }}</td>
+                        <td class="{% if row.yearly_variance < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ row.yearly_variance|accounting_money:request }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="15" class="budget-lines-empty">
+                            <div class="budget-lines-empty-icon">
+                                <i class="fa-solid fa-scale-balanced"></i>
+                            </div>
+                            <strong>Nothing to compare yet</strong>
+                            <span>Add budget lines linked to accounts to see Budget vs Actual here.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
 
     </div>

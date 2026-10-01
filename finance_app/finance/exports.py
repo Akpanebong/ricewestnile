@@ -44,15 +44,26 @@ def _currency_format(request):
 
 def budget_xlsx(budget, request=None):
     wb = Workbook(); ws = wb.active; ws.title = "Budget"
-    columns = ["Code", "Outcome", "Activity", "Description", "Unit", "Price per unit", "Units", "Frequency", "Total", "Budget justification"]
+    month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    columns = ["Account", "Account name", "Outcome", "Activity"] + month_labels + ["Yearly", "Budget justification"]
     _style(ws, f"RICE West Nile - Budget: {budget.name}", columns)
+    yearly_col = 5 + len(month_labels)  # first 4 cols + 12 months
     for row, line in enumerate(budget.lines.all(), 4):
-        ws.append([line.code, line.outcome, line.activity, line.description, line.unit, _amount(line.price_per_unit, request), float(line.units), float(line.frequency), f"=F{row}*G{row}*H{row}", line.justification])
+        amounts = [_amount(amount, request) for _, amount in line.monthly_amounts]
+        first_month_col = get_column_letter(5)
+        last_month_col = get_column_letter(4 + len(month_labels))
+        ws.append(
+            [line.category.code, line.category.name, line.outcome, line.activity]
+            + amounts
+            + [f"=SUM({first_month_col}{row}:{last_month_col}{row})", line.justification]
+        )
     for row in range(4, ws.max_row + 1):
-        ws.cell(row, 6).number_format = ws.cell(row, 9).number_format = _currency_format(request)
-    ws.cell(ws.max_row + 2, 8, "TOTAL").font = Font(bold=True)
-    ws.cell(ws.max_row + 2, 9, f"=SUM(I4:I{ws.max_row})").font = Font(bold=True)
-    for col in range(1, 11): ws.column_dimensions[get_column_letter(col)].width = min(38, max(13, max(len(str(ws.cell(r, col).value or "")) for r in range(3, ws.max_row + 1)) + 2))
+        for col in range(5, yearly_col + 1):
+            ws.cell(row, col).number_format = _currency_format(request)
+    ws.cell(ws.max_row + 2, yearly_col - 1, "TOTAL").font = Font(bold=True)
+    yearly_col_letter = get_column_letter(yearly_col)
+    ws.cell(ws.max_row + 2, yearly_col, f"=SUM({yearly_col_letter}4:{yearly_col_letter}{ws.max_row})").font = Font(bold=True)
+    for col in range(1, len(columns) + 1): ws.column_dimensions[get_column_letter(col)].width = min(38, max(13, max(len(str(ws.cell(r, col).value or "")) for r in range(3, ws.max_row + 1)) + 2))
     return _response(wb, f"budget_{budget.pk}.xlsx")
 
 
@@ -60,8 +71,8 @@ def performance_xlsx(budget, request=None):
     wb = Workbook(); ws = wb.active; ws.title = "Monthly Performance"
     columns = ["Code", "Activity", "Budget", "Funds received", "Expenditure", "Variance", "Donor balance", "Burn rate", "Absorption rate", "Comment"]
     _style(ws, f"RICE West Nile - Monthly Cumulative Budget Performance: {budget.name}", columns)
-    for row, record in enumerate(budget.performance_records.select_related("line"), 4):
-        ws.append([record.line.code, record.line.description, _amount(record.budget_amount, request), _amount(record.funds_received, request), _amount(record.expenditure, request), f"=C{row}-E{row}", f"=C{row}-D{row}", f'=IFERROR(E{row}/D{row},0)', f'=IFERROR(E{row}/C{row},0)', record.comment])
+    for row, record in enumerate(budget.performance_records.select_related("line__category"), 4):
+        ws.append([record.line.category.code, record.line.category.name, _amount(record.budget_amount, request), _amount(record.funds_received, request), _amount(record.expenditure, request), f"=C{row}-E{row}", f"=C{row}-D{row}", f'=IFERROR(E{row}/D{row},0)', f'=IFERROR(E{row}/C{row},0)', record.comment])
         for col in range(3, 8): ws.cell(row, col).number_format = _currency_format(request)
         ws.cell(row, 8).number_format = '0.0%'; ws.cell(row, 9).number_format = '0.0%'
     for col in range(1, 11): ws.column_dimensions[get_column_letter(col)].width = 18 if col not in (2, 10) else 32

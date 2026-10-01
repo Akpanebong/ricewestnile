@@ -232,27 +232,75 @@ class FinanceBudget(models.Model):
 
 
 class FinanceBudgetLine(models.Model):
+    # One line = one ledger account's budget for the whole period, broken
+    # into 12 explicit monthly amounts rather than a unit/price/frequency
+    # calculation — this is what makes "actual" computable straight from
+    # FinancialTransaction (which already carries category + project + date)
+    # instead of needing a second, hand-typed figure that can drift from it.
+    MONTH_FIELDS = [f"m{i:02d}" for i in range(1, 13)]
+
     budget = models.ForeignKey(FinanceBudget, on_delete=models.CASCADE, related_name="lines")
-    code = models.CharField(max_length=50)
+    category = models.ForeignKey(
+        "FinancialCategory", on_delete=models.PROTECT, related_name="budget_lines", null=True,
+        help_text="The ledger account this line budgets for.",
+    )
     outcome = models.CharField(max_length=255, blank=True)
     activity = models.CharField(max_length=255, blank=True)
-    description = models.TextField()
-    unit = models.CharField(max_length=100, blank=True)
-    price_per_unit = models.DecimalField(max_digits=16, decimal_places=2, default=0)
-    units = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    frequency = models.DecimalField(max_digits=12, decimal_places=2, default=1)
     justification = models.TextField(blank=True)
 
+    m01 = models.DecimalField("January", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m02 = models.DecimalField("February", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m03 = models.DecimalField("March", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m04 = models.DecimalField("April", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m05 = models.DecimalField("May", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m06 = models.DecimalField("June", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m07 = models.DecimalField("July", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m08 = models.DecimalField("August", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m09 = models.DecimalField("September", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m10 = models.DecimalField("October", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m11 = models.DecimalField("November", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+    m12 = models.DecimalField("December", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
+
     class Meta:
-        ordering = ("code", "id")
-        constraints = [models.UniqueConstraint(fields=("budget", "code"), name="unique_budget_line_code")]
+        ordering = ("category__code", "id")
+        constraints = [models.UniqueConstraint(fields=("budget", "category"), name="unique_budget_line_category")]
+
+    @property
+    def monthly_amounts(self):
+        """[(1, self.m01), (2, self.m02), ...] — ordered for template iteration."""
+        return [(i, getattr(self, field)) for i, field in enumerate(self.MONTH_FIELDS, start=1)]
 
     @property
     def total(self):
-        return (self.price_per_unit or 0) * (self.units or 0) * (self.frequency or 0)
+        return sum((getattr(self, field) for field in self.MONTH_FIELDS), Decimal("0.00"))
+
+    def actual_for_month(self, year, month):
+        filters = {"category": self.category, "date__year": year, "date__month": month}
+        if self.budget.project_id:
+            filters["project"] = self.budget.project
+        return FinancialTransaction.objects.filter(**filters).aggregate(
+            total=Coalesce(Sum("amount"), Value(0), output_field=DecimalField(max_digits=16, decimal_places=2))
+        )["total"]
+
+    @property
+    def actual_total(self):
+        filters = {
+            "category": self.category,
+            "date__gte": self.budget.period_start,
+            "date__lte": self.budget.period_end,
+        }
+        if self.budget.project_id:
+            filters["project"] = self.budget.project
+        return FinancialTransaction.objects.filter(**filters).aggregate(
+            total=Coalesce(Sum("amount"), Value(0), output_field=DecimalField(max_digits=16, decimal_places=2))
+        )["total"]
+
+    @property
+    def variance_total(self):
+        return self.total - self.actual_total
 
     def __str__(self):
-        return f"{self.code} - {self.description}"
+        return f"{self.category} - {self.budget}" if self.category_id else f"(no account) - {self.budget}"
 
 
 class BudgetPerformance(models.Model):
@@ -266,7 +314,7 @@ class BudgetPerformance(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ("-period", "line__code")
+        ordering = ("-period", "line__category__code")
         constraints = [models.UniqueConstraint(fields=("budget", "line", "period"), name="unique_budget_performance_period")]
 
     @property

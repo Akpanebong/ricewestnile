@@ -653,7 +653,7 @@
                         </h2>
 
                         <small class="budget-lines-help">
-                            Price × units × frequency = line total
+                            Pick an account from the chart of accounts, then enter its budget for each month — the yearly total is the sum of the 12 months.
                         </small>
 
                     </div>
@@ -680,15 +680,22 @@
                     <thead>
 
                         <tr>
-                            <th>Code</th>
+                            <th>Account</th>
                             <th>Outcome</th>
                             <th>Activity</th>
-                            <th>Description</th>
-                            <th>Unit</th>
-                            <th>Price</th>
-                            <th>Units</th>
-                            <th>Freq.</th>
-                            <th>Line total</th>
+                            <th>Jan</th>
+                            <th>Feb</th>
+                            <th>Mar</th>
+                            <th>Apr</th>
+                            <th>May</th>
+                            <th>Jun</th>
+                            <th>Jul</th>
+                            <th>Aug</th>
+                            <th>Sep</th>
+                            <th>Oct</th>
+                            <th>Nov</th>
+                            <th>Dec</th>
+                            <th>Yearly</th>
                             <th>Justification</th>
                             <th></th>
                         </tr>
@@ -711,11 +718,11 @@
                                 {% endif %}
 
 
-                                <!-- Code -->
+                                <!-- Account -->
                                 <td>
-                                    {{ line.code }}
+                                    {{ line.category }}
 
-                                    {% for error in line.code.errors %}
+                                    {% for error in line.category.errors %}
                                         <div class="field-error">
                                             {{ error }}
                                         </div>
@@ -747,63 +754,54 @@
                                 </td>
 
 
-                                <!-- Description -->
+                                <!-- Monthly amounts -->
                                 <td>
-                                    {{ line.description }}
-
-                                    {% for error in line.description.errors %}
-                                        <div class="field-error">
-                                            {{ error }}
-                                        </div>
-                                    {% endfor %}
+                                    {{ line.m01 }}
+                                    {% for error in line.m01.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
                                 </td>
-
-
-                                <!-- Unit -->
                                 <td>
-                                    {{ line.unit }}
-
-                                    {% for error in line.unit.errors %}
-                                        <div class="field-error">
-                                            {{ error }}
-                                        </div>
-                                    {% endfor %}
+                                    {{ line.m02 }}
+                                    {% for error in line.m02.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
                                 </td>
-
-
-                                <!-- Price -->
                                 <td>
-                                    {{ line.price_per_unit }}
-
-                                    {% for error in line.price_per_unit.errors %}
-                                        <div class="field-error">
-                                            {{ error }}
-                                        </div>
-                                    {% endfor %}
+                                    {{ line.m03 }}
+                                    {% for error in line.m03.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
                                 </td>
-
-
-                                <!-- Units -->
                                 <td>
-                                    {{ line.units }}
-
-                                    {% for error in line.units.errors %}
-                                        <div class="field-error">
-                                            {{ error }}
-                                        </div>
-                                    {% endfor %}
+                                    {{ line.m04 }}
+                                    {% for error in line.m04.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
                                 </td>
-
-
-                                <!-- Frequency -->
                                 <td>
-                                    {{ line.frequency }}
-
-                                    {% for error in line.frequency.errors %}
-                                        <div class="field-error">
-                                            {{ error }}
-                                        </div>
-                                    {% endfor %}
+                                    {{ line.m05 }}
+                                    {% for error in line.m05.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ line.m06 }}
+                                    {% for error in line.m06.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ line.m07 }}
+                                    {% for error in line.m07.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ line.m08 }}
+                                    {% for error in line.m08.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ line.m09 }}
+                                    {% for error in line.m09.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ line.m10 }}
+                                    {% for error in line.m10.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ line.m11 }}
+                                    {% for error in line.m11.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                                </td>
+                                <td>
+                                    {{ line.m12 }}
+                                    {% for error in line.m12.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
                                 </td>
 
 
@@ -855,7 +853,7 @@
 
                             <tr class="budget-empty-row">
 
-                                <td colspan="11"
+                                <td colspan="18"
                                     class="text-center py-4 text-muted">
 
                                     <i class="fa-solid fa-list-check d-block mb-2"></i>
@@ -931,21 +929,24 @@
 
             {{ formset.empty_form.id }}
 
-            <td>{{ formset.empty_form.code }}</td>
+            <td>{{ formset.empty_form.category }}</td>
 
             <td>{{ formset.empty_form.outcome }}</td>
 
             <td>{{ formset.empty_form.activity }}</td>
 
-            <td>{{ formset.empty_form.description }}</td>
-
-            <td>{{ formset.empty_form.unit }}</td>
-
-            <td>{{ formset.empty_form.price_per_unit }}</td>
-
-            <td>{{ formset.empty_form.units }}</td>
-
-            <td>{{ formset.empty_form.frequency }}</td>
+            <td>{{ formset.empty_form.m01 }}</td>
+            <td>{{ formset.empty_form.m02 }}</td>
+            <td>{{ formset.empty_form.m03 }}</td>
+            <td>{{ formset.empty_form.m04 }}</td>
+            <td>{{ formset.empty_form.m05 }}</td>
+            <td>{{ formset.empty_form.m06 }}</td>
+            <td>{{ formset.empty_form.m07 }}</td>
+            <td>{{ formset.empty_form.m08 }}</td>
+            <td>{{ formset.empty_form.m09 }}</td>
+            <td>{{ formset.empty_form.m10 }}</td>
+            <td>{{ formset.empty_form.m11 }}</td>
+            <td>{{ formset.empty_form.m12 }}</td>
 
             <td>
                 <input type="text"
@@ -1017,8 +1018,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /* =========================================================
        CALCULATE LINE TOTALS
-       Price × Units × Frequency
+       Sum of the 12 monthly amounts
     ========================================================= */
+
+    const MONTH_FIELD_NAMES = [
+        "m01", "m02", "m03", "m04", "m05", "m06",
+        "m07", "m08", "m09", "m10", "m11", "m12",
+    ];
 
     function calculateTotals() {
 
@@ -1033,32 +1039,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            const priceField =
-                row.querySelector('[name$="-price_per_unit"]');
-
-            const unitsField =
-                row.querySelector('[name$="-units"]');
-
-            const frequencyField =
-                row.querySelector('[name$="-frequency"]');
-
             const output =
                 row.querySelector(".line-total");
 
+            let lineTotal = 0;
 
-            const price =
-                parseFloat(priceField?.value) || 0;
-
-            const units =
-                parseFloat(unitsField?.value) || 0;
-
-            const frequency =
-                parseFloat(frequencyField?.value) || 0;
-
-
-            const lineTotal =
-                price * units * frequency;
-
+            MONTH_FIELD_NAMES.forEach(function (name) {
+                const field = row.querySelector('[name$="-' + name + '"]');
+                lineTotal += parseFloat(field?.value) || 0;
+            });
 
             if (output) {
                 output.value = formatMoney(lineTotal);

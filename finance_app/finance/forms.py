@@ -1,9 +1,11 @@
+from decimal import Decimal
+
 from django import forms
 from django.forms import inlineformset_factory
 
 from .models import (
     FinanceBudget, FinanceBudgetLine, BudgetPerformance, CashBook,
-    CashBookEntry, BankReconciliation, BankReconciliationItem,
+    CashBookEntry, BankReconciliation, BankReconciliationItem, FinancialCategory,
 )
 
 
@@ -31,8 +33,31 @@ class FinanceBudgetForm(StyledFinanceForm):
 class FinanceBudgetLineForm(StyledFinanceForm):
     class Meta:
         model = FinanceBudgetLine
-        fields = ["code", "outcome", "activity", "description", "unit", "price_per_unit", "units", "frequency", "justification"]
-        widgets = {"justification": forms.Textarea(attrs={"rows": 1}), "description": forms.TextInput()}
+        fields = [
+            "category", "outcome", "activity",
+            "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12",
+            "justification",
+        ]
+        widgets = {"justification": forms.Textarea(attrs={"rows": 1})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only postable (leaf) accounts can carry a budget — a group is a
+        # folder, never something transactions post against — same
+        # queryset journal_entry_create uses for the same reason.
+        self.fields["category"].queryset = FinancialCategory.objects.filter(
+            is_group=False
+        ).order_by("category_type", "code")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # A month left blank means "no budget that month", not invalid —
+        # the model column defaults to 0.00, but blank=True makes the form
+        # field optional, so an empty submission comes back as None here.
+        for field in FinanceBudgetLine.MONTH_FIELDS:
+            if cleaned_data.get(field) is None:
+                cleaned_data[field] = Decimal("0.00")
+        return cleaned_data
 
 
 BudgetLineFormSet = inlineformset_factory(FinanceBudget, FinanceBudgetLine, form=FinanceBudgetLineForm, extra=1, can_delete=True)

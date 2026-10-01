@@ -9,6 +9,7 @@ from django.urls import reverse
 from account.models import Profile
 from core.services import get_base_currency
 
+from .forms import FinanceBudgetLineForm
 from .models import (
     BankReconciliation,
     BankReconciliationItem,
@@ -16,6 +17,8 @@ from .models import (
     CashBookEntry,
     CashRequisition,
     CashRequisitionItem,
+    FinanceBudget,
+    FinanceBudgetLine,
     FinancialCategory,
     FinancialTransaction,
     JournalEntry,
@@ -606,3 +609,110 @@ class ReverseJournalEntryViewTests(TestCase):
         self.client.get(self._reverse_url())
         self.entry.refresh_from_db()
         self.assertFalse(self.entry.is_reversed)
+
+
+class FinanceBudgetLineLedgerLinkTests(TestCase):
+    """FinanceBudgetLine.total/actual_for_month/actual_total — the whole
+    point of linking a budget line to a real ledger account: "actual" must
+    come from FinancialTransaction, never a hand-typed figure."""
+
+    def setUp(self):
+        self.creator = make_user("budget_owner")
+        self.expense_account = FinancialCategory.objects.create(
+            code="TEST-BUD-EXPENSE", name="Test Payroll", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.budget = FinanceBudget.objects.create(
+            name="Test Annual Budget", period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
+            created_by=self.creator,
+        )
+        self.line = FinanceBudgetLine.objects.create(
+            budget=self.budget, category=self.expense_account,
+            m01=Decimal("1000.00"), m02=Decimal("1000.00"), m03=Decimal("1000.00"),
+        )
+
+    def test_total_sums_all_twelve_months(self):
+        self.assertEqual(self.line.total, Decimal("3000.00"))
+
+    def test_actual_for_month_is_zero_with_no_transactions(self):
+        self.assertEqual(self.line.actual_for_month(2026, 1), 0)
+
+    def test_actual_for_month_reflects_real_ledger_activity(self):
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("450.00"), currency=get_base_currency(),
+            date=date(2026, 1, 15), created_by=self.creator,
+        )
+        # A transaction in a different month must not bleed into January's figure.
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("999.00"), currency=get_base_currency(),
+            date=date(2026, 2, 1), created_by=self.creator,
+        )
+        self.assertEqual(self.line.actual_for_month(2026, 1), Decimal("450.00"))
+        self.assertEqual(self.line.actual_for_month(2026, 2), Decimal("999.00"))
+
+    def test_actual_total_sums_the_whole_budget_period(self):
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("300.00"), currency=get_base_currency(),
+            date=date(2026, 1, 10), created_by=self.creator,
+        )
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("200.00"), currency=get_base_currency(),
+            date=date(2026, 3, 20), created_by=self.creator,
+        )
+        self.assertEqual(self.line.actual_total, Decimal("500.00"))
+
+    def test_actual_scoped_to_project_when_budget_has_one(self):
+        from core.project_models import Project
+        own_project = Project.objects.create(name="Budget's Own Project")
+        other_project = Project.objects.create(name="A Different Project")
+        self.budget.project = own_project
+        self.budget.save()
+
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("150.00"), currency=get_base_currency(),
+            date=date(2026, 1, 5), created_by=self.creator, project=own_project,
+        )
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("9999.00"), currency=get_base_currency(),
+            date=date(2026, 1, 6), created_by=self.creator, project=other_project,
+        )
+        self.assertEqual(self.line.actual_for_month(2026, 1), Decimal("150.00"))
+
+    def test_variance_total_is_budget_minus_actual(self):
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("1200.00"), currency=get_base_currency(),
+            date=date(2026, 1, 1), created_by=self.creator,
+        )
+        self.assertEqual(self.line.variance_total, Decimal("3000.00") - Decimal("1200.00"))
+
+
+class FinanceBudgetLineFormTests(TestCase):
+    def setUp(self):
+        self.leaf_account = FinancialCategory.objects.create(
+            code="TEST-BUD-FORM", name="Test Form Account", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.group_account = FinancialCategory.objects.create(
+            code="TEST-BUD-GROUP", name="Test Form Group", category_type=FinancialCategory.CategoryType.EXPENSE,
+            is_group=True,
+        )
+
+    def test_category_is_required(self):
+        form = FinanceBudgetLineForm(data={"m01": "100.00"})
+        self.assertFalse(form.is_valid())
+        self.assertIn("category", form.errors)
+
+    def test_category_queryset_excludes_groups(self):
+        form = FinanceBudgetLineForm()
+        queryset = form.fields["category"].queryset
+        self.assertIn(self.leaf_account, queryset)
+        self.assertNotIn(self.group_account, queryset)
+
+    def test_valid_with_a_leaf_account(self):
+        form = FinanceBudgetLineForm(data={"category": self.leaf_account.pk, "m01": "100.00"})
+        self.assertTrue(form.is_valid(), form.errors)

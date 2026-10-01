@@ -110,8 +110,50 @@ def budget_list(request):
 
 @login_required(login_url="login")
 def budget_detail(request, pk):
-    budget = get_object_or_404(FinanceBudget.objects.select_related("project").prefetch_related("lines", "performance_records__line"), pk=pk)
-    return render(request, "finance/budget_detail.html", {"budget": budget})
+    budget = get_object_or_404(
+        FinanceBudget.objects.select_related("project").prefetch_related(
+            "lines__category", "performance_records__line"
+        ),
+        pk=pk,
+    )
+
+    # Budget vs Actual: a template can't call a method with arguments, so
+    # each line's per-month actual (from real ledger activity) is computed
+    # here rather than in the template.
+    year = budget.period_start.year
+    lines_vs_actual = []
+    yearly_budget_total = Decimal("0.00")
+    yearly_actual_total = Decimal("0.00")
+    for line in budget.lines.all():
+        monthly = [
+            {
+                "month": month_number,
+                "budget": budgeted,
+                "actual": line.actual_for_month(year, month_number),
+            }
+            for month_number, budgeted in line.monthly_amounts
+        ]
+        for cell in monthly:
+            cell["variance"] = cell["budget"] - cell["actual"]
+        line_actual_total = line.actual_total
+        lines_vs_actual.append({
+            "line": line,
+            "monthly": monthly,
+            "yearly_budget": line.total,
+            "yearly_actual": line_actual_total,
+            "yearly_variance": line.total - line_actual_total,
+        })
+        yearly_budget_total += line.total
+        yearly_actual_total += line_actual_total
+
+    context = {
+        "budget": budget,
+        "lines_vs_actual": lines_vs_actual,
+        "yearly_budget_total": yearly_budget_total,
+        "yearly_actual_total": yearly_actual_total,
+        "yearly_variance_total": yearly_budget_total - yearly_actual_total,
+    }
+    return render(request, "finance/budget_detail.html", context)
 
 
 @login_required(login_url="login")
