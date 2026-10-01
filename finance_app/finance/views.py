@@ -699,7 +699,7 @@ def _filter_ledger(request):
 
 @login_required(login_url="login")
 def financial_ledger(request):
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can view the organization-wide ledger.")
         return redirect(reverse("finance:dashboard"))
@@ -774,7 +774,7 @@ def financial_ledger(request):
 
 @login_required(login_url="login")
 def financial_ledger_export(request):
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can export the organization-wide ledger.")
         return redirect(reverse("finance:dashboard"))
@@ -1078,7 +1078,7 @@ def reports_home(request):
     live instead of each one getting its own line in the sidebar. New
     report types get added here as cards, not as more sidebar entries.
     """
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
@@ -1154,7 +1154,7 @@ def general_ledger_report(request):
     itself, so it stays lightweight (no report computation here) and the
     report gets the whole screen instead of sharing it with a filter form.
     """
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
@@ -1214,7 +1214,7 @@ def general_ledger_report_view(request):
     can reuse — they're mostly a different groupby/pivot over the same
     per-transaction DataFrame.
     """
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
@@ -1398,7 +1398,7 @@ def income_statement_report(request):
     """Filter form for the Income Statement — same period/dept/project/
     currency shape as the General Ledger's filter page, opening the actual
     report in its own full page on submit."""
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
@@ -1422,7 +1422,7 @@ def income_statement_report_view(request):
     temporary accounts that measure what happened during the period, not a
     running position.
     """
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
@@ -1463,7 +1463,7 @@ def income_statement_report_view(request):
 def budget_vs_actual_report(request):
     """Filter form for Budget vs Actual — pick a fiscal year (matching
     ProjectBudget entries) and the period to measure actual spend against."""
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
@@ -1498,7 +1498,7 @@ def budget_vs_actual_report_view(request):
     reports a total including all their prior quarters, which is a
     reasonable summary as long as budgets are entered consistently.
     """
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
@@ -1554,7 +1554,7 @@ def budget_vs_actual_report_view(request):
 def balance_sheet_report(request):
     """Filter form for the Balance Sheet — a point-in-time snapshot, so it
     only needs an "as of" date and a currency, not a date range."""
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
@@ -1601,7 +1601,7 @@ def balance_sheet_report_view(request):
     measure of how much financial activity isn't yet tied to a specific
     balance-sheet account.
     """
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can run financial reports.")
         return redirect(reverse("finance:dashboard"))
@@ -1682,7 +1682,7 @@ def balance_sheet_report_view(request):
 
 @login_required(login_url="login")
 def journal_entry_list(request):
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can view journal entries.")
         return redirect(reverse("finance:dashboard"))
@@ -1699,7 +1699,7 @@ def journal_entry_list(request):
 
 @login_required(login_url="login")
 def journal_entry_detail(request, pk):
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can view journal entries.")
         return redirect(reverse("finance:dashboard"))

@@ -776,8 +776,17 @@ class JournalEntryLine(models.Model):
         raw = self.debit - self.credit
         signed_amount = raw if self.category.balance_side == "Dr" else -raw
 
+        # Income/Expense accounts post as the matching P&L transaction type;
+        # Asset/Liability/Equity accounts (e.g. moving cash between accounts)
+        # are balance-sheet movements, not P&L, so they post as a transfer.
+        transaction_type = {
+            FinancialCategory.CategoryType.INCOME: FinancialTransaction.TransactionType.INCOME,
+            FinancialCategory.CategoryType.EXPENSE: FinancialTransaction.TransactionType.EXPENSE,
+        }.get(self.category.category_type, FinancialTransaction.TransactionType.TRANSFER)
+
         if self.transaction_id:
             txn = self.transaction
+            txn.transaction_type = transaction_type
             txn.category = self.category
             txn.amount = signed_amount
             txn.original_amount = signed_amount
@@ -790,7 +799,7 @@ class JournalEntryLine(models.Model):
             return txn
 
         txn = FinancialTransaction.objects.create(
-            transaction_type=FinancialTransaction.TransactionType.JOURNAL,
+            transaction_type=transaction_type,
             category=self.category,
             amount=signed_amount,
             currency=base_currency,
