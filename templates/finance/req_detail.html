@@ -872,7 +872,7 @@
                  ATTACHMENT / RELATED DOCUMENTS
             ================================================== -->
 
-            {% if obj.attachment or accounting or admin_expense %}
+            {% if obj.attachment or accounting or admin_expense or obj.created_by == request.user and obj.status == "submitted" or obj.created_by == request.user and obj.status == "approved" %}
 
                 <div class="document-actions">
 

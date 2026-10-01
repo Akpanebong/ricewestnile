@@ -481,7 +481,8 @@ def save_accounting(request, slug=None, pk=None, req_slug=None, req_pk=None):
     return render(request, "finance/account_form.html", {
         "form_obj": obj,
         "requisition": requisition or getattr(obj, "requisition", None),
-        "items": obj.items.all() if obj else []
+        "items": obj.items.all() if obj else [],
+        "currency_options": [{"code": c, "label": CURRENCY_LABELS[c]} for c in SUPPORTED_CURRENCIES],
     })
 
 
