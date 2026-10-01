@@ -18,7 +18,7 @@ from finance_app.finance.models import AccountingForm, AdminExpenseNote, CashReq
 from openpyxl import Workbook
 from .utils.workflow import advance_workflow, user_can_approve
 from .utils.pdf import render_to_pdf
-from .permissions import is_finance_staff as _is_finance_staff, can_manage_chart_of_accounts as _can_manage_chart_of_accounts
+from .permissions import is_finance_staff as _is_finance_staff
 from django.db.models.functions import Coalesce
 from account.templatetags.custom_tags import has_group
 from procurement.procureapp.models import Requisition, PurchaseOrder
@@ -900,7 +900,7 @@ def _build_account_tree(only_groups=False, as_of_date=None, report_currency=None
 
 @login_required(login_url="login")
 def chart_of_accounts(request):
-    is_finance = has_group(request.user, 'Finance')
+    is_finance = _is_finance_staff(request.user)
     if not is_finance:
         messages.error(request, "Only Finance and Operations staff can view the chart of accounts.")
         return redirect(reverse("finance:dashboard"))

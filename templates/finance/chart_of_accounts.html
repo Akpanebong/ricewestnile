@@ -139,6 +139,14 @@ document.getElementById('deleteAccountModal').addEventListener('show.bs.modal', 
     // Delete / Add Child / View Ledger) — only one row's toolbar is open
     // at a time, and clicking inside the toolbar itself never toggles
     // the row (which, for a group, would otherwise also collapse it).
+    //
+    // Group rows drive their own expand/collapse here via `data-bs-target`
+    // instead of Bootstrap's `data-bs-toggle="collapse"` data-api: that
+    // data-api listens on `document` in the capture phase, so it saw every
+    // click landing on an <a> anywhere inside the row — including the
+    // "Add Child"/"View Ledger" links nested in the toolbar — and called
+    // preventDefault() on their navigation before this script ever got a
+    // chance to stop the event from bubbling that far.
     let selectedRow = null;
 
     document.querySelectorAll('.coa-row').forEach(function (row) {
@@ -149,12 +157,34 @@ document.getElementById('deleteAccountModal').addEventListener('show.bs.modal', 
             }
             row.classList.toggle('is-selected');
             selectedRow = row.classList.contains('is-selected') ? row : null;
+
+            const collapseSelector = row.dataset.bsTarget;
+            if (collapseSelector) {
+                const collapseEl = document.querySelector(collapseSelector);
+                if (collapseEl) {
+                    bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).toggle();
+                }
+            }
         });
     });
 
     document.querySelectorAll('.coa-row-actions').forEach(function (actions) {
         actions.addEventListener('click', function (event) {
             event.stopPropagation();
+        });
+    });
+
+    // Keep aria-expanded on the trigger row in sync once each collapse
+    // transition actually finishes, the same way Bootstrap's own
+    // data-api would have for a native data-bs-toggle="collapse" trigger.
+    document.querySelectorAll('.coa-group[data-bs-target]').forEach(function (trigger) {
+        const collapseEl = document.querySelector(trigger.dataset.bsTarget);
+        if (!collapseEl) return;
+        collapseEl.addEventListener('shown.bs.collapse', function () {
+            trigger.setAttribute('aria-expanded', 'true');
+        });
+        collapseEl.addEventListener('hidden.bs.collapse', function () {
+            trigger.setAttribute('aria-expanded', 'false');
         });
     });
 })();
