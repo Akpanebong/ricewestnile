@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth.models import Group
+from django.db.models import Sum
 from django.test import TestCase
 from django.urls import reverse
 
@@ -16,6 +17,9 @@ from .models import (
     CashRequisition,
     CashRequisitionItem,
     FinancialCategory,
+    FinancialTransaction,
+    JournalEntry,
+    JournalEntryLine,
 )
 from .permissions import can_manage_chart_of_accounts, is_finance_editor, is_finance_staff
 from .utils.workflow import advance_workflow, user_can_approve
@@ -322,15 +326,34 @@ class DashboardAndCashbookViewTests(TestCase):
         )
         self.client.login(username="plain_view_user", password="pw")
         response = self.client.post(reverse("finance:cashbook_delete", kwargs={"pk": book.pk}))
-        self.assertRedirects(response, reverse("finance:dashboard"))
+        # EditDeleteAuthorizationMiddleware now gates every *delete*/*trash*
+        # URL site-wide to superusers + ED, raising PermissionDenied (403)
+        # before the view's own @finance_editor_required ever runs.
+        self.assertEqual(response.status_code, 403)
         self.assertTrue(CashBook.objects.filter(pk=book.pk).exists())
 
-    def test_cashbook_delete_succeeds_for_finance_user(self):
+    def test_cashbook_delete_denied_for_finance_user_not_in_ed(self):
+        # finance_view_user is Finance-only. cashbook_delete's own
+        # @finance_editor_required would allow Finance staff to delete, but
+        # EditDeleteAuthorizationMiddleware's can_delete_or_trash() only
+        # allows superuser/ED, and the middleware runs first — so a
+        # Finance-only user is now blocked from deleting cash books too.
+        book = CashBook.objects.create(
+            name="Protected Book 2", period_start=date(2026, 1, 1), period_end=date(2026, 1, 31),
+            created_by=self.finance_user,
+        )
+        self.client.login(username="finance_view_user", password="pw")
+        response = self.client.post(reverse("finance:cashbook_delete", kwargs={"pk": book.pk}))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(CashBook.objects.filter(pk=book.pk).exists())
+
+    def test_cashbook_delete_succeeds_for_ed_user(self):
+        ed_user = make_user("cashbook_ed_user", groups=["ED"])
         book = CashBook.objects.create(
             name="Deletable Book", period_start=date(2026, 1, 1), period_end=date(2026, 1, 31),
             created_by=self.finance_user,
         )
-        self.client.login(username="finance_view_user", password="pw")
+        self.client.login(username="cashbook_ed_user", password="pw")
         response = self.client.post(reverse("finance:cashbook_delete", kwargs={"pk": book.pk}))
         self.assertRedirects(response, reverse("finance:cashbook_list"))
         self.assertFalse(CashBook.objects.filter(pk=book.pk).exists())
@@ -429,3 +452,157 @@ class SubmitAndApproveRequisitionViewTests(TestCase):
         self.requisition.refresh_from_db()
         self.assertEqual(self.requisition.status, "finance_review")
         self.assertEqual(self.requisition.checked_by, self.other_finance_user)
+
+
+class JournalEntryLinePostingTests(TestCase):
+    """post() must classify the resulting FinancialTransaction by the
+    posted account's category_type, since the Financial Ledger's Total
+    Income/Expense/Transfer cards filter on that classification."""
+
+    def setUp(self):
+        self.user = make_user("journal_poster")
+        self.income_account = FinancialCategory.objects.create(
+            code="TEST-JE-INCOME", name="Test Donor Income", category_type=FinancialCategory.CategoryType.INCOME,
+        )
+        self.expense_account = FinancialCategory.objects.create(
+            code="TEST-JE-EXPENSE", name="Test Program Expense", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.asset_account = FinancialCategory.objects.create(
+            code="TEST-JE-ASSET", name="Test Cash", category_type=FinancialCategory.CategoryType.ASSET,
+        )
+        self.entry = JournalEntry.objects.create(date=date(2026, 1, 1), created_by=self.user)
+
+    def test_income_account_posts_as_income(self):
+        line = JournalEntryLine.objects.create(
+            journal_entry=self.entry, category=self.income_account, debit=Decimal("0.00"), credit=Decimal("500.00"),
+        )
+        txn = line.post()
+        self.assertEqual(txn.transaction_type, FinancialTransaction.TransactionType.INCOME)
+
+    def test_expense_account_posts_as_expense(self):
+        line = JournalEntryLine.objects.create(
+            journal_entry=self.entry, category=self.expense_account, debit=Decimal("500.00"), credit=Decimal("0.00"),
+        )
+        txn = line.post()
+        self.assertEqual(txn.transaction_type, FinancialTransaction.TransactionType.EXPENSE)
+
+    def test_asset_account_posts_as_transfer(self):
+        line = JournalEntryLine.objects.create(
+            journal_entry=self.entry, category=self.asset_account, debit=Decimal("500.00"), credit=Decimal("0.00"),
+        )
+        txn = line.post()
+        self.assertEqual(txn.transaction_type, FinancialTransaction.TransactionType.TRANSFER)
+
+    def test_signed_amount_follows_natural_balance_side(self):
+        # Asset is Dr-natured: a debit increases it, so the signed amount
+        # posted should be positive.
+        debit_line = JournalEntryLine.objects.create(
+            journal_entry=self.entry, category=self.asset_account, debit=Decimal("500.00"), credit=Decimal("0.00"),
+        )
+        self.assertEqual(debit_line.post().amount, Decimal("500.00"))
+
+        # Income is Cr-natured: a debit (unusual, e.g. a correction) decreases
+        # it, so the signed amount posted should be negative.
+        debit_against_income = JournalEntryLine.objects.create(
+            journal_entry=self.entry, category=self.income_account, debit=Decimal("200.00"), credit=Decimal("0.00"),
+        )
+        self.assertEqual(debit_against_income.post().amount, Decimal("-200.00"))
+
+
+class JournalEntryReversalTests(TestCase):
+    def setUp(self):
+        self.creator = make_user("je_owner")
+        self.income_account = FinancialCategory.objects.create(
+            code="TEST-REV-INCOME", name="Test Reversal Income", category_type=FinancialCategory.CategoryType.INCOME,
+        )
+        self.asset_account = FinancialCategory.objects.create(
+            code="TEST-REV-ASSET", name="Test Reversal Cash", category_type=FinancialCategory.CategoryType.ASSET,
+        )
+        self.entry = JournalEntry.objects.create(date=date(2026, 1, 1), created_by=self.creator, description="Original")
+        self.debit_line = JournalEntryLine.objects.create(
+            journal_entry=self.entry, category=self.asset_account, debit=Decimal("300.00"), credit=Decimal("0.00"),
+        )
+        self.credit_line = JournalEntryLine.objects.create(
+            journal_entry=self.entry, category=self.income_account, debit=Decimal("0.00"), credit=Decimal("300.00"),
+        )
+        self.debit_line.post()
+        self.credit_line.post()
+
+    def test_reverse_creates_linked_entry_with_swapped_amounts(self):
+        reverser = make_user("je_reverser")
+        reversal = self.entry.reverse(reverser)
+
+        self.assertEqual(reversal.reversal_of, self.entry)
+        self.assertEqual(reversal.created_by, reverser)
+
+        reversed_asset_line = reversal.lines.get(category=self.asset_account)
+        reversed_income_line = reversal.lines.get(category=self.income_account)
+        self.assertEqual(reversed_asset_line.debit, Decimal("0.00"))
+        self.assertEqual(reversed_asset_line.credit, Decimal("300.00"))
+        self.assertEqual(reversed_income_line.debit, Decimal("300.00"))
+        self.assertEqual(reversed_income_line.credit, Decimal("0.00"))
+
+    def test_reverse_nets_to_zero_on_each_account(self):
+        reversal = self.entry.reverse(self.creator)
+        for line in reversal.lines.all():
+            line.post()
+
+        asset_total = FinancialTransaction.objects.filter(category=self.asset_account).aggregate(
+            total=Sum("amount")
+        )["total"]
+        self.assertEqual(asset_total, Decimal("0.00"))
+
+    def test_entry_is_marked_reversed(self):
+        self.assertFalse(self.entry.is_reversed)
+        reversal = self.entry.reverse(self.creator)
+        self.entry.refresh_from_db()
+        self.assertTrue(self.entry.is_reversed)
+        self.assertEqual(self.entry.reversed_by, reversal)
+
+    def test_cannot_reverse_twice(self):
+        self.entry.reverse(self.creator)
+        with self.assertRaises(ValueError):
+            self.entry.reverse(self.creator)
+
+
+class ReverseJournalEntryViewTests(TestCase):
+    def setUp(self):
+        self.finance_user = make_user("reverse_view_finance", groups=["Finance"])
+        self.plain_user = make_user("reverse_view_plain")
+        self.income_account = FinancialCategory.objects.create(
+            code="TEST-RV-INCOME", name="Test RV Income", category_type=FinancialCategory.CategoryType.INCOME,
+        )
+        self.asset_account = FinancialCategory.objects.create(
+            code="TEST-RV-ASSET", name="Test RV Cash", category_type=FinancialCategory.CategoryType.ASSET,
+        )
+        self.entry = JournalEntry.objects.create(date=date(2026, 1, 1), created_by=self.finance_user)
+        JournalEntryLine.objects.create(
+            journal_entry=self.entry, category=self.asset_account, debit=Decimal("100.00"), credit=Decimal("0.00"),
+        ).post()
+        JournalEntryLine.objects.create(
+            journal_entry=self.entry, category=self.income_account, debit=Decimal("0.00"), credit=Decimal("100.00"),
+        ).post()
+
+    def _reverse_url(self):
+        return reverse("finance:reverse_journal_entry", args=[self.entry.pk])
+
+    def test_denied_for_non_finance_user(self):
+        self.client.login(username="reverse_view_plain", password="pw")
+        self.client.post(self._reverse_url())
+        self.entry.refresh_from_db()
+        self.assertFalse(self.entry.is_reversed)
+
+    def test_finance_user_can_reverse(self):
+        self.client.login(username="reverse_view_finance", password="pw")
+        response = self.client.post(self._reverse_url())
+        self.entry.refresh_from_db()
+        self.assertTrue(self.entry.is_reversed)
+        self.assertRedirects(
+            response, reverse("finance:journal_entry_detail", args=[self.entry.reversed_by.pk])
+        )
+
+    def test_get_request_does_not_reverse(self):
+        self.client.login(username="reverse_view_finance", password="pw")
+        self.client.get(self._reverse_url())
+        self.entry.refresh_from_db()
+        self.assertFalse(self.entry.is_reversed)

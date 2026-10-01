@@ -7,12 +7,43 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="fw-bold">Journal Entry <code>{{ entry.reference }}</code></h3>
+            <h3 class="fw-bold">
+                Journal Entry <code>{{ entry.reference }}</code>
+                {% if entry.is_reversed %}
+                <span class="badge text-bg-secondary ms-1">Reversed</span>
+                {% endif %}
+                {% if entry.reversal_of %}
+                <span class="badge text-bg-info ms-1">Reversal</span>
+                {% endif %}
+            </h3>
             <p class="text-muted mb-0">{{ entry.date|date:"M d, Y" }}{% if entry.description %} &middot; {{ entry.description }}{% endif %}</p>
+            {% if entry.is_reversed %}
+            <p class="text-muted small mb-0">
+                Reversed by
+                <a href="{% url 'finance:journal_entry_detail' entry.reversed_by.pk %}">{{ entry.reversed_by.reference }}</a>
+            </p>
+            {% endif %}
+            {% if entry.reversal_of %}
+            <p class="text-muted small mb-0">
+                Reverses
+                <a href="{% url 'finance:journal_entry_detail' entry.reversal_of.pk %}">{{ entry.reversal_of.reference }}</a>
+            </p>
+            {% endif %}
         </div>
-        <a href="{% url 'finance:journal_entry_list' %}" class="btn btn-outline-dark shadow-sm">
-            <i class="fa fa-arrow-left me-1"></i> Journal Entries
-        </a>
+        <div class="d-flex gap-2">
+            {% if can_manage and not entry.is_reversed %}
+            <form method="post" action="{% url 'finance:reverse_journal_entry' entry.pk %}"
+                  onsubmit="return confirm('Post a reversing entry for {{ entry.reference }}? This creates a new entry with every debit and credit swapped — the original is kept for the audit trail.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger shadow-sm">
+                    <i class="fa fa-rotate-left me-1"></i> Reverse
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'finance:journal_entry_list' %}" class="btn btn-outline-dark shadow-sm">
+                <i class="fa fa-arrow-left me-1"></i> Journal Entries
+            </a>
+        </div>
     </div>
 
     <div class="card">

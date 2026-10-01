@@ -78,4 +78,5 @@ urlpatterns = [
     path("journal-entries/", views.journal_entry_list, name="journal_entry_list"),
     path("journal-entries/new/", views.journal_entry_create, name="journal_entry_create"),
     path("journal-entries/<int:pk>/", views.journal_entry_detail, name="journal_entry_detail"),
+    path("journal-entries/<int:pk>/reverse/", views.reverse_journal_entry, name="reverse_journal_entry"),
 ]

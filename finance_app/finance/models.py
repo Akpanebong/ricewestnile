@@ -706,6 +706,13 @@ class JournalEntry(models.Model):
     description = models.CharField(max_length=255, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="journal_entries_created")
     created_at = models.DateTimeField(auto_now_add=True)
+    # Reversing a mistaken entry never deletes it — deleting would destroy
+    # the audit trail and leave a gap in the reference sequence. Instead a
+    # new entry is posted with every debit/credit swapped, linked back here.
+    reversal_of = models.OneToOneField(
+        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="reversed_by",
+        help_text="If set, this entry is a reversal that exactly offsets the linked entry.",
+    )
 
     class Meta:
         verbose_name = "Journal Entry"
@@ -731,6 +738,35 @@ class JournalEntry(models.Model):
     @property
     def is_balanced(self):
         return self.total_debit == self.total_credit
+
+    @property
+    def is_reversed(self):
+        return hasattr(self, "reversed_by")
+
+    def reverse(self, user):
+        """Post a new entry with every line's debit/credit swapped, exactly
+        offsetting this one. Raises ValueError if already reversed."""
+        if self.is_reversed:
+            raise ValueError(f"{self.reference} has already been reversed.")
+
+        reversal = JournalEntry.objects.create(
+            date=timezone.now().date(),
+            description=f"Reversal of {self.reference}" + (f" — {self.description}" if self.description else ""),
+            created_by=user,
+            reversal_of=self,
+        )
+        for line in self.lines.all():
+            reversal_line = JournalEntryLine.objects.create(
+                journal_entry=reversal,
+                category=line.category,
+                debit=line.credit,
+                credit=line.debit,
+                description=line.description,
+                department=line.department,
+                project=line.project,
+            )
+            reversal_line.post()
+        return reversal
 
 
 class JournalEntryLine(models.Model):

@@ -1706,9 +1706,39 @@ def journal_entry_detail(request, pk):
         return redirect(reverse("finance:dashboard"))
 
     entry = get_object_or_404(
-        JournalEntry.objects.prefetch_related("lines__category", "lines__department", "lines__project"), pk=pk
+        JournalEntry.objects.select_related("reversal_of", "reversed_by").prefetch_related(
+            "lines__category", "lines__department", "lines__project"
+        ),
+        pk=pk,
     )
-    return render(request, "finance/journal_entry_detail.html", {"entry": entry})
+    return render(request, "finance/journal_entry_detail.html", {
+        "entry": entry,
+        "can_manage": _can_manage_chart_of_accounts(request.user),
+    })
+
+
+@login_required(login_url="login")
+@transaction.atomic
+def reverse_journal_entry(request, pk):
+    """Post an offsetting entry for a mistaken posting — see
+    JournalEntry.reverse() for why this never deletes the original."""
+    if not _can_manage_chart_of_accounts(request.user):
+        messages.error(request, "Only Finance staff can reverse journal entries.")
+        return redirect(reverse("finance:journal_entry_detail", args=[pk]))
+
+    entry = get_object_or_404(JournalEntry, pk=pk)
+
+    if request.method != "POST":
+        return redirect(reverse("finance:journal_entry_detail", args=[pk]))
+
+    try:
+        reversal = entry.reverse(request.user)
+    except ValueError as e:
+        messages.error(request, str(e))
+        return redirect(reverse("finance:journal_entry_detail", args=[pk]))
+
+    messages.success(request, f"{entry.reference} reversed as {reversal.reference}.")
+    return redirect(reverse("finance:journal_entry_detail", args=[reversal.pk]))
 
 
 @login_required(login_url="login")
