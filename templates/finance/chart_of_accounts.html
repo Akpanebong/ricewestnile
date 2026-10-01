@@ -30,13 +30,154 @@
         </div>
     </div>
 
-    <div class="card coa-tree-card">
+    <div class="coa-search-bar mb-3">
+        <i class="fa-solid fa-magnifying-glass coa-search-icon"></i>
+        <input type="text" id="coaSearchInput" class="form-control" placeholder="Search accounts by code or name...">
+    </div>
+
+    <div class="card coa-tree-card" id="coaTreeCard">
         {% for root in account_tree_roots %}
             {% include "finance/includes/coa_tree_node.html" with node=root depth=0 can_manage=can_manage base_currency=base_currency %}
         {% endfor %}
+        <div class="coa-search-empty" id="coaSearchEmpty" hidden>
+            <i class="fa-solid fa-magnifying-glass mb-2"></i>
+            <div>No accounts match your search.</div>
+        </div>
     </div>
 
 </div>
+
+<script>
+(function () {
+    // Available to every user, not just those who can edit the chart of
+    // accounts — browsing a long, fully-expanded tree to find one account
+    // is exactly the pain point this fixes, and it's a read-only filter.
+    const searchInput = document.getElementById('coaSearchInput');
+    const treeCard = document.getElementById('coaTreeCard');
+    const emptyState = document.getElementById('coaSearchEmpty');
+    if (!searchInput || !treeCard) return;
+
+    const allRows = Array.from(treeCard.querySelectorAll('.coa-row'));
+    const groupRows = allRows.filter(function (row) { return row.classList.contains('coa-group'); });
+    // Process innermost groups first so a parent's "does my subtree have a
+    // match" check can see whether its children already matched.
+    const groupRowsDeepestFirst = groupRows.slice().reverse();
+
+    function collapseElFor(row) {
+        const target = row.dataset.bsTarget;
+        return target ? document.querySelector(target) : null;
+    }
+
+    function restoreDefault() {
+        allRows.forEach(function (row) {
+            row.hidden = false;
+        });
+        if (emptyState) emptyState.hidden = true;
+    }
+
+    function applySearch(query) {
+        const term = query.trim().toLowerCase();
+        if (!term) {
+            restoreDefault();
+            return;
+        }
+
+        allRows.filter(function (row) { return row.classList.contains('coa-account-row'); })
+            .forEach(function (row) {
+                row.hidden = !row.textContent.toLowerCase().includes(term);
+            });
+
+        let anyVisible = false;
+        groupRowsDeepestFirst.forEach(function (row) {
+            const ownMatches = (row.querySelector('.coa-group-label')?.textContent || '').toLowerCase().includes(term);
+            const collapseEl = collapseElFor(row);
+            const hasVisibleChild = collapseEl ? Array.from(collapseEl.children).some(function (child) {
+                return child.classList.contains('coa-row') && !child.hidden;
+            }) : false;
+            const show = ownMatches || hasVisibleChild;
+            row.hidden = !show;
+            if (show) {
+                anyVisible = true;
+                if (collapseEl && !collapseEl.classList.contains('show')) {
+                    bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).show();
+                }
+            }
+        });
+
+        // A matching leaf row also counts toward "anything visible at all".
+        if (!anyVisible) {
+            anyVisible = allRows.some(function (row) {
+                return row.classList.contains('coa-account-row') && !row.hidden;
+            });
+        }
+
+        if (emptyState) emptyState.hidden = anyVisible;
+    }
+
+    searchInput.addEventListener('input', function () {
+        applySearch(searchInput.value);
+    });
+})();
+
+(function () {
+    // Click a row (group or leaf) to reveal its action toolbar (Edit /
+    // Delete / Add Child / View Ledger, for a user who can manage the
+    // chart of accounts) and, for a group, toggle its collapse — this runs
+    // for every signed-in user, not just one who can manage the chart of
+    // accounts, since browsing/collapsing a long read-only tree is not an
+    // edit action. Only one row's toolbar is open at a time, and clicking
+    // inside the toolbar itself never toggles the row (which, for a
+    // group, would otherwise also collapse it).
+    //
+    // Group rows drive their own expand/collapse here via `data-bs-target`
+    // instead of Bootstrap's `data-bs-toggle="collapse"` data-api: that
+    // data-api listens on `document` in the capture phase, so it saw every
+    // click landing on an <a> anywhere inside the row — including the
+    // "Add Child"/"View Ledger" links nested in the toolbar — and called
+    // preventDefault() on their navigation before this script ever got a
+    // chance to stop the event from bubbling that far.
+    let selectedRow = null;
+
+    document.querySelectorAll('.coa-row').forEach(function (row) {
+        row.addEventListener('click', function (event) {
+            if (event.target.closest('.coa-row-actions')) return;
+            if (selectedRow && selectedRow !== row) {
+                selectedRow.classList.remove('is-selected');
+            }
+            row.classList.toggle('is-selected');
+            selectedRow = row.classList.contains('is-selected') ? row : null;
+
+            const collapseSelector = row.dataset.bsTarget;
+            if (collapseSelector) {
+                const collapseEl = document.querySelector(collapseSelector);
+                if (collapseEl) {
+                    bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).toggle();
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.coa-row-actions').forEach(function (actions) {
+        actions.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+    });
+
+    // Keep aria-expanded on the trigger row in sync once each collapse
+    // transition actually finishes, the same way Bootstrap's own
+    // data-api would have for a native data-bs-toggle="collapse" trigger.
+    document.querySelectorAll('.coa-group[data-bs-target]').forEach(function (trigger) {
+        const collapseEl = document.querySelector(trigger.dataset.bsTarget);
+        if (!collapseEl) return;
+        collapseEl.addEventListener('shown.bs.collapse', function () {
+            trigger.setAttribute('aria-expanded', 'true');
+        });
+        collapseEl.addEventListener('hidden.bs.collapse', function () {
+            trigger.setAttribute('aria-expanded', 'false');
+        });
+    });
+})();
+</script>
 
 {% if can_manage %}
 <!-- EDIT ACCOUNT MODAL -->
@@ -133,61 +274,6 @@ document.getElementById('deleteAccountModal').addEventListener('show.bs.modal', 
     document.getElementById('deleteCategoryLabel').textContent = btn.dataset.categoryLabel;
     document.getElementById('deleteAccountForm').action = deleteUrlTemplate.replace('/0/', '/' + btn.dataset.categoryId + '/');
 });
-
-(function () {
-    // Click a row (group or leaf) to reveal its action toolbar (Edit /
-    // Delete / Add Child / View Ledger) — only one row's toolbar is open
-    // at a time, and clicking inside the toolbar itself never toggles
-    // the row (which, for a group, would otherwise also collapse it).
-    //
-    // Group rows drive their own expand/collapse here via `data-bs-target`
-    // instead of Bootstrap's `data-bs-toggle="collapse"` data-api: that
-    // data-api listens on `document` in the capture phase, so it saw every
-    // click landing on an <a> anywhere inside the row — including the
-    // "Add Child"/"View Ledger" links nested in the toolbar — and called
-    // preventDefault() on their navigation before this script ever got a
-    // chance to stop the event from bubbling that far.
-    let selectedRow = null;
-
-    document.querySelectorAll('.coa-row').forEach(function (row) {
-        row.addEventListener('click', function (event) {
-            if (event.target.closest('.coa-row-actions')) return;
-            if (selectedRow && selectedRow !== row) {
-                selectedRow.classList.remove('is-selected');
-            }
-            row.classList.toggle('is-selected');
-            selectedRow = row.classList.contains('is-selected') ? row : null;
-
-            const collapseSelector = row.dataset.bsTarget;
-            if (collapseSelector) {
-                const collapseEl = document.querySelector(collapseSelector);
-                if (collapseEl) {
-                    bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false }).toggle();
-                }
-            }
-        });
-    });
-
-    document.querySelectorAll('.coa-row-actions').forEach(function (actions) {
-        actions.addEventListener('click', function (event) {
-            event.stopPropagation();
-        });
-    });
-
-    // Keep aria-expanded on the trigger row in sync once each collapse
-    // transition actually finishes, the same way Bootstrap's own
-    // data-api would have for a native data-bs-toggle="collapse" trigger.
-    document.querySelectorAll('.coa-group[data-bs-target]').forEach(function (trigger) {
-        const collapseEl = document.querySelector(trigger.dataset.bsTarget);
-        if (!collapseEl) return;
-        collapseEl.addEventListener('shown.bs.collapse', function () {
-            trigger.setAttribute('aria-expanded', 'true');
-        });
-        collapseEl.addEventListener('hidden.bs.collapse', function () {
-            trigger.setAttribute('aria-expanded', 'false');
-        });
-    });
-})();
 </script>
 {% endif %}
 {% endblock %}

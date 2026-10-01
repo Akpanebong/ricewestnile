@@ -1,0 +1,466 @@
+
+{% extends "finance/finance_tools_base.html" %}
+
+{% block title %}{{ budget.name }} — Transactions | Finance{% endblock %}
+
+{% block finance_content %}
+
+<style>
+    /* =========================================================
+       BUDGET TRANSACTIONS
+       ========================================================= */
+
+    .txn-page {
+        animation: txnPageIn .35s ease both;
+    }
+
+    @keyframes txnPageIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .txn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        margin-bottom: .6rem;
+        color: #60716b;
+        font-size: .72rem;
+        font-weight: 650;
+        text-decoration: none;
+    }
+
+    .txn-back:hover {
+        color: #087f7b;
+    }
+
+    .txn-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .txn-eyebrow {
+        margin-bottom: .25rem;
+        font-size: .67rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #198754;
+    }
+
+    .txn-title {
+        margin: 0;
+        color: #18323a;
+        font-size: 1.2rem;
+        font-weight: 750;
+        letter-spacing: -.02em;
+    }
+
+    .txn-meta {
+        margin: .3rem 0 0;
+        color: #71807b;
+        font-size: .76rem;
+    }
+
+    .txn-meta i {
+        margin-right: .25rem;
+        color: #98a49e;
+    }
+
+    .txn-actions {
+        display: flex;
+        gap: .5rem;
+        flex-shrink: 0;
+    }
+
+
+    /* ---------------------------------------------------------
+       SUMMARY
+    --------------------------------------------------------- */
+
+    .txn-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .65rem;
+        margin-bottom: 1rem;
+    }
+
+    .txn-stat {
+        min-width: 170px;
+        flex: 1;
+        padding: .7rem .85rem;
+        border: 1px solid #e5ece9;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 3px 12px rgba(20, 55, 45, .035);
+    }
+
+    .txn-stat-label {
+        display: block;
+        color: #81908b;
+        font-size: .62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .txn-stat-value {
+        display: block;
+        margin-top: .15rem;
+        color: #18323a;
+        font-size: .95rem;
+        font-weight: 750;
+    }
+
+    .txn-stat-value.is-negative {
+        color: #dc3545;
+    }
+
+    .txn-stat-value.is-positive {
+        color: #198754;
+    }
+
+
+    /* ---------------------------------------------------------
+       ACCOUNTS CARD
+    --------------------------------------------------------- */
+
+    .txn-card {
+        overflow: hidden;
+        border: 1px solid #e5ece9;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(20, 55, 45, .045);
+        margin-bottom: 1rem;
+    }
+
+    .txn-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .7rem .9rem;
+        border-bottom: 1px solid #e8efec;
+        background: linear-gradient(135deg, #f8fbfa, #fff);
+    }
+
+    .txn-card-header h2 {
+        margin: 0;
+        color: #18323a;
+        font-size: .85rem;
+        font-weight: 750;
+    }
+
+    .txn-card-header p {
+        margin: .1rem 0 0;
+        color: #81908b;
+        font-size: .67rem;
+    }
+
+    .txn-table {
+        font-size: .75rem;
+        margin: 0;
+    }
+
+    .txn-table thead th {
+        padding: .6rem .75rem;
+        border-bottom: 1px solid #dfe8e4;
+        background: #f8faf9;
+        color: #63736d;
+        font-size: .62rem;
+        font-weight: 800;
+        letter-spacing: .035em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .txn-table tbody td {
+        padding: .65rem .75rem;
+        border-color: #edf1ef;
+        color: #42534d;
+        vertical-align: middle;
+    }
+
+    .txn-account-code {
+        font-family: monospace;
+        font-weight: 700;
+        color: #50625b;
+    }
+
+    .txn-amount {
+        white-space: nowrap;
+        font-weight: 650;
+    }
+
+    .record-count {
+        padding: .25rem .5rem;
+        border-radius: 20px;
+        background: #f0f5f3;
+        color: #60716b;
+        font-size: .65rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+
+    /* ---------------------------------------------------------
+       EMPTY STATE
+    --------------------------------------------------------- */
+
+    .txn-empty {
+        padding: 2.75rem 1rem;
+        text-align: center;
+    }
+
+    .txn-empty-icon {
+        width: 46px;
+        height: 46px;
+        margin: 0 auto .65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: #f1f6f4;
+        color: #198754;
+        font-size: .95rem;
+    }
+
+    .txn-empty strong {
+        display: block;
+        color: #344640;
+        font-size: .85rem;
+    }
+
+    .txn-empty span {
+        display: block;
+        margin-top: .25rem;
+        color: #81908b;
+        font-size: .7rem;
+    }
+
+
+    @media (max-width: 767.98px) {
+        .txn-header {
+            flex-direction: column;
+        }
+
+        .txn-actions {
+            width: 100%;
+        }
+
+        .txn-actions a {
+            flex: 1;
+            text-align: center;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .txn-page {
+            animation: none;
+        }
+    }
+</style>
+
+
+<div class="container-fluid txn-page">
+
+    <a href="{% url 'finance:performance_list' %}" class="txn-back">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back to Budget performance
+    </a>
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+    <div class="txn-header">
+
+        <div>
+            <div class="txn-eyebrow">
+                <i class="fa-solid fa-receipt me-1"></i>
+                Finance control
+            </div>
+
+            <h1 class="txn-title">
+                {{ budget.name }} — Transactions
+            </h1>
+
+            <p class="txn-meta">
+                <i class="fa-regular fa-calendar"></i>
+                {{ budget.period_start|date:"M Y" }} – {{ budget.period_end|date:"M Y" }}
+
+                {% if budget.project %}
+                    &nbsp;•&nbsp;<i class="fa-solid fa-diagram-project"></i>{{ budget.project }}
+                {% else %}
+                    &nbsp;•&nbsp;<span class="fst-italic">Organization-wide</span>
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="txn-actions">
+            <a href="{% url 'finance:budget_detail' budget.pk %}" class="btn btn-sm btn-outline-success">
+                <i class="fa-solid fa-wallet me-1"></i>
+                View budget
+            </a>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY
+    ====================================================== -->
+    <div class="txn-summary">
+
+        <div class="txn-stat">
+            <span class="txn-stat-label">Budgeted</span>
+            <strong class="txn-stat-value">{{ budgeted_total|accounting_money:request }}</strong>
+        </div>
+
+        <div class="txn-stat">
+            <span class="txn-stat-label">Actual</span>
+            <strong class="txn-stat-value">{{ actual_total|accounting_money:request }}</strong>
+        </div>
+
+        <div class="txn-stat">
+            <span class="txn-stat-label">Variance</span>
+            <strong class="txn-stat-value {% if variance_total < 0 %}is-negative{% elif variance_total > 0 %}is-positive{% endif %}">
+                {{ variance_total|accounting_money:request }}
+            </strong>
+        </div>
+
+        <div class="txn-stat">
+            <span class="txn-stat-label">Transactions</span>
+            <strong class="txn-stat-value">{{ transaction_count }}</strong>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ACCOUNTS IN THIS BUDGET
+    ====================================================== -->
+    <div class="txn-card">
+
+        <div class="txn-card-header">
+            <div>
+                <h2>Accounts in this budget</h2>
+                <p>Budgeted vs actual per account — income is a credit, entered and tracked as negative.</p>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table txn-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Type</th>
+                        <th class="text-end">Budgeted</th>
+                        <th class="text-end">Actual</th>
+                        <th class="text-end">Variance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in lines %}
+                    <tr>
+                        <td>
+                            {% if line.category %}
+                                <span class="txn-account-code">{{ line.category.code }}</span>
+                                {{ line.category.name }}
+                            {% else %}
+                                <span class="text-muted">(no account)</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if line.category %}{{ line.category.get_category_type_display }}{% endif %}
+                        </td>
+                        <td class="text-end txn-amount">{{ line.total|accounting_money:request }}</td>
+                        <td class="text-end txn-amount">{{ line.actual_total|accounting_money:request }}</td>
+                        <td class="text-end txn-amount">{{ line.variance_total|accounting_money:request }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TRANSACTIONS
+    ====================================================== -->
+    <div class="txn-card">
+
+        <div class="txn-card-header">
+            <div>
+                <h2>Ledger transactions</h2>
+                <p>Every posting against this budget's accounts, within its period{% if budget.project %} and project{% endif %}.</p>
+            </div>
+            <span class="record-count">
+                {{ transaction_count }} transaction{{ transaction_count|pluralize }}
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table txn-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Account</th>
+                        <th>Project / Dept</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr>
+                        <td>{{ txn.reference }}</td>
+                        <td>{{ txn.date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="status-badge
+                                {% if txn.transaction_type == 'income' %}status-badge--approved
+                                {% elif txn.transaction_type == 'expense' %}status-badge--rejected
+                                {% else %}status-badge--pending{% endif %}">
+                                {{ txn.get_transaction_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="txn-account-code">{{ txn.category.code }}</span>
+                            {{ txn.category.name }}
+                        </td>
+                        <td>
+                            {% if txn.project %}{{ txn.project }}{% endif %}
+                            {% if txn.department %}<br><small class="text-muted">{{ txn.department }}</small>{% endif %}
+                        </td>
+                        <td class="text-end txn-amount">{{ txn.amount|accounting_money:request }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="txn-empty">
+                                <div class="txn-empty-icon">
+                                    <i class="fa-solid fa-receipt"></i>
+                                </div>
+                                <strong>No transactions yet</strong>
+                                <span>
+                                    Once activity is posted against this budget's accounts,
+                                    it will show up here.
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

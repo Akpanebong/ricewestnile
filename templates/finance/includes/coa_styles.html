@@ -3,6 +3,37 @@
         overflow: hidden;
     }
 
+    .coa-search-bar {
+        position: relative;
+    }
+
+    .coa-search-bar input {
+        padding-left: 2.25rem;
+    }
+
+    .coa-search-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.85rem;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        pointer-events: none;
+    }
+
+    .coa-search-empty {
+        padding: 2.5rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.86rem;
+    }
+
+    .coa-search-empty i {
+        display: block;
+        font-size: 1.4rem;
+        color: var(--text-light);
+    }
+
     .coa-group {
         display: flex;
         align-items: center;

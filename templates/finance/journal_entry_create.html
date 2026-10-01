@@ -144,15 +144,17 @@
     </form>
 </div>
 
+{% include "finance/includes/account_picker_modal.html" %}
+
 <template id="journalLineTemplate">
     <tr>
         <td>
-            <select name="line_category" class="form-select je-account-select" required>
-                <option value="">Select account...</option>
-                {% for account in leaf_accounts %}
-                <option value="{{ account.pk }}">{{ account.code }} — {{ account.name }}</option>
-                {% endfor %}
-            </select>
+            <input type="hidden" name="line_category" data-account-value>
+            <button type="button" class="form-control account-picker-trigger"
+                    data-bs-toggle="modal" data-bs-target="#accountPickerModal">
+                <span data-account-label-text class="account-picker-placeholder">Select account...</span>
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
         </td>
         <td><input type="text" name="line_description" class="form-control" placeholder="Line description"></td>
         <td>

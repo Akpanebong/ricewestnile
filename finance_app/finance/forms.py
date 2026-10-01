@@ -4,7 +4,7 @@ from django import forms
 from django.forms import inlineformset_factory
 
 from .models import (
-    FinanceBudget, FinanceBudgetLine, BudgetPerformance, CashBook,
+    FinanceBudget, FinanceBudgetLine, CashBook,
     CashBookEntry, BankReconciliation, BankReconciliationItem, FinancialCategory,
 )
 
@@ -38,7 +38,13 @@ class FinanceBudgetLineForm(StyledFinanceForm):
             "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12",
             "justification",
         ]
-        widgets = {"justification": forms.Textarea(attrs={"rows": 1})}
+        widgets = {
+            # Rendered via the shared account-picker modal (search over the
+            # full chart of accounts) instead of a long <select> — see
+            # templates/finance/includes/account_picker_modal.html.
+            "category": forms.HiddenInput(attrs={"data-account-value": ""}),
+            "justification": forms.Textarea(attrs={"rows": 1}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -57,22 +63,65 @@ class FinanceBudgetLineForm(StyledFinanceForm):
         for field in FinanceBudgetLine.MONTH_FIELDS:
             if cleaned_data.get(field) is None:
                 cleaned_data[field] = Decimal("0.00")
+
+        # Income is a credit-side account — budgeted (and, correspondingly,
+        # actual) income is entered as zero or negative so a budget's totals
+        # net to its true cost instead of adding receipts to disbursements.
+        # Catching a stray positive figure here, per month, is what makes
+        # that convention reliable rather than a note nobody remembers.
+        category = cleaned_data.get("category")
+        if category and category.category_type == FinancialCategory.CategoryType.INCOME:
+            for field in FinanceBudgetLine.MONTH_FIELDS:
+                if cleaned_data.get(field, Decimal("0.00")) > 0:
+                    self.add_error(field, "Income is a credit — enter it as zero or a negative amount.")
+
         return cleaned_data
 
 
-BudgetLineFormSet = inlineformset_factory(FinanceBudget, FinanceBudgetLine, form=FinanceBudgetLineForm, extra=1, can_delete=True)
+class BudgetLineFormSetBase(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            # Individual lines already have problems — don't pile on with a
+            # balance figure computed from data that isn't even valid yet.
+            return
+
+        total_income = Decimal("0.00")
+        total_expense = Decimal("0.00")
+        for form in self.forms:
+            if not hasattr(form, "cleaned_data") or form.cleaned_data.get("DELETE"):
+                continue
+            category = form.cleaned_data.get("category")
+            if category is None:
+                continue
+            line_total = sum(
+                (form.cleaned_data.get(field) or Decimal("0.00") for field in FinanceBudgetLine.MONTH_FIELDS),
+                Decimal("0.00"),
+            )
+            if category.category_type == FinancialCategory.CategoryType.INCOME:
+                total_income += line_total
+            elif category.category_type == FinancialCategory.CategoryType.EXPENSE:
+                total_expense += line_total
+
+        # Income is a credit-side account, so a line against it may be typed
+        # as a negative figure following that convention — compare
+        # magnitudes, not raw signed sums, so a budget entered that way
+        # isn't wrongly flagged as unbalanced.
+        if abs(total_income) != abs(total_expense):
+            raise forms.ValidationError(
+                "This budget doesn't balance — total expected income (%(income)s) must equal "
+                "total expected costs (%(expense)s). Lines on asset/liability/equity accounts "
+                "aren't counted on either side." % {
+                    "income": f"{abs(total_income):,.2f}",
+                    "expense": f"{abs(total_expense):,.2f}",
+                }
+            )
 
 
-class BudgetPerformanceForm(StyledFinanceForm):
-    class Meta:
-        model = BudgetPerformance
-        fields = ["budget", "line", "period", "funds_received", "expenditure", "comment"]
-        widgets = {"period": forms.DateInput(attrs={"type": "date"}),
-                   "comment": forms.Textarea(attrs={"rows": 1})}
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["line"].queryset = FinanceBudgetLine.objects.select_related("budget").all()
+BudgetLineFormSet = inlineformset_factory(
+    FinanceBudget, FinanceBudgetLine, form=FinanceBudgetLineForm, formset=BudgetLineFormSetBase,
+    extra=1, can_delete=True,
+)
 
 
 class CashBookForm(StyledFinanceForm):

@@ -9,7 +9,7 @@ from django.urls import reverse
 from account.models import Profile
 from core.services import get_base_currency
 
-from .forms import FinanceBudgetLineForm
+from .forms import BudgetLineFormSet, FinanceBudgetLineForm
 from .models import (
     BankReconciliation,
     BankReconciliationItem,
@@ -567,6 +567,15 @@ class JournalEntryReversalTests(TestCase):
         with self.assertRaises(ValueError):
             self.entry.reverse(self.creator)
 
+    def test_cannot_reverse_a_reversal(self):
+        # Without this guard, a reversal entry could itself be reversed,
+        # and that reversal reversed again, letting the same original
+        # mistake flip back and forth indefinitely instead of being
+        # corrected once with a new entry.
+        reversal = self.entry.reverse(self.creator)
+        with self.assertRaises(ValueError):
+            reversal.reverse(self.creator)
+
 
 class ReverseJournalEntryViewTests(TestCase):
     def setUp(self):
@@ -609,6 +618,214 @@ class ReverseJournalEntryViewTests(TestCase):
         self.client.get(self._reverse_url())
         self.entry.refresh_from_db()
         self.assertFalse(self.entry.is_reversed)
+
+    def test_cannot_reverse_a_reversal_via_the_view(self):
+        self.client.login(username="reverse_view_finance", password="pw")
+        self.client.post(self._reverse_url())
+        self.entry.refresh_from_db()
+        reversal = self.entry.reversed_by
+
+        response = self.client.post(reverse("finance:reverse_journal_entry", args=[reversal.pk]))
+        reversal.refresh_from_db()
+        self.assertFalse(reversal.is_reversed)
+        self.assertRedirects(response, reverse("finance:journal_entry_detail", args=[reversal.pk]))
+
+
+class FinanceBudgetLineIncomeSignTests(TestCase):
+    """Income is entered as a negative (credit) figure, so its actual must
+    be negated to match — otherwise a receipt would read as extra spend
+    when summed with expense lines into a budget-wide total."""
+
+    def setUp(self):
+        self.creator = make_user("budget_income_sign_owner")
+        self.income_account = FinancialCategory.objects.create(
+            code="TEST-SIGN-INCOME", name="Test Sign Donor Income", category_type=FinancialCategory.CategoryType.INCOME,
+        )
+        self.expense_account = FinancialCategory.objects.create(
+            code="TEST-SIGN-EXPENSE", name="Test Sign Programme Costs", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.budget = FinanceBudget.objects.create(
+            name="Test Sign Budget", period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
+            created_by=self.creator,
+        )
+        self.income_line = FinanceBudgetLine.objects.create(
+            budget=self.budget, category=self.income_account, m01=Decimal("-1000.00"),
+        )
+        self.expense_line = FinanceBudgetLine.objects.create(
+            budget=self.budget, category=self.expense_account, m01=Decimal("1000.00"),
+        )
+
+    def test_income_actual_is_negated_to_match_the_budgeted_convention(self):
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.INCOME,
+            category=self.income_account, amount=Decimal("300.00"), currency=get_base_currency(),
+            date=date(2026, 1, 10), created_by=self.creator,
+        )
+        self.assertEqual(self.income_line.actual_for_month(2026, 1), Decimal("-300.00"))
+        self.assertEqual(self.income_line.actual_total, Decimal("-300.00"))
+
+    def test_expense_actual_is_unaffected(self):
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("200.00"), currency=get_base_currency(),
+            date=date(2026, 1, 15), created_by=self.creator,
+        )
+        self.assertEqual(self.expense_line.actual_total, Decimal("200.00"))
+
+    def test_income_receipt_does_not_inflate_the_budget_wide_actual(self):
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.INCOME,
+            category=self.income_account, amount=Decimal("300.00"), currency=get_base_currency(),
+            date=date(2026, 1, 10), created_by=self.creator,
+        )
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("200.00"), currency=get_base_currency(),
+            date=date(2026, 1, 15), created_by=self.creator,
+        )
+        # The budget-wide headline is a cost-tracking figure (Expense-type
+        # lines only) — without that scoping this would read 500.00 (300
+        # income + 200 expense blended together) or, with only the sign
+        # flip and no scoping, -100.00 (300 income negated, netted against
+        # 200 expense). Either way a receipt must never show up as spend.
+        self.assertEqual(self.budget.actual_amount, Decimal("200.00"))
+        self.assertEqual(self.budget.total_amount, Decimal("1000.00"))
+        # The income line itself still correctly shows its own negative actual.
+        self.assertEqual(self.income_line.actual_total, Decimal("-300.00"))
+
+
+class FinanceBudgetPerformancePropertiesTests(TestCase):
+    """FinanceBudget.actual_amount/variance_amount/utilization_percent — the
+    figures the Budget performance page shows must come from the ledger."""
+
+    def setUp(self):
+        self.creator = make_user("budget_perf_owner")
+        self.expense_account = FinancialCategory.objects.create(
+            code="TEST-PERF-EXPENSE", name="Test Perf Expense", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.budget = FinanceBudget.objects.create(
+            name="Test Perf Budget", period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
+            created_by=self.creator,
+        )
+        FinanceBudgetLine.objects.create(
+            budget=self.budget, category=self.expense_account,
+            m01=Decimal("1000.00"), m02=Decimal("1000.00"),
+        )
+
+    def test_actual_amount_is_zero_with_no_transactions(self):
+        self.assertEqual(self.budget.actual_amount, Decimal("0.00"))
+        self.assertEqual(self.budget.utilization_percent, Decimal("0.00"))
+
+    def test_actual_amount_reflects_real_ledger_activity(self):
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("500.00"), currency=get_base_currency(),
+            date=date(2026, 1, 15), created_by=self.creator,
+        )
+        self.assertEqual(self.budget.actual_amount, Decimal("500.00"))
+        self.assertEqual(self.budget.variance_amount, Decimal("1500.00"))
+        self.assertEqual(self.budget.utilization_percent, Decimal("25.00"))
+
+    def test_utilization_percent_is_zero_for_a_budget_with_no_lines(self):
+        empty_budget = FinanceBudget.objects.create(
+            name="Test Empty Budget", period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
+            created_by=self.creator,
+        )
+        self.assertEqual(empty_budget.total_amount, Decimal("0.00"))
+        self.assertEqual(empty_budget.utilization_percent, Decimal("0.00"))
+
+
+class PerformanceListViewTests(TestCase):
+    """The Budget performance page lists every budget with ledger-derived
+    totals and links through to its transactions — it is not a form for
+    typing in expenditure figures by hand."""
+
+    def setUp(self):
+        self.user = make_user("perf_view_user", groups=["Finance"])
+        self.expense_account = FinancialCategory.objects.create(
+            code="TEST-PERF-VIEW", name="Test Perf View Expense", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.budget = FinanceBudget.objects.create(
+            name="Test Perf View Budget", period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
+            created_by=self.user,
+        )
+        FinanceBudgetLine.objects.create(budget=self.budget, category=self.expense_account, m01=Decimal("1000.00"))
+
+    def test_lists_budgets_with_ledger_derived_totals(self):
+        self.client.login(username="perf_view_user", password="pw")
+        response = self.client.get(reverse("finance:performance_list"))
+        self.assertEqual(response.status_code, 200)
+        rows = {row["budget"].pk: row for row in response.context["rows"]}
+        self.assertEqual(rows[self.budget.pk]["total"], Decimal("1000.00"))
+        self.assertEqual(rows[self.budget.pk]["actual"], Decimal("0.00"))
+
+    def test_links_through_to_the_budget_transactions_drilldown(self):
+        self.client.login(username="perf_view_user", password="pw")
+        response = self.client.get(reverse("finance:performance_list"))
+        self.assertContains(response, reverse("finance:budget_transactions", args=[self.budget.pk]))
+
+    def test_no_add_entry_point_remains(self):
+        self.client.login(username="perf_view_user", password="pw")
+        response = self.client.get(reverse("finance:performance_list"))
+        self.assertNotContains(response, "Add performance")
+
+    def test_manual_performance_create_route_is_gone(self):
+        from django.urls import NoReverseMatch
+        with self.assertRaises(NoReverseMatch):
+            reverse("finance:performance_create")
+
+
+class BudgetTransactionsViewTests(TestCase):
+    """Drilling into a budget from the Performance page must show the real
+    ledger postings behind its "Actual" figure — scoped to exactly the same
+    category/date/project filters FinanceBudgetLine.actual_total uses, so
+    the list always foots to the totals shown elsewhere."""
+
+    def setUp(self):
+        self.user = make_user("txn_view_user", groups=["Finance"])
+        self.expense_account = FinancialCategory.objects.create(
+            code="TEST-TXN-EXPENSE", name="Test Txn Expense", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.other_account = FinancialCategory.objects.create(
+            code="TEST-TXN-OTHER", name="Test Txn Unrelated Expense", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.budget = FinanceBudget.objects.create(
+            name="Test Txn Budget", period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
+            created_by=self.user,
+        )
+        FinanceBudgetLine.objects.create(budget=self.budget, category=self.expense_account, m01=Decimal("1000.00"))
+
+        self.in_scope_txn = FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("250.00"), currency=get_base_currency(),
+            date=date(2026, 1, 20), created_by=self.user,
+        )
+        # Different account entirely — not budgeted here, must not appear.
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.other_account, amount=Decimal("999.00"), currency=get_base_currency(),
+            date=date(2026, 1, 20), created_by=self.user,
+        )
+        # Same account, but outside the budget's period — must not appear.
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("777.00"), currency=get_base_currency(),
+            date=date(2027, 1, 5), created_by=self.user,
+        )
+
+    def test_lists_only_transactions_for_this_budgets_accounts_and_period(self):
+        self.client.login(username="txn_view_user", password="pw")
+        response = self.client.get(reverse("finance:budget_transactions", args=[self.budget.pk]))
+        self.assertEqual(response.status_code, 200)
+        transactions = list(response.context["transactions"])
+        self.assertEqual(transactions, [self.in_scope_txn])
+
+    def test_totals_match_the_performance_page_figures(self):
+        self.client.login(username="txn_view_user", password="pw")
+        response = self.client.get(reverse("finance:budget_transactions", args=[self.budget.pk]))
+        self.assertEqual(response.context["budgeted_total"], self.budget.total_amount)
+        self.assertEqual(response.context["actual_total"], self.budget.actual_amount)
+        self.assertEqual(response.context["actual_total"], Decimal("250.00"))
 
 
 class FinanceBudgetLineLedgerLinkTests(TestCase):
@@ -716,3 +933,103 @@ class FinanceBudgetLineFormTests(TestCase):
     def test_valid_with_a_leaf_account(self):
         form = FinanceBudgetLineForm(data={"category": self.leaf_account.pk, "m01": "100.00"})
         self.assertTrue(form.is_valid(), form.errors)
+
+    def test_positive_amount_on_an_income_account_is_rejected(self):
+        income_account = FinancialCategory.objects.create(
+            code="TEST-BUD-FORM-INCOME", name="Test Form Income", category_type=FinancialCategory.CategoryType.INCOME,
+        )
+        form = FinanceBudgetLineForm(data={"category": income_account.pk, "m01": "100.00"})
+        self.assertFalse(form.is_valid())
+        self.assertIn("m01", form.errors)
+
+    def test_negative_amount_on_an_income_account_is_valid(self):
+        income_account = FinancialCategory.objects.create(
+            code="TEST-BUD-FORM-INCOME-2", name="Test Form Income 2", category_type=FinancialCategory.CategoryType.INCOME,
+        )
+        form = FinanceBudgetLineForm(data={"category": income_account.pk, "m01": "-100.00"})
+        self.assertTrue(form.is_valid(), form.errors)
+
+
+class BudgetLineFormSetBalanceTests(TestCase):
+    """A budget must not save unless total expected income equals total
+    expected costs — checked across Income- and Expense-type accounts only."""
+
+    def setUp(self):
+        self.creator = make_user("budget_balance_owner")
+        self.income_account = FinancialCategory.objects.create(
+            code="TEST-BAL-INCOME", name="Test Grant Income", category_type=FinancialCategory.CategoryType.INCOME,
+        )
+        self.expense_account = FinancialCategory.objects.create(
+            code="TEST-BAL-EXPENSE", name="Test Programme Costs", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.budget = FinanceBudget.objects.create(
+            name="Test Balance Budget", period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
+            created_by=self.creator,
+        )
+
+    def _management_form_data(self, total_forms):
+        return {
+            "lines-TOTAL_FORMS": str(total_forms),
+            "lines-INITIAL_FORMS": "0",
+            "lines-MIN_NUM_FORMS": "0",
+            "lines-MAX_NUM_FORMS": "1000",
+        }
+
+    def _line_data(self, index, category, m01="0.00"):
+        data = {f"lines-{index}-category": category.pk, f"lines-{index}-m01": m01}
+        for field in FinanceBudgetLine.MONTH_FIELDS[1:]:
+            data[f"lines-{index}-{field}"] = "0.00"
+        return data
+
+    def test_mismatched_income_and_expense_rejected(self):
+        data = self._management_form_data(2)
+        data.update(self._line_data(0, self.income_account, m01="-1000.00"))
+        data.update(self._line_data(1, self.expense_account, m01="500.00"))
+        formset = BudgetLineFormSet(data=data, instance=self.budget)
+        self.assertFalse(formset.is_valid())
+        self.assertTrue(any("doesn't balance" in error for error in formset.non_form_errors()))
+
+    def test_balanced_income_and_expense_accepted(self):
+        data = self._management_form_data(2)
+        data.update(self._line_data(0, self.income_account, m01="-1000.00"))
+        data.update(self._line_data(1, self.expense_account, m01="1000.00"))
+        formset = BudgetLineFormSet(data=data, instance=self.budget)
+        self.assertTrue(formset.is_valid(), formset.errors)
+
+    def test_deleted_line_excluded_from_balance_check(self):
+        extra_expense_account = FinancialCategory.objects.create(
+            code="TEST-BAL-EXPENSE-2", name="Test Office Costs", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        data = self._management_form_data(3)
+        data.update(self._line_data(0, self.income_account, m01="-1000.00"))
+        data.update(self._line_data(1, self.expense_account, m01="1000.00"))
+        data.update(self._line_data(2, extra_expense_account, m01="500.00"))
+        data["lines-2-DELETE"] = "on"
+        formset = BudgetLineFormSet(data=data, instance=self.budget)
+        self.assertTrue(formset.is_valid(), formset.errors)
+
+    def test_negative_income_entered_as_credit_still_balances(self):
+        data = self._management_form_data(2)
+        data.update(self._line_data(0, self.income_account, m01="-1000.00"))
+        data.update(self._line_data(1, self.expense_account, m01="1000.00"))
+        formset = BudgetLineFormSet(data=data, instance=self.budget)
+        self.assertTrue(formset.is_valid(), formset.errors)
+
+    def test_asset_lines_excluded_from_balance_check(self):
+        asset_account = FinancialCategory.objects.create(
+            code="TEST-BAL-ASSET", name="Test Equipment", category_type=FinancialCategory.CategoryType.ASSET,
+        )
+        data = self._management_form_data(3)
+        data.update(self._line_data(0, self.income_account, m01="-1000.00"))
+        data.update(self._line_data(1, self.expense_account, m01="1000.00"))
+        data.update(self._line_data(2, asset_account, m01="99999.00"))
+        formset = BudgetLineFormSet(data=data, instance=self.budget)
+        self.assertTrue(formset.is_valid(), formset.errors)
+
+    def test_positive_income_amount_is_rejected(self):
+        data = self._management_form_data(2)
+        data.update(self._line_data(0, self.income_account, m01="1000.00"))
+        data.update(self._line_data(1, self.expense_account, m01="1000.00"))
+        formset = BudgetLineFormSet(data=data, instance=self.budget)
+        self.assertFalse(formset.is_valid())
+        self.assertIn("m01", formset.forms[0].errors)

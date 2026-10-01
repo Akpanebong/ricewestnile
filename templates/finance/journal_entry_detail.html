@@ -31,7 +31,7 @@
             {% endif %}
         </div>
         <div class="d-flex gap-2">
-            {% if can_manage and not entry.is_reversed %}
+            {% if can_manage and not entry.is_reversed and not entry.reversal_of %}
             <form method="post" action="{% url 'finance:reverse_journal_entry' entry.pk %}"
                   onsubmit="return confirm('Post a reversing entry for {{ entry.reference }}? This creates a new entry with every debit and credit swapped — the original is kept for the audit trail.');">
                 {% csrf_token %}

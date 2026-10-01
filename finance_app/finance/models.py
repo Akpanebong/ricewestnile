@@ -223,9 +223,38 @@ class FinanceBudget(models.Model):
         if self.period_end and self.period_start and self.period_end < self.period_start:
             raise ValidationError("Budget end date cannot be before its start date.")
 
+    def _expense_lines(self):
+        # "How much of the budget have we used" is a cost-tracking question —
+        # Income lines fund a program, they aren't part of spending against
+        # it. Blending both into one sum would (even with income's actual
+        # negated to match its negative budgeted convention) wash out to
+        # ~zero for every balanced budget, since a valid budget's income and
+        # expense totals are required to match — useless as a headline. So
+        # the single "Budgeted"/"Actual"/"Variance"/"Utilization" figures are
+        # Expense-type lines only; Income still shows correctly (and
+        # negatively) per line in the detailed breakdown.
+        return [
+            line for line in self.lines.all()
+            if line.category_id and line.category.category_type == FinancialCategory.CategoryType.EXPENSE
+        ]
+
     @property
     def total_amount(self):
-        return sum((line.total for line in self.lines.all()), Decimal("0.00"))
+        return sum((line.total for line in self._expense_lines()), Decimal("0.00"))
+
+    @property
+    def actual_amount(self):
+        return sum((line.actual_total for line in self._expense_lines()), Decimal("0.00"))
+
+    @property
+    def variance_amount(self):
+        return self.total_amount - self.actual_amount
+
+    @property
+    def utilization_percent(self):
+        if not self.total_amount:
+            return Decimal("0.00")
+        return (self.actual_amount / self.total_amount) * 100
 
     def __str__(self):
         return self.name
@@ -274,13 +303,29 @@ class FinanceBudgetLine(models.Model):
     def total(self):
         return sum((getattr(self, field) for field in self.MONTH_FIELDS), Decimal("0.00"))
 
+    @property
+    def _actual_sign(self):
+        # A receipt posted to an Income account comes out of the ledger as a
+        # positive figure (it increased the account on its normal credit
+        # side) — correct for the ledger itself, but budgeted income is
+        # entered as a negative (credit-convention) figure here so a
+        # multi-line budget sums to its true net cost instead of double
+        # counting both sides. Negating the income actual to match keeps
+        # "actual" on the same sign convention as "budgeted" for every line,
+        # so a budget-wide total doesn't let money received read as
+        # additional spend.
+        if self.category_id and self.category.category_type == FinancialCategory.CategoryType.INCOME:
+            return Decimal("-1")
+        return Decimal("1")
+
     def actual_for_month(self, year, month):
         filters = {"category": self.category, "date__year": year, "date__month": month}
         if self.budget.project_id:
             filters["project"] = self.budget.project
-        return FinancialTransaction.objects.filter(**filters).aggregate(
+        total = FinancialTransaction.objects.filter(**filters).aggregate(
             total=Coalesce(Sum("amount"), Value(0), output_field=DecimalField(max_digits=16, decimal_places=2))
         )["total"]
+        return total * self._actual_sign
 
     @property
     def actual_total(self):
@@ -291,9 +336,10 @@ class FinanceBudgetLine(models.Model):
         }
         if self.budget.project_id:
             filters["project"] = self.budget.project
-        return FinancialTransaction.objects.filter(**filters).aggregate(
+        total = FinancialTransaction.objects.filter(**filters).aggregate(
             total=Coalesce(Sum("amount"), Value(0), output_field=DecimalField(max_digits=16, decimal_places=2))
         )["total"]
+        return total * self._actual_sign
 
     @property
     def variance_total(self):
@@ -793,9 +839,15 @@ class JournalEntry(models.Model):
 
     def reverse(self, user):
         """Post a new entry with every line's debit/credit swapped, exactly
-        offsetting this one. Raises ValueError if already reversed."""
+        offsetting this one. Raises ValueError if already reversed, or if
+        this entry is itself a reversal — chaining reversal-of-a-reversal
+        lets the same original mistake be flipped back and forth
+        indefinitely instead of being corrected once; the fix for an
+        incorrect reversal is a new correcting entry, not another reversal."""
         if self.is_reversed:
             raise ValueError(f"{self.reference} has already been reversed.")
+        if self.reversal_of_id:
+            raise ValueError(f"{self.reference} is itself a reversal and cannot be reversed — post a new correcting entry instead.")
 
         reversal = JournalEntry.objects.create(
             date=timezone.now().date(),

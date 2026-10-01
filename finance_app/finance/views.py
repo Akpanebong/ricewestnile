@@ -23,9 +23,9 @@ from django.db.models.functions import Coalesce
 from account.templatetags.custom_tags import has_group
 from procurement.procureapp.models import Requisition, PurchaseOrder
 from core.services import user_amount_to_ugx, CURRENCY_LABELS, normalize_currency, get_latest_usd_rates
-from .forms import FinanceBudgetForm, BudgetLineFormSet, BudgetPerformanceForm, CashBookForm, CashBookEntryForm, BankReconciliationForm, BankReconciliationItemFormSet
+from .forms import FinanceBudgetForm, BudgetLineFormSet, CashBookForm, CashBookEntryForm, BankReconciliationForm, BankReconciliationItemFormSet
 from .models import (
-    FinanceBudget, BudgetPerformance, CashBook, BankReconciliation,
+    FinanceBudget, CashBook, BankReconciliation,
     FinancialCategory, FinancialTransaction, JournalEntry, JournalEntryLine,
 )
 from core.services import SUPPORTED_CURRENCIES, get_base_currency, convert_amount
@@ -143,8 +143,14 @@ def budget_detail(request, pk):
             "yearly_actual": line_actual_total,
             "yearly_variance": line.total - line_actual_total,
         })
-        yearly_budget_total += line.total
-        yearly_actual_total += line_actual_total
+        # The summary bar answers "how much of the budget have we used" —
+        # a cost question. Income lines are entered negative and fund the
+        # program rather than spend against it, so (matching
+        # FinanceBudget.total_amount/actual_amount) only Expense-type lines
+        # count toward it; every line still gets its own row above either way.
+        if line.category_id and line.category.category_type == FinancialCategory.CategoryType.EXPENSE:
+            yearly_budget_total += line.total
+            yearly_actual_total += line_actual_total
 
     context = {
         "budget": budget,
@@ -171,7 +177,13 @@ def budget_create(request, pk=None):
         formset.save()
         messages.success(request, "Budget saved successfully.")
         return redirect("finance:budget_detail", pk=budget.pk)
-    return render(request, "finance/budget_form.html", {"form": form, "formset": formset, "budget": instance})
+    context = {
+        "form": form,
+        "formset": formset,
+        "budget": instance,
+        "leaf_accounts": FinancialCategory.objects.filter(is_group=False).order_by("category_type", "code"),
+    }
+    return render(request, "finance/budget_form.html", context)
 
 
 @login_required(login_url="login")
@@ -185,17 +197,65 @@ def budget_delete(request, pk):
 
 @login_required(login_url="login")
 def performance_list(request):
-    records = BudgetPerformance.objects.select_related("budget", "line").all()
-    return render(request, "finance/budget_performance_list.html", {"records": records})
+    # Performance here means "how each budget is actually tracking" — read
+    # straight off the ledger (FinanceBudget.actual_amount sums each line's
+    # actual_total, which is itself a live FinancialTransaction aggregate),
+    # never a hand-typed expenditure figure that could drift from it.
+    # Each total is computed once here (not in the template) since
+    # actual_amount re-runs a ledger aggregate per line every time it's read.
+    budgets = FinanceBudget.objects.select_related("project").prefetch_related("lines__category")
+    rows = []
+    over_budget_count = 0
+    for budget in budgets:
+        total = budget.total_amount
+        actual = budget.actual_amount
+        if actual > total:
+            over_budget_count += 1
+        rows.append({
+            "budget": budget,
+            "total": total,
+            "actual": actual,
+            "variance": total - actual,
+            "utilization": (actual / total * 100) if total else Decimal("0.00"),
+        })
+    context = {
+        "rows": rows,
+        "over_budget_count": over_budget_count,
+    }
+    return render(request, "finance/budget_performance_list.html", context)
 
 
 @login_required(login_url="login")
-@finance_editor_required
-def performance_create(request):
-    form = BudgetPerformanceForm(request.POST or None)
-    if form.is_valid():
-        record = form.save(commit=False); record.created_by = request.user; record.save(); messages.success(request, "Budget performance record saved."); return redirect("finance:performance_list")
-    return render(request, "finance/budget_performance_form.html", {"form": form})
+def budget_transactions(request, pk):
+    # The actual transactions behind a budget's "Actual" figure — filtered
+    # by exactly the same category/date/project rule FinanceBudgetLine.
+    # actual_total uses internally, so this list always foots to the totals
+    # shown on the Performance and Budget Detail pages.
+    budget = get_object_or_404(
+        FinanceBudget.objects.select_related("project").prefetch_related("lines__category"), pk=pk,
+    )
+    lines = list(budget.lines.all())
+    category_ids = [line.category_id for line in lines if line.category_id]
+
+    transactions = FinancialTransaction.objects.filter(
+        category_id__in=category_ids,
+        date__gte=budget.period_start,
+        date__lte=budget.period_end,
+    ).select_related("category", "project", "department", "created_by")
+    if budget.project_id:
+        transactions = transactions.filter(project=budget.project)
+    transactions = transactions.order_by("category__code", "date")
+
+    context = {
+        "budget": budget,
+        "lines": lines,
+        "transactions": transactions,
+        "transaction_count": transactions.count(),
+        "budgeted_total": budget.total_amount,
+        "actual_total": budget.actual_amount,
+        "variance_total": budget.variance_amount,
+    }
+    return render(request, "finance/budget_transactions.html", context)
 
 
 @login_required(login_url="login")

@@ -294,11 +294,8 @@
         outline: none;
     }
 
-    .budget-lines-table .line-total {
+    .budget-lines-table .line-yearly {
         min-width: 105px;
-        border-color: #dce8e2;
-        background: #f5f9f7;
-        color: #18323a;
         font-weight: 800;
         text-align: right;
     }
@@ -653,7 +650,7 @@
                         </h2>
 
                         <small class="budget-lines-help">
-                            Pick an account from the chart of accounts, then enter its budget for each month — the yearly total is the sum of the 12 months.
+                            Pick an account from the chart of accounts, then either type a Yearly amount to split it evenly across the 12 months, or fill in each month individually — they stay in sync either way. Total expected income must equal total expected costs before this budget can be saved.
                         </small>
 
                     </div>
@@ -672,6 +669,12 @@
 
             </div>
 
+            {% if formset.non_form_errors %}
+                <div class="alert alert-danger py-2 small mx-3 mt-3 mb-0">
+                    {{ formset.non_form_errors }}
+                </div>
+            {% endif %}
+
 
             <div class="table-responsive">
 
@@ -683,6 +686,7 @@
                             <th>Account</th>
                             <th>Outcome</th>
                             <th>Activity</th>
+                            <th>Yearly</th>
                             <th>Jan</th>
                             <th>Feb</th>
                             <th>Mar</th>
@@ -695,7 +699,6 @@
                             <th>Oct</th>
                             <th>Nov</th>
                             <th>Dec</th>
-                            <th>Yearly</th>
                             <th>Justification</th>
                             <th></th>
                         </tr>
@@ -721,6 +724,11 @@
                                 <!-- Account -->
                                 <td>
                                     {{ line.category }}
+                                    <button type="button" class="form-control account-picker-trigger"
+                                            data-bs-toggle="modal" data-bs-target="#accountPickerModal">
+                                        <span data-account-label-text class="account-picker-placeholder">Select account...</span>
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </button>
 
                                     {% for error in line.category.errors %}
                                         <div class="field-error">
@@ -751,6 +759,15 @@
                                             {{ error }}
                                         </div>
                                     {% endfor %}
+                                </td>
+
+
+                                <!-- Yearly (type here to split evenly across the 12 months) -->
+                                <td>
+                                    <input type="text"
+                                           class="form-control line-yearly"
+                                           inputmode="decimal"
+                                           aria-label="Yearly amount — splits evenly across the 12 months">
                                 </td>
 
 
@@ -802,16 +819,6 @@
                                 <td>
                                     {{ line.m12 }}
                                     {% for error in line.m12.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-
-
-                                <!-- Calculated total -->
-                                <td>
-                                    <input type="text"
-                                           class="form-control line-total"
-                                           readonly
-                                           tabindex="-1"
-                                           aria-label="Calculated line total">
                                 </td>
 
 
@@ -918,6 +925,8 @@
 
     </form>
 
+    {% include "finance/includes/account_picker_modal.html" %}
+
 
     <!-- =====================================================
          EMPTY FORM TEMPLATE
@@ -929,11 +938,25 @@
 
             {{ formset.empty_form.id }}
 
-            <td>{{ formset.empty_form.category }}</td>
+            <td>
+                {{ formset.empty_form.category }}
+                <button type="button" class="form-control account-picker-trigger"
+                        data-bs-toggle="modal" data-bs-target="#accountPickerModal">
+                    <span data-account-label-text class="account-picker-placeholder">Select account...</span>
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </td>
 
             <td>{{ formset.empty_form.outcome }}</td>
 
             <td>{{ formset.empty_form.activity }}</td>
+
+            <td>
+                <input type="text"
+                       class="form-control line-yearly"
+                       inputmode="decimal"
+                       aria-label="Yearly amount — splits evenly across the 12 months">
+            </td>
 
             <td>{{ formset.empty_form.m01 }}</td>
             <td>{{ formset.empty_form.m02 }}</td>
@@ -947,13 +970,6 @@
             <td>{{ formset.empty_form.m10 }}</td>
             <td>{{ formset.empty_form.m11 }}</td>
             <td>{{ formset.empty_form.m12 }}</td>
-
-            <td>
-                <input type="text"
-                       class="form-control line-total"
-                       readonly
-                       tabindex="-1">
-            </td>
 
             <td>{{ formset.empty_form.justification }}</td>
 
@@ -1040,7 +1056,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             const output =
-                row.querySelector(".line-total");
+                row.querySelector(".line-yearly");
 
             let lineTotal = 0;
 
@@ -1049,8 +1065,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 lineTotal += parseFloat(field?.value) || 0;
             });
 
-            if (output) {
-                output.value = formatMoney(lineTotal);
+            // Never overwrite the Yearly field while the user is actively
+            // typing into it — doing so on every "input" event resets the
+            // cursor mid-keystroke and makes the field feel stuck. It gets
+            // its value from distributeYearlyToMonths() instead; this only
+            // needs to (re)format it when some OTHER field changed the
+            // row's total (e.g. a month was edited directly).
+            if (output && document.activeElement !== output) {
+                // A plain decimal string, not formatMoney()'s comma-grouped
+                // display string — this field stays user-editable, and a
+                // value like "1,909.01" would parseFloat() to just 1 the
+                // next time distributeYearlyToMonths() reads it back.
+                output.value = lineTotal.toFixed(2);
             }
 
 
@@ -1061,6 +1087,95 @@ document.addEventListener("DOMContentLoaded", function () {
 
         grandTotal.textContent = formatMoney(total);
 
+    }
+
+
+    /* =========================================================
+       ACTIVE MONTHS FOR THE SELECTED PERIOD
+       The m01..m12 grid is always Jan-Dec of the budget's start
+       year, but a budget rarely runs the full year (e.g. Apr-Dec,
+       or an Oct-Mar fiscal year spanning two calendar years) — the
+       Yearly split must only land on months the budget actually
+       covers, never before period_start or after period_end.
+    ========================================================= */
+
+    function getActiveMonthIndices() {
+        const startField = document.getElementById("id_period_start");
+        const endField = document.getElementById("id_period_end");
+        const all = MONTH_FIELD_NAMES.map(function (_, index) { return index; });
+
+        if (!startField || !endField || !startField.value || !endField.value) {
+            return all;
+        }
+
+        const start = new Date(startField.value + "T00:00:00");
+        const end = new Date(endField.value + "T00:00:00");
+        if (isNaN(start) || isNaN(end) || end < start) {
+            return all;
+        }
+
+        const startMonth = start.getMonth() + 1;
+        const endMonth = end.getMonth() + 1;
+        const yearSpan = end.getFullYear() - start.getFullYear();
+
+        if (yearSpan === 0) {
+            return all.filter(function (index) {
+                const month = index + 1;
+                return month >= startMonth && month <= endMonth;
+            });
+        }
+
+        if (yearSpan === 1) {
+            // Wraps into the next calendar year (e.g. Oct-Mar) — active
+            // months are the two tail/head segments of the Jan-Dec grid.
+            return all.filter(function (index) {
+                const month = index + 1;
+                return month >= startMonth || month <= endMonth;
+            });
+        }
+
+        // Spans more than a year — doesn't fit a single Jan-Dec grid at
+        // all, so there's no sound way to narrow it; fall back to every month.
+        return all;
+    }
+
+
+    /* =========================================================
+       DISTRIBUTE YEARLY ACROSS MONTHS
+       Typing a Yearly amount splits it evenly across the months
+       the budget's period actually covers, distributing any
+       rounding remainder (in cents) across the first few of them
+       so they always sum back to exactly what was typed. Months
+       outside the period are cleared to zero.
+    ========================================================= */
+
+    function distributeYearlyToMonths(row) {
+        const yearlyField = row.querySelector(".line-yearly");
+        if (!yearlyField) return;
+
+        const activeIndices = getActiveMonthIndices();
+        const activeSet = new Set(activeIndices);
+
+        const yearly = parseFloat(yearlyField.value) || 0;
+        const totalCents = Math.round(yearly * 100);
+        const monthCount = activeIndices.length || 12;
+        const baseCents = Math.floor(totalCents / monthCount);
+        const remainderCents = totalCents - (baseCents * monthCount);
+
+        let distributed = 0;
+        MONTH_FIELD_NAMES.forEach(function (name, index) {
+            const field = row.querySelector('[name$="-' + name + '"]');
+            if (!field) return;
+
+            if (!activeSet.has(index)) {
+                field.value = "0.00";
+                return;
+            }
+
+            const cents = baseCents + (distributed < remainderCents ? 1 : 0);
+            distributed += 1;
+            field.value = (cents / 100).toFixed(2);
+        });
     }
 
 
@@ -1189,14 +1304,33 @@ document.addEventListener("DOMContentLoaded", function () {
        LIVE CALCULATION
     ========================================================= */
 
-    body.addEventListener(
-        "input",
-        calculateTotals
-    );
+    function handleLineInput(event) {
+        if (event.target.classList.contains("line-yearly")) {
+            const row = event.target.closest(".budget-line-row");
+            if (row) {
+                distributeYearlyToMonths(row);
+            }
+        }
+        calculateTotals();
+    }
 
+    body.addEventListener("input", handleLineInput);
+    body.addEventListener("change", handleLineInput);
+
+    // Clicking into a Yearly field (pre-filled with its current total, e.g.
+    // "872.69") placed the cursor inside that existing text instead of
+    // replacing it, so new digits were inserted before the trailing
+    // ".00" / ".69" instead of after it — it looked like you couldn't type
+    // past the decimal point. Selecting the whole value on focus means the
+    // first keystroke simply overwrites it, like any other amount field.
     body.addEventListener(
-        "change",
-        calculateTotals
+        "focus",
+        function (event) {
+            if (event.target.classList.contains("line-yearly")) {
+                event.target.select();
+            }
+        },
+        true
     );
 
 
