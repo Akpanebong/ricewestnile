@@ -368,7 +368,11 @@ class ProfileDeleteAuthorizationTests(TestCase):
     def test_non_superuser_cannot_delete_a_profile(self):
         self.client.login(username="bystander", password="pw")
         response = self.client.post(reverse("profile_delete", kwargs={"pk": self.victim.pk}))
-        self.assertRedirects(response, reverse("profile_list"))
+        # EditDeleteAuthorizationMiddleware now gates this site-wide (its
+        # can_delete_or_trash() check runs before the view's own superuser
+        # check ever does), so a non-superuser gets a hard 403 here instead
+        # of the view's friendlier redirect+message — still correctly denied.
+        self.assertEqual(response.status_code, 403)
         self.assertTrue(Profile.objects.filter(pk=self.victim.pk).exists())
 
     def test_anonymous_user_cannot_delete_a_profile(self):

@@ -57,9 +57,16 @@ class EditDeleteAuthorizationMiddleware:
             url_name = getattr(resolve(request.path_info), "url_name", "") or ""
         except Resolver404:
             url_name = ""
-        is_delete_action = any(action in url_name.lower() for action in ("delete", "trash"))
+        # Only mutating requests actually change anything — gating GET too
+        # blocked plain page views (e.g. an exited employee's own exit-flow
+        # page, which BlockExitedUserMiddleware explicitly exempts so they
+        # can always see it, was a 403 here purely because its URL name
+        # contains "update").
+        is_mutating = request.method in ("POST", "PUT", "PATCH", "DELETE")
+        is_delete_action = is_mutating and any(action in url_name.lower() for action in ("delete", "trash"))
         is_edit_action = (
-            url_name not in self.EXCLUDED_URL_NAMES
+            is_mutating
+            and url_name not in self.EXCLUDED_URL_NAMES
             and not is_delete_action
             and any(action in url_name.lower() for action in ("update", "edit"))
         )
