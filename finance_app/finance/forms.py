@@ -35,6 +35,7 @@ class FinanceBudgetLineForm(StyledFinanceForm):
         model = FinanceBudgetLine
         fields = [
             "category", "outcome", "activity",
+            "unit", "price_per_unit", "quantity", "frequency",
             "m01", "m02", "m03", "m04", "m05", "m06", "m07", "m08", "m09", "m10", "m11", "m12",
             "justification",
         ]
@@ -44,6 +45,14 @@ class FinanceBudgetLineForm(StyledFinanceForm):
             # templates/finance/includes/account_picker_modal.html.
             "category": forms.HiddenInput(attrs={"data-account-value": ""}),
             "justification": forms.Textarea(attrs={"rows": 1}),
+            # These share a class with the unnamed, calculator-only extra
+            # cost rows budget_form.html lets a user add (see
+            # cost-breakdown-extra-row template) so one JS function can sum
+            # every row — named or not — the same way.
+            "unit": forms.TextInput(attrs={"class": "cost-row-unit"}),
+            "price_per_unit": forms.NumberInput(attrs={"class": "cost-row-price"}),
+            "quantity": forms.NumberInput(attrs={"class": "cost-row-quantity"}),
+            "frequency": forms.NumberInput(attrs={"class": "cost-row-frequency"}),
         }
 
     def __init__(self, *args, **kwargs):

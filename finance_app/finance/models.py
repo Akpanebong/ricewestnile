@@ -244,7 +244,20 @@ class FinanceBudget(models.Model):
 
     @property
     def actual_amount(self):
-        return sum((line.actual_total for line in self._expense_lines()), Decimal("0.00"))
+        # Budgeted amounts add up correctly per line regardless of sharing
+        # an account (above) — but actual_total is an account-wide ledger
+        # figure, so two lines coded to the same account would each report
+        # that *same* figure. Count each distinct account once, or a
+        # budget with several lines on one account would multiply its real
+        # actual spend by however many lines share it.
+        seen_category_ids = set()
+        total = Decimal("0.00")
+        for line in self._expense_lines():
+            if line.category_id in seen_category_ids:
+                continue
+            seen_category_ids.add(line.category_id)
+            total += line.actual_total
+        return total
 
     @property
     def variance_amount(self):
@@ -261,11 +274,15 @@ class FinanceBudget(models.Model):
 
 
 class FinanceBudgetLine(models.Model):
-    # One line = one ledger account's budget for the whole period, broken
-    # into 12 explicit monthly amounts rather than a unit/price/frequency
-    # calculation — this is what makes "actual" computable straight from
-    # FinancialTransaction (which already carries category + project + date)
-    # instead of needing a second, hand-typed figure that can drift from it.
+    # One line = one costed activity item (e.g. "Soda — 3 cartons x 23
+    # months"), budgeted into 12 explicit monthly amounts tied to the
+    # ledger account it should post against — several lines can share one
+    # account (a real activity budget routinely has many cost lines coding
+    # to the same handful of accounts), which is what makes "actual"
+    # computable straight from FinancialTransaction (which already carries
+    # category + project + date) instead of needing a second, hand-typed
+    # figure that can drift from it. See FinanceBudget.actual_amount for how
+    # shared accounts avoid being double-counted.
     MONTH_FIELDS = [f"m{i:02d}" for i in range(1, 13)]
 
     budget = models.ForeignKey(FinanceBudget, on_delete=models.CASCADE, related_name="lines")
@@ -276,6 +293,15 @@ class FinanceBudgetLine(models.Model):
     outcome = models.CharField(max_length=255, blank=True)
     activity = models.CharField(max_length=255, blank=True)
     justification = models.TextField(blank=True)
+
+    # Costing aid, not a second source of truth: filling these in computes
+    # unit_cost_total below, which only ever feeds the Yearly input (see
+    # budget_form.html) — the same field a user could otherwise type
+    # straight into. Left blank, a line behaves exactly as before.
+    unit = models.CharField(max_length=100, blank=True)
+    price_per_unit = models.DecimalField(max_digits=16, decimal_places=2, null=True, blank=True)
+    quantity = models.PositiveIntegerField(null=True, blank=True)
+    frequency = models.PositiveIntegerField(null=True, blank=True)
 
     m01 = models.DecimalField("January", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
     m02 = models.DecimalField("February", max_digits=16, decimal_places=2, default=Decimal("0.00"), blank=True)
@@ -292,7 +318,11 @@ class FinanceBudgetLine(models.Model):
 
     class Meta:
         ordering = ("category__code", "id")
-        constraints = [models.UniqueConstraint(fields=("budget", "category"), name="unique_budget_line_category")]
+        # No longer unique per (budget, category): a real activity-based
+        # budget routinely has many distinct cost lines — Soda, Fuel,
+        # Honorarium — all coding to the same handful of ledger accounts.
+        # See FinanceBudget.actual_amount for how "Actual" avoids
+        # double-counting once lines share an account.
 
     @property
     def monthly_amounts(self):
@@ -302,6 +332,16 @@ class FinanceBudgetLine(models.Model):
     @property
     def total(self):
         return sum((getattr(self, field) for field in self.MONTH_FIELDS), Decimal("0.00"))
+
+    @property
+    def unit_cost_total(self):
+        """Price x Quantity x Frequency — the same calculation the paper
+        budget template uses, kept purely as a costing aid: it's never
+        stored, it only ever feeds the Yearly input (see budget_form.html),
+        so there's nothing for it to drift out of sync with."""
+        if self.price_per_unit is None or self.quantity is None or self.frequency is None:
+            return None
+        return self.price_per_unit * self.quantity * self.frequency
 
     @property
     def _actual_sign(self):

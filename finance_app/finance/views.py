@@ -124,6 +124,7 @@ def budget_detail(request, pk):
     lines_vs_actual = []
     yearly_budget_total = Decimal("0.00")
     yearly_actual_total = Decimal("0.00")
+    seen_expense_category_ids = set()
     for line in budget.lines.all():
         monthly = [
             {
@@ -150,7 +151,12 @@ def budget_detail(request, pk):
         # count toward it; every line still gets its own row above either way.
         if line.category_id and line.category.category_type == FinancialCategory.CategoryType.EXPENSE:
             yearly_budget_total += line.total
-            yearly_actual_total += line_actual_total
+            # actual_total is an account-wide ledger figure — two lines
+            # sharing an account would otherwise double-count it here the
+            # same way FinanceBudget.actual_amount guards against.
+            if line.category_id not in seen_expense_category_ids:
+                seen_expense_category_ids.add(line.category_id)
+                yearly_actual_total += line_actual_total
 
     context = {
         "budget": budget,

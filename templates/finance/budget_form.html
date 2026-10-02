@@ -10,9 +10,22 @@
        BUDGET FORM — ENTERPRISE FINANCE
     ========================================================= */
 
-    .budget-form-page {
-        animation: budgetFormIn .4s ease both;
-    }
+    /* No entrance animation on this wrapper (unlike equivalent page-fade-in
+       wrappers elsewhere) — it's an ancestor of the account-picker modal
+       included further down this page. A CSS Animation with
+       fill-mode: both/forwards stays attached (status "finished", still
+       returned by getAnimations()) for the rest of the page's life, and an
+       element with such an animation on opacity or transform establishes a
+       stacking context for as long as that's true — regardless of the
+       animated property's current resolved value. The modal is
+       position: fixed and a descendant of this element, so it got trapped
+       inside that context: its z-index only won against this element's own
+       stacking-context siblings, never against the modal backdrop appended
+       at the body level, which silently absorbed every click meant for the
+       account list. See git history for the two near-miss fixes that
+       didn't work (ending the keyframe at transform: none; then dropping
+       transform from the animation but keeping an opacity-only one) before
+       finding that only removing the animation itself resolves it. */
 
     /* ---------------------------------------------------------
        PAGE HEADER
@@ -300,6 +313,114 @@
         text-align: right;
     }
 
+    .cost-breakdown-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .64rem;
+        font-weight: 650;
+        color: #087f7b;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .cost-breakdown-toggle:hover {
+        color: #065f5c;
+    }
+
+    .budget-line-cost-row td {
+        padding: .65rem .85rem .85rem !important;
+        background: #f7faf9;
+        border-top: none !important;
+    }
+
+    .cost-breakdown-rows {
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .cost-breakdown-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .75rem;
+        align-items: flex-end;
+    }
+
+    .cost-breakdown-row.cost-breakdown-extra {
+        padding-top: .5rem;
+        border-top: 1px dashed #dce8e2;
+    }
+
+    .cost-breakdown-field {
+        display: flex;
+        flex-direction: column;
+        gap: .25rem;
+        min-width: 110px;
+    }
+
+    .cost-breakdown-field label {
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+        color: #68756f;
+    }
+
+    .cost-breakdown-remove-row {
+        flex-shrink: 0;
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: #8a9590;
+        font-size: .72rem;
+    }
+
+    .cost-breakdown-remove-row:hover {
+        background: #fdecec;
+        color: #b42318;
+    }
+
+    .cost-breakdown-footer {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: .75rem;
+        margin-top: .6rem;
+    }
+
+    .cost-breakdown-add-row {
+        font-size: .68rem;
+        font-weight: 650;
+        color: #087f7b;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .cost-breakdown-add-row:hover {
+        color: #065f5c;
+    }
+
+    .cost-breakdown-total-field {
+        min-width: 140px;
+    }
+
+    .cost-breakdown-total {
+        display: block;
+        padding: .45rem .6rem;
+        border-radius: 6px;
+        background: #e9f3f0;
+        color: #0b4a46;
+        font-weight: 800;
+        font-size: .82rem;
+        text-align: right;
+    }
+
     .budget-lines-table .field-error {
         margin-top: .2rem;
         color: #b42318;
@@ -403,18 +524,22 @@
        ANIMATIONS
     --------------------------------------------------------- */
 
-    @keyframes budgetFormIn {
-        from {
-            opacity: 0;
-            transform: translateY(8px);
-        }
+    /* Opacity only — no transform. animation-fill-mode: both keeps this
+       animation attached (merely "finished", via getAnimations()) for the
+       page's entire lifetime, and per spec an element with an active
+       transform animation establishes a stacking/containing-block context
+       for as long as that's true, REGARDLESS of the transform's current
+       value — "to { transform: none }" does not undo this, since the
+       animation effect is still in force. The account-picker modal
+       included on this page is a descendant of .budget-form-page and uses
+       position: fixed — trapped inside that context, its z-index only won
+       against its own ancestor's siblings, not against the modal backdrop
+       appended at the body level, so the backdrop silently absorbed every
+       click into the list. */
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
+    /* Per-row entrance animation is unaffected by the above — a row is not
+       an ancestor of the modal (it's included separately, further down
+       this page), so its transform is safe to keep. */
     @keyframes lineIn {
         from {
             opacity: 0;
@@ -768,6 +893,9 @@
                                            class="form-control line-yearly"
                                            inputmode="decimal"
                                            aria-label="Yearly amount — splits evenly across the 12 months">
+                                    <button type="button" class="btn btn-link btn-sm cost-breakdown-toggle p-0 mt-1" title="Compute from unit cost (price x quantity x frequency)">
+                                        <i class="fa-solid fa-calculator"></i> Cost breakdown
+                                    </button>
                                 </td>
 
 
@@ -854,6 +982,48 @@
 
                                 </td>
 
+                            </tr>
+
+                            <!-- Cost breakdown (optional costing aid — price x quantity x
+                                 frequency, same calculation the paper budget template uses).
+                                 Feeds the Yearly field above when a row is fully filled;
+                                 leaving it collapsed/blank keeps the line exactly as before.
+                                 "Add cost row" lets several cost components (e.g. two
+                                 different group sizes/rates) sum into the one total —
+                                 only the first row is saved on the line itself; any
+                                 extra rows are a calculator only, not stored. -->
+                            <tr class="budget-line-cost-row" hidden>
+                                <td colspan="18">
+                                    <div class="cost-breakdown-rows">
+                                        <div class="cost-breakdown-row">
+                                            <div class="cost-breakdown-field">
+                                                <label>Unit</label>
+                                                {{ line.unit }}
+                                            </div>
+                                            <div class="cost-breakdown-field">
+                                                <label>Price per unit</label>
+                                                {{ line.price_per_unit }}
+                                            </div>
+                                            <div class="cost-breakdown-field">
+                                                <label>Quantity</label>
+                                                {{ line.quantity }}
+                                            </div>
+                                            <div class="cost-breakdown-field">
+                                                <label>Frequency</label>
+                                                {{ line.frequency }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="cost-breakdown-footer">
+                                        <button type="button" class="btn btn-link btn-sm cost-breakdown-add-row p-0">
+                                            <i class="fa-solid fa-plus"></i> Add cost row
+                                        </button>
+                                        <div class="cost-breakdown-field cost-breakdown-total-field">
+                                            <label>Total</label>
+                                            <output class="cost-breakdown-total">—</output>
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
 
                         {% empty %}
@@ -956,6 +1126,9 @@
                        class="form-control line-yearly"
                        inputmode="decimal"
                        aria-label="Yearly amount — splits evenly across the 12 months">
+                <button type="button" class="btn btn-link btn-sm cost-breakdown-toggle p-0 mt-1" title="Compute from unit cost (price x quantity x frequency)">
+                    <i class="fa-solid fa-calculator"></i> Cost breakdown
+                </button>
             </td>
 
             <td>{{ formset.empty_form.m01 }}</td>
@@ -994,6 +1167,70 @@
 
         </tr>
 
+        <tr class="budget-line-cost-row" hidden>
+            <td colspan="18">
+                <div class="cost-breakdown-rows">
+                    <div class="cost-breakdown-row">
+                        <div class="cost-breakdown-field">
+                            <label>Unit</label>
+                            {{ formset.empty_form.unit }}
+                        </div>
+                        <div class="cost-breakdown-field">
+                            <label>Price per unit</label>
+                            {{ formset.empty_form.price_per_unit }}
+                        </div>
+                        <div class="cost-breakdown-field">
+                            <label>Quantity</label>
+                            {{ formset.empty_form.quantity }}
+                        </div>
+                        <div class="cost-breakdown-field">
+                            <label>Frequency</label>
+                            {{ formset.empty_form.frequency }}
+                        </div>
+                    </div>
+                </div>
+                <div class="cost-breakdown-footer">
+                    <button type="button" class="btn btn-link btn-sm cost-breakdown-add-row p-0">
+                        <i class="fa-solid fa-plus"></i> Add cost row
+                    </button>
+                    <div class="cost-breakdown-field cost-breakdown-total-field">
+                        <label>Total</label>
+                        <output class="cost-breakdown-total">—</output>
+                    </div>
+                </div>
+            </td>
+        </tr>
+
+    </template>
+
+    <!-- Extra cost-breakdown row — a calculator-only addition, never bound
+         to a Django field, so it has no name attribute and is never
+         submitted. Its contribution to the line's total is already baked
+         into the Yearly field (and the 12 months) by the time the form is
+         saved; only the first cost row's own unit/price/quantity/frequency
+         are persisted on the line itself. -->
+    <template id="cost-breakdown-extra-row">
+        <div class="cost-breakdown-row cost-breakdown-extra">
+            <div class="cost-breakdown-field">
+                <label>Unit</label>
+                <input type="text" class="form-control cost-row-unit">
+            </div>
+            <div class="cost-breakdown-field">
+                <label>Price per unit</label>
+                <input type="text" inputmode="decimal" class="form-control cost-row-price">
+            </div>
+            <div class="cost-breakdown-field">
+                <label>Quantity</label>
+                <input type="number" class="form-control cost-row-quantity">
+            </div>
+            <div class="cost-breakdown-field">
+                <label>Frequency</label>
+                <input type="number" class="form-control cost-row-frequency">
+            </div>
+            <button type="button" class="cost-breakdown-remove-row" title="Remove this cost row">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
     </template>
 
 </div>
@@ -1214,8 +1451,14 @@ document.addEventListener("DOMContentLoaded", function () {
         totalForms.value = index + 1;
 
 
+        // Not just body.lastElementChild — the template now inserts a
+        // line row AND its (hidden) cost-breakdown row together, so the
+        // last child in the DOM is the cost row, not the one to scroll to
+        // or focus.
+        const lineRows =
+            body.querySelectorAll(".budget-line-row");
         const newRow =
-            body.lastElementChild;
+            lineRows[lineRows.length - 1];
 
         if (newRow) {
 
@@ -1268,6 +1511,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 'input[name$="-DELETE"]'
             );
 
+        const costRow =
+            row.nextElementSibling;
+        const hasCostRow =
+            costRow && costRow.classList.contains("budget-line-cost-row");
+
 
         /*
          * Existing formset row:
@@ -1279,16 +1527,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
             row.style.display = "none";
 
+            if (hasCostRow) {
+                costRow.style.display = "none";
+            }
+
         }
 
         /*
          * Newly-added row:
-         * physically remove it.
+         * physically remove it (and its cost-breakdown row, which would
+         * otherwise submit unit/price/quantity/frequency fields with no
+         * category or months left to go with them).
          *
          * We intentionally do NOT decrease TOTAL_FORMS,
          * because Django formsets expect indexes to remain valid.
          */
         else {
+
+            if (hasCostRow) {
+                costRow.remove();
+            }
 
             row.remove();
 
@@ -1304,6 +1562,47 @@ document.addEventListener("DOMContentLoaded", function () {
        LIVE CALCULATION
     ========================================================= */
 
+    // Costing aid: price x quantity x frequency, the same calculation the
+    // paper budget template uses — summed across every cost row in the
+    // panel (a line can have more than one, e.g. two different group
+    // sizes/rates for the same activity). It never gets its own stored
+    // total: it just writes the sum straight into the Yearly field and
+    // reuses distributeYearlyToMonths() exactly as if the user had typed
+    // the figure there directly, so there's only ever one place the
+    // amount actually lives. Only the first row (named, Django-bound) is
+    // ever saved on the line itself — any extra rows are unnamed and
+    // never submitted; their contribution is already baked into Yearly.
+    function updateCostBreakdown(costRow) {
+        let total = 0;
+        let anyComplete = false;
+
+        costRow.querySelectorAll(".cost-breakdown-row").forEach(function (rowEl) {
+            const price = parseFloat(rowEl.querySelector(".cost-row-price")?.value);
+            const quantity = parseFloat(rowEl.querySelector(".cost-row-quantity")?.value);
+            const frequency = parseFloat(rowEl.querySelector(".cost-row-frequency")?.value);
+            if (!isNaN(price) && !isNaN(quantity) && !isNaN(frequency)) {
+                total += price * quantity * frequency;
+                anyComplete = true;
+            }
+        });
+
+        const output = costRow.querySelector(".cost-breakdown-total");
+        if (output) {
+            output.textContent = anyComplete
+                ? total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : "—";
+        }
+
+        if (!anyComplete) return;
+
+        const lineRow = costRow.previousElementSibling;
+        if (!lineRow || !lineRow.classList.contains("budget-line-row")) return;
+        const yearlyField = lineRow.querySelector(".line-yearly");
+        if (!yearlyField) return;
+        yearlyField.value = total.toFixed(2);
+        distributeYearlyToMonths(lineRow);
+    }
+
     function handleLineInput(event) {
         if (event.target.classList.contains("line-yearly")) {
             const row = event.target.closest(".budget-line-row");
@@ -1311,11 +1610,56 @@ document.addEventListener("DOMContentLoaded", function () {
                 distributeYearlyToMonths(row);
             }
         }
+
+        const costRow = event.target.closest(".budget-line-cost-row");
+        if (costRow) {
+            updateCostBreakdown(costRow);
+        }
+
         calculateTotals();
     }
 
     body.addEventListener("input", handleLineInput);
     body.addEventListener("change", handleLineInput);
+
+    // Toggle a line's cost-breakdown row, add/remove extra cost rows within
+    // it — all delegated, so dynamically-added rows work with no extra wiring.
+    body.addEventListener("click", function (event) {
+
+        const toggle = event.target.closest(".cost-breakdown-toggle");
+        if (toggle) {
+            const lineRow = toggle.closest(".budget-line-row");
+            const costRow = lineRow ? lineRow.nextElementSibling : null;
+            if (costRow && costRow.classList.contains("budget-line-cost-row")) {
+                costRow.hidden = !costRow.hidden;
+            }
+            return;
+        }
+
+        const addRowBtn = event.target.closest(".cost-breakdown-add-row");
+        if (addRowBtn) {
+            const costRow = addRowBtn.closest(".budget-line-cost-row");
+            const container = costRow ? costRow.querySelector(".cost-breakdown-rows") : null;
+            const extraTemplate = document.getElementById("cost-breakdown-extra-row");
+            if (container && extraTemplate) {
+                container.appendChild(extraTemplate.content.cloneNode(true));
+            }
+            return;
+        }
+
+        const removeRowBtn = event.target.closest(".cost-breakdown-remove-row");
+        if (removeRowBtn) {
+            const rowEl = removeRowBtn.closest(".cost-breakdown-row");
+            const costRow = removeRowBtn.closest(".budget-line-cost-row");
+            if (rowEl) {
+                rowEl.remove();
+            }
+            if (costRow) {
+                updateCostBreakdown(costRow);
+            }
+        }
+
+    });
 
     // Clicking into a Yearly field (pre-filled with its current total, e.g.
     // "872.69") placed the cursor inside that existing text instead of

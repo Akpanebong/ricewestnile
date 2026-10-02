@@ -735,6 +735,90 @@ class FinanceBudgetPerformancePropertiesTests(TestCase):
         self.assertEqual(empty_budget.utilization_percent, Decimal("0.00"))
 
 
+class FinanceBudgetLineUnitCostTests(TestCase):
+    """unit/price_per_unit/quantity/frequency are a pure costing aid — they
+    never get their own stored total, so there's nothing for it to drift
+    out of sync with the line's actual monthly amounts."""
+
+    def setUp(self):
+        self.creator = make_user("unit_cost_owner")
+        self.expense_account = FinancialCategory.objects.create(
+            code="TEST-UNIT-EXPENSE", name="Test Unit Cost Expense", category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.budget = FinanceBudget.objects.create(
+            name="Test Unit Cost Budget", period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
+            created_by=self.creator,
+        )
+
+    def test_unit_cost_total_matches_the_paper_template_formula(self):
+        # The template's own first example: Soda/water, 15,000/carton,
+        # 3 cartons, 23 months -> 1,035,000.
+        line = FinanceBudgetLine.objects.create(
+            budget=self.budget, category=self.expense_account, unit="Cartons",
+            price_per_unit=Decimal("15000.00"), quantity=3, frequency=23,
+        )
+        self.assertEqual(line.unit_cost_total, Decimal("1035000.00"))
+
+    def test_unit_cost_total_is_none_when_any_input_is_missing(self):
+        line = FinanceBudgetLine.objects.create(
+            budget=self.budget, category=self.expense_account,
+            price_per_unit=Decimal("15000.00"), quantity=3,
+        )
+        self.assertIsNone(line.unit_cost_total)
+
+
+class SharedAccountBudgetLinesTests(TestCase):
+    """A real activity-based budget has many granular cost lines (Soda,
+    Fuel, Honorarium...) that naturally share one ledger account — Actual
+    must be counted once per account, not once per line."""
+
+    def setUp(self):
+        self.creator = make_user("shared_account_owner")
+        self.expense_account = FinancialCategory.objects.create(
+            code="TEST-SHARED-EXPENSE", name="Test Shared Program Expenditure",
+            category_type=FinancialCategory.CategoryType.EXPENSE,
+        )
+        self.budget = FinanceBudget.objects.create(
+            name="Test Shared Account Budget", period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
+            created_by=self.creator,
+        )
+        self.soda_line = FinanceBudgetLine.objects.create(
+            budget=self.budget, category=self.expense_account, activity="Soda/water", m01=Decimal("1035000.00"),
+        )
+        self.fuel_line = FinanceBudgetLine.objects.create(
+            budget=self.budget, category=self.expense_account, activity="Fuel for field activities", m01=Decimal("2688000.00"),
+        )
+
+    def test_multiple_lines_can_share_an_account(self):
+        # No IntegrityError — the old unique_budget_line_category
+        # constraint has been removed.
+        self.assertEqual(self.budget.lines.filter(category=self.expense_account).count(), 2)
+
+    def test_budgeted_total_sums_every_line(self):
+        self.assertEqual(self.budget.total_amount, Decimal("3723000.00"))
+
+    def test_actual_is_counted_once_per_account_not_per_line(self):
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("500000.00"), currency=get_base_currency(),
+            date=date(2026, 1, 10), created_by=self.creator,
+        )
+        # Without the dedupe this would read 1,000,000.00 (counted once for
+        # each of the two lines sharing the account).
+        self.assertEqual(self.budget.actual_amount, Decimal("500000.00"))
+
+    def test_budget_detail_view_dedupes_actual_the_same_way(self):
+        FinancialTransaction.objects.create(
+            transaction_type=FinancialTransaction.TransactionType.EXPENSE,
+            category=self.expense_account, amount=Decimal("500000.00"), currency=get_base_currency(),
+            date=date(2026, 1, 10), created_by=self.creator,
+        )
+        self.client.login(username="shared_account_owner", password="pw")
+        response = self.client.get(reverse("finance:budget_detail", args=[self.budget.pk]))
+        self.assertEqual(response.context["yearly_actual_total"], Decimal("500000.00"))
+        self.assertEqual(len(response.context["lines_vs_actual"]), 2)
+
+
 class PerformanceListViewTests(TestCase):
     """The Budget performance page lists every budget with ledger-derived
     totals and links through to its transactions — it is not a form for
