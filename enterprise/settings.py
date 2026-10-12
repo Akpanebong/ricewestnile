@@ -8,8 +8,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
-DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+def env_bool(*names, default=False):
+    """Read a boolean environment variable, supporting the legacy names."""
+    for name in names:
+        value = os.getenv(name)
+        if value is not None:
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+    return default
+
+
+def env_list(*names, default=None):
+    for name in names:
+        value = os.getenv(name)
+        if value is not None:
+            return [item.strip() for item in value.split(",") if item.strip()]
+    return list(default or [])
+
+
+DEBUG = env_bool("DJANGO_DEBUG", "DEBUG", default=False)
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     if DEBUG:
         SECRET_KEY = "django-insecure-local-dev-only-do-not-deploy"
@@ -19,22 +36,22 @@ if not SECRET_KEY:
             "and no secret key configured — set it in the environment or .env."
         )
 
-_allowed_hosts_env = os.getenv("DJANGO_ALLOWED_HOSTS")
-if _allowed_hosts_env:
-    ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_env.split(",") if host.strip()]
-elif DEBUG:
-    ALLOWED_HOSTS = ["*"]
-else:
-    ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "ALLOWED_HOSTS", default=["*"] if DEBUG else [])
 
-if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
+# HTTPS/security defaults are enabled for production and can be overridden when
+# TLS is terminated elsewhere (for example, by a load balancer).
+SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", default=not DEBUG)
+SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", default=not DEBUG)
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000" if not DEBUG else "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=not DEBUG)
+SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", default=not DEBUG)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = os.getenv("SECURE_REFERRER_POLICY", "same-origin")
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -110,6 +127,16 @@ TEMPLATES = [
     }
 ]
 
+if not DEBUG:
+    # Avoid reparsing and recompiling templates on every request in production.
+    TEMPLATES[0]["APP_DIRS"] = False
+    TEMPLATES[0]["OPTIONS"]["loaders"] = [
+        ("django.template.loaders.cached.Loader", [
+            "django.template.loaders.filesystem.Loader",
+            "django.template.loaders.app_directories.Loader",
+        ])
+    ]
+
 WSGI_APPLICATION = "enterprise.wsgi.application"
 
 DATABASES = {
@@ -120,8 +147,15 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD", ""),
         "HOST": os.getenv("DB_HOST", ""),
         "PORT": os.getenv("DB_PORT", ""),
+        "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "60" if not DEBUG else "0")),
+        "CONN_HEALTH_CHECKS": True,
     }
 }
+
+if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
+    DATABASES["default"].setdefault("OPTIONS", {})["timeout"] = int(
+        os.getenv("SQLITE_TIMEOUT", "20")
+    )
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -153,7 +187,7 @@ SITE_ID = 1
 
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", default=True)
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
@@ -221,10 +255,22 @@ DEFAULT_DISPLAY_CURRENCY = os.getenv("DEFAULT_DISPLAY_CURRENCY", "UGX")
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "enterprise-cache",
+        "BACKEND": os.getenv(
+            "CACHE_BACKEND",
+            "django.core.cache.backends.locmem.LocMemCache",
+        ),
+        "LOCATION": os.getenv("CACHE_LOCATION", "enterprise-cache"),
+        "TIMEOUT": int(os.getenv("CACHE_TIMEOUT", "300")),
     }
 }
 
+if CACHES["default"]["BACKEND"] == "django.core.cache.backends.locmem.LocMemCache":
+    CACHES["default"]["OPTIONS"] = {
+        "MAX_ENTRIES": int(os.getenv("CACHE_MAX_ENTRIES", "10000")),
+    }
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_HOST = env_bool("USE_X_FORWARDED_HOST", default=True)
+
+# Compress HTML/CSS/JS responses when the web server has not already done so.
+MIDDLEWARE.insert(1, "django.middleware.gzip.GZipMiddleware")
