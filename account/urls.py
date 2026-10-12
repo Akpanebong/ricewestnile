@@ -38,6 +38,7 @@ urlpatterns = [
 
     # Program Area URLs
     path('program-areas/', views.program_area_list, name='program_area_list'),
+    path('program-areas/<int:pk>/', views.program_area_detail, name='program_area_detail'),
     path('program-areas/create/', views.program_area_create, name='program_area_create'),
     path('program-areas/<int:pk>/edit/', views.program_area_update, name='program_area_update'),
     path('program-areas/<int:pk>/delete/', views.program_area_delete, name='program_area_delete'),

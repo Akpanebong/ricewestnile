@@ -575,6 +575,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const department = document.getElementById('id_department');
     const unit = document.getElementById('id_unit');
+    const programArea = document.getElementById('id_program_area');
     const project = document.getElementById('id_project');
 
     function replaceOptions(select, items, emptyText) {
@@ -603,17 +604,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function loadProjects() {
-        if (!unit || !unit.value) {
-            replaceOptions(project, [], '-- No Project --');
-            return;
-        }
-        const response = await fetch(`{% url 'projects_for_unit' %}?unit=${unit.value}`);
+        const selectedProject = project.value;
+        const params = new URLSearchParams({selected_project: selectedProject});
+        if (unit && unit.value) params.set('unit', unit.value);
+        if (programArea && programArea.value) params.set('program_area', programArea.value);
+        const response = await fetch(`{% url 'projects_for_unit' %}?${params.toString()}`);
         const data = await response.json();
         replaceOptions(project, data.projects, '-- No Project --');
     }
 
     if (department) department.addEventListener('change', loadUnits);
     if (unit) unit.addEventListener('change', loadProjects);
+    if (programArea) programArea.addEventListener('change', loadProjects);
 });
 </script>
 

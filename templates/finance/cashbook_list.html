@@ -104,6 +104,11 @@
                         {{ book.name }}
                     </h2>
 
+                    <span class="cashbook-period">
+                        <i class="fa-solid fa-wallet me-1"></i>
+                        {{ book.get_cashbook_type_display }}
+                    </span>
+
                     <div class="cashbook-project">
 
                         <span class="project-icon">

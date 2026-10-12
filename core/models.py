@@ -59,6 +59,7 @@ RESOURCE_TYPES = (
     ("presentation", "Presentation"),
     ("report", "Report"),
     ("success_story", "Success Story"),
+    ("Case_study", "Case Study")
 )
 
 

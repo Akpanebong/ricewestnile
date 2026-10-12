@@ -481,4 +481,50 @@
     }
 }
 </style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const department = document.getElementById("id_department");
+    const unit = document.getElementById("id_unit");
+    const programArea = document.getElementById("id_program_area");
+    const project = document.getElementById("id_project");
+    if (!department || !unit || !project) return;
+
+    function replaceOptions(select, items, emptyText, selectedValue) {
+        const current = selectedValue || select.value;
+        select.innerHTML = `<option value="">${emptyText}</option>`;
+        items.forEach(function (item) {
+            const option = new Option(item.name, item.id);
+            option.selected = String(item.id) === String(current);
+            select.add(option);
+        });
+    }
+
+    async function loadProjects() {
+        const selectedProject = "{{ profile.project_id|default:'' }}";
+        const params = new URLSearchParams({selected_project: selectedProject});
+        if (unit.value) params.set("unit", unit.value);
+        if (programArea && programArea.value) params.set("program_area", programArea.value);
+        const response = await fetch(`{% url 'projects_for_unit' %}?${params.toString()}`);
+        const data = await response.json();
+        replaceOptions(project, data.projects, "-- No Project --", "{{ profile.project_id|default:'' }}");
+    }
+
+    async function loadUnits() {
+        if (!department.value) {
+            replaceOptions(unit, [], "-- Choose Unit --");
+            replaceOptions(project, [], "-- No Project --");
+            return;
+        }
+        const response = await fetch(`{% url 'units_for_department' %}?department=${department.value}`);
+        const data = await response.json();
+        replaceOptions(unit, data.units, "-- Choose Unit --", "{{ profile.unit_id|default:'' }}");
+        await loadProjects();
+    }
+
+    department.addEventListener("change", loadUnits);
+    unit.addEventListener("change", loadProjects);
+    if (programArea) programArea.addEventListener("change", loadProjects);
+    loadProjects();
+});
+</script>
 {% endblock %}

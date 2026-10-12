@@ -38,7 +38,7 @@
 
 <link
     rel="icon"
-    href="{% static 'images/ricewn.png' %}"
+    href="{% static 'images/ricewn_.png' %}"
     type="image/x-icon"
 >
 
@@ -170,9 +170,30 @@
                 </li>
 
 
+                {% if governance_visible %}
                 <li>
                     <a
-                        class="dropdown-item quick-access-item{% if '/garcis/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/assets/' not in request.path and '/procurement/' not in request.path and '/finance_app/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %} current-subsystem{% endif %}"
+                        class="dropdown-item quick-access-item{% if '/governance/' in request.path %} current-subsystem{% endif %}"
+                        href="{% url 'governance_dashboard' %}"
+                    >
+                        <span class="quick-access-icon qa-garcis">
+                            <i class="fa-solid fa-landmark"></i>
+                        </span>
+                        <span>
+                            <strong>Governance</strong>
+                            <small>Policies, controls, decisions, and stakeholder engagement</small>
+                        </span>
+                        {% if '/governance/' in request.path %}
+                        <span class="qa-status-badge">Active</span>
+                        {% endif %}
+                    </a>
+                </li>
+                {% endif %}
+
+
+                <li>
+                    <a
+                        class="dropdown-item quick-access-item{% if '/garcis/' not in request.path and '/governance/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/asset/' not in request.path and '/procurement/' not in request.path and '/finance_app/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %} current-subsystem{% endif %}"
                         href="{% url 'dashboard' %}"
                     >
 
@@ -185,7 +206,7 @@
                             <small>Human Resources</small>
                         </span>
 
-                        {% if '/garcis/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/assets/' not in request.path and '/procurement/' not in request.path and '/finance_app/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %}
+                        {% if '/garcis/' not in request.path and '/governance/' not in request.path and '/monitoring/' not in request.path and '/communication/' not in request.path and '/asset/' not in request.path and '/procurement/' not in request.path and '/finance_app/' not in request.path and '/system-home/' not in request.path and request.path != '/forum/' %}
                         <span class="qa-status-badge">Active</span>
                         {% endif %}
 
@@ -206,7 +227,7 @@
                         <span>
                             <strong>GARCIS</strong>
                             <small>
-                                Government Audit Risk and Compliance Information System
+                                Audit, Risk and Compliance Information System
                             </small>
                         </span>
 
@@ -253,7 +274,7 @@
 
                         <span>
                             <strong>COMMUNICATION</strong>
-                            <small>Communication Management</small>
+                            <small>Communication</small>
                         </span>
 
                         {% if '/communication/' in request.path %}
@@ -266,7 +287,7 @@
 
                 <li>
                     <a
-                        class="dropdown-item quick-access-item{% if '/assets/' in request.path %} current-subsystem{% endif %}"
+                        class="dropdown-item quick-access-item{% if '/asset/' in request.path %} current-subsystem{% endif %}"
                         href="{% url 'asset:dashboard' %}"
                     >
 
@@ -279,7 +300,7 @@
                             <small>Asset Management</small>
                         </span>
 
-                        {% if '/assets/' in request.path %}
+                        {% if '/asset/' in request.path %}
                         <span class="qa-status-badge">Active</span>
                         {% endif %}
 
@@ -672,11 +693,40 @@
     </div>
 
 
+
+    <footer class="border-top bg-white py-3 mt-4">
+    <div class="container-fluid d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <small class="text-muted">RICE West Nile Management Information System</small>
+        <div class="d-flex gap-3" aria-label="Social media links">
+            {% for social in social_media_links %}
+            <a href="{{ social.url }}" target="_blank" rel="noopener noreferrer" class="text-muted"
+               title="{{ social.label }}" aria-label="{{ social.label }}">
+                <i class="{{ social.icon }}"></i>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</footer>
+
+
+
     <!-- =================================================
          FORUM FAB
     ================================================== -->
 
     <div class="forum-fab-container">
+
+        {% if unread_forum_count %}
+        <div class="forum-notification-popup" role="status" aria-live="polite">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong><i class="fa-solid fa-bell me-1"></i> New forum activity</strong>
+                <span class="badge bg-danger">{{ unread_forum_count }}</span>
+            </div>
+            {% for item in unread_forum_items %}
+            <a href="{{ item.url }}" class="d-block small text-decoration-none text-dark py-1">{{ item.title }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
 
         <a
             href="{% url 'forum_list' %}"
@@ -717,6 +767,7 @@
     </div>
 
 </main>
+
 
 
 <!-- =====================================================

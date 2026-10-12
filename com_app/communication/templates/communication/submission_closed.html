@@ -1,0 +1,64 @@
+{% extends 'communication/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+
+    <div class="card shadow-lg border-0" style="max-width: 650px; width: 100%; border-radius: 12px;">
+
+        <!-- Header -->
+        <div class="card-header bg-danger text-white text-center" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+            <h4 class="mb-0">
+                <i class="fas fa-lock me-2"></i> Submission Closed
+            </h4>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body p-4">
+
+            <!-- Message -->
+            <div class="mb-3">
+                <p class="mb-2" style="font-size: 15px;">
+                    The submission window for this month has officially closed.
+                </p>
+
+                <p class="mb-2">
+                    <strong>Deadline:</strong>
+                    <span class="text-danger">
+                        {{ deadline|date:"d F Y" }}
+                    </span>
+                </p>
+
+                <p class="mb-3">
+                    <strong>Next Submission Window:</strong><br>
+                    Submissions will reopen after the scheduled monthly meeting on
+                    <span class="text-success fw-bold">
+                        {{ meeting_day|date:"l, d F Y" }}
+                    </span>.
+                </p>
+
+                <hr>
+
+                <p class="text-muted mb-0">
+                    Kindly ensure that all future presentations are submitted within the approved submission period to avoid restrictions.
+                </p>
+            </div>
+
+            <!-- Optional Countdown (No JS auto-hide) -->
+            <div class="btn btn-light border mt-4">
+                <strong>Note:</strong> Submission access is automatically restored after the meeting date.
+            </div>
+
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="card-footer text-center bg-light">
+            <a href="{% url 'comm:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -294,8 +294,11 @@
         outline: none;
     }
 
-    .budget-lines-table .line-yearly {
+    .budget-lines-table .line-total {
         min-width: 105px;
+        border-color: #dce8e2;
+        background: #f5f9f7;
+        color: #18323a;
         font-weight: 800;
         text-align: right;
     }
@@ -650,7 +653,7 @@
                         </h2>
 
                         <small class="budget-lines-help">
-                            Pick an account from the chart of accounts, then either type a Yearly amount to split it evenly across the 12 months, or fill in each month individually — they stay in sync either way. Total expected income must equal total expected costs before this budget can be saved.
+                            Price × units × frequency = line total
                         </small>
 
                     </div>
@@ -658,22 +661,7 @@
                 </div>
 
 
-                <button type="button"
-                        class="btn btn-outline-primary btn-sm add-line-btn"
-                        id="add-budget-line">
-
-                    <i class="fa-solid fa-plus"></i>
-                    Add budget line
-
-                </button>
-
             </div>
-
-            {% if formset.non_form_errors %}
-                <div class="alert alert-danger py-2 small mx-3 mt-3 mb-0">
-                    {{ formset.non_form_errors }}
-                </div>
-            {% endif %}
 
 
             <div class="table-responsive">
@@ -683,22 +671,15 @@
                     <thead>
 
                         <tr>
-                            <th>Account</th>
-                            <th>Outcome</th>
+                            <th>Code</th>
+                            <th>Output</th>
                             <th>Activity</th>
-                            <th>Yearly</th>
-                            <th>Jan</th>
-                            <th>Feb</th>
-                            <th>Mar</th>
-                            <th>Apr</th>
-                            <th>May</th>
-                            <th>Jun</th>
-                            <th>Jul</th>
-                            <th>Aug</th>
-                            <th>Sep</th>
-                            <th>Oct</th>
-                            <th>Nov</th>
-                            <th>Dec</th>
+                            <th>Description</th>
+                            <th>Unit</th>
+                            <th>Price</th>
+                            <th>Units</th>
+                            <th>Freq.</th>
+                            <th>Line total</th>
                             <th>Justification</th>
                             <th></th>
                         </tr>
@@ -721,16 +702,11 @@
                                 {% endif %}
 
 
-                                <!-- Account -->
+                                <!-- Code -->
                                 <td>
-                                    {{ line.category }}
-                                    <button type="button" class="form-control account-picker-trigger"
-                                            data-bs-toggle="modal" data-bs-target="#accountPickerModal">
-                                        <span data-account-label-text class="account-picker-placeholder">Select account...</span>
-                                        <i class="fa-solid fa-magnifying-glass"></i>
-                                    </button>
+                                    {{ line.code }}
 
-                                    {% for error in line.category.errors %}
+                                    {% for error in line.code.errors %}
                                         <div class="field-error">
                                             {{ error }}
                                         </div>
@@ -762,63 +738,73 @@
                                 </td>
 
 
-                                <!-- Yearly (type here to split evenly across the 12 months) -->
+                                <!-- Description -->
+                                <td>
+                                    {{ line.description }}
+
+                                    {% for error in line.description.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Unit -->
+                                <td>
+                                    {{ line.unit }}
+
+                                    {% for error in line.unit.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Price -->
+                                <td>
+                                    {{ line.price_per_unit }}
+
+                                    {% for error in line.price_per_unit.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Units -->
+                                <td>
+                                    {{ line.units }}
+
+                                    {% for error in line.units.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Frequency -->
+                                <td>
+                                    {{ line.frequency }}
+
+                                    {% for error in line.frequency.errors %}
+                                        <div class="field-error">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </td>
+
+
+                                <!-- Calculated total -->
                                 <td>
                                     <input type="text"
-                                           class="form-control line-yearly"
-                                           inputmode="decimal"
-                                           aria-label="Yearly amount — splits evenly across the 12 months">
-                                </td>
-
-
-                                <!-- Monthly amounts -->
-                                <td>
-                                    {{ line.m01 }}
-                                    {% for error in line.m01.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m02 }}
-                                    {% for error in line.m02.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m03 }}
-                                    {% for error in line.m03.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m04 }}
-                                    {% for error in line.m04.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m05 }}
-                                    {% for error in line.m05.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m06 }}
-                                    {% for error in line.m06.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m07 }}
-                                    {% for error in line.m07.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m08 }}
-                                    {% for error in line.m08.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m09 }}
-                                    {% for error in line.m09.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m10 }}
-                                    {% for error in line.m10.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m11 }}
-                                    {% for error in line.m11.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
-                                </td>
-                                <td>
-                                    {{ line.m12 }}
-                                    {% for error in line.m12.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                                           class="form-control line-total"
+                                           readonly
+                                           tabindex="-1"
+                                           aria-label="Calculated line total">
                                 </td>
 
 
@@ -860,7 +846,7 @@
 
                             <tr class="budget-empty-row">
 
-                                <td colspan="18"
+                                <td colspan="11"
                                     class="text-center py-4 text-muted">
 
                                     <i class="fa-solid fa-list-check d-block mb-2"></i>
@@ -890,7 +876,14 @@
 
             <div class="budget-form-footer">
 
-                <div>
+                <div class="d-flex align-items-center gap-3">
+
+                    <button type="button"
+                            class="btn btn-outline-primary btn-sm add-line-btn"
+                            id="add-budget-line">
+                        <i class="fa-solid fa-plus"></i>
+                        Add budget line
+                    </button>
 
                     <span class="budget-total-label">
                         Budget total:
@@ -925,8 +918,6 @@
 
     </form>
 
-    {% include "finance/includes/account_picker_modal.html" %}
-
 
     <!-- =====================================================
          EMPTY FORM TEMPLATE
@@ -938,38 +929,28 @@
 
             {{ formset.empty_form.id }}
 
-            <td>
-                {{ formset.empty_form.category }}
-                <button type="button" class="form-control account-picker-trigger"
-                        data-bs-toggle="modal" data-bs-target="#accountPickerModal">
-                    <span data-account-label-text class="account-picker-placeholder">Select account...</span>
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </button>
-            </td>
+            <td>{{ formset.empty_form.code }}</td>
 
             <td>{{ formset.empty_form.outcome }}</td>
 
             <td>{{ formset.empty_form.activity }}</td>
 
+            <td>{{ formset.empty_form.description }}</td>
+
+            <td>{{ formset.empty_form.unit }}</td>
+
+            <td>{{ formset.empty_form.price_per_unit }}</td>
+
+            <td>{{ formset.empty_form.units }}</td>
+
+            <td>{{ formset.empty_form.frequency }}</td>
+
             <td>
                 <input type="text"
-                       class="form-control line-yearly"
-                       inputmode="decimal"
-                       aria-label="Yearly amount — splits evenly across the 12 months">
+                       class="form-control line-total"
+                       readonly
+                       tabindex="-1">
             </td>
-
-            <td>{{ formset.empty_form.m01 }}</td>
-            <td>{{ formset.empty_form.m02 }}</td>
-            <td>{{ formset.empty_form.m03 }}</td>
-            <td>{{ formset.empty_form.m04 }}</td>
-            <td>{{ formset.empty_form.m05 }}</td>
-            <td>{{ formset.empty_form.m06 }}</td>
-            <td>{{ formset.empty_form.m07 }}</td>
-            <td>{{ formset.empty_form.m08 }}</td>
-            <td>{{ formset.empty_form.m09 }}</td>
-            <td>{{ formset.empty_form.m10 }}</td>
-            <td>{{ formset.empty_form.m11 }}</td>
-            <td>{{ formset.empty_form.m12 }}</td>
 
             <td>{{ formset.empty_form.justification }}</td>
 
@@ -1009,6 +990,42 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    const projectField = document.getElementById("id_project");
+    const donorField = document.getElementById("id_donor");
+    const startField = document.getElementById("id_period_start");
+    const endField = document.getElementById("id_period_end");
+
+    if (projectField) {
+        projectField.addEventListener("change", function () {
+            if (!projectField.value) {
+                donorField.value = "";
+                startField.value = "";
+                endField.value = "";
+                return;
+            }
+
+            const detailsUrl = "{% url 'finance:cashbook_project_budget' 0 %}"
+                .replace("/0/", "/" + projectField.value + "/");
+
+            fetch(detailsUrl, {headers: {"X-Requested-With": "XMLHttpRequest"}})
+                .then(function (response) {
+                    if (!response.ok) throw new Error("Unable to load project details");
+                    return response.json();
+                })
+                .then(function (data) {
+                    const project = data.project || {};
+                    donorField.value = project.donor || "";
+                    startField.value = project.period_start || "";
+                    endField.value = project.period_end || "";
+                })
+                .catch(function () {
+                    donorField.value = "";
+                    startField.value = "";
+                    endField.value = "";
+                });
+        });
+    }
+
     const body = document.getElementById("budget-lines-body");
     const addButton = document.getElementById("add-budget-line");
     const template = document.getElementById("empty-budget-line");
@@ -1034,13 +1051,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /* =========================================================
        CALCULATE LINE TOTALS
-       Sum of the 12 monthly amounts
+       Price × Units × Frequency
     ========================================================= */
-
-    const MONTH_FIELD_NAMES = [
-        "m01", "m02", "m03", "m04", "m05", "m06",
-        "m07", "m08", "m09", "m10", "m11", "m12",
-    ];
 
     function calculateTotals() {
 
@@ -1055,28 +1067,35 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
+            const priceField =
+                row.querySelector('[name$="-price_per_unit"]');
+
+            const unitsField =
+                row.querySelector('[name$="-units"]');
+
+            const frequencyField =
+                row.querySelector('[name$="-frequency"]');
+
             const output =
-                row.querySelector(".line-yearly");
+                row.querySelector(".line-total");
 
-            let lineTotal = 0;
 
-            MONTH_FIELD_NAMES.forEach(function (name) {
-                const field = row.querySelector('[name$="-' + name + '"]');
-                lineTotal += parseFloat(field?.value) || 0;
-            });
+            const price =
+                parseFloat(priceField?.value) || 0;
 
-            // Never overwrite the Yearly field while the user is actively
-            // typing into it — doing so on every "input" event resets the
-            // cursor mid-keystroke and makes the field feel stuck. It gets
-            // its value from distributeYearlyToMonths() instead; this only
-            // needs to (re)format it when some OTHER field changed the
-            // row's total (e.g. a month was edited directly).
-            if (output && document.activeElement !== output) {
-                // A plain decimal string, not formatMoney()'s comma-grouped
-                // display string — this field stays user-editable, and a
-                // value like "1,909.01" would parseFloat() to just 1 the
-                // next time distributeYearlyToMonths() reads it back.
-                output.value = lineTotal.toFixed(2);
+            const units =
+                parseFloat(unitsField?.value) || 0;
+
+            const frequency =
+                parseFloat(frequencyField?.value) || 0;
+
+
+            const lineTotal =
+                price * units * frequency;
+
+
+            if (output) {
+                output.value = formatMoney(lineTotal);
             }
 
 
@@ -1087,95 +1106,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         grandTotal.textContent = formatMoney(total);
 
-    }
-
-
-    /* =========================================================
-       ACTIVE MONTHS FOR THE SELECTED PERIOD
-       The m01..m12 grid is always Jan-Dec of the budget's start
-       year, but a budget rarely runs the full year (e.g. Apr-Dec,
-       or an Oct-Mar fiscal year spanning two calendar years) — the
-       Yearly split must only land on months the budget actually
-       covers, never before period_start or after period_end.
-    ========================================================= */
-
-    function getActiveMonthIndices() {
-        const startField = document.getElementById("id_period_start");
-        const endField = document.getElementById("id_period_end");
-        const all = MONTH_FIELD_NAMES.map(function (_, index) { return index; });
-
-        if (!startField || !endField || !startField.value || !endField.value) {
-            return all;
-        }
-
-        const start = new Date(startField.value + "T00:00:00");
-        const end = new Date(endField.value + "T00:00:00");
-        if (isNaN(start) || isNaN(end) || end < start) {
-            return all;
-        }
-
-        const startMonth = start.getMonth() + 1;
-        const endMonth = end.getMonth() + 1;
-        const yearSpan = end.getFullYear() - start.getFullYear();
-
-        if (yearSpan === 0) {
-            return all.filter(function (index) {
-                const month = index + 1;
-                return month >= startMonth && month <= endMonth;
-            });
-        }
-
-        if (yearSpan === 1) {
-            // Wraps into the next calendar year (e.g. Oct-Mar) — active
-            // months are the two tail/head segments of the Jan-Dec grid.
-            return all.filter(function (index) {
-                const month = index + 1;
-                return month >= startMonth || month <= endMonth;
-            });
-        }
-
-        // Spans more than a year — doesn't fit a single Jan-Dec grid at
-        // all, so there's no sound way to narrow it; fall back to every month.
-        return all;
-    }
-
-
-    /* =========================================================
-       DISTRIBUTE YEARLY ACROSS MONTHS
-       Typing a Yearly amount splits it evenly across the months
-       the budget's period actually covers, distributing any
-       rounding remainder (in cents) across the first few of them
-       so they always sum back to exactly what was typed. Months
-       outside the period are cleared to zero.
-    ========================================================= */
-
-    function distributeYearlyToMonths(row) {
-        const yearlyField = row.querySelector(".line-yearly");
-        if (!yearlyField) return;
-
-        const activeIndices = getActiveMonthIndices();
-        const activeSet = new Set(activeIndices);
-
-        const yearly = parseFloat(yearlyField.value) || 0;
-        const totalCents = Math.round(yearly * 100);
-        const monthCount = activeIndices.length || 12;
-        const baseCents = Math.floor(totalCents / monthCount);
-        const remainderCents = totalCents - (baseCents * monthCount);
-
-        let distributed = 0;
-        MONTH_FIELD_NAMES.forEach(function (name, index) {
-            const field = row.querySelector('[name$="-' + name + '"]');
-            if (!field) return;
-
-            if (!activeSet.has(index)) {
-                field.value = "0.00";
-                return;
-            }
-
-            const cents = baseCents + (distributed < remainderCents ? 1 : 0);
-            distributed += 1;
-            field.value = (cents / 100).toFixed(2);
-        });
     }
 
 
@@ -1304,33 +1234,14 @@ document.addEventListener("DOMContentLoaded", function () {
        LIVE CALCULATION
     ========================================================= */
 
-    function handleLineInput(event) {
-        if (event.target.classList.contains("line-yearly")) {
-            const row = event.target.closest(".budget-line-row");
-            if (row) {
-                distributeYearlyToMonths(row);
-            }
-        }
-        calculateTotals();
-    }
-
-    body.addEventListener("input", handleLineInput);
-    body.addEventListener("change", handleLineInput);
-
-    // Clicking into a Yearly field (pre-filled with its current total, e.g.
-    // "872.69") placed the cursor inside that existing text instead of
-    // replacing it, so new digits were inserted before the trailing
-    // ".00" / ".69" instead of after it — it looked like you couldn't type
-    // past the decimal point. Selecting the whole value on focus means the
-    // first keystroke simply overwrites it, like any other amount field.
     body.addEventListener(
-        "focus",
-        function (event) {
-            if (event.target.classList.contains("line-yearly")) {
-                event.target.select();
-            }
-        },
-        true
+        "input",
+        calculateTotals
+    );
+
+    body.addEventListener(
+        "change",
+        calculateTotals
     );
 
 

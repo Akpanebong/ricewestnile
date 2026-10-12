@@ -11,7 +11,7 @@ from core.project_models import Project
 from hr_apps.HRapp.models import Employee
 from hr_apps.HRapp.templatetags.group_tags import has_group
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Prefetch, Q
 from django.contrib.auth.models import Group
 from hr_apps.HRapp.views import is_supervisor
 from hr_apps.HRapp.utils import employee_leave_balances
@@ -145,8 +145,28 @@ def unit_delete(request, pk):
 # -------------------- PROGRAM AREA --------------------
 @login_required
 def program_area_list(request):
-    program_areas = ProgramArea.objects.all()
+    program_areas = ProgramArea.objects.annotate(
+        project_count=Count("projects", distinct=True),
+        staff_count=Count("members", filter=Q(members__profile_type="Staff"), distinct=True),
+    )
     return render(request, 'dept/program_area_list.html', {'program_areas': program_areas, 'can_manage': is_hr(request.user) or request.user.is_superuser})
+
+
+@login_required
+def program_area_detail(request, pk):
+    program_area = get_object_or_404(ProgramArea, pk=pk)
+    staff_qs = Profile.objects.filter(profile_type="Staff").select_related("department", "unit").order_by("first_name", "last_name", "username")
+    projects = (
+        Project.objects.filter(program_area=program_area)
+        .select_related("project_head", "project_officer", "unit")
+        .prefetch_related(Prefetch("members", queryset=staff_qs, to_attr="assigned_staff"))
+        .order_by("name")
+    )
+    return render(request, "dept/program_area_detail.html", {
+        "program_area": program_area,
+        "projects": projects,
+        "can_manage": is_hr(request.user) or request.user.is_superuser,
+    })
 
 
 @login_required
@@ -363,7 +383,9 @@ def profile_list(request):
     ]
 
     # ✅ BASE QUERYSETS
-    profiles_qs = Profile.objects.select_related("department", "program_area").order_by('program_area__name')
+    profiles_qs = Profile.objects.select_related(
+        "department", "program_area", "employee", "employee__employeepersonalinfo"
+    ).order_by('program_area__name')
 
     staff_qs = Employee.objects.select_related(
         "user", "user__department"
@@ -441,11 +463,34 @@ def profile_list(request):
     paginator = Paginator(queryset, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
 
+    # Resolve gender explicitly for the table. EmployeePersonalInfo is a
+    # separate one-to-one record and may not exist for every profile.
+    for row in page_obj.object_list:
+        if isinstance(row, Employee):
+            gender = EmployeePersonalInfo.objects.filter(
+                employee_id=row.pk
+            ).values_list("sex", flat=True).first()
+        else:
+            gender = EmployeePersonalInfo.objects.filter(
+                employee__user_id=row.pk
+            ).values_list("sex", flat=True).first()
+        row.gender = gender or "—"
+
+    gender_qs = EmployeePersonalInfo.objects.filter(employee__user__isnull=False)
+
     return render(request, 'profile/profile_list.html', {
         'page_obj': page_obj,
         'data_type': data_type,
         'filter_types': filter_types,
         'search_query': search_query,
+        'profile_counts': {
+            'staff': Profile.objects.filter(profile_type='Staff').count(),
+            'volunteer': Profile.objects.filter(profile_type='Volunteer').count(),
+            'intern': Profile.objects.filter(profile_type='Intern').count(),
+            'community_structure': Profile.objects.filter(profile_type='Community Structure').count(),
+            'male': gender_qs.filter(sex__iexact='Male').count(),
+            'female': gender_qs.filter(sex__iexact='Female').count(),
+        },
     })
 
 
@@ -458,7 +503,21 @@ def units_for_department(request):
 
 @login_required
 def projects_for_unit(request):
-    projects = Project.objects.filter(unit_id=request.GET.get('unit')).order_by('name')
+    unit_id = request.GET.get('unit')
+    program_area_id = request.GET.get('program_area')
+    selected_project = request.GET.get('selected_project')
+    projects = Project.objects.all()
+    if unit_id:
+        # Projects created before unit assignment, or intentionally shared
+        # projects, remain selectable for every unit.
+        projects = projects.filter(Q(unit_id=unit_id) | Q(unit__isnull=True))
+    if program_area_id:
+        projects = projects.filter(program_area_id=program_area_id)
+    if selected_project:
+        projects = Project.objects.filter(
+            Q(pk__in=projects.values("pk")) | Q(pk=selected_project)
+        )
+    projects = projects.order_by('name')
     return JsonResponse({'projects': [{'id': project.id, 'name': project.name} for project in projects]})
 
 
@@ -1325,14 +1384,21 @@ def admin_reset_password(request, pk):
 
 def forgot_password(request):
     if request.method == 'POST':
-        email = request.POST.get('email', '').strip()
-        if not email:
-            messages.error(request, "Please enter your email address.")
+        identifier = request.POST.get('email', '').strip()
+        if not identifier:
+            messages.error(request, "Please enter your email, alternative email, staff ID, or phone number.")
             return redirect('forgot_password')
 
-        try:
-            user = User.objects.get(email__iexact=email)
-        except User.DoesNotExist:
+        user = User.objects.filter(
+            Q(email__iexact=identifier) |
+            Q(alternative_email__iexact=identifier) |
+            Q(phone__iexact=identifier)
+        ).first()
+        if user is None:
+            from hr_apps.HRapp.employee_models import Employee
+            employee = Employee.objects.select_related('user').filter(staff_id__iexact=identifier).first()
+            user = employee.user if employee else None
+        if user is None:
             # For security we can show success message or show error depending on preference.
             # Here we show a success message to avoid leaking which emails exist.
             messages.success(request, "If that email exists in our system, a password reset link has been sent.")
@@ -1357,7 +1423,10 @@ def forgot_password(request):
         })
 
         from_email = settings.DEFAULT_FROM_EMAIL
-        to = [user.email]
+        to = list(dict.fromkeys(filter(None, [user.email, user.alternative_email])))
+        if not to:
+            messages.error(request, "No recovery email is configured for this account. Contact an administrator.")
+            return redirect('forgot_password')
 
         try:
             msg = EmailMultiAlternatives(subject, text_content, from_email, to)

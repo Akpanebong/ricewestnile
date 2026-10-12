@@ -144,3 +144,34 @@ button:focus-visible {
     border-radius: var(--radius-md);
     border-width: 1px;
 }
+.forum-notification-popup {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 12px);
+    width: min(340px, calc(100vw - 32px));
+    padding: .8rem 1rem;
+    border: 1px solid rgba(15, 118, 110, .2);
+    border-radius: .75rem;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, .18);
+    z-index: 20;
+    animation: forum-popup-in .25s ease-out;
+}
+
+.forum-notification-popup::after {
+    content: "";
+    position: absolute;
+    right: 28px;
+    bottom: -8px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-right: 1px solid rgba(15, 118, 110, .2);
+    border-bottom: 1px solid rgba(15, 118, 110, .2);
+    transform: rotate(45deg);
+}
+
+@keyframes forum-popup-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}

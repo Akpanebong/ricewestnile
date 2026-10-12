@@ -10,7 +10,9 @@ urlpatterns = [
     path('employees/edit/<int:pk>/<slug:slug>/', views.admin_edit_employee, name='edit_employee'),
     path('employees/delete/<int:pk>/<slug:slug>/', views.delete_employee, name='delete_employee'),
     path('leaves/', views.leave_list, name='leave_list'),
+    path('leaves/supervisor/', views.supervisor_leave_list, name='supervisor_leave_list'),
     path('leaves/apply/', views.apply_leave, name='apply_leave'),
+    path('leaves/schedule/', views.schedule_leave, name='schedule_leave'),
     path('leave/delete/<int:pk>/', views.delete_leave, name='delete_leave'),
 
     path("leave/report/", views.leave_yearly_report, name="leave_report"),
@@ -65,4 +67,3 @@ urlpatterns = [
 
     path("orientation/my/", orient.orientation_my, name="orientation_my"),
 ]
-

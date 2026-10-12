@@ -35,12 +35,29 @@
 
 .quick-access-menu {
     width: 320px;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     margin-top: 12px !important;
     padding: 8px;
     border: none;
     border-radius: 14px;
     background: #ffffff;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18) !important;
+}
+
+.quick-access-menu::-webkit-scrollbar {
+    width: 7px;
+}
+
+.quick-access-menu::-webkit-scrollbar-thumb {
+    background: rgba(15, 118, 110, 0.45);
+    border-radius: 999px;
+}
+
+.quick-access-menu {
+    scrollbar-color: rgba(15, 118, 110, 0.45) transparent;
+    scrollbar-width: thin;
 }
 
 .quick-access-header {

@@ -66,7 +66,7 @@
                     <img
                         src="{{ gallery.cover_image.url }}"
                         class="card-img-top media-cover gallery-image"
-                        alt="{{ gallery.title }}"
+                        alt="{{ gallery.activity }}"
                         loading="lazy"
                     >
 
@@ -122,24 +122,13 @@
 
                 <!-- Title -->
                 <h2 class="h5 fw-bold gallery-title">
-                    {{ gallery.title }}
+                    {{ gallery.activity }}
                 </h2>
 
 
-                <!-- Description -->
-                {% if gallery.description %}
-
                 <p class="text-muted gallery-description mb-4">
-                    {{ gallery.description|truncatewords:20 }}
+                    Explore photos from this activity.
                 </p>
-
-                {% else %}
-
-                <p class="text-muted gallery-description mb-4">
-                    Explore photos and stories from this project.
-                </p>
-
-                {% endif %}
 
 
                 <!-- Action -->

@@ -107,28 +107,28 @@
         <div class="col-sm-6 col-xl-3">
             <div class="card interactive-card ledger-metric-card p-3">
                 <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Total Income</small>
-                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_income|default:0 }}" data-counter-decimals="2">0</h3>
+                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_income|default:0 }}" data-counter-decimals="2">{{ totals.total_income|default:0|floatformat:2 }}</h3>
                 <small class="text-muted">{{ base_currency }}</small>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="card interactive-card ledger-metric-card is-expense p-3">
                 <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Total Expense</small>
-                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_expense|default:0 }}" data-counter-decimals="2">0</h3>
+                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_expense|default:0 }}" data-counter-decimals="2">{{ totals.total_expense|default:0|floatformat:2 }}</h3>
                 <small class="text-muted">{{ base_currency }}</small>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="card interactive-card ledger-metric-card is-transfer p-3">
                 <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Fund Transfers</small>
-                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_transfer|default:0 }}" data-counter-decimals="2">0</h3>
+                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ totals.total_transfer|default:0 }}" data-counter-decimals="2">{{ totals.total_transfer|default:0|floatformat:2 }}</h3>
                 <small class="text-muted">{{ base_currency }}</small>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="card interactive-card ledger-metric-card is-net p-3">
                 <small class="text-muted text-uppercase fw-bold" style="font-size:.72rem;">Net Position</small>
-                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ net_position|default:0 }}" data-counter-decimals="2">0</h3>
+                <h3 class="fw-bold mt-1 mb-0" data-counter="{{ net_position|default:0 }}" data-counter-decimals="2">{{ net_position|default:0|floatformat:2 }}</h3>
                 <small class="text-muted">Income − Expense ({{ base_currency }})</small>
             </div>
         </div>

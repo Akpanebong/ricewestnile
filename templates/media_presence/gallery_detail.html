@@ -1,7 +1,7 @@
 
 {% extends "communication/base.html" %}
 
-{% block title %}{{ gallery.title }} | Media Presence{% endblock %}
+{% block title %}{{ gallery.activity }} | Media Presence{% endblock %}
 
 {% block media_content %}
 
@@ -26,18 +26,12 @@
 
                     <div class="gallery-project-tag">
                         <i class="fa-solid fa-diagram-project me-2"></i>
-                        {{ gallery.project.name }}
+                        {{ gallery.project.name }} · {{ gallery.activity }}
                     </div>
 
                     <h1 class="gallery-detail-title">
-                        {{ gallery.title }}
+                        {{ gallery.activity }}
                     </h1>
-
-                    {% if gallery.description %}
-                    <p class="gallery-detail-description">
-                        {{ gallery.description }}
-                    </p>
-                    {% endif %}
 
                     <div class="gallery-meta">
 
@@ -62,7 +56,7 @@
                 <div class="col-lg-4 text-lg-end">
 
                     <a
-                        href="{% url 'media_presence:galleries' %}"
+                        href="{{ back_url }}"
                         class="btn gallery-back-button"
                     >
                         <i class="fa-solid fa-arrow-left me-2"></i>
@@ -99,8 +93,8 @@
             </div>
 
             <div class="gallery-section-hint d-none d-md-flex">
-                <i class="fa-solid fa-expand me-2"></i>
-                Click a photo to explore
+                <i class="fa-brands fa-google-drive me-2"></i>
+                Photos are securely stored in Google Drive
             </div>
 
         </div>
@@ -115,91 +109,34 @@
                 style="--gallery-index: {{ forloop.counter0 }};"
             >
 
-                <article
-                    class="media-gallery-item gallery-photo-card"
-                    tabindex="0"
-                    role="button"
-                    aria-label="View {{ photo.title|default:'gallery photo' }}"
-                    data-gallery-index="{{ forloop.counter0 }}"
-                >
+                <article class="media-gallery-item gallery-photo-card" aria-label="{{ photo.title|default:'Google Drive photo' }}">
 
-                    <!-- IMAGE -->
                     <div class="gallery-photo-frame">
-
-                        <img
-                            src="{{ photo.image.url }}"
-                            class="media-gallery-photo"
-                            alt="{{ photo.title }}"
-                            loading="lazy"
-                            data-gallery-image="{{ photo.image.url }}"
-                            data-gallery-title="{{ photo.title }}"
-                            data-bs-toggle="modal"
-                            data-bs-target="#photoLightbox"
-                        >
-
-
-                        <!-- Gradient -->
-                        <div class="gallery-photo-gradient"></div>
-
-
-                        <!-- Hover overlay -->
-                        <div class="media-gallery-overlay">
-
-                            <div class="gallery-view-action">
-
-                                <span class="gallery-view-icon">
-                                    <i class="fa-solid fa-expand"></i>
-                                </span>
-
-                                <span class="gallery-view-text">
-                                    View photo
-                                </span>
-
+                        <div class="drive-photo-panel">
+                            <div class="drive-photo-brand">
+                                <span class="drive-photo-icon"><i class="fa-brands fa-google-drive"></i></span>
+                                <span>Google Drive</span>
+                                <span class="drive-photo-status"><i class="fa-solid fa-link me-1"></i> Linked</span>
                             </div>
-
-                        </div>
-
-
-                        <!-- Top controls -->
-                        <div class="gallery-photo-controls">
-
-                            <button
-                                type="button"
-                                class="gallery-icon-button"
-                                data-bs-toggle="modal"
-                                data-bs-target="#photoLightbox"
-                                data-gallery-image="{{ photo.image.url }}"
-                                data-gallery-title="{{ photo.title }}"
-                                aria-label="View photo"
-                            >
-                                <i class="fa-solid fa-expand"></i>
-                            </button>
-
-                            <a
-                                href="{% url 'media_presence:photo_download' photo.pk %}"
-                                class="gallery-icon-button download-button"
-                                download
-                                aria-label="Download photo"
-                            >
-                                <i class="fa-solid fa-download"></i>
+                            <div class="drive-photo-main">
+                                <i class="fa-regular fa-image"></i>
+                                <strong>Photo stored externally</strong>
+                                <small>Open the secure Drive link to view</small>
+                            </div>
+                            <a href="{{ photo.image }}" target="_blank" rel="noopener" class="btn drive-photo-open">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Open photo
                             </a>
-
                         </div>
+                    </div>
 
-
-                        <!-- Caption -->
-                        <div class="media-gallery-caption">
-
-                            {% if photo.title %}
-                            <strong>{{ photo.title }}</strong>
-                            {% endif %}
-
-                            {% if photo.caption %}
-                            <small>{{ photo.caption }}</small>
-                            {% endif %}
-
+                    <div class="gallery-photo-card-footer">
+                        <div class="min-w-0">
+                            <strong class="d-block text-truncate">{{ photo.title|default:"Untitled photo" }}</strong>
+                            {% if photo.caption %}<small class="d-block text-muted text-truncate">{{ photo.caption }}</small>{% endif %}
                         </div>
-
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{% url 'media_presence:photo_download' photo.pk %}" class="gallery-drive-link" aria-label="Open photo in Google Drive" title="Open in Google Drive"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                        </div>
                     </div>
 
                 </article>
@@ -290,7 +227,7 @@
 
                         <small class="text-muted">
                             <i class="fa-solid fa-shield-halved me-1"></i>
-                            Supported image uploads
+                            Google Drive links only
                         </small>
 
                         <button
@@ -344,6 +281,10 @@
                         Photo preview
                     </h5>
 
+                    <a id="photoDriveLink" href="#" target="_blank" rel="noopener" class="btn btn-sm btn-outline-light ms-3">
+                        <i class="fa-brands fa-google-drive me-1"></i> Open in Drive
+                    </a>
+
                 </div>
 
                 <button
@@ -372,6 +313,14 @@
                         src=""
                         alt=""
                     >
+
+                    <div id="photoLightboxFallback" class="text-center text-white px-3" hidden>
+                        <i class="fa-solid fa-image-slash fa-2x mb-2"></i>
+                        <p class="mb-2">The Drive preview could not be loaded.</p>
+                        <a id="photoLightboxFallbackLink" href="#" target="_blank" rel="noopener" class="btn btn-success">
+                            <i class="fa-brands fa-google-drive me-1"></i> Open photo in Drive
+                        </a>
+                    </div>
 
                 </div>
 
@@ -562,6 +511,91 @@
     transition:
         transform 0.4s cubic-bezier(.2,.8,.2,1),
         box-shadow 0.4s ease;
+}
+
+.drive-photo-panel {
+    height: 100%;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1rem;
+    background:
+        radial-gradient(circle at 85% 15%, rgba(66, 133, 244, .22), transparent 35%),
+        linear-gradient(145deg, #f8fbff 0%, #edf5f3 100%);
+}
+
+.drive-photo-brand {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    color: #31506a;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .02em;
+}
+
+.drive-photo-icon {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #fff;
+    color: #4285f4;
+    font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(40, 70, 90, .08);
+}
+
+.drive-photo-status {
+    margin-left: auto;
+    padding: .28rem .45rem;
+    border-radius: 999px;
+    background: rgba(25, 135, 84, .1);
+    color: #198754;
+    font-size: .6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.drive-photo-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .35rem;
+    text-align: center;
+    color: #31506a;
+}
+
+.drive-photo-main > i {
+    margin-bottom: .25rem;
+    color: #6f8ba1;
+    font-size: 2.8rem;
+}
+
+.drive-photo-main strong {
+    font-size: .82rem;
+}
+
+.drive-photo-main small {
+    color: #748897;
+    font-size: .68rem;
+}
+
+.drive-photo-open {
+    width: 100%;
+    border: 0;
+    border-radius: 9px;
+    background: #087f7b;
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.drive-photo-open:hover {
+    background: #075c63;
+    color: #fff;
 }
 
 .gallery-photo-card:hover,
@@ -1082,6 +1116,55 @@
    REDUCED MOTION
 ========================================================= */
 
+.gallery-photo-card {
+    border: 1px solid rgba(24, 50, 58, .09);
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(20, 40, 50, .08);
+}
+
+.gallery-photo-frame {
+    aspect-ratio: 4 / 3;
+    background: #edf3f1;
+}
+
+.gallery-photo-card-footer {
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .75rem .85rem;
+    background: #fff;
+}
+
+.gallery-photo-card-footer strong {
+    color: #18323a;
+    font-size: .82rem;
+}
+
+.gallery-photo-card-footer small {
+    margin-top: .2rem;
+    font-size: .7rem;
+}
+
+.gallery-drive-link {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 9px;
+    background: #eef7f5;
+    color: #087f7b;
+    text-decoration: none;
+}
+
+.gallery-drive-link:hover {
+    background: #087f7b;
+    color: #fff;
+}
+
 @media (prefers-reduced-motion: reduce) {
 
     .gallery-detail-hero,
@@ -1214,6 +1297,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const loader =
         modal.querySelector(".lightbox-loader");
 
+    const driveLink =
+        document.getElementById("photoDriveLink");
+
+    const fallback =
+        document.getElementById("photoLightboxFallback");
+
+    const fallbackLink =
+        document.getElementById("photoLightboxFallbackLink");
+
 
     /* =====================================================
        OPEN LIGHTBOX
@@ -1229,6 +1321,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const image =
             trigger.dataset.galleryImage;
+
+        const driveUrl =
+            trigger.dataset.galleryDriveUrl || image;
 
         const title =
             trigger.dataset.galleryTitle || "Photo preview";
@@ -1249,6 +1344,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         /* Update title */
         lightboxTitle.textContent = title;
+
+        if (driveLink) {
+            driveLink.href = driveUrl;
+        }
+        if (fallbackLink) {
+            fallbackLink.href = driveUrl;
+        }
+        if (fallback) {
+            fallback.hidden = true;
+        }
+        lightboxImage.hidden = false;
 
 
         /*
@@ -1282,6 +1388,10 @@ document.addEventListener("DOMContentLoaded", function () {
         preload.onerror = function () {
 
             lightboxImage.alt = "Unable to load gallery photo";
+            lightboxImage.hidden = true;
+            if (fallback) {
+                fallback.hidden = false;
+            }
 
             if (loader) {
                 loader.classList.add("hidden");
@@ -1307,6 +1417,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             lightboxImage.removeAttribute("src");
             lightboxImage.alt = "";
+            lightboxImage.hidden = false;
+            if (fallback) {
+                fallback.hidden = true;
+            }
 
         }, 250);
 

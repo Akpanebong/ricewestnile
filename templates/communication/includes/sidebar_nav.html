@@ -30,10 +30,15 @@
 <div class="sidebar-section">
 
     <span>
-        CONTENT MANAGEMENT
+        COMMUNICATION
     </span>
 
 </div>
+
+<a href="{% url 'comm:staff_events:list' %}" class="sidebar-dashboard {% if request.resolver_match.namespace == 'staff_events' %}active{% endif %}">
+    <span class="sidebar-nav-icon"><i class="fa-solid fa-calendar-days"></i></span>
+    <span class="sidebar-nav-text">Staff Events</span>
+</a>
 
 
 <!-- =====================================================
@@ -206,18 +211,6 @@
 </div>
 
 
-<!-- =====================================================
-     WORKFLOW
-===================================================== -->
-
-<div class="sidebar-section">
-
-    <span>
-        WORKFLOW
-    </span>
-
-</div>
-
 
 {% if request.user|has_group:"REVIEW" or request.user.can_review %}
 <!-- =====================================================
@@ -247,18 +240,6 @@
 {% endif %}
 
 
-<!-- =====================================================
-     COMMUNICATION
-===================================================== -->
-
-<div class="sidebar-section">
-
-    <span>
-        COMMUNICATION
-    </span>
-
-</div>
-
 <a href="{% url 'media_presence:broadcasts' %}" class="sidebar-dashboard {% if request.resolver_match.namespace == 'media_presence' and 'broadcast' in request.resolver_match.url_name %}active{% endif %}">
     <span class="sidebar-nav-icon"><i class="fa-solid fa-tower-broadcast"></i></span>
     <span class="sidebar-nav-text">Media Engagement and Archives </span>
@@ -267,6 +248,16 @@
 <a href="{% url 'media_presence:galleries' %}" class="sidebar-dashboard {% if request.resolver_match.namespace == 'media_presence' and 'galler' in request.resolver_match.url_name %}active{% endif %}">
     <span class="sidebar-nav-icon"><i class="fa-solid fa-images"></i></span>
     <span class="sidebar-nav-text">Documentation Library </span>
+</a>
+
+<a href="{% url 'media_presence:social_media' %}" class="sidebar-dashboard {% if request.resolver_match.namespace == 'media_presence' and 'social_media' in request.resolver_match.url_name %}active{% endif %}">
+    <span class="sidebar-nav-icon"><i class="fa-solid fa-share-nodes"></i></span>
+    <span class="sidebar-nav-text">Social Media</span>
+</a>
+
+<a href="{% url 'media_presence:newsletters' %}" class="sidebar-dashboard {% if request.resolver_match.namespace == 'media_presence' and 'newsletter' in request.resolver_match.url_name %}active{% endif %}">
+    <span class="sidebar-nav-icon"><i class="fa-solid fa-newspaper"></i></span>
+    <span class="sidebar-nav-text">Newsletters</span>
 </a>
 
 

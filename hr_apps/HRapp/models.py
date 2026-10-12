@@ -374,6 +374,32 @@ class Leave(models.Model):
         super().save(*args, **kwargs)
 
 
+class LeaveSchedule(models.Model):
+    STATUS_CHOICES = (("Planned", "Planned"), ("Reviewed", "Reviewed"), ("Cancelled", "Cancelled"))
+
+    employee = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="leave_schedules")
+    year = models.PositiveIntegerField()
+    leave_type = models.ForeignKey(LeaveType, on_delete=models.SET_NULL, null=True, blank=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Planned")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("year", "start_date", "employee__last_name")
+
+    def clean(self):
+        if self.end_date < self.start_date:
+            raise ValidationError("End date cannot be before start date.")
+        if self.start_date.year != self.year or self.end_date.year != self.year:
+            raise ValidationError("Both leave dates must fall within the selected plan year.")
+
+    def __str__(self):
+        return f"{self.employee} | {self.year} | {self.start_date} → {self.end_date}"
+
+
 class LeaveDocument(models.Model):
     leave = models.ForeignKey('Leave', on_delete=models.CASCADE, related_name='documents')
     file = models.FileField(upload_to='leave_documents/')

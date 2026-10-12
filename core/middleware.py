@@ -20,7 +20,7 @@ class RequireLoginForModulesMiddleware:
     the future that forgets the per-view check too.
     """
 
-    PROTECTED_PREFIXES = ("/garcis/", "/mne/monitoring/", "/asset/")
+    PROTECTED_PREFIXES = ("/garcis/", "/governance/", "/mne/monitoring/", "/asset/")
 
     def __init__(self, get_response):
         self.get_response = get_response

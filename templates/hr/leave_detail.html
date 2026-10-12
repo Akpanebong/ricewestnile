@@ -85,13 +85,15 @@
                     <!-- Approval Buttons -->
                     <section class="mt-4 text-center">
 
-                        {% if user|has_group:"Supervisor" and not leave.supervisor_approved and not leave.status == 'Denied' %}
+                        {% if request.user.employee == leave.supervisor %}
+                        {% if not leave.supervisor_approved and leave.status != 'Denied' %}
                         <form method="post" action="{% url 'approve_supervisor' leave.pk 'approved' %}" class="d-inline">
                             {% csrf_token %}
                             <button class="btn btn-success px-4 my-2">
                                 <i class="fa fa-thumbs-up"></i> Approve as Supervisor
                             </button>
                         </form>
+                        {% endif %}
                         {% endif %}
 
                         {% if user|has_group:"HR" and leave.supervisor_approved and not leave.hr_approved %}

@@ -1,15 +1,14 @@
 from django import forms
-from .models import Broadcast, PhotoGallery, GalleryPhoto
+from .models import Broadcast, PhotoGallery, GalleryPhoto, SocialMediaContent, Newsletter
 
 
 class BroadcastForm(forms.ModelForm):
     class Meta:
         model = Broadcast
-        fields = ["title", "summary", "youtube_url", "cover_image", "starts_at", "ends_at", "is_live", "is_published"]
-        widgets = {"starts_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
-                   "ends_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        fields = ["title", "summary", "media_url", "media_type", "cover_image", "published_date", "is_live", "is_published"]
+        widgets = {"published_date": forms.DateTimeInput(attrs={"type": "datetime-local"}),
                    "summary": forms.Textarea(attrs={"rows": 3}),
-                   "youtube_url": forms.URLInput(attrs={"placeholder": "https://youtu.be/8ifDzdXmyCI"})
+                   "media_url": forms.URLInput(attrs={"placeholder": "https://example.com/media-link"})
                    }
 
     def __init__(self, *args, **kwargs):
@@ -29,8 +28,7 @@ class BroadcastForm(forms.ModelForm):
 class GalleryForm(forms.ModelForm):
     class Meta:
         model = PhotoGallery
-        fields = ["project", "title", "description", "cover_image", "published"]
-        widgets = {"description": forms.Textarea(attrs={"rows": 3})}
+        fields = ["year", "quarter", "project", "activity", "cover_image", "published"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -48,3 +46,38 @@ class GalleryPhotoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
+        self.fields["image"].label = "Google Drive photo link"
+        self.fields["image"].widget = forms.URLInput(attrs={
+            "class": "form-control",
+            "placeholder": "https://drive.google.com/file/d/.../view?usp=sharing",
+        })
+        self.fields["image"].help_text = "Upload the photo to Google Drive, enable link sharing, then paste the link here."
+
+
+class SocialMediaContentForm(forms.ModelForm):
+    class Meta:
+        model = SocialMediaContent
+        fields = ["platform", "title", "content", "url", "published_at"]
+        widgets = {"content": forms.Textarea(attrs={"rows": 4}), "published_at": forms.DateTimeInput(attrs={"type": "datetime-local"})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-select" if isinstance(field.widget, forms.Select) else "form-control"
+
+
+class NewsletterForm(forms.ModelForm):
+    class Meta:
+        model = Newsletter
+        fields = ["year", "quarter", "file"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-select" if isinstance(field.widget, forms.Select) else "form-control"
+
+    def clean_file(self):
+        file = self.cleaned_data["file"]
+        if not file.name.lower().endswith(".pdf"):
+            raise forms.ValidationError("Newsletter files must be PDF documents.")
+        return file

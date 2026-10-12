@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Leave, Attendance, Training, \
+from .models import Leave, LeaveSchedule, Attendance, Training, \
     StaffDevice, LeaveDocument, Supervisor, SpecialLeaveType, LeaveType, SituationReport
 from .employee_models import (BankDetail, Employee, Dependant, EducationHistory, EmergencyContact, EmployeeAddress,
 EmployeeContact, EmployeePersonalInfo, WorkExperience,)
@@ -18,6 +18,13 @@ class LeaveAdmin(admin.ModelAdmin):
 @admin.register(LeaveDocument)
 class LeaveDocumentAdmin(admin.ModelAdmin):
     list_display = ("leave", "file", "created_at")
+
+
+@admin.register(LeaveSchedule)
+class LeaveScheduleAdmin(admin.ModelAdmin):
+    list_display = ("employee", "year", "leave_type", "start_date", "end_date", "status")
+    list_filter = ("year", "status", "leave_type")
+    search_fields = ("employee__first_name", "employee__last_name", "employee__username")
 
 
 @admin.register(Supervisor)

@@ -17,7 +17,7 @@
 
 <!-- Stats Cards -->
 <div class="row g-4 mb-4 stagger-grid">
-  <div class="col-md-4">
+  <div class="col-md-4 col-xl-3">
     <div class="card shadow-sm p-4 text-center interactive-card">
       <i class="bi bi-easel display-5 text-primary"></i>
       <h5 class="mt-3">Presentations</h5>
@@ -28,7 +28,7 @@
     </div>
   </div>
 
-  <div class="col-md-4">
+  <div class="col-md-4 col-xl-3">
     <div class="card shadow-sm p-4 text-center interactive-card">
       <i class="bi bi-file-earmark-text display-5 text-success"></i>
       <h5 class="mt-3">Reports</h5>
@@ -39,7 +39,7 @@
     </div>
   </div>
 
-  <div class="col-md-4">
+  <div class="col-md-4 col-xl-3">
     <div class="card shadow-sm p-4 text-center interactive-card">
       <i class="bi bi-clipboard-check display-5 text-warning"></i>
       <h5 class="mt-3">Review Queue</h5>
@@ -47,6 +47,51 @@
       <a href="{% url 'comm:review_queue' %}" class="btn btn-outline-warning w-100 mt-3">
         Review Now
       </a>
+    </div>
+  </div>
+
+  <div class="col-md-4 col-xl-3">
+    <div class="card shadow-sm p-4 text-center interactive-card">
+      <i class="fa-solid fa-tower-broadcast display-5 text-info"></i>
+      <h5 class="mt-3">Broadcasts</h5>
+      <h2 class="fw-bold" data-counter="{{ broadcasts_count|default:0 }}">{{ broadcasts_count }}</h2>
+      <a href="{% url 'media_presence:broadcasts' %}" class="btn btn-outline-info w-100 mt-3">View Broadcasts</a>
+    </div>
+  </div>
+
+  <div class="col-md-4 col-xl-3">
+    <div class="card shadow-sm p-4 text-center interactive-card">
+      <i class="fa-solid fa-images display-5 text-secondary"></i>
+      <h5 class="mt-3">Galleries</h5>
+      <h2 class="fw-bold" data-counter="{{ galleries_count|default:0 }}">{{ galleries_count }}</h2>
+      <a href="{% url 'media_presence:galleries' %}" class="btn btn-outline-secondary w-100 mt-3">View Galleries</a>
+    </div>
+  </div>
+
+  <div class="col-md-4 col-xl-3">
+    <div class="card shadow-sm p-4 text-center interactive-card">
+      <i class="fa-solid fa-camera display-5 text-primary"></i>
+      <h5 class="mt-3">Gallery Photos</h5>
+      <h2 class="fw-bold" data-counter="{{ gallery_photos_count|default:0 }}">{{ gallery_photos_count }}</h2>
+      <a href="{% url 'media_presence:galleries' %}" class="btn btn-outline-primary w-100 mt-3">View Library</a>
+    </div>
+  </div>
+
+  <div class="col-md-4 col-xl-3">
+    <div class="card shadow-sm p-4 text-center interactive-card">
+      <i class="fa-solid fa-hashtag display-5 text-danger"></i>
+      <h5 class="mt-3">Social Media</h5>
+      <h2 class="fw-bold" data-counter="{{ social_media_count|default:0 }}">{{ social_media_count }}</h2>
+      <a href="{% url 'media_presence:social_media' %}" class="btn btn-outline-danger w-100 mt-3">View Content</a>
+    </div>
+  </div>
+
+  <div class="col-md-4 col-xl-3">
+    <div class="card shadow-sm p-4 text-center interactive-card">
+      <i class="fa-solid fa-newspaper display-5 text-dark"></i>
+      <h5 class="mt-3">Newsletters</h5>
+      <h2 class="fw-bold" data-counter="{{ newsletters_count|default:0 }}">{{ newsletters_count }}</h2>
+      <a href="{% url 'media_presence:newsletters' %}" class="btn btn-outline-dark w-100 mt-3">View Newsletters</a>
     </div>
   </div>
 </div>

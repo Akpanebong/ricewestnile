@@ -27,6 +27,7 @@ from notification.utils import notify
 from finance_app.finance.models import AccountingForm, AdminExpenseNote, CashRequisition, CashRequisitionItem
 
 from account.templatetags.custom_tags import has_group
+from account.permissions import deny_signatory_conflict, signature_required
 from .models import (
     AuditLog, Supplier, ProcurementPlan, RFQ,
     Requisition, Product, RFQSendLog, PurchaseOrder, SupplierSpendReport)
@@ -441,6 +442,7 @@ def notify_programs_head(request, procurement):
 
 
 @login_required(login_url='login')
+@signature_required
 def procurement_create(request):
     """Create ProcurementPlan and its items."""
     if not request.user.is_superuser and not Project.objects.filter(project_head=request.user).exists():
@@ -491,6 +493,7 @@ def procurement_create(request):
 
 
 @login_required(login_url='login')
+@signature_required
 def procurement_update(request, pk):
     plan = get_object_or_404(ProcurementPlan, pk=pk)
 
@@ -681,6 +684,7 @@ def is_executive_director(user):
 
 
 @login_required(login_url="login")
+@signature_required
 def review_procurement(request, pk):
 
     procurement = get_object_or_404(ProcurementPlan, pk=pk)
@@ -693,6 +697,13 @@ def review_procurement(request, pk):
 
     if action not in ["Reviewed", "Rejected"]:
         messages.error(request, "Invalid action.")
+        return redirect("requisition_detail", pk=procurement.pk)
+
+    if deny_signatory_conflict(
+        request,
+        requester=procurement.requester,
+        previous_signers=[procurement.created_by, procurement.reviewed_by, procurement.checked_by, procurement.approved_by],
+    ):
         return redirect("requisition_detail", pk=procurement.pk)
 
     if action == "Reviewed":
@@ -750,6 +761,7 @@ def review_procurement(request, pk):
 
 
 @login_required(login_url="login")
+@signature_required
 def approve_procurement(request, pk):
 
     procurement = get_object_or_404(
@@ -772,6 +784,13 @@ def approve_procurement(request, pk):
 
     if action not in ["Approved", "Rejected"]:
         messages.error(request, "Invalid action.")
+        return redirect("requisition_detail", pk=pk)
+
+    if deny_signatory_conflict(
+        request,
+        requester=procurement.requester,
+        previous_signers=[procurement.created_by, procurement.reviewed_by, procurement.checked_by, procurement.approved_by],
+    ):
         return redirect("requisition_detail", pk=pk)
 
     if action == "Approved":

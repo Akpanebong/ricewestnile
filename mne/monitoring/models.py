@@ -19,7 +19,6 @@ ENTERPRISE_TYPES = [
 ]
 
 
-
 class StrategicObjective(models.Model):
     code = models.CharField(max_length=50, help_text='E.g: SO 1', unique=True)   # e.g. 'SO1'
     title = models.CharField(max_length=400)

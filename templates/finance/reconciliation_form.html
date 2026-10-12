@@ -1,5 +1,6 @@
 
 {% extends "finance/finance_tools_base.html" %}
+{% load humanize %}
 
 {% block title %}Bank reconciliation | Finance{% endblock %}
 
@@ -495,6 +496,42 @@
         transform: translateY(-1px);
     }
 
+    .reconciliation-balance-summary {
+        margin-top: 1.25rem;
+        padding: .9rem 1rem;
+        border: 1px solid #dce9e5;
+        border-radius: 12px;
+        background: #f7fbfa;
+    }
+
+    .reconciliation-balance-summary .balance-label {
+        color: #64748b;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .reconciliation-balance-summary .balance-value {
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .reconciliation-balance-summary .balance-note {
+        margin-top: .2rem;
+        color: #64748b;
+        font-size: .7rem;
+    }
+
+    .reconciliation-balance-summary .difference-value.is-balanced {
+        color: #047857;
+    }
+
+    .reconciliation-balance-summary .difference-value.is-outstanding {
+        color: #b45309;
+    }
+
     /* =========================================================
        RESPONSIVE
        ========================================================= */
@@ -618,6 +655,7 @@
 
                     <p class="reconciliation-description">
                         {{ cash_book.name }}
+                        <span class="d-block">{{ cash_book.get_cashbook_type_display }}</span>
                         · Reconcile statement balance to the cash book.
                     </p>
 
@@ -757,6 +795,32 @@
 
                     {% endfor %}
 
+                </div>
+
+                <div class="reconciliation-balance-summary" aria-live="polite">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-12 col-md-4">
+                            <div class="balance-label">Cashbook closing balance</div>
+                            <div class="balance-value">
+                                <span data-cashbook-closing>{{ cash_book.closing_balance|floatformat:2|intcomma }}</span>
+                                <span>{{ display_currency }}</span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="balance-label">Adjusted balance</div>
+                            <div class="balance-value">
+                                <span data-adjusted-balance>0.00</span>
+                                <span>{{ display_currency }}</span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="balance-label">Difference</div>
+                            <div class="balance-value difference-value" data-reconciliation-difference>0.00 {{ display_currency }}</div>
+                        </div>
+                    </div>
+                    <div class="balance-note">
+                        Difference updates automatically as the statement balance and reconciling item amounts are entered.
+                    </div>
                 </div>
 
             </div>
@@ -927,5 +991,47 @@
     </div>
 
 </div>
+
+<script>
+    (function () {
+        const statementInput = document.getElementById("id_statement_balance");
+        const closingValue = document.querySelector("[data-cashbook-closing]");
+        const adjustedValue = document.querySelector("[data-adjusted-balance]");
+        const differenceValue = document.querySelector("[data-reconciliation-difference]");
+        if (!statementInput || !closingValue || !adjustedValue || !differenceValue) return;
+
+        const currency = "{{ display_currency|escapejs }}";
+        const numberValue = (element) => {
+            const value = parseFloat(element && element.value);
+            return Number.isFinite(value) ? value : 0;
+        };
+
+        const refreshBalances = () => {
+            let adjusted = numberValue(statementInput);
+            document.querySelectorAll("input[name$='-amount']").forEach((amountInput) => {
+                const prefix = amountInput.name.slice(0, -"-amount".length);
+                const typeInput = document.querySelector(`[name='${prefix}-item_type']`);
+                const amount = numberValue(amountInput);
+                if (typeInput && (typeInput.value === "payment" || typeInput.value === "receipt_cashbook")) adjusted -= amount;
+                if (typeInput && (typeInput.value === "receipt" || typeInput.value === "payment_statement")) adjusted += amount;
+            });
+
+            const closing = parseFloat(closingValue.textContent.replace(/,/g, "")) || 0;
+            const difference = adjusted - closing;
+            const formatAmount = (value) => value.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+            adjustedValue.textContent = formatAmount(adjusted);
+            differenceValue.textContent = `${formatAmount(difference)} ${currency}`;
+            differenceValue.classList.toggle("is-balanced", Math.abs(difference) < 0.005);
+            differenceValue.classList.toggle("is-outstanding", Math.abs(difference) >= 0.005);
+        };
+
+        document.querySelector("form").addEventListener("input", refreshBalances);
+        document.querySelector("form").addEventListener("change", refreshBalances);
+        refreshBalances();
+    }());
+</script>
 
 {% endblock %}

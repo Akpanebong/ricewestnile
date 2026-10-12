@@ -4,62 +4,271 @@
 {% block system_name %}Daily System Activity{% endblock %}
 
 {% block content %}
+
 <div class="container-fluid py-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-        <div>
-            <span class="text-uppercase text-muted small fw-semibold">ED Assurance</span>
-            <h1 class="h3 mb-1">Daily System Activity</h1>
-            <p class="text-muted mb-0">Activity recorded for {{ selected_date|date:"l, d F Y" }}.</p>
+
+<!-- Page Header -->
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">
+                ED Assurance
+            </span>
+            <span class="text-muted small">
+                System monitoring
+            </span>
         </div>
-        <form method="get" class="d-flex gap-2 align-items-end">
-            <div>
-                <label for="activity-date" class="form-label small mb-1">Activity date</label>
-                <input id="activity-date" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-control">
-            </div>
-            <button class="btn btn-primary" type="submit">View day</button>
-        </form>
+
+        <h1 class="h3 fw-bold mb-1">Daily System Activity</h1>
+
+        <p class="text-muted mb-0">
+            System activity recorded for
+            <strong class="text-dark">
+                {{ selected_date|date:"l, d F Y" }}
+            </strong>
+        </p>
     </div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Time</th>
-                        <th>User</th>
-                        <th>Module</th>
-                        <th>Action</th>
-                        <th>Path</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for activity in page_obj %}
-                    <tr>
-                        <td>{{ activity.created_at|date:"H:i:s" }}</td>
-                        <td>{{ activity.actor|default:"System" }}</td>
-                        <td>{{ activity.module|title }}</td>
-                        <td><span class="badge text-bg-secondary">{{ activity.action }}</span></td>
-                        <td class="text-break">{{ activity.path|default:"—" }}</td>
-                        <td>{{ activity.status_code }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="6" class="text-center text-muted py-5">No activity recorded for this date.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Date Filter -->
+    <form method="get" class="d-flex flex-column flex-sm-row align-items-sm-end gap-2">
+        <div>
+            <label for="activity-date" class="form-label small fw-semibold text-muted mb-1">
+                Activity date
+            </label>
+            <input
+                id="activity-date"
+                type="date"
+                name="date"
+                value="{{ selected_date|date:'Y-m-d' }}"
+                class="form-control"
+                aria-label="Select activity date"
+            >
         </div>
-        {% if page_obj.paginator.num_pages > 1 %}
-        <div class="card-footer bg-white">
+
+        <button class="btn btn-primary px-4" type="submit">
+            <i class="fas fa-calendar-day me-2"></i>
+            View day
+        </button>
+    </form>
+</div>
+
+<!-- Activity Card -->
+<div class="card border-0 shadow-sm overflow-hidden">
+
+    <!-- Card Header -->
+    <div class="card-header bg-white border-bottom py-3 px-4">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+            <div>
+                <h2 class="h6 fw-bold mb-1">System Activity Log</h2>
+                <p class="text-muted small mb-0">
+                    Chronological record of system actions and requests.
+                </p>
+            </div>
+
+            {% if page_obj.paginator.count %}
+            <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
+                {{ page_obj.paginator.count }}
+                {% if page_obj.paginator.count == 1 %}activity{% else %}activities{% endif %}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Activity Table -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" class="ps-4 text-nowrap">Time</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Module</th>
+                    <th scope="col">Action</th>
+                    <th scope="col">Request Path</th>
+                    <th scope="col" class="text-center pe-4">Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for activity in page_obj %}
+                <tr>
+
+                    <!-- Time -->
+                    <td class="ps-4 text-nowrap">
+                        <span class="fw-semibold text-dark">
+                            {{ activity.created_at|date:"H:i:s" }}
+                        </span>
+                    </td>
+
+                    <!-- User -->
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div
+                                class="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                                style="width: 34px; height: 34px;"
+                                aria-hidden="true"
+                            >
+                                <i class="fas fa-user text-muted small"></i>
+                            </div>
+
+                            <div class="text-truncate" style="max-width: 180px;">
+                                <span class="fw-semibold text-dark">
+                                    {{ activity.actor|default:"System" }}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Module -->
+                    <td>
+                        <span class="text-dark fw-medium">
+                            {{ activity.module|title }}
+                        </span>
+                    </td>
+
+                    <!-- Action -->
+                    <td>
+                        <span class="badge rounded-pill text-bg-secondary px-3 py-2">
+                            {{ activity.action }}
+                        </span>
+                    </td>
+
+                    <!-- Path -->
+                    <td>
+                        {% if activity.path %}
+                            <code
+                                class="small text-muted d-inline-block text-truncate"
+                                style="max-width: 360px;"
+                                title="{{ activity.path }}"
+                            >
+                                {{ activity.path }}
+                            </code>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Status -->
+                    <td class="text-center pe-4">
+                        {% if activity.status_code >= 200 and activity.status_code < 300 %}
+                            <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">
+                                {{ activity.status_code }}
+                            </span>
+                        {% elif activity.status_code >= 300 and activity.status_code < 400 %}
+                            <span class="badge rounded-pill bg-warning-subtle text-warning px-3 py-2">
+                                {{ activity.status_code }}
+                            </span>
+                        {% elif activity.status_code >= 400 %}
+                            <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">
+                                {{ activity.status_code }}
+                            </span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-2">
+                                {{ activity.status_code|default:"—" }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="py-4">
+                            <div
+                                class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                                style="width: 56px; height: 56px;"
+                            >
+                                <i class="fas fa-clipboard-list text-muted fs-5"></i>
+                            </div>
+
+                            <h3 class="h6 fw-bold text-dark mb-1">
+                                No activity recorded
+                            </h3>
+
+                            <p class="text-muted small mb-0">
+                                There is no system activity recorded for
+                                {{ selected_date|date:"d F Y" }}.
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="card-footer bg-white border-top px-4 py-3">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+
+            <div class="small text-muted">
+                Showing page
+                <strong class="text-dark">{{ page_obj.number }}</strong>
+                of
+                <strong class="text-dark">{{ page_obj.paginator.num_pages }}</strong>
+            </div>
+
             <nav aria-label="Activity pages">
-                <ul class="pagination mb-0">
-                    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?date={{ selected_date|date:'Y-m-d' }}&page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
-                    <li class="page-item active"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
-                    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?date={{ selected_date|date:'Y-m-d' }}&page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+                <ul class="pagination pagination-sm mb-0">
+
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="?date={{ selected_date|date:'Y-m-d' }}&page={{ page_obj.previous_page_number }}"
+                            aria-label="Previous page"
+                        >
+                            <i class="fas fa-chevron-left me-1"></i>
+                            Previous
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-chevron-left me-1"></i>
+                            Previous
+                        </span>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">
+                            {{ page_obj.number }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="?date={{ selected_date|date:'Y-m-d' }}&page={{ page_obj.next_page_number }}"
+                            aria-label="Next page"
+                        >
+                            Next
+                            <i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Next
+                            <i class="fas fa-chevron-right ms-1"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+
                 </ul>
             </nav>
+
         </div>
-        {% endif %}
     </div>
+    {% endif %}
+
+</div>
+
+
 </div>
 {% endblock %}

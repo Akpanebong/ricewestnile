@@ -3,7 +3,7 @@ from django.core import mail
 from django.test import TestCase, RequestFactory
 from django.urls import reverse
 
-from .models import Profile, ExitProcess, ExitStepStatus, ExitStepType
+from .models import Department, Profile, ExitProcess, ExitStepStatus, ExitStepType, Unit
 from .utils import generate_strong_password, meal_team_required, superuser_required
 from .views import token_generator
 
@@ -29,6 +29,38 @@ class ProfileModelTests(TestCase):
             username="jdoe", password="pw", first_name="Jane", last_name="Doe"
         )
         self.assertEqual(str(profile), "Jane Doe")
+
+    def test_unit_groups_are_exclusive_when_unit_changes(self):
+        department = Department.objects.create(name="Finance")
+        first_unit = Unit.objects.create(department=department, name="Finance")
+        second_unit = Unit.objects.create(department=department, name="IT")
+        profile = Profile.objects.create_user(
+            username="unituser", password="pw", unit=first_unit
+        )
+        profile.groups.add(Group.objects.create(name="Admin"))
+        self.assertTrue(profile.groups.filter(name="Finance").exists())
+        self.assertTrue(profile.groups.filter(name="Admin").exists())
+
+        profile.unit = second_unit
+        profile.save()
+        profile.refresh_from_db()
+        self.assertFalse(profile.groups.filter(name="Finance").exists())
+        self.assertTrue(profile.groups.filter(name="IT").exists())
+        self.assertTrue(profile.groups.filter(name="Admin").exists())
+
+    def test_role_groups_are_removed_when_roles_are_released(self):
+        department = Department.objects.create(name="Operations")
+        unit = Unit.objects.create(department=department, name="Operations")
+        profile = Profile.objects.create_user(
+            username="roleuser", password="pw", department=department,
+            unit=unit, can_review=True, is_CMT=True,
+        )
+        self.assertEqual(profile.groups.filter(name__in=["REVIEW", "CMT"]).count(), 2)
+
+        profile.can_review = False
+        profile.is_CMT = False
+        profile.save()
+        self.assertFalse(profile.groups.filter(name__in=["REVIEW", "CMT"]).exists())
 
 
 class ExitProcessModelTests(TestCase):

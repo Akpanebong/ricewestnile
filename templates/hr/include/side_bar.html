@@ -20,6 +20,17 @@
 
 </a>
 
+{% if request.user|has_group:"Supervisor" or request.user.is_superuser %}
+<a href="{% url 'supervisor_leave_list' %}"
+   class="sidebar-dashboard
+   {% if current_url == 'supervisor_leave_list' %}active{% endif %}">
+    <span class="sidebar-nav-icon">
+        <i class="fa-solid fa-user-check"></i>
+    </span>
+    <span class="sidebar-nav-text">Supervisor leave queue</span>
+</a>
+{% endif %}
+
 
 {% if request.user.is_superuser or request.user|has_group:"ED" %}
 <a href="{% url 'edit_access_requests' %}"

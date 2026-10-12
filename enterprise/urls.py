@@ -33,7 +33,7 @@ urlpatterns = [
     path("mne/core/", include(("core.urls", "core"), namespace="mne_core")),
     path("mne/monitoring/", include("mne.monitoring.urls")),
     path("garcis/", include(("risk_apps.garcis_urls", "garcis_core"), namespace="garcis")),
-    path("garcis/governance/", include("risk_apps.governance.urls")),
+    path("governance/", include("risk_apps.governance.urls")),
     path("garcis/audit/", include("risk_apps.audit.urls")),
     path("garcis/analytics/", include("risk_apps.analytics.urls")),
     path("garcis/compliance/", include("risk_apps.compliance.urls")),

@@ -10,6 +10,8 @@ from django.views.generic import ListView, DetailView
 from django.db.models import Sum, Q
 
 from account.models import Profile
+from account.permissions import deny_signatory_conflict, signature_required
+from account.templatetags.custom_tags import has_group
 from core.project_models import Project
 from notification.utils import notify
 from procurement.procureapp.forms import RequisitionForm, RequisitionItemFormSet
@@ -17,8 +19,10 @@ from procurement.procureapp.models import Requisition, RequisitionItem, Product
 from procurement.procureapp.utils import render_pdf, send_html_email
 
 @login_required(login_url='login')
+@signature_required
 def req_create(request):
-    if not request.user.is_superuser and not Project.objects.filter(project_officer=request.user).exists():
+    finance_req = has_group(request.user, 'Finance')
+    if not request.user.is_superuser and not Project.objects.filter(project_officer=request.user).exists() and not finance_req:
         messages.warning(request,"Only Project Officers can create procurement requisitions.")
         return redirect('req_list')
 
@@ -92,6 +96,7 @@ def req_create(request):
 
 
 @login_required(login_url='login')
+@signature_required
 def req_update(request, pk):
     po = get_object_or_404(Requisition, pk=pk)
 
@@ -141,6 +146,7 @@ def req_update(request, pk):
 
 
 @login_required(login_url='login')
+@signature_required
 def req_approve(request, pk):
 
     po = get_object_or_404(Requisition, pk=pk)
@@ -194,6 +200,13 @@ def req_approve(request, pk):
         reverse("po_detail", args=[po.pk]))
 
     user = request.user
+
+    if deny_signatory_conflict(
+        request,
+        requester=po.issued_by,
+        previous_signers=[po.created_by, po.reviewed_by, po.checked_by, po.approved_by],
+    ):
+        return redirect("po_detail", pk=po.pk)
 
     # =========================
     # PROJECT HEAD REVIEW

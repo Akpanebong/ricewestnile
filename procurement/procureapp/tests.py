@@ -1,8 +1,37 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from core.project_models import Project, ProjectBudget
 from .models import ProcurementPlan, Supplier, Requisition, RFQ, RFQSendLog, PurchaseOrder
+
+
+class ProcurementSignatureRequirementTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="procurement-finance",
+            password="test-pass-123",
+        )
+        Group.objects.create(name="Finance").user_set.add(self.user)
+
+    def test_unsigned_user_is_redirected_to_profile_before_requisition(self):
+        self.client.login(username="procurement-finance", password="test-pass-123")
+        response = self.client.get(reverse("req_create"))
+        self.assertRedirects(
+            response,
+            reverse("update_employee", kwargs={"slug": self.user.slug}),
+        )
+
+    def test_signed_user_can_open_requisition_form(self):
+        self.user.signature = SimpleUploadedFile(
+            "signature.png", b"signature", content_type="image/png"
+        )
+        self.user.save()
+        self.client.login(username="procurement-finance", password="test-pass-123")
+        response = self.client.get(reverse("req_create"))
+        self.assertEqual(response.status_code, 200)
 
 
 class ProcurementPlanBudgetTests(TestCase):

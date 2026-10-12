@@ -1,6 +1,10 @@
 from datetime import timedelta
+from functools import wraps
 
 from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils import timezone
 
 from hr_apps.HRapp.templatetags.group_tags import has_group
@@ -12,6 +16,85 @@ def is_hr(user) -> bool:
 
 def is_cmt(user) -> bool:
     return bool(user and (user.is_superuser or getattr(user, "is_CMT", False)))
+
+
+def has_uploaded_signature(user) -> bool:
+    """Return True only when the user's profile signature file is available."""
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+
+    signature = getattr(user, "signature", None)
+    if not signature or not getattr(signature, "name", None):
+        return False
+
+    try:
+        return signature.storage.exists(signature.name)
+    except (OSError, ValueError):
+        return False
+
+
+def signature_required(view):
+    """Block workflow writes until the acting profile has a signature."""
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        if has_uploaded_signature(request.user):
+            return view(request, *args, **kwargs)
+
+        messages.warning(
+            request,
+            "Upload your signature to your profile before creating, reviewing, checking, or approving documents.",
+        )
+        return redirect(reverse("update_employee", kwargs={"slug": request.user.slug}))
+
+    return wrapped
+
+
+def _signatory_user_id(actor):
+    """Resolve a profile/user/employee signer to the underlying user id."""
+    if actor is None:
+        return None
+    user_id = getattr(actor, "user_id", None)
+    if user_id:
+        return user_id
+    return getattr(actor, "pk", None)
+
+
+def can_sign_without_conflict(user, *, requester=None, previous_signers=()):
+    """Enforce separation of duties for a document workflow.
+
+    ``requester`` may be a User/Profile or an Employee; previous signers are
+    compared by their underlying account id. This keeps the rule consistent
+    across HR (Employee supervisor) and the other apps (User foreign keys).
+    """
+    actor_id = _signatory_user_id(user)
+    if not actor_id:
+        return False
+
+    if _signatory_user_id(requester) == actor_id:
+        return False
+
+    return not any(
+        _signatory_user_id(signer) == actor_id
+        for signer in previous_signers
+        if signer is not None
+    )
+
+
+def deny_signatory_conflict(request, *, requester=None, previous_signers=()):
+    """Add the standard SoD error and return whether the action is blocked."""
+    if can_sign_without_conflict(
+        request.user,
+        requester=requester,
+        previous_signers=previous_signers,
+    ):
+        return False
+
+    messages.error(
+        request,
+        "Separation of duties prevents you from signing this form because "
+        "you are the requester or have already signed it at another stage.",
+    )
+    return True
 
 
 def can_update_or_edit(user) -> bool:

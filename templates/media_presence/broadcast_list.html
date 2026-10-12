@@ -139,7 +139,7 @@
                     </span>
 
                     <span>
-                        {{ broadcast.starts_at|date:"M d, Y · H:i" }}
+                        {{ broadcast.published_date|date:"M d, Y · H:i" }}
                     </span>
 
                 </div>
@@ -155,17 +155,17 @@
 
                 <a
                     class="btn broadcast-watch-btn"
-                    href="{{ broadcast.youtube_url }}"
+                    href="{{ broadcast.media_url }}"
                     target="_blank"
                     rel="noopener"
                 >
 
                     <span class="youtube-icon">
-                        <i class="fa-brands fa-youtube"></i>
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
                     </span>
 
                     <span>
-                        Watch on YouTube
+                        Open {{ broadcast.get_media_type_display }}
                     </span>
 
                     <i class="fa-solid fa-arrow-up-right-from-square broadcast-arrow"></i>

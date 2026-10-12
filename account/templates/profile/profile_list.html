@@ -31,6 +31,15 @@
         </form>
     </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-2"><div class="card border-0 shadow-sm h-100"><div class="card-body"><i class="fa-solid fa-mars text-primary"></i><div class="small text-muted mt-2">Male</div><div class="h3 mb-0">{{ profile_counts.male }}</div></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card border-0 shadow-sm h-100"><div class="card-body"><i class="fa-solid fa-venus text-danger"></i><div class="small text-muted mt-2">Female</div><div class="h3 mb-0">{{ profile_counts.female }}</div></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card border-0 shadow-sm h-100"><div class="card-body"><i class="fa-solid fa-users text-success"></i><div class="small text-muted mt-2">Staff</div><div class="h3 mb-0">{{ profile_counts.staff }}</div></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card border-0 shadow-sm h-100"><div class="card-body"><i class="fa-solid fa-hand-holding-heart text-info"></i><div class="small text-muted mt-2">Volunteer</div><div class="h3 mb-0">{{ profile_counts.volunteer }}</div></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card border-0 shadow-sm h-100"><div class="card-body"><i class="fa-solid fa-user-graduate text-warning"></i><div class="small text-muted mt-2">Intern</div><div class="h3 mb-0">{{ profile_counts.intern }}</div></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card border-0 shadow-sm h-100"><div class="card-body"><i class="fa-solid fa-people-group text-secondary"></i><div class="small text-muted mt-2">Community Structure</div><div class="h3 mb-0">{{ profile_counts.community_structure }}</div></div></div></div>
+    </div>
+
     <!-- FILTER BUTTONS -->
     {% if request.user|has_group:"HR" or request.user.is_superuser %}
     <div class="mb-4 d-flex flex-wrap gap-2">
@@ -55,6 +64,10 @@
                    <thead class="table-light">
                         <tr class="text-uppercase small text-muted">
                             <th style="width:50px;">#</th>
+                            <th style="min-width:120px;">Staff ID</th>
+                            <th style="min-width:150px;">Job Title</th>
+                            <th style="min-width:100px;">Gender</th>
+                            <th style="min-width:160px;">Program Area</th>
 
                             {% if data_type == 'profiles' or data_type == 'employee' %}
                                 <th style="min-width:220px;">Full Name</th>
@@ -95,10 +108,31 @@
                             </td>
 
                             {% if data_type == 'profiles' or data_type == 'employee' %}
+                            <td data-label="Staff ID">{% if data_type == 'profiles' %}{{ obj.employee.staff_id|default:"—" }}{% else %}{{ obj.staff_id|default:"—" }}{% endif %}</td>
+                            <td data-label="Job Title">{% if data_type == 'profiles' %}{{ obj.employee.job_title|default:"—" }}{% else %}{{ obj.job_title|default:"—" }}{% endif %}</td>
+                            <td data-label="Gender">{{ obj.gender }}</td>
+                            <td data-label="Program Area">{% if data_type == 'profiles' %}{{ obj.program_area|default:"—" }}{% else %}{{ obj.user.program_area|default:"—" }}{% endif %}</td>
+                            {% else %}
+                            <td data-label="Staff ID">{{ obj.staff_id|default:"—" }}</td>
+                            <td data-label="Job Title">{{ obj.job_title|default:"—" }}</td>
+                            <td data-label="Gender">{{ obj.gender }}</td>
+                            <td data-label="Program Area">{{ obj.user.program_area|default:"—" }}</td>
+                            {% endif %}
+
+                            {% if data_type == 'profiles' or data_type == 'employee' %}
 
                             <!-- NAME -->
                             <td class="fw-semibold" data-label="Full Name">
-                                {% if request.user.employee == obj.supervised_by %}
+                                {% if data_type == 'profiles' %}
+                                    {% if request.user.employee == obj.employee.supervised_by %}
+                                    <a href="{% url 'create_appraisal' obj.employee.pk %}" class="text-decoration-none text-dark">
+                                        {{ obj }}
+                                        <div class="small text-success">Send Appraisal</div>
+                                    </a>
+                                    {% else %}
+                                        {{ obj }}
+                                    {% endif %}
+                                {% elif request.user.employee == obj.supervised_by %}
                                 <a href="{% url 'create_appraisal' obj.pk %}" class="text-decoration-none text-dark">
                                     {{ obj }}
                                     <div class="small text-success">Send Appraisal</div>
@@ -129,7 +163,7 @@
                             </td>
 
                             <!-- PHONE -->
-                            <td data-label="Phone">{{ obj.phone }}</td>
+                            <td data-label="Phone">{% if data_type == 'profiles' %}{{ obj.phone }}{% else %}{{ obj.user.phone }}{% endif %}</td>
 
                             <!-- CATEGORY -->
                             {% if data_type == 'profiles' %}
@@ -173,6 +207,7 @@
 
                             <!-- INTERNSHIP / OTHERS -->
                             <td class="fw-semibold" data-label="Name">
+
                             {% if request.user.employee == obj.supervised_by %}
                                 <a href="{% url 'create_appraisal' obj.pk %}" class="text-decoration-none text-dark">
                                     {{ obj }}
@@ -210,7 +245,7 @@
 
                         {% empty %}
                         <tr>
-                            <td colspan="8" class="text-center py-5">
+                            <td colspan="12" class="text-center py-5">
                                 <div class="empty-state">
                                     <div class="empty-state-icon">
                                         <i class="fa-solid fa-magnifying-glass"></i>

@@ -97,6 +97,8 @@ class Profile(AbstractUser):
     title = models.CharField(max_length=120, blank=True)
     designation = models.CharField(max_length=50, null=True, blank=True)
     phone = models.CharField(max_length=50, blank=True)
+    alternative_email = models.EmailField(blank=True, help_text="Backup email used for password recovery when the primary email is unavailable.")
+    forum_last_seen_at = models.DateTimeField(null=True, blank=True, editable=False)
     address = models.TextField(blank=True)
     slug = models.SlugField(null=True, blank=True, unique=True, editable=False)
     signature = models.FileField(upload_to="Signature", blank=True, null=True)
@@ -104,7 +106,7 @@ class Profile(AbstractUser):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Probation", db_index=True)
     probation_starts = models.DateField(null=True, blank=True)
     probation_ends = models.DateField(null=True, blank=True)
-    is_CMT = models.BooleanField(default=False)
+    is_CMT = models.BooleanField(verbose_name='Staff is CMT member?', default=False)
     can_review = models.BooleanField(default=False)
     display_currency = models.CharField(
         max_length=3,

@@ -1,4 +1,4 @@
-{% extends "garcis/base.html" %}
+{% extends "governance/base.html" %}
 
 {% block title %}Controls{% endblock %}
 
@@ -6,7 +6,7 @@
 <div class="container-fluid py-4">
     <div class="card p-3">
         <h4>Control Library</h4>
-                <p align="right"><a href="{% url 'control_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i> Create Control</a> </p>
+                {% if governance_can_create %}<p align="right"><a href="{% url 'control_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i> Create Control</a> </p>{% endif %}
 
         <table class="table table-striped">
             <thead><tr><th>ID</th><th>Title</th><th>Policy</th><th>Status</th><th>Effectiveness</th></tr></thead>

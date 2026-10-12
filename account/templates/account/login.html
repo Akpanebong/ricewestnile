@@ -155,8 +155,8 @@
                 {% endif %}
 
                 <div class="mb-3">
-                    <label for="id_username" class="form-label fw-semibold">Username</label>
-                    <input id="id_username" name="username" type="text" autocomplete="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}">
+                    <label for="id_username" class="form-label fw-semibold">Staff ID, phone, email, or username</label>
+                    <input id="id_username" name="username" type="text" autocomplete="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" placeholder="Enter any registered login identifier">
                     {% for error in form.username.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
                 </div>
 

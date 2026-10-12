@@ -211,9 +211,9 @@ class FinanceBudgetAdmin(admin.ModelAdmin):
 
 @admin.register(models.FinanceBudgetLine)
 class FinanceBudgetLineAdmin(admin.ModelAdmin):
-    list_display = ("budget", "category", "total")
+    list_display = ("budget", "code", "description", "price_per_unit", "units", "frequency", "total")
     list_filter = ("budget",)
-    search_fields = ("category__code", "category__name", "activity")
+    search_fields = ("code", "description", "activity")
 
 
 @admin.register(models.BudgetPerformance)

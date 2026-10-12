@@ -161,6 +161,7 @@
                         </form>
 
                         <!-- Add -->
+                        {% if request.user|has_group:'Procurement' %}
                         <a href="{% url 'core:project_create'  %}"
                            class="btn btn-primary enterprise-btn px-4">
 
@@ -169,6 +170,7 @@
                             New Project
 
                         </a>
+                        {% endif %}
 
                     </div>
 
@@ -196,6 +198,8 @@
                             <th>
                                 Project Head
                             </th>
+
+                            <th>Status</th>
 
                             <th class="text-end">
                                 FY {{ fiscal_year }} Budget
@@ -257,6 +261,13 @@
 
                             </td>
 
+                            <td>
+                                <span class="badge {% if pro.schedule_status == 'On Schedule' %}bg-success-subtle text-success{% elif pro.schedule_status == 'In Progress' %}bg-warning-subtle text-warning{% elif pro.schedule_status == 'Not Started' %}bg-secondary-subtle text-secondary{% else %}bg-danger-subtle text-danger{% endif %}">
+                                    {{ pro.schedule_status }}
+                                </span>
+                                <div class="small text-muted mt-1">{{ pro.activity_report_count }}/{{ pro.planned_activity_count|default:"0" }} activities</div>
+                            </td>
+
                             <td class="text-end fw-semibold">
                                 {{ pro.budget_summary.budget_amount|money:request }}
                             </td>
@@ -284,6 +295,7 @@
                                     <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-3">
 
                                         <li>
+                                            {% if pro.project_head == request.user or request.user.is_superuser %}
 
                                             <a class="dropdown-item"
                                                href="{% url 'core:project_update' pro.pk pro.slug %}">
@@ -293,7 +305,46 @@
                                                 Edit Project
 
                                             </a>
+                                            {% endif %}
 
+
+                                        </li>
+
+                                        {% if request.user.is_superuser or pro.project_officer_id == request.user.pk %}
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:project_reporting_input' pro.pk pro.slug %}">
+                                                <i class="fa fa-clipboard-list text-primary me-2"></i>
+                                                Project Reporting &amp; Uploads
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:project_document_upload' pro.pk pro.slug 'workplan' %}">
+                                                <i class="fa fa-calendar-check text-success me-2"></i>
+                                                Upload Workplan
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:project_document_upload' pro.pk pro.slug 'report' %}">
+                                                <i class="fa fa-file-lines text-info me-2"></i>
+                                                Upload Report
+                                            </a>
+                                        </li>
+                                        {% endif %}
+
+                                        {% if request.user.is_superuser or request.user.is_CMT %}
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:cmt_project_reporting' pro.pk pro.slug %}">
+                                                <i class="fa fa-eye text-dark me-2"></i>
+                                                CMT Reporting View
+                                            </a>
+                                        </li>
+                                        {% endif %}
+
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:project_documents' pro.pk pro.slug %}">
+                                                <i class="fa fa-folder-open text-secondary me-2"></i>
+                                                View Workplans &amp; Reports
+                                            </a>
                                         </li>
 
                                         <li>
@@ -301,6 +352,7 @@
                                         </li>
 
                                         <li>
+                                        {% if request.user.is_superuser %}
 
                                             <a class="dropdown-item text-danger"
                                                href="{% url 'core:trash_project' pro.pk pro.name %}">
@@ -310,6 +362,7 @@
                                                 Delete Project
 
                                             </a>
+                                            {% endif %}
 
                                         </li>
 
@@ -325,7 +378,7 @@
 
                         <tr>
 
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
 
                                 <div class="empty-state">
 

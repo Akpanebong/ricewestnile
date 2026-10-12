@@ -1,5 +1,7 @@
 from django import forms
 from django.core.validators import RegexValidator
+from django.db.models import Q
+
 from .models import EditAccessRequest, Profile, Department, ExitProcessStep, Unit, ProgramArea
 from django.forms import CheckboxInput
 from hr_apps.HRapp.employee_models import (BankDetail, Dependant, EducationHistory,EmergencyContact, Employee, EmployeeAddress, EmployeeContact, EmployeePersonalInfo, WorkExperience,)
@@ -381,7 +383,7 @@ class ProfileForm(forms.ModelForm):
         model = Profile
         fields = [
             'username', 'title', 'first_name', 'last_name',
-            'email', 'program_area', 'phone',
+            'email', 'alternative_email', 'program_area', 'phone',
             'profile_type', 'status', 'probation_starts', 'probation_ends',
              'department',  'unit', 'project', "is_CMT", 'can_review', 'address',
             'signature',
@@ -446,6 +448,16 @@ class ProfileForm(forms.ModelForm):
 
         return email
 
+    def clean_alternative_email(self):
+        email = (self.cleaned_data.get('alternative_email') or '').strip().lower()
+        if email and self.instance.pk and email == (self.instance.email or '').lower():
+            raise forms.ValidationError("Alternative email must differ from the primary email.")
+        if email:
+            qs = Profile.objects.filter(Q(email__iexact=email) | Q(alternative_email__iexact=email)).exclude(pk=self.instance.pk if self.instance.pk else None)
+            if qs.exists():
+                raise forms.ValidationError("This alternative email is already in use.")
+        return email
+
     def clean(self):
         cleaned = super().clean()
         if self.require_signature and not cleaned.get("signature") and not self.errors.get("signature"):
@@ -467,9 +479,9 @@ class ProfileForm(forms.ModelForm):
 
     def get_groups(self):
         return {
-            "Account Info": ["username", "email"],
+            "Account Info": ["username", "email", "alternative_email"],
             "Personal Info": ["first_name", "last_name", "title", "is_CMT"],
-            "Work Info": ["department", "program_area", "profile_type", "status", "probation_starts", "probation_ends"],
+            "Work Info": ["department", "program_area", "unit", "project", "profile_type", "status", "probation_starts", "probation_ends"],
             "Contact Info": ["phone", "address"],
             "Signature": ["signature"],
         }

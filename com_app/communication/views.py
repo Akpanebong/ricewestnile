@@ -3,11 +3,11 @@ from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, FormView, TemplateView
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from notification.models import Notification
+from account.models import Profile
 from notification.utils import notify
-from .models import MonthlyPresentation, Report, FocusArea, SubGroup
+from .models import MonthlyPresentation, Report
 from .forms import PresentationForm, ReportForm, ReportReviewForm, ReportCommentForm, PresentationReplyForm
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
@@ -15,9 +15,10 @@ from django.db.models import Value, CharField
 from itertools import chain
 from django.utils.timezone import now
 from .models import SubGroup, FocusArea
+from com_app.media_presence.models import Broadcast, PhotoGallery, GalleryPhoto, SocialMediaContent, Newsletter
 from .forms import SubGroupForm
 from account.templatetags.custom_tags import has_group
-from .utils import send_notification_email, can_submit_presentation, check_report_deadline
+from .utils import send_notification_email, can_submit_presentation
 from smtplib import SMTPException  # for catching email sending errors
 
 
@@ -49,6 +50,11 @@ class DashboardView(LoginRequiredMixin, View):
                 received=False, status__in=['SUBMITTED', 'UNDER_REVIEW']
             ).count(),
             'recent_activities': recent_activities[:10],  # limit to 10 recent
+            'broadcasts_count': Broadcast.objects.count(),
+            'galleries_count': PhotoGallery.objects.count(),
+            'gallery_photos_count': GalleryPhoto.objects.count(),
+            'social_media_count': SocialMediaContent.objects.count(),
+            'newsletters_count': Newsletter.objects.count(),
         }
 
         return render(request, 'communication/dashboard.html', context)
@@ -61,6 +67,32 @@ class PresentationListView(LoginRequiredMixin, ListView):
     context_object_name = 'presentations'
 
 
+# class PresentationCreateView(LoginRequiredMixin, CreateView):
+#     model = MonthlyPresentation
+#     form_class = PresentationForm
+#     template_name = 'communication/presentation_form_create.html'
+#     success_url = reverse_lazy('comm:presentations')
+#
+#     def dispatch(self, request, *args, **kwargs):
+#         today = timezone.now().date()
+#         allowed, message = can_submit_presentation(today)
+#
+#         if not allowed:
+#             return HttpResponseForbidden(message)
+#
+#         return super().dispatch(request, *args, **kwargs)
+#
+#     def form_valid(self, form):
+#         obj = form.save(commit=False)
+#         obj.sent_by = self.request.user
+#         obj.save()
+#         messages.success(self.request, "Presentation uploaded successfully.")
+#         return super().form_valid(form)
+
+def get_reviewers():
+    return Profile.objects.filter(groups__name__in=['Communication', 'ED', 'REVIEW'])
+
+
 class PresentationCreateView(LoginRequiredMixin, CreateView):
     model = MonthlyPresentation
     form_class = PresentationForm
@@ -69,10 +101,14 @@ class PresentationCreateView(LoginRequiredMixin, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         today = timezone.now().date()
-        allowed, message = can_submit_presentation(today)
+        allowed, context_data = can_submit_presentation(today)
 
         if not allowed:
-            return HttpResponseForbidden(message)
+            return render(request, "communication/submission_closed.html",
+            context_data)
+
+        #if not allowed:
+            #return HttpResponseForbidden(message)
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -80,6 +116,19 @@ class PresentationCreateView(LoginRequiredMixin, CreateView):
         obj = form.save(commit=False)
         obj.sent_by = self.request.user
         obj.save()
+
+        # Notify reviewers
+        reviewers = get_reviewers()
+
+        for reviewer in reviewers:
+            notify(
+                title="New Presentation Submitted",
+                message=f"{obj.sent_by} submitted a presentation.",
+                users=reviewer, action_url='/communication/presentations/',
+                category='', source_app='', attachment=obj.file,
+                group_name=['Communication', 'ED', 'REVIEW']
+                )
+
         messages.success(self.request, "Presentation uploaded successfully.")
         return super().form_valid(form)
 

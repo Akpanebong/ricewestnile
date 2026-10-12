@@ -176,13 +176,27 @@
                                     {{ form.donor }}
 
                                 </div>
-                                 <div class="col-md-6">
+                                <div class="col-md-6">
 
                                     <label class="form-label fw-semibold">
                                         Project Code
                                     </label>
 
                                     {{ form.code}}
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <label class="form-label fw-semibold">
+                                        Program Area
+                                    </label>
+
+                                    {{ form.program_area }}
+
+                                    {% for error in form.program_area.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
 
                                 </div>
 

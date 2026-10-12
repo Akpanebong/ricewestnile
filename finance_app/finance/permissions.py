@@ -40,6 +40,18 @@ def finance_editor_required(view):
     return wrapped
 
 
+def finance_requisition_required(view):
+    """Allow only Finance users or superusers to create cash requisitions."""
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        if not is_finance_editor(request.user):
+            messages.error(request, "Only Finance staff or a superuser can create requisitions.")
+            return redirect("finance:dashboard")
+        return view(request, *args, **kwargs)
+
+    return wrapped
+
+
 class FinanceEditorRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return is_finance_editor(self.request.user)

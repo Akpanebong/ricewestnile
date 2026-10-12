@@ -1,5 +1,5 @@
 from notification.models import Notification
-from .models import Leave, Attendance, Training,\
+from .models import Leave, LeaveSchedule, Attendance, Training,\
     ForumThread, ForumPost, SituationReport
 from django import forms
 from hr_apps.HRapp.employee_models import Employee
@@ -82,6 +82,19 @@ class LeaveForm(forms.ModelForm):
         else:
             cleaned["special_type"] = None
         return cleaned
+
+
+class LeaveScheduleForm(forms.ModelForm):
+    class Meta:
+        model = LeaveSchedule
+        fields = ["year", "leave_type", "start_date", "end_date", "notes"]
+        widgets = {
+            "year": forms.NumberInput(attrs={"class": "form-control", "min": 2020}),
+            "leave_type": forms.Select(attrs={"class": "form-select"}),
+            "start_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "end_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "class": "form-control", "placeholder": "Optional note for HR"}),
+        }
 
 
 

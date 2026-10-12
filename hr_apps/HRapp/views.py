@@ -9,13 +9,13 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import DetailView, UpdateView
 from account.models import Profile, Unit
-from notification.utils import notify
-from .models import Employee, Attendance, Leave, \
+from notification.utils import notify, _send_html_email
+from .models import Employee, Attendance, Leave, LeaveSchedule, \
     Training, ForumThread, ForumPost, SituationReport, LeaveType
 from django.contrib.auth.decorators import login_required,  user_passes_test
 from .forms import EmployeeForm, LeaveForm, AttendanceForm, TrainingForm, \
     ForumThreadForm, ForumPostForm, SituationReportForm, UpdateSitrepStatusForm,\
-    StaffAttendanceForm
+    StaffAttendanceForm, LeaveScheduleForm
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseForbidden
 from reportlab.lib.pagesizes import A4
@@ -33,15 +33,52 @@ from django.utils.timezone import now, timedelta
 from django.db.models import Avg, Count, Q
 from .utils import (render_to_pdf, yearly_leave_allocation_report, staff_leave_balance_report, employee_leave_balances,
                     logo_path, )
-from account.permissions import is_cmt as is_cmt_user
+from account.permissions import deny_signatory_conflict, is_cmt as is_cmt_user, signature_required
 import logging
 
 logger = logging.getLogger(__name__)
 
 
+def _notify_leave_recipients(*, request, leave, recipients, title, message, category):
+    """Create an in-app leave notification and attempt email delivery."""
+    recipients = list(dict.fromkeys(user for user in recipients if user))
+    if not recipients:
+        return
+
+    action_url = request.build_absolute_uri(
+        reverse("leave_detail", kwargs={"pk": leave.pk, "slug": leave.slug})
+    )
+    notify(
+        request=request,
+        users=recipients,
+        title=title,
+        message=message,
+        category=category,
+        source_app="hr",
+        action_url=action_url,
+    )
+
+    email_message = f"{message}\n\nOpen the leave request: {action_url}"
+    for recipient in recipients:
+        if not recipient.email:
+            continue
+        try:
+            send_mail(
+                subject=title,
+                message=email_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[recipient.email],
+                fail_silently=False,
+            )
+        except Exception:
+            logger.exception("Unable to email leave notification to %s", recipient.email)
+
+
 # helper access checks (customize to your groups/permissions)
 def is_supervisor(user):
-    return bool(user and (user.is_superuser or user.groups.filter(name="Supervisor").exists() or user.is_staff))
+    # Django's `is_staff` flag grants admin-site access; it should not by
+    # itself grant access to the leave approval workflow.
+    return bool(user and (user.is_superuser or user.groups.filter(name="Supervisor").exists()))
 
 
 # def is_hr(user):
@@ -292,45 +329,196 @@ def add_employee(request):
 
 @login_required(login_url="login")
 def leave_list(request):
+
     user = request.user
     employee = getattr(user, "employee", None)
 
-    # Executive Director
+    # =========================================================
+    # BASIC EMPLOYEE RECORD CHECK
+    # =========================================================
+
+    if employee is None:
+        messages.error(
+            request,
+            "Your account isn't linked to an employee record yet. "
+            "Please contact HR to complete your employee profile."
+        )
+        return redirect("dashboard")
+
+
+    # =========================================================
+    # LEAVE VISIBILITY
+    #
+    # Roles are ADDITIVE.
+    #
+    # A user can simultaneously be:
+    # - Employee
+    # - Supervisor
+    # - HR
+    # - ED
+    #
+    # =========================================================
+
     if is_ed(user):
-        leaves_qs = Leave.objects.all().order_by("-applied_date")
 
-    # HR
-    elif is_hr(user):
-        leaves_qs = Leave.objects.filter(
-            supervisor_approved=True
-        ).order_by("-applied_date")
+        # ED can see everything.
+        leaves_qs = (
+            Leave.objects
+            .select_related("employee", "supervisor")
+            .all()
+            .order_by("-applied_date")
+        )
 
-    # Supervisor
-    elif is_supervisor(user):
-        if employee is None:
-            messages.error(request, "Your account isn't linked to an employee record yet — contact HR to finish setting up your account before you can review leave requests.")
-            return redirect("dashboard")
-
-        leaves_qs = Leave.objects.filter(
-            supervisor=employee
-        ).order_by("-applied_date")
-
-    # Employee
     else:
-        if employee is None:
-            messages.error(request, "Your account isn't linked to an employee record yet — contact HR to finish setting up your account before you can apply for leave.")
-            return redirect("dashboard")
 
-        leaves_qs = Leave.objects.filter(
-            employee=user
-        ).order_by("-end_date")
+        visibility = Q()
+
+        # -----------------------------------------------------
+        # EVERY STAFF MEMBER SEES THEIR OWN LEAVE
+        # -----------------------------------------------------
+
+        visibility |= Q(employee=user)
+
+
+        # -----------------------------------------------------
+        # SUPERVISOR
+        #
+        # Also see leave applications belonging to employees
+        # whose supervisor is this employee.
+        # -----------------------------------------------------
+
+        if is_supervisor(user):
+
+            visibility |= Q(supervisor=employee)
+
+
+        # -----------------------------------------------------
+        # HR
+        #
+        # HR sees leave requests that have passed supervisor
+        # approval.
+        #
+        # Because the user's own leave was already included
+        # above, HR also sees their own applications.
+        # -----------------------------------------------------
+
+        if is_hr(user):
+
+            visibility |= Q(supervisor_approved=True)
+
+
+        # -----------------------------------------------------
+        # BUILD QUERY
+        # -----------------------------------------------------
+
+        leaves_qs = (
+            Leave.objects
+            .select_related("employee", "supervisor")
+            .filter(visibility)
+            .distinct()
+            .order_by("-applied_date")
+        )
+
+
+    # =========================================================
+    # PAGINATION
+    # =========================================================
 
     paginator = Paginator(leaves_qs, 5)
     page_number = request.GET.get("page")
+    leaves_page = paginator.get_page(page_number)
 
-    return render(request, "hr/leave_list.html", {
-        "leaves": paginator.get_page(page_number),
+    # ---------------------------------------------------------
+    # LEAVE SCHEDULES
+    # ---------------------------------------------------------
+
+    if is_ed(user) or is_hr(user):
+        schedules = (
+            LeaveSchedule.objects
+            .select_related("employee", "leave_type")
+            .all()
+            .order_by("-start_date")
+        )
+
+    elif is_supervisor(user) and employee is not None:
+        # Get the Profile/User IDs of employees supervised by this employee.
+        supervised_user_ids = Employee.objects.filter(
+            supervised_by=employee
+        ).values_list("user_id", flat=True)
+
+        schedules = (
+            LeaveSchedule.objects
+            .select_related("employee", "leave_type")
+            .filter(
+                Q(employee=user) |
+                Q(employee_id__in=supervised_user_ids)
+            )
+            .distinct()
+            .order_by("-start_date")
+        )
+
+    else:
+        schedules = (
+            LeaveSchedule.objects
+            .select_related("employee", "leave_type")
+            .filter(employee=user)
+            .order_by("-start_date")
+        )
+
+
+    # =========================================================
+    # CONTEXT
+    # =========================================================
+
+    return render(
+        request,
+        "hr/leave_list.html",
+        {
+            "leaves": leaves_page,
+            "leave_schedules": schedules[:100],
+
+            # Useful in the template
+            "is_ed": is_ed(user),
+            "is_hr": is_hr(user),
+            "is_supervisor": is_supervisor(user),
+        }
+    )
+
+
+@login_required(login_url="login")
+def supervisor_leave_list(request):
+    """Show only leave requests assigned to the logged-in supervisor."""
+    employee = getattr(request.user, "employee", None)
+    if not employee or not is_supervisor(request.user):
+        messages.error(request, "Only supervisors can access the supervisor leave queue.")
+        return redirect("leave_list")
+
+    leaves_qs = (
+        Leave.objects
+        .select_related("employee", "leave_type", "supervisor")
+        .filter(supervisor=employee)
+        .order_by("-applied_date")
+    )
+    paginator = Paginator(leaves_qs, 10)
+    return render(request, "hr/supervisor_leave_list.html", {
+        "leaves": paginator.get_page(request.GET.get("page")),
+        "supervisor": employee,
     })
+
+
+@login_required(login_url="login")
+def schedule_leave(request):
+    if request.method == "POST":
+        form = LeaveScheduleForm(request.POST)
+        if form.is_valid():
+            schedule = form.save(commit=False)
+            schedule.employee = request.user
+            schedule.save()
+            messages.success(request, "Your annual leave plan has been scheduled for HR review.")
+            return redirect("leave_list")
+    else:
+        form = LeaveScheduleForm(initial={"year": date.today().year})
+    return render(request, "hr/leave_schedule.html", {"form": form, "year": date.today().year})
 
 
 @login_required(login_url='login')
@@ -350,6 +538,7 @@ def leave_detail(request, pk, slug):
 
 
 @login_required(login_url='login')
+@signature_required
 def apply_leave(request):
     if request.user.status == "On Leave" or request.user.status == "Probation":
         messages.info(request, f"Oops!!!, Your profile is still on {request.user.status}, so you can't apply now")
@@ -462,9 +651,29 @@ def apply_leave(request):
 
 
 @login_required(login_url='login')
+@signature_required
 @user_passes_test(is_supervisor)
 def approve_supervisor(request, pk, action):
     leave = get_object_or_404(Leave, pk=pk)
+
+    assigned_employee = getattr(request.user, "employee", None)
+    if not request.user.is_superuser and (
+        not assigned_employee or leave.supervisor_id != assigned_employee.id
+    ):
+        messages.error(request, "Only the assigned supervisor can action this leave request.")
+        return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
+
+    if action in {"approved", "denied"} and deny_signatory_conflict(
+        request,
+        requester=leave.employee,
+        # ``leave.supervisor`` is assigned when the request is created; it is
+        # not a signature until the supervisor approval flag is set.
+        previous_signers=[
+            leave.hr if leave.hr_approved else None,
+            leave.ed if leave.ed_approved else None,
+        ],
+    ):
+        return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
 
     if request.method == "POST":
 
@@ -478,6 +687,17 @@ def approve_supervisor(request, pk, action):
             leave.employee.status = "Active"
             leave.employee.save(update_fields=["status"])
             leave.save(update_fields=["status"])
+            _notify_leave_recipients(
+                request=request,
+                leave=leave,
+                recipients=[leave.employee],
+                title="Leave request denied by supervisor",
+                message=(
+                    f"Your {leave.leave_type} leave request for {leave.start_date} "
+                    f"to {leave.end_date} was denied by your supervisor."
+                ),
+                category="error",
+            )
             messages.error(request, "Leave rejected.")
             return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
 
@@ -490,6 +710,21 @@ def approve_supervisor(request, pk, action):
 
         leave.update_status()
         leave.save()
+        if action == "approved":
+            _notify_leave_recipients(
+                request=request,
+                leave=leave,
+                recipients=Profile.objects.filter(
+                    groups__name="HR", is_active=True
+                ).distinct(),
+                title="Leave request approved by supervisor",
+                message=(
+                    f"{leave.employee}'s {leave.leave_type} leave request for "
+                    f"{leave.start_date} to {leave.end_date} was approved by the "
+                    "supervisor and is awaiting HR review."
+                ),
+                category="info",
+            )
         messages.success(request, "Supervisor action recorded.")
         return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
 
@@ -497,9 +732,20 @@ def approve_supervisor(request, pk, action):
 
 
 @login_required(login_url='login')
+@signature_required
 @user_passes_test(is_hr)
 def approve_hr(request, pk, action):
     leave = get_object_or_404(Leave, pk=pk)
+
+    if action in {"approved", "denied"} and deny_signatory_conflict(
+        request,
+        requester=leave.employee,
+        previous_signers=[
+            leave.supervisor if leave.supervisor_approved else None,
+            leave.ed if leave.ed_approved else None,
+        ],
+    ):
+        return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
 
     if request.method == "POST":
         leave.hr = request.user
@@ -513,6 +759,17 @@ def approve_hr(request, pk, action):
             leave.employee.status = "Active"
             leave.employee.save(update_fields=["status"])
             leave.save(update_fields=["status"])
+            _notify_leave_recipients(
+                request=request,
+                leave=leave,
+                recipients=[leave.employee, leave.supervisor.user if leave.supervisor else None],
+                title="Leave request denied by HR",
+                message=(
+                    f"{leave.employee}'s {leave.leave_type} leave request for "
+                    f"{leave.start_date} to {leave.end_date} was denied by HR."
+                ),
+                category="error",
+            )
             messages.error(request, "Leave rejected.")
             return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
 
@@ -525,6 +782,21 @@ def approve_hr(request, pk, action):
 
         leave.update_status()
         leave.save()
+        if action == "approved":
+            _notify_leave_recipients(
+                request=request,
+                leave=leave,
+                recipients=Profile.objects.filter(
+                    groups__name="ED", is_active=True
+                ).distinct(),
+                title="Leave request approved by HR",
+                message=(
+                    f"{leave.employee}'s {leave.leave_type} leave request for "
+                    f"{leave.start_date} to {leave.end_date} was approved by HR "
+                    "and is awaiting ED review."
+                ),
+                category="info",
+            )
         messages.success(request, "HR action recorded.")
         return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
 
@@ -532,9 +804,20 @@ def approve_hr(request, pk, action):
 
 
 @login_required(login_url='login')
+@signature_required
 @user_passes_test(is_ed)
 def approve_ed(request, pk, action):
     leave = get_object_or_404(Leave, pk=pk)
+
+    if action in {"approved", "denied"} and deny_signatory_conflict(
+        request,
+        requester=leave.employee,
+        previous_signers=[
+            leave.supervisor if leave.supervisor_approved else None,
+            leave.hr if leave.hr_approved else None,
+        ],
+    ):
+        return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
 
     if request.method == "POST":
         leave.ed = request.user
@@ -550,6 +833,17 @@ def approve_ed(request, pk, action):
             leave.employee.status = "Active"
             leave.employee.save(update_fields=["status"])
             leave.save(update_fields=["status"])
+            _notify_leave_recipients(
+                request=request,
+                leave=leave,
+                recipients=[leave.employee],
+                title="Leave request denied by ED",
+                message=(
+                    f"Your {leave.leave_type} leave request for {leave.start_date} "
+                    f"to {leave.end_date} was denied by the Executive Director."
+                ),
+                category="error",
+            )
             messages.error(request, "Leave rejected.")
             return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
 
@@ -562,6 +856,19 @@ def approve_ed(request, pk, action):
 
         leave.update_status()
         leave.save()
+        if action == "approved":
+            _notify_leave_recipients(
+                request=request,
+                leave=leave,
+                recipients=[leave.employee],
+                title="Leave request fully approved",
+                message=(
+                    f"Your {leave.leave_type} leave request for {leave.start_date} "
+                    f"to {leave.end_date} has been fully approved by the "
+                    "Executive Director."
+                ),
+                category="success",
+            )
         messages.success(request, "ED action recorded.")
         return redirect(reverse("leave_detail", kwargs={"pk": pk, "slug": leave.slug}))
 
@@ -1219,6 +1526,7 @@ def forum_list(request):
     paginator = Paginator(threads_qs, 10)  # 5 threads per page
     page_number = request.GET.get("page")
     threads = paginator.get_page(page_number)
+    Profile.objects.filter(pk=request.user.pk).update(forum_last_seen_at=timezone.now())
     return render(request, "hr/forum_list.html", {"threads": threads})
 
 
@@ -1238,6 +1546,7 @@ def forum_detail(request, thread_id):
     else:
         form = ForumPostForm()
 
+    Profile.objects.filter(pk=request.user.pk).update(forum_last_seen_at=timezone.now())
     return render(request, "hr/forum_detail.html", {"thread": thread, "posts": posts, "form": form})
 
 

@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from . import views
 
 app_name = 'comm'
@@ -18,6 +18,7 @@ urlpatterns = [
     path('review/queue/', views.ReviewQueueView.as_view(), name='review_queue'),
 
     path('focus/area/', views.FocusAreaDashboardView.as_view(), name='focusarea-dashboard'),
+    path('events/', include(('com_app.staff_events.urls', 'staff_events'), namespace='staff_events')),
     path('subgroup/create/', views.SubGroupCreateView.as_view(), name='subgroup-create'),
     path('subgroup/<int:pk>/update/', views.SubGroupUpdateView.as_view(), name='subgroup-update'),
     path('subgroup/<int:pk>/delete/', views.SubGroupDeleteView.as_view(), name='subgroup-delete'),

@@ -214,6 +214,46 @@
 
 </div>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const projectField = document.getElementById("id_project");
+    const openingBalanceField = document.getElementById("id_opening_balance");
+    if (!projectField || !openingBalanceField) return;
+
+    const budgetUrlTemplate = "{% url 'finance:cashbook_project_budget' 0 %}";
+
+    projectField.addEventListener("change", function () {
+        if (!projectField.value) {
+            openingBalanceField.value = "";
+            return;
+        }
+
+        const budgetUrl = budgetUrlTemplate.replace("/0/", "/" + projectField.value + "/");
+        fetch(budgetUrl, {headers: {"X-Requested-With": "XMLHttpRequest"}})
+            .then(function (response) {
+                if (!response.ok) throw new Error("Unable to load project budget");
+                return response.json();
+            })
+            .then(function (data) {
+                openingBalanceField.value = data.budget || "0.00";
+
+                const budgetDetails = data.financial_budget || {};
+                const projectDetails = data.project || {};
+                const donorField = document.getElementById("id_donor");
+                const startField = document.getElementById("id_period_start");
+                const endField = document.getElementById("id_period_end");
+
+                if (donorField) donorField.value = budgetDetails.donor || projectDetails.donor || "";
+                if (startField) startField.value = budgetDetails.period_start || projectDetails.period_start || "";
+                if (endField) endField.value = budgetDetails.period_end || projectDetails.period_end || "";
+            })
+            .catch(function () {
+                openingBalanceField.value = "";
+            });
+    });
+});
+</script>
+
 
 <style>
 

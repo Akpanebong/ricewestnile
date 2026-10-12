@@ -41,3 +41,6 @@ class ExitProcessAdmin(admin.ModelAdmin):
 @admin.register(Unit)
 class UnitAdmin(admin.ModelAdmin):
     list_display = ('department', 'name', 'head')
+
+
+admin.site.register(ProgramArea)

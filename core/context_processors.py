@@ -48,8 +48,8 @@ def global_dashboard(request):
 
 def site_settings(request):
     return {
-        "SITE_NAME": "RICE West Nile - Enterprise",
-        "SITE_SHORT": "RICE Enterprise",
+        "SITE_NAME": "RICE West Nile - MIS",
+        "SITE_SHORT": "RICE MIS",
         "STATIC_CSS_FILES": [
             "assets/css/assets.css",
             "assets/css/style.css",

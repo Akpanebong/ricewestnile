@@ -7,6 +7,14 @@ from django.db.models import Q, F
 from account.models import Profile
 
 
+SEX_CHOICES = (
+    ("Male", "Male"),
+    ("Female", "Female"),
+    ("Other", "Other"),
+    ("Prefer not to say", "Prefer not to say"),
+)
+
+
 class Employee(models.Model):
     user = models.OneToOneField(Profile, on_delete=models.SET_NULL, null=True)
     staff_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
@@ -60,7 +68,7 @@ class EmployeePersonalInfo(models.Model):
     employee = models.OneToOneField(Employee, on_delete=models.CASCADE)
 
     marital_status = models.CharField(max_length=80, blank=True)
-    sex = models.CharField(max_length=40, blank=True)
+    sex = models.CharField(max_length=40, choices=SEX_CHOICES, blank=True)
     ethnicity = models.CharField(max_length=100, blank=True)
     blood_group = models.CharField(max_length=20, blank=True)
 

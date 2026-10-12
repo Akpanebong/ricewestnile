@@ -22,13 +22,17 @@
                 <thead class="table-light">
                     <tr>
                         <th>Name</th>
+                        <th>Projects</th>
+                        <th>Staff</th>
                         {% if can_manage %}<th>Actions</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for program_area in program_areas %}
                     <tr>
-                        <td>{{ program_area.name }}</td>
+                        <td><a href="{% url 'program_area_detail' program_area.pk %}" class="fw-semibold text-decoration-none">{{ program_area.name }}</a></td>
+                        <td>{{ program_area.project_count }}</td>
+                        <td>{{ program_area.staff_count }}</td>
                         {% if can_manage %}
                         <td>
                             <a href="{% url 'program_area_update' program_area.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
@@ -38,7 +42,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="2">
+                        <td colspan="4">
                             <div class="empty-state">
                                 <div class="empty-state-title">No program areas yet</div>
                             </div>

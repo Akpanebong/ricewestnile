@@ -1,5 +1,5 @@
 from django.contrib.auth.models import Group
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import m2m_changed, post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
 
@@ -8,41 +8,7 @@ from notification.utils import notify
 from .models import Profile, ExitProcess
 from .services import sync_profile_groups
 
-# @receiver(pre_save, sender=Profile)
-# def track_profile_department_and_status(sender, instance, **kwargs):
-#     if not instance.pk:
-#         instance._previous_department_id = None
-#         instance._previous_status = None
-#         return
-#
-#     previous = Profile.objects.filter(pk=instance.pk).only("department_id", "status").first()
-#     instance._previous_department_id = getattr(previous, "department_id", None)
-#     instance._previous_status = getattr(previous, "status", None)
 
-
-# @receiver(post_save, sender=Profile)
-# def manage_profile_department_group(sender, instance, created, **kwargs):
-#     if not instance.department_id:
-#         return
-#
-#     dept_name = instance.department.name
-#     group, _ = Group.objects.get_or_create(name=dept_name)
-#
-#     # If department changed, remove old department group.
-#     previous_department_id = getattr(instance, "_previous_department_id", None)
-#     if previous_department_id and previous_department_id != instance.department_id:
-#         previous_department_name = (
-#             Department.objects.filter(pk=previous_department_id)
-#             .values_list("name", flat=True)
-#             .first()
-#         )
-#         if previous_department_name and previous_department_name != dept_name:
-#             try:
-#                 instance.groups.remove(Group.objects.get(name=previous_department_name))
-#             except Group.DoesNotExist:
-#                 pass
-#
-#     instance.groups.add(group)
 @receiver(post_save, sender=Profile)
 def profile_post_save(sender, instance, created, **kwargs):
 
@@ -56,6 +22,41 @@ def profile_post_save(sender, instance, created, **kwargs):
     ):
         instance.department.head = instance
         instance.department.save(update_fields=["head"])
+
+
+@receiver(pre_save, sender=Profile)
+def cache_previous_profile_assignments(sender, instance, **kwargs):
+    """Keep old assignment names available to the post-save synchronizer."""
+    if not instance.pk:
+        return
+
+    previous = Profile.objects.select_related(
+        "department", "unit", "project", "program_area"
+    ).filter(pk=instance.pk).first()
+    if not previous:
+        return
+
+    instance._previous_department_name = getattr(previous.department, "name", None)
+    instance._previous_unit_name = getattr(previous.unit, "name", None)
+    instance._previous_project_name = getattr(previous.project, "name", None)
+    instance._previous_program_area_name = getattr(previous.program_area, "name", None)
+
+
+@receiver(m2m_changed, sender=Profile.groups.through)
+def profile_groups_changed(sender, instance, action, pk_set=None, **kwargs):
+    """Prevent direct group edits from leaving conflicting unit groups."""
+    if action not in {"post_add", "post_remove", "post_clear"}:
+        return
+
+    if isinstance(instance, Profile):
+        profiles = [instance]
+    elif pk_set:
+        profiles = Profile.objects.filter(pk__in=pk_set)
+    else:
+        profiles = []
+
+    for profile in profiles:
+        sync_profile_groups(profile)
 
 
 @receiver(post_save, sender=Profile)

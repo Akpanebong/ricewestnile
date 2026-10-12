@@ -9,10 +9,62 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse_lazy
 from django.utils.timezone import now
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from .forms import *
 
 
-class GovernanceDashboardView(TemplateView):
+def _is_governance_user(user):
+    return bool(
+        user and user.is_authenticated and (
+            user.is_superuser
+            or user.groups.filter(name__iexact="ED").exists()
+            or user.groups.filter(name__iexact="Governance").exists()
+        )
+    )
+
+
+def _is_governance_manager(user):
+    return bool(
+        user and user.is_authenticated and (
+            user.is_superuser or user.groups.filter(name__iexact="ED").exists()
+        )
+    )
+
+
+class GovernanceAccessMixin:
+    """Governance is a standalone module for ED and Governance members."""
+    def dispatch(self, request, *args, **kwargs):
+        if not _is_governance_user(request.user):
+            raise PermissionDenied("Only ED and Governance group members may access Governance.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["governance_can_manage"] = _is_governance_manager(self.request.user)
+        context["governance_can_create"] = _is_governance_user(self.request.user)
+        return context
+
+
+class GovernanceCreateMixin(GovernanceAccessMixin):
+    pass
+
+
+class GovernanceManageMixin(GovernanceAccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if not _is_governance_manager(request.user):
+            raise PermissionDenied("Only ED members and superusers may modify Governance records.")
+        return super().dispatch(request, *args, **kwargs)
+
+
+def manager_required(view):
+    def wrapped(request, *args, **kwargs):
+        if not _is_governance_manager(request.user):
+            raise PermissionDenied("Only ED members and superusers may modify Governance records.")
+        return view(request, *args, **kwargs)
+    return wrapped
+
+
+class GovernanceDashboardView(GovernanceAccessMixin, TemplateView):
     template_name = "governance/dashboard.html"
 
     def get_context_data(self, **kwargs):
@@ -33,20 +85,20 @@ class GovernanceDashboardView(TemplateView):
         return context
 
 
-class PolicyListView(ListView):
+class PolicyListView(GovernanceAccessMixin, ListView):
     model = Policy
     template_name = "governance/policy_list.html"
     context_object_name = "policies"
     paginate_by = 25
 
 
-class PolicyDetail(DetailView):
+class PolicyDetail(GovernanceAccessMixin, DetailView):
     model = Policy
     template_name = "governance/policy_detail.html"
     # context_object_name = "risk"
 
 
-class PolicyCreateView(CreateView):
+class PolicyCreateView(GovernanceCreateMixin, CreateView):
     model = Policy
     form_class = PolicyForm
     template_name = "governance/form.html"
@@ -58,7 +110,7 @@ class PolicyCreateView(CreateView):
         return super().form_valid(form)
 
 
-class PolicyUpdateView(UpdateView):
+class PolicyUpdateView(GovernanceManageMixin, UpdateView):
     model = Policy
     form_class = PolicyForm
     template_name = "governance/form.html"
@@ -69,6 +121,7 @@ class PolicyUpdateView(UpdateView):
         return super().form_valid(form)
 
 
+@manager_required
 def policy_delete(request, pk):
     obj = get_object_or_404(Policy, pk=pk)
 
@@ -83,19 +136,19 @@ def policy_delete(request, pk):
     })
 
 
-class ControlListView(ListView):
+class ControlListView(GovernanceAccessMixin, ListView):
     model = Control
     template_name = "governance/control_list.html"
     context_object_name = "controls"
     paginate_by = 25
 
 
-class ControlDetail(DetailView):
+class ControlDetail(GovernanceAccessMixin, DetailView):
     model = Control
     template_name = "governance/control_detail.html"
 
 
-class ControlCreateView(CreateView):
+class ControlCreateView(GovernanceCreateMixin, CreateView):
     model = Control
     form_class = ControlForm
     template_name = "governance/form.html"
@@ -107,13 +160,14 @@ class ControlCreateView(CreateView):
         return super().form_valid(form)
 
 
-class ControlUpdateView(UpdateView):
+class ControlUpdateView(GovernanceManageMixin, UpdateView):
     model = Control
     form_class = ControlForm
     template_name = "governance/form.html"
     success_url = reverse_lazy("control_list")
 
 
+@manager_required
 def control_delete(request, pk):
     obj = get_object_or_404(Control, pk=pk)
 
@@ -128,19 +182,19 @@ def control_delete(request, pk):
     })
 
 
-class DecisionRecordListView(ListView):
+class DecisionRecordListView(GovernanceAccessMixin, ListView):
     model = DecisionRecord
     template_name = "governance/decision_list.html"
     context_object_name = "decisions"
     paginate_by = 25
 
 
-class DecisionRecordDetail(DetailView):
+class DecisionRecordDetail(GovernanceAccessMixin, DetailView):
     model = DecisionRecord
     template_name = "governance/decision_detail.html"
 
 
-class DecisionCreateView(CreateView):
+class DecisionCreateView(GovernanceCreateMixin, CreateView):
     model = DecisionRecord
     form_class = DecisionRecordForm
     template_name = "governance/form.html"
@@ -152,13 +206,14 @@ class DecisionCreateView(CreateView):
         return super().form_valid(form)
 
 
-class DecisionUpdateView(UpdateView):
+class DecisionUpdateView(GovernanceManageMixin, UpdateView):
     model = DecisionRecord
     form_class = DecisionRecordForm
     template_name = "governance/form.html"
     success_url = reverse_lazy("decision_list")
 
 
+@manager_required
 def decision_delete(request, pk):
     obj = get_object_or_404(DecisionRecord, pk=pk)
 
@@ -173,19 +228,19 @@ def decision_delete(request, pk):
     })
 
 
-class StakeholderEngagementListView(ListView):
+class StakeholderEngagementListView(GovernanceAccessMixin, ListView):
     model = StakeholderEngagement
     template_name = "governance/engagement_list.html"
     context_object_name = "engagements"
     paginate_by = 25
 
 
-class StakeholderEngagementDetail(DetailView):
+class StakeholderEngagementDetail(GovernanceAccessMixin, DetailView):
     model = StakeholderEngagement
     template_name = "governance/stakeholder_detail.html"
 
 
-class StakeholderCreateView(CreateView):
+class StakeholderCreateView(GovernanceCreateMixin, CreateView):
     model = StakeholderEngagement
     form_class = StakeholderEngagementForm
     template_name = "governance/form.html"
@@ -197,13 +252,14 @@ class StakeholderCreateView(CreateView):
         return super().form_valid(form)
 
 
-class StakeholderUpdateView(UpdateView):
+class StakeholderUpdateView(GovernanceManageMixin, UpdateView):
     model = StakeholderEngagement
     form_class = StakeholderEngagementForm
     template_name = "governance/form.html"
     success_url = reverse_lazy("engagement_list")
 
 
+@manager_required
 def stakeholder_delete(request, pk):
     obj = get_object_or_404(StakeholderEngagement, pk=pk)
 
@@ -218,25 +274,31 @@ def stakeholder_delete(request, pk):
     })
 
 
+@manager_required
 def approve_policy(request, pk):
     return approve_object(request, Policy, pk)
 
 
+@manager_required
 def reject_policy(request, pk):
     return reject_object(request, Policy, pk)
 
 
+@manager_required
 def approve_control(request, pk):
     return approve_object(request, Control, pk)
 
 
+@manager_required
 def reject_control(request, pk):
     return reject_object(request, Control, pk)
 
 
+@manager_required
 def approve_decision(request, pk):
     return approve_object(request, DecisionRecord, pk)
 
 
+@manager_required
 def reject_decision(request, pk):
     return reject_object(request, DecisionRecord, pk)

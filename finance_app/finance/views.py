@@ -9,9 +9,10 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Sum, ExpressionWrapper, F, DecimalField, Value
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.urls import reverse
 from account.models import Department
+from account.permissions import deny_signatory_conflict, signature_required
 from assets.assetapp.models import AssetMaintenance, Asset
 from core.project_models import Project, ProjectBudget
 from finance_app.finance.models import AccountingForm, AdminExpenseNote, CashRequisition, CashRequisitionItem, ApprovalLog, AccountingItem
@@ -23,13 +24,13 @@ from django.db.models.functions import Coalesce
 from account.templatetags.custom_tags import has_group
 from procurement.procureapp.models import Requisition, PurchaseOrder
 from core.services import user_amount_to_ugx, CURRENCY_LABELS, normalize_currency, get_latest_usd_rates
-from .forms import FinanceBudgetForm, BudgetLineFormSet, CashBookForm, CashBookEntryForm, BankReconciliationForm, BankReconciliationItemFormSet
+from .forms import FinanceBudgetForm, BudgetLineFormSet, BudgetPerformanceForm, CashBookForm, CashBookEntryForm, BankReconciliationForm, BankReconciliationItemFormSet
 from .models import (
-    FinanceBudget, CashBook, BankReconciliation,
+    FinanceBudget, FinanceBudgetLine, BudgetPerformance, CashBook, BankReconciliation,
     FinancialCategory, FinancialTransaction, JournalEntry, JournalEntryLine,
 )
 from core.services import SUPPORTED_CURRENCIES, get_base_currency, convert_amount
-from .permissions import finance_editor_required, is_finance_editor as _can_manage_chart_of_accounts
+from .permissions import finance_editor_required, finance_requisition_required, is_finance_editor as _can_manage_chart_of_accounts
 from .exports import budget_xlsx, performance_xlsx, cashbook_xlsx, reconciliation_xlsx
 
 
@@ -110,56 +111,8 @@ def budget_list(request):
 
 @login_required(login_url="login")
 def budget_detail(request, pk):
-    budget = get_object_or_404(
-        FinanceBudget.objects.select_related("project").prefetch_related(
-            "lines__category", "performance_records__line"
-        ),
-        pk=pk,
-    )
-
-    # Budget vs Actual: a template can't call a method with arguments, so
-    # each line's per-month actual (from real ledger activity) is computed
-    # here rather than in the template.
-    year = budget.period_start.year
-    lines_vs_actual = []
-    yearly_budget_total = Decimal("0.00")
-    yearly_actual_total = Decimal("0.00")
-    for line in budget.lines.all():
-        monthly = [
-            {
-                "month": month_number,
-                "budget": budgeted,
-                "actual": line.actual_for_month(year, month_number),
-            }
-            for month_number, budgeted in line.monthly_amounts
-        ]
-        for cell in monthly:
-            cell["variance"] = cell["budget"] - cell["actual"]
-        line_actual_total = line.actual_total
-        lines_vs_actual.append({
-            "line": line,
-            "monthly": monthly,
-            "yearly_budget": line.total,
-            "yearly_actual": line_actual_total,
-            "yearly_variance": line.total - line_actual_total,
-        })
-        # The summary bar answers "how much of the budget have we used" —
-        # a cost question. Income lines are entered negative and fund the
-        # program rather than spend against it, so (matching
-        # FinanceBudget.total_amount/actual_amount) only Expense-type lines
-        # count toward it; every line still gets its own row above either way.
-        if line.category_id and line.category.category_type == FinancialCategory.CategoryType.EXPENSE:
-            yearly_budget_total += line.total
-            yearly_actual_total += line_actual_total
-
-    context = {
-        "budget": budget,
-        "lines_vs_actual": lines_vs_actual,
-        "yearly_budget_total": yearly_budget_total,
-        "yearly_actual_total": yearly_actual_total,
-        "yearly_variance_total": yearly_budget_total - yearly_actual_total,
-    }
-    return render(request, "finance/budget_detail.html", context)
+    budget = get_object_or_404(FinanceBudget.objects.select_related("project").prefetch_related("lines", "performance_records__line"), pk=pk)
+    return render(request, "finance/budget_detail.html", {"budget": budget})
 
 
 @login_required(login_url="login")
@@ -177,13 +130,7 @@ def budget_create(request, pk=None):
         formset.save()
         messages.success(request, "Budget saved successfully.")
         return redirect("finance:budget_detail", pk=budget.pk)
-    context = {
-        "form": form,
-        "formset": formset,
-        "budget": instance,
-        "leaf_accounts": FinancialCategory.objects.filter(is_group=False).order_by("category_type", "code"),
-    }
-    return render(request, "finance/budget_form.html", context)
+    return render(request, "finance/budget_form.html", {"form": form, "formset": formset, "budget": instance})
 
 
 @login_required(login_url="login")
@@ -197,65 +144,31 @@ def budget_delete(request, pk):
 
 @login_required(login_url="login")
 def performance_list(request):
-    # Performance here means "how each budget is actually tracking" — read
-    # straight off the ledger (FinanceBudget.actual_amount sums each line's
-    # actual_total, which is itself a live FinancialTransaction aggregate),
-    # never a hand-typed expenditure figure that could drift from it.
-    # Each total is computed once here (not in the template) since
-    # actual_amount re-runs a ledger aggregate per line every time it's read.
-    budgets = FinanceBudget.objects.select_related("project").prefetch_related("lines__category")
-    rows = []
-    over_budget_count = 0
-    for budget in budgets:
-        total = budget.total_amount
-        actual = budget.actual_amount
-        if actual > total:
-            over_budget_count += 1
-        rows.append({
-            "budget": budget,
-            "total": total,
-            "actual": actual,
-            "variance": total - actual,
-            "utilization": (actual / total * 100) if total else Decimal("0.00"),
-        })
-    context = {
-        "rows": rows,
-        "over_budget_count": over_budget_count,
-    }
-    return render(request, "finance/budget_performance_list.html", context)
+    records = BudgetPerformance.objects.select_related("budget", "line").all()
+    return render(request, "finance/budget_performance_list.html", {"records": records})
 
 
 @login_required(login_url="login")
-def budget_transactions(request, pk):
-    # The actual transactions behind a budget's "Actual" figure — filtered
-    # by exactly the same category/date/project rule FinanceBudgetLine.
-    # actual_total uses internally, so this list always foots to the totals
-    # shown on the Performance and Budget Detail pages.
-    budget = get_object_or_404(
-        FinanceBudget.objects.select_related("project").prefetch_related("lines__category"), pk=pk,
-    )
-    lines = list(budget.lines.all())
-    category_ids = [line.category_id for line in lines if line.category_id]
+@finance_editor_required
+def performance_create(request):
+    form = BudgetPerformanceForm(request.POST or None)
+    if form.is_valid():
+        record = form.save(commit=False); record.created_by = request.user; record.save(); messages.success(request, "Budget performance record saved."); return redirect("finance:performance_list")
+    return render(request, "finance/budget_performance_form.html", {"form": form})
 
-    transactions = FinancialTransaction.objects.filter(
-        category_id__in=category_ids,
-        date__gte=budget.period_start,
-        date__lte=budget.period_end,
-    ).select_related("category", "project", "department", "created_by")
-    if budget.project_id:
-        transactions = transactions.filter(project=budget.project)
-    transactions = transactions.order_by("category__code", "date")
 
-    context = {
-        "budget": budget,
-        "lines": lines,
-        "transactions": transactions,
-        "transaction_count": transactions.count(),
-        "budgeted_total": budget.total_amount,
-        "actual_total": budget.actual_amount,
-        "variance_total": budget.variance_amount,
-    }
-    return render(request, "finance/budget_transactions.html", context)
+@login_required(login_url="login")
+@finance_editor_required
+def performance_lines(request, budget_id):
+    """Return only the budget lines belonging to the selected budget."""
+    get_object_or_404(FinanceBudget, pk=budget_id)
+    lines = FinanceBudgetLine.objects.filter(budget_id=budget_id).order_by("code", "id")
+    return JsonResponse({
+        "lines": [
+            {"id": line.pk, "label": f"{line.code} - {line.description}"}
+            for line in lines
+        ],
+    })
 
 
 @login_required(login_url="login")
@@ -266,9 +179,9 @@ def cashbook_list(request):
 @login_required(login_url="login")
 def cashbook_detail(request, pk):
     cash_book = get_object_or_404(CashBook.objects.select_related("project").prefetch_related("entries", "bank_reconciliation"), pk=pk)
-    form = CashBookEntryForm()
+    form = CashBookEntryForm(cash_book=cash_book)
     if request.method == "POST":
-        form = CashBookEntryForm(request.POST)
+        form = CashBookEntryForm(request.POST, cash_book=cash_book)
         if not (request.user.is_superuser or request.user.groups.filter(name__iexact="Finance").exists()):
             messages.error(request, "Only Finance staff or a superuser can add cash book entries.")
         elif form.is_valid():
@@ -283,6 +196,41 @@ def cashbook_create(request):
     if form.is_valid():
         obj = form.save(commit=False); obj.created_by = request.user; obj.save(); messages.success(request, "Cash book created."); return redirect("finance:cashbook_detail", pk=obj.pk)
     return render(request, "finance/cashbook_form.html", {"form": form})
+
+
+@login_required(login_url="login")
+@finance_editor_required
+def cashbook_project_budget(request, project_id):
+    """Return project metadata and the selected project's FinanceBudget total."""
+    project = get_object_or_404(Project, pk=project_id)
+    total = FinanceBudgetLine.objects.filter(budget__project_id=project_id).aggregate(
+        total=Coalesce(
+            Sum(
+                ExpressionWrapper(
+                    F("price_per_unit") * F("units") * F("frequency"),
+                    output_field=DecimalField(max_digits=24, decimal_places=2),
+                )
+            ),
+            Value(0),
+            output_field=DECIMAL_ZERO,
+        )
+    )["total"]
+    financial_budget = FinanceBudget.objects.filter(project_id=project_id).order_by(
+        "-period_start", "-pk"
+    ).first()
+    return JsonResponse({
+        "budget": str(total),
+        "project": {
+            "donor": project.donor or "",
+            "period_start": project.start_date.isoformat() if project.start_date else "",
+            "period_end": project.end_date.isoformat() if project.end_date else "",
+        },
+        "financial_budget": {
+            "donor": financial_budget.donor if financial_budget else "",
+            "period_start": financial_budget.period_start.isoformat() if financial_budget else "",
+            "period_end": financial_budget.period_end.isoformat() if financial_budget else "",
+        },
+    })
 
 
 @login_required(login_url="login")
@@ -329,7 +277,8 @@ def export_reconciliation(request, pk): return reconciliation_xlsx(get_object_or
 
 
 @login_required(login_url="login")
-@finance_editor_required
+@finance_requisition_required
+@signature_required
 def create_cash_requisition(request):
     if request.method == "POST":
         with transaction.atomic():
@@ -386,7 +335,8 @@ def create_cash_requisition(request):
 
 
 @login_required(login_url="login")
-@finance_editor_required
+@finance_requisition_required
+@signature_required
 def create_cash_requisition_from_procurement(request, req_pk):
     procurement_req = get_object_or_404(Requisition, pk=req_pk, status="Approved")
     purchase_order = get_object_or_404(
@@ -433,6 +383,7 @@ def requisition_detail(request, pk, slug):
 
 @login_required(login_url="login")
 @finance_editor_required
+@signature_required
 def submit_requisition(request, pk, slug):
     obj = get_object_or_404(CashRequisition, pk=pk,  slug=slug, created_by=request.user)
 
@@ -448,8 +399,16 @@ def submit_requisition(request, pk, slug):
 
 @login_required(login_url="login")
 @finance_editor_required
+@signature_required
 def approve_requisition(request, pk, slug):
     obj = get_object_or_404(CashRequisition, pk=pk,  slug=slug)
+
+    if deny_signatory_conflict(
+        request,
+        requester=obj.created_by,
+        previous_signers=[obj.checked_by, obj.reviewed_by, obj.approved_by],
+    ):
+        return redirect(reverse("finance:requisition_detail", kwargs={'pk': obj.pk, 'slug': obj.slug}))
 
     if user_can_approve(request.user, obj):
         advance_workflow(obj, request.user)
@@ -492,8 +451,16 @@ def requisition_pdf(request, pk, slug):
 
 @login_required(login_url="login")
 @finance_editor_required
+@signature_required
 def reject_requisition(request, pk, slug):
     obj = get_object_or_404(CashRequisition, pk=pk,  slug=slug)
+
+    if deny_signatory_conflict(
+        request,
+        requester=obj.created_by,
+        previous_signers=[obj.checked_by, obj.reviewed_by, obj.approved_by],
+    ):
+        return redirect(reverse("finance:requisition_detail", kwargs={'pk': obj.pk, 'slug': obj.slug}))
 
     if request.method == "POST":
         reason = request.POST.get("reason")
@@ -519,6 +486,7 @@ def reject_requisition(request, pk, slug):
 @login_required(login_url="login")
 @transaction.atomic
 @finance_editor_required
+@signature_required
 def save_accounting(request, slug=None, pk=None, req_slug=None, req_pk=None):
 
     obj = None
@@ -590,8 +558,16 @@ def save_accounting(request, slug=None, pk=None, req_slug=None, req_pk=None):
 
 @login_required(login_url="login")
 @finance_editor_required
+@signature_required
 def approve_account_form(request, pk, slug):
     obj = get_object_or_404(AccountingForm, pk=pk,  slug=slug)
+
+    if deny_signatory_conflict(
+        request,
+        requester=obj.created_by,
+        previous_signers=[obj.checked_by, obj.reviewed_by, obj.approved_by],
+    ):
+        return redirect(reverse("finance:accounting_detail", kwargs={'pk': obj.pk, 'slug': obj.slug}))
 
     if user_can_approve(request.user, obj):
         advance_workflow(obj, request.user)
@@ -656,6 +632,7 @@ def accounting_pdf(request, pk, slug):
 
 @login_required(login_url="login")
 @finance_editor_required
+@signature_required
 def create_admin_expense(request, slug, pk):
     cash_req = get_object_or_404(CashRequisition, slug=slug, pk=pk)
     if request.method == "POST":
@@ -693,6 +670,7 @@ def admin_expense_detail(request, pk, slug):
 
 @login_required(login_url="login")
 @finance_editor_required
+@signature_required
 def submit_admin_expense(request, pk, slug):
     obj = get_object_or_404(AdminExpenseNote, pk=pk,  slug=slug)
 
@@ -707,6 +685,7 @@ def submit_admin_expense(request, pk, slug):
 
 @login_required(login_url="login")
 @finance_editor_required
+@signature_required
 def approve_admin_expense(request, pk, slug):
     obj = get_object_or_404(AdminExpenseNote, pk=pk, slug=slug)
 
@@ -718,11 +697,17 @@ def approve_admin_expense(request, pk, slug):
 
     if request.method == "POST":
 
+        if deny_signatory_conflict(
+            request,
+            requester=obj.created_by,
+            previous_signers=[obj.checked_by, obj.reviewed_by, obj.approved_by],
+        ):
+            return redirect(reverse("finance:admin_expense_detail", kwargs={"pk": obj.pk, "slug": obj.slug}))
+
         # STEP 1: Initial review (any department)
         if obj.status == "submitted":
             if is_assets or is_operations or is_finance:
                 obj.status = "under_review"
-                obj.checked_by = user
                 obj.reviewed_by = user
                 obj.save()
                 messages.success(request, "Expense moved to review stage.")
@@ -730,7 +715,7 @@ def approve_admin_expense(request, pk, slug):
                 messages.error(request, "You are not authorized to review this expense.")
 
         # STEP 2: Final approval (Finance or Operations only)
-        elif obj.status == "under_review" and obj.cash_req.checked_by == user:
+        elif obj.status == "under_review" and obj.reviewed_by != user:
             if is_finance or is_operations:
                 obj.status = "approved"
                 obj.approved_by = user
@@ -809,10 +794,21 @@ def financial_ledger(request):
 
     transactions, project_id = _filter_ledger(request)
 
+    # Include legacy journal rows by classifying them from their account type.
+    journal_income = Q(transaction_type=FinancialTransaction.TransactionType.JOURNAL,
+                       category__category_type=FinancialCategory.CategoryType.INCOME)
+    journal_expense = Q(transaction_type=FinancialTransaction.TransactionType.JOURNAL,
+                        category__category_type=FinancialCategory.CategoryType.EXPENSE)
+    journal_transfer = Q(transaction_type=FinancialTransaction.TransactionType.JOURNAL) & ~Q(
+        category__category_type__in=[
+            FinancialCategory.CategoryType.INCOME,
+            FinancialCategory.CategoryType.EXPENSE,
+        ]
+    )
     totals = transactions.aggregate(
-        total_income=Coalesce(Sum("amount", filter=Q(transaction_type="income")), Value(0), output_field=DECIMAL_ZERO),
-        total_expense=Coalesce(Sum("amount", filter=Q(transaction_type="expense")), Value(0), output_field=DECIMAL_ZERO),
-        total_transfer=Coalesce(Sum("amount", filter=Q(transaction_type="transfer")), Value(0), output_field=DECIMAL_ZERO),
+        total_income=Coalesce(Sum("amount", filter=Q(transaction_type=FinancialTransaction.TransactionType.INCOME) | journal_income), Value(0), output_field=DECIMAL_ZERO),
+        total_expense=Coalesce(Sum("amount", filter=Q(transaction_type=FinancialTransaction.TransactionType.EXPENSE) | journal_expense), Value(0), output_field=DECIMAL_ZERO),
+        total_transfer=Coalesce(Sum("amount", filter=Q(transaction_type=FinancialTransaction.TransactionType.TRANSFER) | journal_transfer), Value(0), output_field=DECIMAL_ZERO),
     )
     net_position = totals["total_income"] - totals["total_expense"]
 

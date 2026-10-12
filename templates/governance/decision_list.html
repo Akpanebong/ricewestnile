@@ -1,4 +1,4 @@
-{% extends "garcis/base.html" %}
+{% extends "governance/base.html" %}
 {% block title %}Decision Tracking{% endblock %}
 {% block content %}
 <div class="container-fluid py-4">
@@ -9,7 +9,7 @@
 
         </div>
         <div class="quick-links">
-            <a href="{% url 'decision_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i> Create Decision</a>
+            {% if governance_can_create %}<a href="{% url 'decision_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i> Create Decision</a>{% endif %}
             <a href="{% url 'governance_dashboard' %}" class="btn btn-outline-secondary">Governance Hub</a>
             <a href="{% url 'policy_list' %}" class="btn btn-outline-dark">Policies</a>
         </div>

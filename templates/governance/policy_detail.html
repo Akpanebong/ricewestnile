@@ -1,4 +1,4 @@
-{% extends "garcis/base.html" %}
+{% extends "governance/base.html" %}
 
 {% block content %}
 
@@ -74,7 +74,7 @@
 
 <h6>Actions</h6>
 
-<a href="{% url 'policy_update' object.pk %}" class="btn btn-warning w-100 mb-2">Edit</a>
+{% if governance_can_manage %}<a href="{% url 'policy_update' object.pk %}" class="btn btn-warning w-100 mb-2">Edit</a>
 
 <a href="{% url 'policy_delete' object.pk %}" class="btn btn-danger w-100 mb-2">Delete</a>
 
@@ -87,6 +87,7 @@
 <a href="{% url 'policy_reject' object.pk %}" class="btn btn-dark w-100">
     Reject
 </a>
+{% endif %}
 
 </div>
 

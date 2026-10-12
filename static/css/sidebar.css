@@ -461,3 +461,32 @@ body.sidebar-collapsed .sidebar-submenu {
         display: block !important;
     }
 }
+.governance-sidebar,
+.governance-sidebar a,
+.governance-sidebar a i,
+.governance-sidebar .sidebar-section,
+.governance-sidebar .text-muted {
+    color: #fff !important;
+}
+
+.governance-sidebar a:hover,
+.governance-sidebar a.active {
+    color: #fff !important;
+}
+
+body.sidebar-collapsed .governance-sidebar a {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+body.sidebar-collapsed .governance-sidebar .governance-sidebar-text,
+body.sidebar-collapsed .governance-sidebar .governance-sidebar-status {
+    display: none !important;
+}
+
+body.sidebar-collapsed .governance-sidebar a i {
+    margin-right: 0 !important;
+}
