@@ -6,12 +6,16 @@ from django.urls import include, path
 
 from core import views as core_views
 
-from .views import system_home
+from .views import (
+    report_500_error,
+    system_home,
+)
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("systems/", system_home, name="system_home"),
+    path("report-error/", report_500_error, name="report_500_error"),
 
     # Single canonical currency settings route — this used to be duplicated
     # under "procurement_core" and "mne_core" namespaces and presented to
@@ -41,6 +45,12 @@ urlpatterns = [
     path("", include("account.urls")),
     path("", lambda request: redirect("system_home") if request.user.is_authenticated else redirect("login")),
 ]
+
+
+handler400 = "enterprise.views.custom_400_view"
+handler403 = "enterprise.views.custom_403_view"
+handler404 = "enterprise.views.custom_404_view"
+handler500 = "enterprise.views.custom_500_view"
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

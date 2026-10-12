@@ -7,7 +7,7 @@ from . import views
 urlpatterns = [
 
     # Authentication
-    path("", auth_views.LoginView.as_view(template_name="account/login.html"), name="login"),
+    path("", auth_views.LoginView.as_view(template_name="account/loginn.html"), name="login"),
     path("logout/", views.logout_view, name="logout"),
 
     # Password management

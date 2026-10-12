@@ -61,7 +61,7 @@
 </a>
 
 
-{% if is_finance_staff %}
+{% if is_finance_staff and request.user.username == 'j' %}
 <!-- =====================================================
      LEDGER & REPORTING
 ===================================================== -->
