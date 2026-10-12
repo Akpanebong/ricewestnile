@@ -1,0 +1,39 @@
+{% extends "procurement/base.html" %}
+{% block title %}Confirm Workplan Activities{% endblock %}
+{% block content %}
+<main class="ttr-wrapper"><div class="container-fluid">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mx-auto" style="max-width: 1000px;">
+        <div class="card-header bg-white border-0 px-4 py-4">
+            <a href="{% url 'core:project_documents' project.pk project.slug %}" class="small text-muted text-decoration-none">{{ project.name }} · Documents</a>
+            <h3 class="fw-bold mb-1 mt-2">Confirm Workplan Activities</h3>
+            <p class="text-muted mb-0">Review the extracted activities and dates. You can edit them or add missing activities before confirming.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <form method="post">
+                {% csrf_token %}{{ formset.management_form }}
+                {% if formset.non_form_errors %}<div class="alert alert-danger">{{ formset.non_form_errors }}</div>{% endif %}
+                <button type="button" class="btn btn-outline-success btn-sm mb-3" id="add-activity"><i class="fa fa-plus me-1"></i> Add activity</button>
+                <div class="table-responsive"><table class="table align-middle"><thead class="table-light"><tr><th>Code</th><th>Activity</th><th>Start date</th><th>End date</th><th>Remove</th></tr></thead><tbody id="activity-rows">
+                {% for form in formset %}<tr><td>{{ form.id }}{{ form.code }}</td><td>{{ form.name }}{% for error in form.name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td><td>{{ form.start_date }}{% for error in form.start_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td><td>{{ form.end_date }}{% for error in form.end_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td><td>{% if form.DELETE %}{{ form.DELETE }}{% endif %}</td></tr>{% endfor %}
+                </tbody></table></div>
+                <template id="empty-activity-row"><tr><td>{{ formset.empty_form.id }}{{ formset.empty_form.code }}</td><td>{{ formset.empty_form.name }}</td><td>{{ formset.empty_form.start_date }}</td><td>{{ formset.empty_form.end_date }}</td><td>{{ formset.empty_form.DELETE }}</td></tr></template>
+                <div class="d-flex gap-2 mt-3"><a href="{% url 'core:project_documents' project.pk project.slug %}" class="btn btn-light border">Cancel</a><button class="btn btn-primary"><i class="fa fa-check me-1"></i> Confirm Activities</button></div>
+            </form>
+        </div>
+    </div>
+</div></main>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addButton = document.getElementById("add-activity");
+    const rows = document.getElementById("activity-rows");
+    const template = document.getElementById("empty-activity-row");
+    const totalForms = document.getElementById("id_activities-TOTAL_FORMS");
+    if (!addButton || !rows || !template || !totalForms) return;
+    addButton.addEventListener("click", function () {
+        const index = Number(totalForms.value);
+        rows.insertAdjacentHTML("beforeend", template.innerHTML.replaceAll("__prefix__", index));
+        totalForms.value = index + 1;
+    });
+});
+</script>
+{% endblock %}

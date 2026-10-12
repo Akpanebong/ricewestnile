@@ -1,0 +1,425 @@
+
+{% extends "communication/base.html" %}
+
+{% block title %}Staff Events Calendar{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+   CALENDAR LEGEND
+   ========================================================= */
+
+.calendar-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: .55rem .9rem;
+    border: 1px solid #e9ecef;
+    border-radius: .5rem;
+    background: #fff;
+}
+
+.calendar-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: #495057;
+    font-size: .8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.calendar-legend-dot {
+    width: 11px;
+    height: 11px;
+    display: inline-block;
+    flex: 0 0 11px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, .08);
+}
+
+/* Today */
+.calendar-legend-dot.today {
+    background: #198754;
+}
+
+/* Past */
+.calendar-legend-dot.past {
+    background: #dc3545;
+}
+
+/* Upcoming */
+.calendar-legend-dot.future {
+    background: #ffc107;
+}
+
+/* Highlight today's actual calendar cell */
+.staff-calendar-day.today {
+    box-shadow: inset 0 0 0 2px #198754;
+}
+
+/* Keep today's event background consistent */
+.staff-calendar-day.has-events.status-current {
+    background: #eaf7ef;
+}
+
+.staff-calendar-day.has-events.status-past {
+    background: #fff0f0;
+}
+
+.staff-calendar-day.has-events.status-future {
+    background: #fff9df;
+}
+    .staff-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 1px;
+    background: #dee2e6;
+}
+
+.staff-calendar-weekday {
+    padding: .55rem .35rem;
+    background: #f8f9fa;
+    color: #5f6b76;
+    font-size: .72rem;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+/* Perfectly square calendar cells */
+.staff-calendar-day {
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+    min-height: 0;
+    padding: .45rem;
+    background: #fff;
+    overflow: hidden;
+    position: relative;
+}
+
+.staff-calendar-day.outside-month {
+    background: #f8f9fa;
+    color: #adb5bd;
+}
+
+.staff-calendar-day.has-events.status-current {
+    background: #eaf7ef;
+}
+
+.staff-calendar-day.has-events.status-past {
+    background: #fff0f0;
+}
+
+.staff-calendar-day.has-events.status-future {
+    background: #fff9df;
+}
+</style>
+
+
+<!-- =========================================================
+     PAGE HEADER
+     ========================================================= -->
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+
+    <div>
+        <h1 class="h3 fw-bold mb-1">
+            Staff Events Calendar
+        </h1>
+
+        <p class="text-muted mb-0">
+            Four-month view of staff events, meetings and available minutes.
+        </p>
+    </div>
+
+    {% if can_manage_events %}
+        <a
+            href="{% url 'comm:staff_events:create' %}"
+            class="btn btn-success"
+        >
+            <i class="fa-solid fa-plus me-1"></i>
+            Create Event
+        </a>
+    {% endif %}
+
+</div>
+
+
+<!-- =========================================================
+     CALENDAR CONTROLS
+     ========================================================= -->
+
+<div class="d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3 mb-4">
+
+    <a
+        href="?month={{ calendar_previous }}"
+        class="btn btn-outline-secondary btn-sm"
+    >
+        <i class="fa-solid fa-chevron-left me-1"></i>
+        Previous 4 Months
+    </a>
+
+    <div class="calendar-legend">
+
+        <span class="calendar-legend-item">
+            <span class="calendar-legend-dot today"></span>
+            Today
+        </span>
+
+        <span class="calendar-legend-item">
+            <span class="calendar-legend-dot past"></span>
+            Past
+        </span>
+
+        <span class="calendar-legend-item">
+            <span class="calendar-legend-dot future"></span>
+            Upcoming
+        </span>
+
+    </div>
+
+    <a
+        href="?month={{ calendar_next }}"
+        class="btn btn-outline-secondary btn-sm"
+    >
+        Next 4 Months
+        <i class="fa-solid fa-chevron-right ms-1"></i>
+    </a>
+
+</div>
+
+
+<!-- =========================================================
+     FOUR-MONTH CALENDAR
+     ========================================================= -->
+
+<div class="row g-4 mb-4">
+
+    {% for calendar in calendar_months %}
+
+        <div class="col-12 col-xl-6">
+
+            <div class="card shadow-sm calendar-month-card h-100">
+
+                <div class="card-header">
+                    <h2 class="h5 fw-semibold mb-0">
+                        {{ calendar.title }}
+                    </h2>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="staff-calendar-wrapper">
+
+                        <div class="staff-calendar">
+
+                            <!-- Weekdays -->
+                            {% for weekday in weekdays %}
+                                <div class="staff-calendar-weekday">
+                                    {{ weekday }}
+                                </div>
+                            {% endfor %}
+
+
+                            <!-- Calendar days -->
+                            {% for week in calendar.weeks %}
+
+                                {% for cell in week %}
+
+                                    <div
+                                        class="
+                                            staff-calendar-day
+                                            {% if not cell.in_month %}outside-month{% endif %}
+                                            {% if cell.events %}
+                                                has-events status-{{ cell.status }}
+                                            {% endif %}
+                                            {% if cell.date == calendar_today %}today{% endif %}
+                                        "
+                                    >
+
+                                        <span
+                                            class="staff-calendar-number"
+                                            aria-label="{{ cell.date|date:'l, d F Y' }}"
+                                        >
+                                            {{ cell.date|date:"j" }}
+                                        </span>
+
+
+                                        {% for event in cell.events %}
+
+                                            <a
+                                                href="{% url 'comm:staff_events:detail' event.pk %}"
+                                                class="staff-calendar-event"
+                                                title="{{ event.title }} — {{ event.starts_at|date:'D, d M Y h:i A' }}"
+                                                aria-label="{{ event.title }} on {{ event.starts_at|date:'l, d F Y h:i A' }}"
+                                            >
+                                                {{ event.starts_at|date:"h:i A" }}
+                                                ·
+                                                {{ event.title }}
+                                            </a>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endfor %}
+
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+
+<!-- =========================================================
+     EVENT LIST
+     ========================================================= -->
+
+<div class="card shadow-sm">
+
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+
+        <div>
+            <h2 class="h5 fw-semibold mb-1">
+                Staff Events
+            </h2>
+
+            <p class="small text-muted mb-0">
+                Scheduled events and available meeting minutes.
+            </p>
+        </div>
+
+        {% if events %}
+            <span class="badge bg-light text-dark border">
+                {{ events|length }} event{{ events|length|pluralize }}
+            </span>
+        {% endif %}
+
+    </div>
+
+
+    <div class="table-responsive">
+
+        <table class="table table-hover mb-0 staff-events-table">
+
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Date &amp; Time</th>
+                    <th>Location</th>
+                    <th>Minutes</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for event in events %}
+
+                    <tr>
+
+                        <td>
+                            <a
+                                href="{% url 'comm:staff_events:detail' event.pk %}"
+                                class="staff-event-title"
+                            >
+                                {{ event.title }}
+                            </a>
+
+                            {% if event.event_type == 'monthly_meeting' %}
+                                <span class="badge bg-info text-dark event-type-badge ms-2">
+                                    Monthly Meeting
+                                </span>
+                            {% endif %}
+                        </td>
+
+
+                        <td class="text-nowrap">
+
+                            <div class="fw-medium">
+                                {{ event.starts_at|date:"D, d M Y" }}
+                            </div>
+
+                            <div class="small text-muted">
+                                {{ event.starts_at|date:"h:i A" }}
+                                –
+                                {{ event.ends_at|date:"h:i A" }}
+                            </div>
+
+                        </td>
+
+
+                        <td>
+                            {{ event.location|default:"—" }}
+                        </td>
+
+
+                        <td>
+
+                            {% if event.minutes %}
+
+                                <a
+                                    href="{{ event.minutes.url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="btn btn-sm btn-outline-danger"
+                                >
+                                    <i class="fa-solid fa-file-pdf me-1"></i>
+                                    PDF
+                                </a>
+
+                            {% else %}
+
+                                <span class="text-muted">—</span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td
+                            colspan="4"
+                            class="text-center text-muted py-5"
+                        >
+                            <i class="fa-regular fa-calendar-xmark fa-2x mb-2"></i>
+
+                            <div class="fw-medium">
+                                No staff events yet.
+                            </div>
+
+                            {% if can_manage_events %}
+                                <div class="small mt-1">
+                                    Create an event to get started.
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

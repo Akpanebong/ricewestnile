@@ -1,0 +1,34 @@
+{% extends "procurement/base.html" %}
+{% block title %}Upload {{ document_title }}{% endblock %}
+{% block content %}
+<main class="ttr-wrapper"><div class="container-fluid">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mx-auto" style="max-width: 760px;">
+        <div class="card-header bg-white border-0 px-4 py-4">
+            <a href="{% url 'core:project_documents' project.pk project.slug %}" class="small text-muted text-decoration-none">{{ project.name }} · Documents</a>
+            <h3 class="fw-bold mb-1 mt-2">Upload {{ document_title }}</h3>
+            <p class="text-muted mb-0">Only the assigned Project Officer can submit documents for this project.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">File</label>
+                    {{ form.file }}
+                    <div class="form-text">Accepted: PDF, Word, Excel, and PowerPoint files.</div>
+                    {% for error in form.file.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+                {% if document_type == "workplan" %}
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label fw-semibold">Workplan period</label>{{ form.workplan_period }}{% for error in form.workplan_period.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+                </div>
+                {% else %}
+                <div class="mb-3"><label class="form-label fw-semibold">Activity</label>{{ form.activity }}{% for error in form.activity.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}<div class="form-text">Select the confirmed workplan activity this report covers.</div></div>
+                <div class="mb-3"><label class="form-label fw-semibold">Report type</label>{{ form.report_type }}{% for error in form.report_type.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+                {% endif %}
+                <div class="d-flex gap-2 mt-4"><a href="{% url 'core:project_documents' project.pk project.slug %}" class="btn btn-light border">Cancel</a><button class="btn btn-primary"><i class="fa fa-upload me-1"></i> Upload {{ document_title }}</button></div>
+            </form>
+        </div>
+    </div>
+</div></main>
+{% endblock %}

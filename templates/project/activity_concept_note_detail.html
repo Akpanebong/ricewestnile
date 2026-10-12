@@ -1,0 +1,875 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}Concept Note | {{ activity.name }}{% endblock %}
+
+{% block content %}
+
+<main class="ttr-wrapper">
+    <div class="container-fluid py-4">
+
+        <!-- Breadcrumb -->
+        <div class="mb-3">
+            <a href="{% url 'core:project_documents' project.pk project.slug %}"
+               class="text-decoration-none small text-muted">
+                <i class="fas fa-folder-open me-1"></i>
+                {{ project.name }} / Documents
+            </a>
+        </div>
+
+        <!-- Page Header -->
+        <div class="d-flex flex-column flex-lg-row justify-content-between
+                    align-items-lg-center gap-3 mb-4">
+
+            <div>
+                <div class="text-uppercase small fw-semibold text-muted mb-1">
+                    Activity Documentation
+                </div>
+
+                <h3 class="fw-bold mb-1">
+                    <i class="fas fa-file-alt me-2 text-primary"></i>
+                    Activity Concept Note
+                </h3>
+
+                <p class="text-muted mb-0">
+                    {{ activity.code|default:"Activity" }}
+                    <span class="mx-1">—</span>
+                    {{ activity.name }}
+                </p>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <span class="badge rounded-pill px-3 py-2
+                    {% if note.status == 'approved' %}
+                        bg-success
+                    {% elif note.status == 'rejected' %}
+                        bg-danger
+                    {% elif note.status == 'reviewed' %}
+                        bg-info text-dark
+                    {% elif note.status == 'submitted' %}
+                        bg-primary
+                    {% else %}
+                        bg-warning text-dark
+                    {% endif %}">
+                    {% if note.status == 'approved' %}
+                        <i class="fas fa-check-circle me-1"></i>
+                    {% elif note.status == 'rejected' %}
+                        <i class="fas fa-times-circle me-1"></i>
+                    {% elif note.status == 'reviewed' %}
+                        <i class="fas fa-user-check me-1"></i>
+                    {% elif note.status == 'submitted' %}
+                        <i class="fas fa-paper-plane me-1"></i>
+                    {% else %}
+                        <i class="fas fa-pencil-alt me-1"></i>
+                    {% endif %}
+
+                    {{ note.get_status_display }}
+                </span>
+            </div>
+
+        </div>
+
+
+        <!-- Submission & Approval Trail -->
+        <section class="card border-0 shadow-sm rounded-4 mb-4">
+
+            <div class="card-header bg-white border-0 px-4 pt-4 pb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="section-icon bg-primary-subtle text-primary">
+                        <i class="fas fa-route"></i>
+                    </span>
+
+                    <div>
+                        <h5 class="fw-bold mb-0">
+                            Submission & Approval Trail
+                        </h5>
+                        <small class="text-muted">
+                            Document workflow and approval history
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body px-4 pb-4">
+
+                <div class="row g-3">
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="info-box">
+                            <span class="info-label">Source</span>
+                            <span class="info-value">
+                                {{ note.get_source_display|default:"-" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="info-box">
+                            <span class="info-label">Written By</span>
+                            <span class="info-value">
+                                {{ note.created_by|default:"-" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="info-box">
+                            <span class="info-label">Reviewed By</span>
+                            <span class="info-value">
+                                {{ note.reviewed_by|default:"Pending" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="info-box">
+                            <span class="info-label">Approved By</span>
+                            <span class="info-value">
+                                {{ note.approved_by|default:"Pending" }}
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+                {% if note.uploaded_file %}
+                    <div class="mt-4 pt-3 border-top">
+                        <a href="{{ note.uploaded_file.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="btn btn-sm btn-success">
+                            <i class="fas fa-file-pdf me-1"></i>
+                            Open Uploaded Form
+                        </a>
+                    </div>
+                {% endif %}
+
+                {% if note.rejection_reason %}
+                    <div class="alert alert-danger border-0 rounded-3 mt-4 mb-0">
+                        <div class="fw-semibold mb-1">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Revision Requested
+                        </div>
+
+                        <div>
+                            {{ note.rejection_reason|linebreaksbr }}
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>
+        </section>
+
+
+        <!-- Activity Profile -->
+        <section class="card border-0 shadow-sm rounded-4 mb-4">
+
+            <div class="card-header bg-white border-0 px-4 pt-4 pb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="section-icon bg-success-subtle text-success">
+                        <i class="fas fa-project-diagram"></i>
+                    </span>
+
+                    <div>
+                        <h5 class="fw-bold mb-0">
+                            Activity Profile
+                        </h5>
+                        <small class="text-muted">
+                            Core information about the activity
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body px-4 pb-4">
+
+                <div class="row g-4">
+
+                    <div class="col-12 col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Project</span>
+                            <div class="detail-value">
+                                {{ note.project_name|default:"-" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Activity</span>
+                            <div class="detail-value">
+                                {{ note.activity_code|default:"-" }}
+                                {% if note.activity_name %}
+                                    <span class="text-muted">—</span>
+                                    {{ note.activity_name }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Core Program Area</span>
+                            <div class="detail-value">
+                                {{ note.core_program_area|default:"-" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Outcome / Result Area</span>
+                            <div class="detail-value">
+                                {{ note.outcome_result_area|default:"-" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Activity Dates</span>
+                            <div class="detail-value">
+                                {{ note.activity_start_date|default:"-" }}
+                                <span class="text-muted mx-1">to</span>
+                                {{ note.activity_end_date|default:"-" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Venue / Location</span>
+                            <div class="detail-value">
+                                {{ note.activity_venue|default:"-" }}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- Concept Description -->
+        <section class="card border-0 shadow-sm rounded-4 mb-4">
+
+            <div class="card-header bg-white border-0 px-4 pt-4 pb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="section-icon bg-info-subtle text-info">
+                        <i class="fas fa-align-left"></i>
+                    </span>
+
+                    <div>
+                        <h5 class="fw-bold mb-0">
+                            Concept Description
+                        </h5>
+                        <small class="text-muted">
+                            Rationale, objectives, methodology and safeguards
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body px-4 pb-4">
+
+                <div class="concept-content">
+
+                    <div class="concept-section">
+                        <h6>Background</h6>
+                        <div class="concept-text">
+                            {{ note.background|default:"Not provided."|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <div class="concept-section">
+                        <h6>Objectives</h6>
+                        <div class="concept-text">
+                            {{ note.objectives|default:"Not provided."|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <div class="concept-section">
+                        <h6>Methodology</h6>
+                        <div class="concept-text">
+                            {{ note.methodology|default:"Not provided."|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <div class="concept-section">
+                        <h6>Expected Outputs / Deliverables</h6>
+                        <div class="concept-text">
+                            {{ note.expected_outputs|default:"Not provided."|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <div class="concept-section">
+                        <h6>Inputs Required</h6>
+                        <div class="concept-text">
+                            {{ note.inputs_required|default:"Not provided."|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <div class="concept-section">
+                        <h6>Cross-Cutting Themes</h6>
+                        <div class="concept-text">
+                            {{ note.cross_cutting_themes|default:"Not provided."|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <div class="concept-section">
+                        <h6>Safeguarding Integration</h6>
+                        <div class="concept-text">
+                            {{ note.safeguarding_integration|default:"Not provided."|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <div class="concept-section mb-0">
+                        <h6>AAP Integration</h6>
+                        <div class="concept-text">
+                            {{ note.aap_integration|default:"Not provided."|linebreaksbr }}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- Implementation & Budget -->
+        <div class="row g-4">
+
+            <!-- Implementation Plan -->
+            <div class="col-12 col-xl-6">
+
+                <section class="card border-0 shadow-sm rounded-4 h-100">
+
+                    <div class="card-header bg-white border-0 px-4 pt-4 pb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="section-icon bg-warning-subtle text-warning">
+                                <i class="fas fa-tasks"></i>
+                            </span>
+
+                            <div>
+                                <h5 class="fw-bold mb-0">
+                                    Implementation Plan
+                                </h5>
+                                <small class="text-muted">
+                                    Planned tasks and responsibilities
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body px-4 pb-4">
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Date</th>
+                                        <th>Responsible</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    {% for row in note.tasks %}
+                                        <tr>
+                                            <td>
+                                                {{ row.task|default:"-" }}
+                                            </td>
+
+                                            <td class="text-nowrap">
+                                                {{ row.date|default:"-" }}
+                                            </td>
+
+                                            <td>
+                                                {{ row.person|default:"-" }}
+                                            </td>
+                                        </tr>
+
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="3"
+                                                class="text-center text-muted py-4">
+                                                <i class="fas fa-inbox d-block fs-4 mb-2"></i>
+                                                No implementation tasks entered.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+
+                                </tbody>
+
+                            </table>
+                        </div>
+
+                    </div>
+                </section>
+
+            </div>
+
+
+            <!-- Budget -->
+            <div class="col-12 col-xl-6">
+
+                <section class="card border-0 shadow-sm rounded-4 h-100">
+
+                    <div class="card-header bg-white border-0 px-4 pt-4 pb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="section-icon bg-success-subtle text-success">
+                                <i class="fas fa-coins"></i>
+                            </span>
+
+                            <div>
+                                <h5 class="fw-bold mb-0">
+                                    Budget
+                                </h5>
+                                <small class="text-muted">
+                                    Activity budget and cost estimates
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body px-4 pb-4">
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-3">
+
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th class="text-center">Qty</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    {% for row in note.budget_lines %}
+                                        <tr>
+                                            <td>
+                                                {{ row.item|default:"-" }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ row.qty|default:"-" }}
+                                            </td>
+
+                                            <td class="text-end fw-semibold text-nowrap">
+                                                {{ row.amount|default:"-" }}
+                                            </td>
+                                        </tr>
+
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="3"
+                                                class="text-center text-muted py-4">
+                                                <i class="fas fa-receipt d-block fs-4 mb-2"></i>
+                                                No budget lines entered.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+
+                                </tbody>
+
+                            </table>
+                        </div>
+
+                        {% if note.total_amount_in_words %}
+                            <div class="budget-total">
+                                <span class="text-muted small">
+                                    Total in words
+                                </span>
+
+                                <div class="fw-semibold mt-1">
+                                    {{ note.total_amount_in_words }}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                    </div>
+                </section>
+
+            </div>
+
+        </div>
+
+
+        <!-- Workflow Actions -->
+        <section class="card border-0 shadow-sm rounded-4 mt-4">
+
+            <div class="card-header bg-white border-0 px-4 pt-4 pb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="section-icon bg-primary-subtle text-primary">
+                        <i class="fas fa-cogs"></i>
+                    </span>
+
+                    <div>
+                        <h5 class="fw-bold mb-0">
+                            Workflow Actions
+                        </h5>
+                        <small class="text-muted">
+                            Available actions depend on the current approval stage
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body px-4 pb-4">
+
+                <div class="workflow-actions">
+
+                    <!-- Draft / Rejected -->
+                    {% if can_manage %}
+
+                        {% if note.status == 'draft' or note.status == 'rejected' %}
+
+                            <a href="{% url 'core:activity_concept_note_entry' project.pk project.slug activity.pk %}"
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>
+                                Edit Online
+                            </a>
+
+                            <a href="{% url 'core:activity_concept_note_upload' project.pk project.slug activity.pk %}"
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-file-upload me-1"></i>
+                                Replace Upload
+                            </a>
+
+                            <form method="post"
+                                  action="{% url 'core:activity_concept_note_submit' project.pk project.slug activity.pk %}"
+                                  class="d-inline">
+                                {% csrf_token %}
+
+                                <button type="submit"
+                                        class="btn btn-primary">
+                                    <i class="fas fa-paper-plane me-1"></i>
+                                    Submit for Review
+                                </button>
+                            </form>
+
+                        {% endif %}
+
+                    {% endif %}
+
+
+                    <!-- Review Stage -->
+                    {% if can_review %}
+
+                        {% if note.status == 'submitted' %}
+
+                            <div class="workflow-form">
+                                <form method="post"
+                                      action="{% url 'core:activity_concept_note_review' project.pk project.slug activity.pk %}">
+
+                                    {% csrf_token %}
+
+                                    <input type="hidden"
+                                           name="action"
+                                           value="review">
+
+                                    <label class="form-label small fw-semibold">
+                                        Review Comments
+                                    </label>
+
+                                    <textarea name="comments"
+                                              class="form-control"
+                                              rows="2"
+                                              placeholder="Review comments (optional)"></textarea>
+
+                                    <button type="submit"
+                                            class="btn btn-success mt-2">
+                                        <i class="fas fa-check me-1"></i>
+                                        Review & Forward
+                                    </button>
+
+                                </form>
+                            </div>
+
+
+                            <div class="workflow-form">
+                                <form method="post"
+                                      action="{% url 'core:activity_concept_note_review' project.pk project.slug activity.pk %}">
+
+                                    {% csrf_token %}
+
+                                    <input type="hidden"
+                                           name="action"
+                                           value="return">
+
+                                    <label class="form-label small fw-semibold">
+                                        Reason for Return
+                                    </label>
+
+                                    <textarea name="comments"
+                                              class="form-control"
+                                              rows="2"
+                                              placeholder="Explain what needs to be revised..."
+                                              required></textarea>
+
+                                    <button type="submit"
+                                            class="btn btn-outline-danger mt-2">
+                                        <i class="fas fa-undo me-1"></i>
+                                        Return for Revision
+                                    </button>
+
+                                </form>
+                            </div>
+
+                        {% endif %}
+
+                    {% endif %}
+
+
+                    <!-- Approval Stage -->
+                    {% if can_approve %}
+
+                        {% if note.status == 'reviewed' %}
+
+                            <div class="workflow-form">
+
+                                <form method="post"
+                                      action="{% url 'core:activity_concept_note_approve' project.pk project.slug activity.pk %}">
+
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            class="btn btn-success">
+                                        <i class="fas fa-check-double me-1"></i>
+                                        Approve Concept Note
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+
+                            <div class="workflow-form">
+
+                                <form method="post"
+                                      action="{% url 'core:activity_concept_note_approve' project.pk project.slug activity.pk %}">
+
+                                    {% csrf_token %}
+
+                                    <input type="hidden"
+                                           name="action"
+                                           value="reject">
+
+                                    <label class="form-label small fw-semibold">
+                                        Reason for Rejection
+                                    </label>
+
+                                    <textarea name="comments"
+                                              class="form-control"
+                                              rows="2"
+                                              placeholder="Explain the reason for rejection..."
+                                              required></textarea>
+
+                                    <button type="submit"
+                                            class="btn btn-outline-danger mt-2">
+                                        <i class="fas fa-times me-1"></i>
+                                        Reject
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        {% endif %}
+
+                    {% endif %}
+
+
+                    <!-- No Actions -->
+                    {% if note.status == 'approved' %}
+                        <div class="alert alert-success border-0 rounded-3 mb-0 w-100">
+                            <i class="fas fa-check-circle me-2"></i>
+                            This concept note has been approved and requires no further action.
+                        </div>
+                    {% elif note.status == 'submitted' and not can_review %}
+                        <div class="alert alert-info border-0 rounded-3 mb-0 w-100">
+                            <i class="fas fa-hourglass-half me-2"></i>
+                            This concept note is awaiting review.
+                        </div>
+                    {% elif note.status == 'reviewed' and not can_approve %}
+                        <div class="alert alert-info border-0 rounded-3 mb-0 w-100">
+                            <i class="fas fa-hourglass-half me-2"></i>
+                            This concept note is awaiting approval.
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</main>
+
+
+<style>
+    /* =========================================================
+       CONCEPT NOTE DETAIL
+       ========================================================= */
+
+    .section-icon {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: .95rem;
+    }
+
+    .info-box {
+        height: 100%;
+        padding: .9rem 1rem;
+        border: 1px solid #edf0f2;
+        border-radius: 12px;
+        background: #f8f9fa;
+    }
+
+    .info-label,
+    .detail-label {
+        display: block;
+        margin-bottom: .3rem;
+        color: #6c757d;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .info-value,
+    .detail-value {
+        color: #212529;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    .detail-item {
+        height: 100%;
+        padding-bottom: .9rem;
+        border-bottom: 1px solid #f0f2f4;
+    }
+
+    .concept-section {
+        padding: 1.1rem 0;
+        border-bottom: 1px solid #edf0f2;
+    }
+
+    .concept-section:first-child {
+        padding-top: 0;
+    }
+
+    .concept-section h6 {
+        margin-bottom: .5rem;
+        color: #343a40;
+        font-weight: 700;
+    }
+
+    .concept-text {
+        color: #5f6368;
+        line-height: 1.75;
+        white-space: normal;
+    }
+
+    .table thead th {
+        background: #f8f9fa;
+        color: #495057;
+        border-bottom-width: 1px;
+        font-size: .76rem;
+        font-weight: 700;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        vertical-align: middle;
+    }
+
+    .budget-total {
+        padding: 1rem;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        background: #f8f9fa;
+    }
+
+    .workflow-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: .75rem;
+    }
+
+    .workflow-form {
+        flex: 1 1 280px;
+        min-width: 260px;
+        padding: 1rem;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        background: #f8f9fa;
+    }
+
+    .workflow-form form {
+        margin: 0;
+    }
+
+    .workflow-form .btn {
+        width: 100%;
+    }
+
+    .workflow-actions > .btn,
+    .workflow-actions > form {
+        margin: 0;
+    }
+
+    @media (max-width: 767.98px) {
+
+        .container-fluid {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        .card-body,
+        .card-header {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        .workflow-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .workflow-actions > .btn,
+        .workflow-actions > form,
+        .workflow-form {
+            width: 100%;
+            min-width: 100%;
+        }
+
+        .workflow-actions > form .btn {
+            width: 100%;
+        }
+
+        .table {
+            min-width: 600px;
+        }
+
+        .table-responsive {
+            border-radius: 10px;
+        }
+    }
+</style>
+
+{% endblock %}

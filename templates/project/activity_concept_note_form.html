@@ -1,0 +1,126 @@
+{% extends "procurement/base.html" %}
+{% block title %}Activity Concept Note | {{ activity.name }}{% endblock %}
+{% block content %}
+<main class="ttr-wrapper"><div class="container-fluid py-4">
+<a href="{% url 'core:project_documents' project.pk project.slug %}" class="small text-muted">{{ project.name }} / Documents</a>
+<h3 class="fw-bold mt-2">Activity Concept Note</h3><p class="text-muted">{{ activity.code|default:"Activity" }} — {{ activity.name }}</p>
+{% if entry_mode == "upload" %}
+<div class="card border-0 shadow-sm rounded-4 p-4" style="max-width:720px"><h5>Upload completed concept note</h5><p class="text-muted">Upload the completed Word or PDF version of the template.</p><form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.non_field_errors }}{{ form.uploaded_file }}{{ form.uploaded_file.errors }}<div class="mt-4"><button class="btn btn-primary">Save draft</button> {% if note %}<a href="{% url 'core:activity_concept_note_detail' project.pk project.slug activity.pk %}" class="btn btn-light border">Cancel</a>{% else %}<a href="{% url 'core:project_documents' project.pk project.slug %}" class="btn btn-light border">Cancel</a>{% endif %}</div></form></div>
+{% else %}
+<form method="post">{% csrf_token %}{{ form.non_field_errors }}
+<div class="btn-group flex-wrap mb-4" role="tablist"><button type="button" class="btn btn-primary concept-section-button" data-section="concept-a">A. Profile</button><button type="button" class="btn btn-outline-primary concept-section-button" data-section="concept-b">B. Description</button><button type="button" class="btn btn-outline-primary concept-section-button" data-section="concept-c">C. Safeguarding</button><button type="button" class="btn btn-outline-primary concept-section-button" data-section="concept-d">D. Timeline</button><button type="button" class="btn btn-outline-primary concept-section-button" data-section="concept-e">E. Budget</button></div>
+<div id="concept-a" class="concept-section card border-0 shadow-sm rounded-4 p-4 mb-4"><h5>A. Approvals and Activity Profile</h5><p class="small text-muted">Written by Project Officer · Reviewed by Project Head · Approved by Head of Program Department</p><div class="row g-3">
+{% for field in form %}{% if field.name == 'project_name' or field.name == 'activity_code' or field.name == 'activity_name' or field.name == 'core_program_area' or field.name == 'outcome_result_area' or field.name == 'activity_start_date' or field.name == 'activity_end_date' or field.name == 'activity_venue' or field.name == 'concept_date' %}<div class="col-md-6"><label class="form-label">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endif %}{% endfor %}
+</div></div>
+<div id="concept-b" class="concept-section card border-0 shadow-sm rounded-4 p-4 mb-4"><h5>B. Concept Description</h5><div class="row g-3">
+{% for field in form %}{% if field.name == 'background' or field.name == 'objectives' or field.name == 'methodology' or field.name == 'expected_outputs' or field.name == 'inputs_required' %}<div class="col-12"><label class="form-label">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endif %}{% endfor %}
+</div></div>
+<div id="concept-c" class="concept-section card border-0 shadow-sm rounded-4 p-4 mb-4"><h5>C. Cross-Cutting Themes, Safeguarding and AAP</h5><div class="row g-3">
+{% for field in form %}{% if field.name == 'cross_cutting_themes' or field.name == 'safeguarding_integration' or field.name == 'aap_integration' %}<div class="col-12"><label class="form-label">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endif %}{% endfor %}
+</div></div>
+<div id="concept-d" class="concept-section card border-0 shadow-sm rounded-4 p-4 mb-4">
+<h5>D. Activity Implementation Plan / Timeline</h5>
+{% for field in form %}{% if field.name == 'tasks_text' %}<div class="d-none">{{ field }}</div>{% endif %}{% endfor %}
+<div class="table-responsive">
+<table class="table table-bordered align-middle mb-2">
+<thead><tr><th>Task</th><th style="width: 20%;">Date</th><th style="width: 25%;">Responsible</th><th style="width: 48px;"></th></tr></thead>
+<tbody id="implementationRows"></tbody>
+</table>
+</div>
+<button type="button" class="btn btn-sm btn-outline-primary" id="addImplementationRow"><i class="fa fa-plus me-1"></i>Add task</button>
+</div>
+<div id="concept-e" class="concept-section card border-0 shadow-sm rounded-4 p-4 mb-4">
+<h5>E. Proposed Activity Budget</h5>
+{% for field in form %}{% if field.name == 'budget_lines_text' %}<div class="d-none">{{ field }}</div>{% endif %}{% endfor %}
+<div class="table-responsive">
+<table class="table table-bordered align-middle mb-2">
+<thead><tr><th>Item</th><th>Unit</th><th>Qty</th><th>Frequency</th><th>Unit cost</th><th>Amount</th><th style="width: 48px;"></th></tr></thead>
+<tbody id="budgetRows"></tbody>
+</table>
+</div>
+<button type="button" class="btn btn-sm btn-outline-primary" id="addBudgetRow"><i class="fa fa-plus me-1"></i>Add budget item</button>
+{% for field in form %}{% if field.name == 'total_amount_in_words' %}<label class="form-label mt-3">{{ field.label }}</label>{{ field }}{% endif %}{% endfor %}
+</div>
+<button class="btn btn-primary">Save draft</button> <a href="{% url 'core:project_documents' project.pk project.slug %}" class="btn btn-light border">Cancel</a>
+</form>
+<script>
+document.querySelectorAll('.concept-section-button').forEach(function(button) {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('.concept-section').forEach(function(section) { section.classList.add('d-none'); });
+        document.getElementById(button.dataset.section).classList.remove('d-none');
+        document.querySelectorAll('.concept-section-button').forEach(function(item) { item.classList.remove('btn-primary'); item.classList.add('btn-outline-primary'); });
+        button.classList.remove('btn-outline-primary'); button.classList.add('btn-primary');
+    });
+});
+document.querySelectorAll('.concept-section').forEach(function(section, index) { if (index > 0) section.classList.add('d-none'); });
+
+function splitRows(value, fieldCount) {
+    return value.trim() ? value.split(/\r?\n/).filter(Boolean).map(function(line) {
+        var parts = line.split('|').map(function(part) { return part.trim(); });
+        while (parts.length < fieldCount) parts.push('');
+        return parts.slice(0, fieldCount);
+    }) : [];
+}
+
+function addEditableRow(tbody, values, fieldNames) {
+    var row = document.createElement('tr');
+    fieldNames.forEach(function(name, index) {
+        var cell = document.createElement('td');
+        var input = document.createElement('input');
+        input.type = name === 'date' ? 'date' : (name === 'qty' || name === 'unit_cost' || name === 'amount' ? 'number' : 'text');
+        if (input.type === 'number') input.step = 'any';
+        input.className = 'form-control form-control-sm';
+        input.dataset.field = name;
+        input.value = values[index] || '';
+        input.placeholder = name.replace('_', ' ');
+        cell.appendChild(input);
+        row.appendChild(cell);
+    });
+    var removeCell = document.createElement('td');
+    removeCell.innerHTML = '<button type="button" class="btn btn-sm btn-outline-danger remove-entry" title="Remove row"><i class="fa fa-times"></i></button>';
+    removeCell.querySelector('.remove-entry').addEventListener('click', function() {
+        if (tbody.children.length > 1) row.remove();
+    });
+    row.appendChild(removeCell);
+    tbody.appendChild(row);
+}
+
+var tasksText = document.getElementById('id_tasks_text');
+var implementationRows = document.getElementById('implementationRows');
+var taskFields = ['task', 'date', 'person'];
+splitRows(tasksText.value, taskFields.length).forEach(function(values) {
+    addEditableRow(implementationRows, values, taskFields);
+});
+if (!implementationRows.children.length) addEditableRow(implementationRows, [], taskFields);
+document.getElementById('addImplementationRow').addEventListener('click', function() {
+    addEditableRow(implementationRows, [], taskFields);
+});
+
+var budgetText = document.getElementById('id_budget_lines_text');
+var budgetRows = document.getElementById('budgetRows');
+var budgetFields = ['item', 'unit', 'qty', 'freq', 'unit_cost', 'amount'];
+splitRows(budgetText.value, budgetFields.length).forEach(function(values) {
+    addEditableRow(budgetRows, values, budgetFields);
+});
+if (!budgetRows.children.length) addEditableRow(budgetRows, [], budgetFields);
+document.getElementById('addBudgetRow').addEventListener('click', function() {
+    addEditableRow(budgetRows, [], budgetFields);
+});
+
+document.querySelector('form').addEventListener('submit', function() {
+    function serialize(tbody, fields) {
+        return Array.from(tbody.children).map(function(row) {
+            return fields.map(function(field) {
+                return row.querySelector('[data-field="' + field + '"]').value.trim();
+            }).join(' | ');
+        }).filter(function(line) {
+            return line.replace(/[| ]/g, '');
+        }).join('\n');
+    }
+    tasksText.value = serialize(implementationRows, taskFields);
+    budgetText.value = serialize(budgetRows, budgetFields);
+});
+</script>
+{% endif %}
+</div></main>
+{% endblock %}

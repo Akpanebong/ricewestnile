@@ -1,0 +1,26 @@
+{% extends "communication/base.html" %}
+{% block title %}Documentation Library{% endblock %}
+{% block media_content %}
+{% include "media_presence/includes/media_header.html" %}
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+  <div><div class="media-eyebrow text-success"><i class="fa-solid fa-camera-retro me-1"></i> Documentation Library</div><h1 class="h2 fw-bold mb-1">{{ heading }}</h1><p class="text-muted mb-0">{{ subheading }}</p></div>
+  <a href="{% url 'media_presence:gallery_create' %}" class="btn btn-success"><i class="fa-solid fa-plus me-1"></i> Add Activity</a>
+</div>
+<nav aria-label="Gallery breadcrumb" class="mb-4"><ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{% url 'media_presence:galleries' %}">Years</a></li>
+  {% if year %}<li class="breadcrumb-item"><a href="{% url 'media_presence:gallery_quarters' year %}">{{ year }}</a></li>{% endif %}
+  {% if quarter %}<li class="breadcrumb-item"><a href="{% url 'media_presence:gallery_projects' year quarter %}">Q{{ quarter }}</a></li>{% endif %}
+  {% if project %}<li class="breadcrumb-item active">{{ project.name }}</li>{% endif %}
+</ol></nav>
+<div class="row g-4">
+{% for item in items %}
+    <div class="col-md-6 col-xl-4"><a class="card h-100 shadow-sm border-0 text-decoration-none text-dark overflow-hidden" href="{% if level == 'years' %}{% url 'media_presence:gallery_quarters' item.year %}{% elif level == 'quarters' %}{% url 'media_presence:gallery_projects' year item.quarter %}{% elif level == 'projects' %}{% url 'media_presence:gallery_activities' year quarter item.project_id %}{% else %}{% url 'media_presence:gallery_detail' item.pk %}{% endif %}">
+    {% if level == 'activities' and item.cover_image %}<img src="{{ item.cover_image.url }}" alt="{{ item.activity }}" class="w-100" style="height:180px;object-fit:cover;">{% endif %}<div class="p-4">
+    <div class="d-flex justify-content-between align-items-start"><span class="display-6 text-success"><i class="fa-solid {% if level == 'years' %}fa-calendar{% elif level == 'quarters' %}fa-layer-group{% elif level == 'projects' %}fa-diagram-project{% elif level == 'activities' %}fa-person-chalkboard{% endif %}"></i></span><i class="fa-solid fa-arrow-right text-muted"></i></div>
+    <h2 class="h4 mt-3">{% if level == 'years' %}{{ item.year }}{% elif level == 'quarters' %}Q{{ item.quarter }}{% elif level == 'projects' %}{{ item.project__name }}{% else %}{{ item.activity }}{% endif %}</h2>
+    <p class="text-muted mb-0">{% if level == 'activities' %}Photo activity{% endif %}</p>
+    <small class="text-muted mt-3 d-block">{% if level == 'activities' %}{{ item.photo_count }} photos{% else %}{{ item.activity_count }} activities · {{ item.photo_count }} photos{% endif %}</small>
+    </div></a></div>
+{% empty %}<div class="col-12"><div class="alert alert-light border text-center py-5">No documentation has been uploaded here yet.</div></div>{% endfor %}
+</div>
+{% endblock %}

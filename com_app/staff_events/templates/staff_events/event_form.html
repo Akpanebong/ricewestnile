@@ -1,0 +1,408 @@
+{% extends "communication/base.html" %}
+
+{% block title %}Create Staff Event{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       CREATE STAFF EVENT
+       ========================================================= */
+
+    .event-form-card {
+        max-width: 900px;
+        margin: 0 auto;
+        border: 1px solid #e1e5e8;
+        border-radius: .65rem;
+        overflow: hidden;
+    }
+
+    .event-form-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        background: #fff;
+    }
+
+    .event-form-header h1 {
+        color: #263238;
+        font-weight: 700;
+    }
+
+    .event-form-header p {
+        max-width: 720px;
+        margin-bottom: 0;
+        color: #6c757d;
+        font-size: .9rem;
+        line-height: 1.6;
+    }
+
+    .event-form-body {
+        padding: 1.5rem;
+    }
+
+    .form-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-section-title {
+        margin-bottom: 1rem;
+        padding-bottom: .6rem;
+        border-bottom: 1px solid #e9ecef;
+        color: #263238;
+        font-size: .95rem;
+        font-weight: 700;
+    }
+
+    .form-label {
+        margin-bottom: .4rem;
+        color: #495057;
+        font-size: .82rem;
+        font-weight: 600;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 44px;
+        border-color: #dce1e5;
+        border-radius: .4rem;
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .1);
+    }
+
+    .form-help {
+        margin-top: .35rem;
+        color: #6c757d;
+        font-size: .75rem;
+        line-height: 1.45;
+    }
+
+    .field-error {
+        margin-top: .35rem;
+        color: #dc3545;
+        font-size: .78rem;
+    }
+
+    .required-mark {
+        color: #dc3545;
+    }
+
+    .event-form-actions {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    @media (max-width: 767.98px) {
+
+        .event-form-header,
+        .event-form-body {
+            padding: 1rem;
+        }
+
+        .event-form-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .event-form-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+
+<div class="card shadow-sm event-form-card">
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <div class="event-form-header">
+
+        <h1 class="h3 mb-2">
+            Create Staff Event
+        </h1>
+
+        <p>
+            Create a staff event and send calendar invitations to all
+            staff members who have an email address. Each invitation
+            includes an ICS calendar attachment.
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         FORM
+         ===================================================== -->
+
+    <div class="event-form-body">
+
+        <form method="post" novalidate>
+
+            {% csrf_token %}
+
+
+            {% if form.non_field_errors %}
+
+                <div class="alert alert-danger" role="alert">
+
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>
+
+                    {{ form.non_field_errors }}
+
+                </div>
+
+            {% endif %}
+
+
+           <!-- =================================================
+     EVENT INFORMATION
+     ================================================= -->
+
+<div class="form-section">
+
+    <h2 class="form-section-title">
+        <i class="fa-regular fa-calendar me-2 text-success"></i>
+        Event Information
+    </h2>
+
+    <div class="row g-3">
+
+        <!-- Event Title -->
+        <div class="col-12 col-md-6">
+
+            <label
+                for="{{ form.title.id_for_label }}"
+                class="form-label"
+            >
+                Event Title
+                {% if form.title.field.required %}
+                    <span class="required-mark">*</span>
+                {% endif %}
+            </label>
+
+            {{ form.title }}
+
+            {% if form.title.errors %}
+                <div class="field-error">
+                    {{ form.title.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <!-- Event Type -->
+        {% if form.event_type %}
+
+            <div class="col-12 col-md-6">
+
+                <label
+                    for="{{ form.event_type.id_for_label }}"
+                    class="form-label"
+                >
+                    Event Type
+                    {% if form.event_type.field.required %}
+                        <span class="required-mark">*</span>
+                    {% endif %}
+                </label>
+
+                {{ form.event_type }}
+
+                {% if form.event_type.errors %}
+                    <div class="field-error">
+                        {{ form.event_type.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- Location -->
+        {% if form.location %}
+
+            <div class="col-12 col-md-6">
+
+                <label
+                    for="{{ form.location.id_for_label }}"
+                    class="form-label"
+                >
+                    Location
+                </label>
+
+                {{ form.location }}
+
+                {% if form.location.errors %}
+                    <div class="field-error">
+                        {{ form.location.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- Description - FULL WIDTH -->
+        {% if form.description %}
+
+            <div class="col-12">
+
+                <label
+                    for="{{ form.description.id_for_label }}"
+                    class="form-label"
+                >
+                    Description
+                </label>
+
+                {{ form.description }}
+
+                {% if form.description.help_text %}
+                    <div class="form-help">
+                        {{ form.description.help_text }}
+                    </div>
+                {% endif %}
+
+                {% if form.description.errors %}
+                    <div class="field-error">
+                        {{ form.description.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+            <!-- =================================================
+                 DATE & TIME
+                 ================================================= -->
+
+            <div class="form-section">
+
+                <h2 class="form-section-title">
+                    <i class="fa-regular fa-clock me-2 text-success"></i>
+                    Date &amp; Time
+                </h2>
+
+
+                <div class="row g-3">
+
+                    {% if form.starts_at %}
+
+                        <div class="col-12 col-md-6">
+
+                            <label
+                                for="{{ form.starts_at.id_for_label }}"
+                                class="form-label"
+                            >
+                                Start Date &amp; Time
+                                {% if form.starts_at.field.required %}
+                                    <span class="required-mark">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ form.starts_at }}
+
+                            {% if form.starts_at.help_text %}
+                                <div class="form-help">
+                                    {{ form.starts_at.help_text }}
+                                </div>
+                            {% endif %}
+
+                            {% if form.starts_at.errors %}
+                                <div class="field-error">
+                                    {{ form.starts_at.errors }}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if form.ends_at %}
+
+                        <div class="col-12 col-md-6">
+
+                            <label
+                                for="{{ form.ends_at.id_for_label }}"
+                                class="form-label"
+                            >
+                                End Date &amp; Time
+                                {% if form.ends_at.field.required %}
+                                    <span class="required-mark">*</span>
+                                {% endif %}
+                            </label>
+
+                            {{ form.ends_at }}
+
+                            {% if form.ends_at.help_text %}
+                                <div class="form-help">
+                                    {{ form.ends_at.help_text }}
+                                </div>
+                            {% endif %}
+
+                            {% if form.ends_at.errors %}
+                                <div class="field-error">
+                                    {{ form.ends_at.errors }}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 ACTIONS
+                 ================================================= -->
+
+            <div class="event-form-actions">
+
+                <button
+                    type="submit"
+                    class="btn btn-success"
+                >
+                    <i class="fa-solid fa-paper-plane me-1"></i>
+                    Create &amp; Send Invitations
+                </button>
+
+
+                <a
+                    href="{% url 'comm:staff_events:list' %}"
+                    class="btn btn-outline-secondary"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

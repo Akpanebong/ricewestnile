@@ -1,0 +1,488 @@
+{% extends "communication/base.html" %}
+
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       STAFF EVENT DETAIL
+       ========================================================= */
+
+    .event-header {
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .event-title {
+        color: #263238;
+        font-weight: 700;
+        line-height: 1.25;
+    }
+
+    .event-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem 1.25rem;
+        color: #6c757d;
+        font-size: .9rem;
+    }
+
+    .event-meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
+
+    .event-meta-item i {
+        width: 1rem;
+        text-align: center;
+        color: #198754;
+    }
+
+    /* Summary card */
+    .event-summary {
+        border: 1px solid #e1e5e8;
+        border-radius: .6rem;
+        background: #fff;
+    }
+
+    .event-summary-item {
+        height: 100%;
+        padding: 1rem 1.1rem;
+        border-right: 1px solid #e9ecef;
+    }
+
+    .event-summary-item:last-child {
+        border-right: 0;
+    }
+
+    .event-summary-label {
+        margin-bottom: .25rem;
+        color: #6c757d;
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .event-summary-value {
+        color: #263238;
+        font-weight: 600;
+    }
+
+    /* Content cards */
+    .event-card {
+        overflow: hidden;
+        border: 1px solid #e1e5e8;
+        border-radius: .6rem;
+    }
+
+    .event-card .card-header {
+        padding: .9rem 1.1rem;
+        border-bottom: 1px solid #e9ecef;
+        background: #fff;
+    }
+
+    .event-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .event-description {
+        color: #46515a;
+        line-height: 1.7;
+    }
+
+    /* Minutes */
+    .minutes-file {
+        display: flex;
+        align-items: center;
+        gap: .9rem;
+        padding: 1rem;
+        border: 1px solid #e1e5e8;
+        border-radius: .5rem;
+        background: #f8f9fa;
+    }
+
+    .minutes-file-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.7rem;
+        height: 2.7rem;
+        flex: 0 0 2.7rem;
+        border-radius: .45rem;
+        background: #fff0f0;
+        color: #dc3545;
+        font-size: 1.15rem;
+    }
+
+    .minutes-file-name {
+        overflow: hidden;
+        color: #263238;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .minutes-file-meta {
+        color: #6c757d;
+        font-size: .78rem;
+    }
+
+    /* Upload area */
+    .minutes-upload {
+        margin-top: 1.25rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .minutes-upload-label {
+        display: block;
+        margin-bottom: .5rem;
+        color: #495057;
+        font-size: .82rem;
+        font-weight: 600;
+    }
+
+    /* Mobile */
+    @media (max-width: 767.98px) {
+
+        .event-title {
+            font-size: 1.35rem;
+        }
+
+        .event-meta {
+            flex-direction: column;
+            gap: .4rem;
+        }
+
+        .event-summary-item {
+            border-right: 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .event-summary-item:last-child {
+            border-bottom: 0;
+        }
+
+        .event-header-actions {
+            width: 100%;
+        }
+
+        .event-header-actions .btn {
+            width: 100%;
+        }
+
+        .event-card .card-body {
+            padding: 1rem;
+        }
+    }
+</style>
+
+
+<!-- =========================================================
+     PAGE HEADER
+     ========================================================= -->
+
+<div class="event-header mb-4">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3">
+
+        <div class="flex-grow-1">
+
+            <h1 class="h3 event-title mb-2">
+                {{ event.title }}
+            </h1>
+
+            <div class="event-meta">
+
+                <span class="event-meta-item">
+                    <i class="fa-regular fa-calendar"></i>
+                    {{ event.starts_at|date:"l, d F Y" }}
+                </span>
+
+                <span class="event-meta-item">
+                    <i class="fa-regular fa-clock"></i>
+                    {{ event.starts_at|date:"h:i A" }}
+                    –
+                    {{ event.ends_at|date:"h:i A" }}
+                </span>
+
+                {% if event.location %}
+                    <span class="event-meta-item">
+                        <i class="fa-solid fa-location-dot"></i>
+                        {{ event.location }}
+                    </span>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <div class="event-header-actions">
+
+            <a
+                href="{% url 'comm:staff_events:list' %}"
+                class="btn btn-outline-secondary"
+            >
+                <i class="fa-solid fa-arrow-left me-1"></i>
+                Back to Events
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     EVENT SUMMARY
+     ========================================================= -->
+
+<div class="card shadow-sm event-summary mb-4">
+
+    <div class="row g-0">
+
+        <div class="col-12 col-md-4">
+
+            <div class="event-summary-item">
+
+                <div class="event-summary-label">
+                    Date
+                </div>
+
+                <div class="event-summary-value">
+                    {{ event.starts_at|date:"d M Y" }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-12 col-md-4">
+
+            <div class="event-summary-item">
+
+                <div class="event-summary-label">
+                    Time
+                </div>
+
+                <div class="event-summary-value">
+                    {{ event.starts_at|date:"h:i A" }}
+                    –
+                    {{ event.ends_at|date:"h:i A" }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-12 col-md-4">
+
+            <div class="event-summary-item">
+
+                <div class="event-summary-label">
+                    Location
+                </div>
+
+                <div class="event-summary-value">
+                    {{ event.location|default:"Not specified" }}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     EVENT DESCRIPTION
+     ========================================================= -->
+
+<div class="card shadow-sm event-card mb-4">
+
+    <div class="card-header">
+
+        <h2 class="h5 fw-semibold mb-0">
+            <i class="fa-regular fa-file-lines text-success me-2"></i>
+            Event Details
+        </h2>
+
+    </div>
+
+    <div class="card-body">
+
+        {% if event.description %}
+
+            <div class="event-description">
+                {{ event.description|linebreaks }}
+            </div>
+
+        {% else %}
+
+            <p class="text-muted mb-0">
+                No description was provided for this event.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MEETING MINUTES
+     ========================================================= -->
+
+<div class="card shadow-sm event-card">
+
+    <div class="card-header">
+
+        <div class="d-flex justify-content-between align-items-center gap-3">
+
+            <h2 class="h5 fw-semibold mb-0">
+                <i class="fa-regular fa-file-pdf text-danger me-2"></i>
+                Meeting Minutes
+            </h2>
+
+            {% if event.minutes %}
+                <span class="badge bg-success">
+                    Available
+                </span>
+            {% else %}
+                <span class="badge bg-secondary">
+                    Not uploaded
+                </span>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <div class="card-body">
+
+        {% if event.minutes %}
+
+            <div class="minutes-file">
+
+                <div class="minutes-file-icon">
+                    <i class="fa-regular fa-file-pdf"></i>
+                </div>
+
+                <div class="flex-grow-1 min-width-0">
+
+                    <div
+                        class="minutes-file-name"
+                        title="{{ event.minutes.name }}"
+                    >
+                        {{ event.minutes.name|cut:"minutes/" }}
+                    </div>
+
+                    <div class="minutes-file-meta">
+                        Uploaded
+                        {{ event.minutes_uploaded_at|date:"d M Y, h:i A" }}
+                    </div>
+
+                </div>
+
+                <a
+                    href="{{ event.minutes.url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-outline-danger btn-sm"
+                >
+                    <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>
+                    View PDF
+                </a>
+
+            </div>
+
+        {% else %}
+
+            <div class="text-center py-3">
+
+                <i class="fa-regular fa-file-pdf fa-2x text-muted mb-3"></i>
+
+                <p class="text-muted mb-0">
+                    No meeting minutes have been uploaded yet.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+
+        {% if can_manage_events %}
+
+            <div class="minutes-upload">
+
+                <h3 class="h6 fw-semibold mb-1">
+                    {% if event.minutes %}
+                        Replace Meeting Minutes
+                    {% else %}
+                        Upload Meeting Minutes
+                    {% endif %}
+                </h3>
+
+                <p class="small text-muted mb-3">
+                    Upload the official meeting minutes as a PDF document.
+                </p>
+
+
+                <form
+                    method="post"
+                    enctype="multipart/form-data"
+                    action="{% url 'comm:staff_events:minutes' event.pk %}"
+                >
+
+                    {% csrf_token %}
+
+                    <label
+                        for="{{ form.minutes.id_for_label }}"
+                        class="minutes-upload-label"
+                    >
+                        Minutes PDF
+                    </label>
+
+                    {{ form.minutes }}
+
+                    {% if form.minutes.errors %}
+                        <div class="text-danger small mt-2">
+                            {{ form.minutes.errors }}
+                        </div>
+                    {% endif %}
+
+                    <button
+                        type="submit"
+                        class="btn btn-success mt-3"
+                    >
+                        <i class="fa-solid fa-upload me-1"></i>
+
+                        {% if event.minutes %}
+                            Replace PDF
+                        {% else %}
+                            Upload PDF
+                        {% endif %}
+                    </button>
+
+                </form>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

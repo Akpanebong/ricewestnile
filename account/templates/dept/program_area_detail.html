@@ -1,0 +1,58 @@
+{% extends "hr/base.html" %}
+{% block title %}{{ program_area.name }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
+        <div>
+            <a href="{% url 'program_area_list' %}" class="text-muted small text-decoration-none">Program Areas</a>
+            <h4 class="fw-bold mb-1">{{ program_area.name }}</h4>
+            <p class="text-muted mb-0">Projects and staff assigned to this program area.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-primary-subtle text-primary align-self-center">{{ projects|length }} project{{ projects|length|pluralize }}</span>
+            {% if can_manage %}<a href="{% url 'program_area_update' program_area.pk %}" class="btn btn-outline-secondary">Edit program area</a>{% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for project in projects %}
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <h5 class="mb-1 fw-bold">{{ project.name }}</h5>
+                        <div class="small text-muted">{{ project.code|default:"No project code" }}{% if project.unit %} · {{ project.unit.name }}{% endif %}</div>
+                    </div>
+                    <span class="badge bg-light text-dark">{{ project.assigned_staff|length }} staff</span>
+                </div>
+                <div class="card-body">
+                    <div class="small text-muted mb-2">Project leadership</div>
+                    <div class="mb-3">
+                        <span class="me-3"><strong>Head:</strong> {{ project.project_head|default:"—" }}</span>
+                        <span><strong>Officer:</strong> {{ project.project_officer|default:"—" }}</span>
+                    </div>
+                    <h6 class="fw-bold mb-2"><i class="fa fa-users me-2 text-primary"></i>Assigned staff</h6>
+                    {% if project.assigned_staff %}
+                    <div class="list-group list-group-flush">
+                        {% for staff in project.assigned_staff %}
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">{{ staff.get_full_name|default:staff.username }}</div>
+                                <div class="small text-muted">{{ staff.designation|default:staff.title|default:"Staff" }}</div>
+                            </div>
+                            <span class="small text-muted">{{ staff.department.name|default:"—" }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted small mb-0">No staff are currently assigned to this project.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12"><div class="card border-0 shadow-sm"><div class="card-body text-center text-muted py-5">No projects are assigned to this program area yet.</div></div></div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

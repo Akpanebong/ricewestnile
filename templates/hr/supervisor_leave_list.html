@@ -1,0 +1,58 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Supervisor Leave Queue{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-white p-3 mb-4 rounded shadow-sm d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="fw-bold text-success mb-0">Supervisor Leave Queue</h4>
+        <small class="text-muted">Leave requests assigned to {{ supervisor }}</small>
+    </div>
+    <a href="{% url 'leave_list' %}" class="btn btn-outline-success">All leave</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave type</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leave in leaves %}
+                    <tr>
+                        <td><a href="{% url 'leave_detail' leave.pk leave.slug %}" class="fw-semibold text-decoration-none">{{ leave.employee }}</a></td>
+                        <td>{{ leave.leave_type }}</td>
+                        <td>{{ leave.start_date }} &rarr; {{ leave.end_date }}<br><small class="text-muted">{{ leave.days_requested }} working day{{ leave.days_requested|pluralize }}</small></td>
+                        <td>
+                            <span class="badge {% if leave.status == 'Denied' %}bg-danger{% elif leave.status == 'Approved' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ leave.status }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if not leave.supervisor_approved and leave.status != 'Denied' %}
+                            <a href="{% url 'approve_supervisor' leave.pk 'approved' %}" class="btn btn-sm btn-success">Approve</a>
+                            <a href="{% url 'approve_supervisor' leave.pk 'denied' %}" class="btn btn-sm btn-outline-danger">Deny</a>
+                            {% elif leave.supervisor_approved and not leave.hr_approved %}
+                            <a href="{% url 'approve_supervisor' leave.pk 'reverse' %}" class="btn btn-sm btn-outline-secondary">Reverse</a>
+                            {% else %}
+                            <span class="text-muted">No action</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No leave requests are assigned to you.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% include "pagination.html" with page_obj=leaves %}
+        </div>
+    </div>
+</div>
+{% endblock %}
