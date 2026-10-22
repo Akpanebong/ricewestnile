@@ -1,23 +1,61 @@
+
 <aside class="sidebar governance-sidebar p-3">
-    <div class="sidebar-section"><span>GOVERNANCE</span></div>
-    <a class="d-block py-2 {% if request.resolver_match.url_name == 'governance_dashboard' %}active{% endif %}" href="{% url 'governance_dashboard' %}">
-        <i class="fa-solid fa-landmark me-2"></i><span class="governance-sidebar-text">Governance Hub</span>
-    </a>
-    <a class="d-block py-2 {% if request.resolver_match.url_name == 'policy_list' %}active{% endif %}" href="{% url 'policy_list' %}">
-        <i class="fa-solid fa-book me-2"></i><span class="governance-sidebar-text">Policies</span>
-    </a>
-    <a class="d-block py-2 {% if request.resolver_match.url_name == 'control_list' %}active{% endif %}" href="{% url 'control_list' %}">
-        <i class="fa-solid fa-shield-halved me-2"></i><span class="governance-sidebar-text">Controls</span>
-    </a>
-    <a class="d-block py-2 {% if request.resolver_match.url_name == 'decision_list' %}active{% endif %}" href="{% url 'decision_list' %}">
-        <i class="fa-solid fa-gavel me-2"></i><span class="governance-sidebar-text">Decisions</span>
-    </a>
-    <a class="d-block py-2 {% if request.resolver_match.url_name == 'engagement_list' %}active{% endif %}" href="{% url 'engagement_list' %}">
-        <i class="fa-solid fa-people-group me-2"></i><span class="governance-sidebar-text">Stakeholder Engagement</span>
-    </a>
-    {% if governance_can_manage %}
-    <div class="governance-sidebar-status small text-muted mt-4">ED administration access enabled</div>
-    {% else %}
-    <div class="governance-sidebar-status small text-muted mt-4">Governance members may create records.</div>
-    {% endif %}
+    <div class="sidebar-section">
+        <span>GOVERNANCE</span>
+    </div>
+
+    <nav class="governance-sidebar-nav" aria-label="Governance navigation">
+        <a
+            href="{% url 'governance_dashboard' %}"
+            class="d-flex align-items-center py-2 px-3 {% if request.resolver_match.url_name == 'governance_dashboard' %}active{% endif %}"
+            {% if request.resolver_match.url_name == 'governance_dashboard' %}aria-current="page"{% endif %}
+        >
+            <i class="fa-solid fa-landmark me-2" aria-hidden="true"></i>
+            <span class="governance-sidebar-text">Governance Hub</span>
+        </a>
+
+        <a
+            href="{% url 'policy_list' %}"
+            class="d-flex align-items-center py-2 px-3 {% if request.resolver_match.url_name == 'policy_list' %}active{% endif %}"
+            {% if request.resolver_match.url_name == 'policy_list' %}aria-current="page"{% endif %}
+        >
+            <i class="fa-solid fa-book me-2" aria-hidden="true"></i>
+            <span class="governance-sidebar-text">Policies</span>
+        </a>
+
+        <a
+            href="{% url 'control_list' %}"
+            class="d-flex align-items-center py-2 px-3 {% if request.resolver_match.url_name == 'control_list' %}active{% endif %}"
+            {% if request.resolver_match.url_name == 'control_list' %}aria-current="page"{% endif %}
+        >
+            <i class="fa-solid fa-shield-halved me-2" aria-hidden="true"></i>
+            <span class="governance-sidebar-text">Controls</span>
+        </a>
+
+        <a
+            href="{% url 'decision_list' %}"
+            class="d-flex align-items-center py-2 px-3 {% if request.resolver_match.url_name == 'decision_list' %}active{% endif %}"
+            {% if request.resolver_match.url_name == 'decision_list' %}aria-current="page"{% endif %}
+        >
+            <i class="fa-solid fa-gavel me-2" aria-hidden="true"></i>
+            <span class="governance-sidebar-text">Decisions</span>
+        </a>
+
+        <a
+            href="{% url 'engagement_list' %}"
+            class="d-flex align-items-center py-2 px-3 {% if request.resolver_match.url_name == 'engagement_list' %}active{% endif %}"
+            {% if request.resolver_match.url_name == 'engagement_list' %}aria-current="page"{% endif %}
+        >
+            <i class="fa-solid fa-people-group me-2" aria-hidden="true"></i>
+            <span class="governance-sidebar-text">Stakeholder Engagement</span>
+        </a>
+    </nav>
+
+    <div class="governance-sidebar-status small text-muted mt-4">
+        {% if governance_can_manage %}
+            ED administration access enabled
+        {% else %}
+            Governance members may create records.
+        {% endif %}
+    </div>
 </aside>

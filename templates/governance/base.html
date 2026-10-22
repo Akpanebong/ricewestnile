@@ -1,6 +1,9 @@
+
 {% extends "base.html" %}
+
 {% block extra_head %}
 <style>
+    /* Governance sidebar */
     .governance-sidebar,
     .governance-sidebar a,
     .governance-sidebar a i,
@@ -9,23 +12,51 @@
         color: #fff !important;
     }
 
-    body.sidebar-collapsed .governance-sidebar .governance-sidebar-text,
-    body.sidebar-collapsed .governance-sidebar .governance-sidebar-status {
+    .governance-sidebar a {
+        text-decoration: none;
+    }
+
+    .governance-sidebar a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .governance-sidebar a.active {
+        background-color: rgba(255, 255, 255, 0.16);
+        border-radius: 0.5rem;
+    }
+
+    /* Collapsed desktop sidebar */
+    body.sidebar-collapsed .governance-sidebar
+    .governance-sidebar-text,
+    body.sidebar-collapsed .governance-sidebar
+    .governance-sidebar-status {
         display: none !important;
     }
 
     body.sidebar-collapsed .governance-sidebar a {
         justify-content: center;
-        padding-left: 0 !important;
         padding-right: 0 !important;
+        padding-left: 0 !important;
     }
 
     body.sidebar-collapsed .governance-sidebar a i {
         margin-right: 0 !important;
     }
 </style>
-{% endblock %}
-{% block header_home_url %}{% url 'governance_dashboard' %}{% endblock %}
-{% block system_name %}Governance Management{% endblock %}
-{% block sidebar_desktop %}{% include "governance/sidebar.html" %}{% endblock %}
-{% block sidebar_mobile %}{% include "governance/sidebar.html" %}{% endblock %}
+{% endblock extra_head %}
+
+{% block header_home_url %}
+    {% url 'governance_dashboard' %}
+{% endblock header_home_url %}
+
+{% block system_name %}
+    Governance Management
+{% endblock system_name %}
+
+{% block sidebar_desktop %}
+    {% include "governance/sidebar.html" %}
+{% endblock sidebar_desktop %}
+
+{% block sidebar_mobile %}
+    {% include "governance/sidebar.html" %}
+{% endblock sidebar_mobile %}
