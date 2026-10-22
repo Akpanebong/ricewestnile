@@ -114,7 +114,6 @@ TEMPLATES = [
                 "enterprise.context_processors.forum_activity",
                 "core.context_processors.currency_context",
                 "core.context_processors.global_dashboard",
-                "core.context_processors.site_settings",
                 "hr_apps.HRapp.context_processors.event_profile",
                 "com_app.communication.context_processors.focus_areas",
                 "notification.context_processors.notifications",
