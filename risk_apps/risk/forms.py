@@ -38,15 +38,15 @@ class RiskForm(forms.ModelForm):
             "continuity_dependency",
         ]
         widgets = {
-            "event": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
-            "cause": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+            "event": forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
+            "cause": forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
             "category": forms.Select(attrs={"class": "form-select"}),
             "likelihood": forms.Select(attrs={"class": "form-select"}),
             "impact": forms.Select(attrs={"class": "form-select"}),
             "risk_owner": forms.TextInput(attrs={"class": "form-control"}),
             "risk_type": forms.TextInput(attrs={"class": "form-control"}),
             "status": forms.Select(attrs={"class": "form-select"}),
-            "mitigation_plan": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+            "mitigation_plan": forms.Textarea(attrs={"rows": 2, "class": "form-control"}),
             "date_identified": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "valid_from": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "valid_to": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
@@ -74,7 +74,7 @@ class ScenarioForm(forms.ModelForm):
 
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'multiplier': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1'}),
             'risks': forms.SelectMultiple(attrs={'class': 'form-select'}),
         }
@@ -106,7 +106,7 @@ class GARCISRiskFeatureForm(forms.ModelForm):
                 widget.attrs.setdefault("class", "form-check-input")
             elif isinstance(widget, forms.Textarea):
                 widget.attrs.setdefault("class", "form-control")
-                widget.attrs.setdefault("rows", 3)
+                widget.attrs.setdefault("rows", 2)
             else:
                 widget.attrs.setdefault("class", "form-control")
 

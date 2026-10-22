@@ -14,7 +14,7 @@ class AuditLogForm(forms.ModelForm):
         widgets = {
             "start_date": forms.DateInput(attrs={"type": "date"}),
             "end_date": forms.DateInput(attrs={"type": "date"}),
-            "scope": forms.Textarea(attrs={"rows": 3}),
+            "scope": forms.Textarea(attrs={"rows": 2}),
         }
 
 

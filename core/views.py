@@ -42,6 +42,9 @@ def _core_route(request, name):
 
 def approve_object(request, model, pk):
     obj = get_object_or_404(model, pk=pk)
+    if _approval_is_final(obj):
+        messages.info(request, f"{obj} has already been approved or rejected.")
+        return redirect(request.META.get("HTTP_REFERER") or "system_home")
     if hasattr(obj, "approval_status"):
         obj.approval_status = "approved"
     if hasattr(obj, "status") and not getattr(obj, "status", None):
@@ -61,6 +64,9 @@ def approve_object(request, model, pk):
 
 def reject_object(request, model, pk):
     obj = get_object_or_404(model, pk=pk)
+    if _approval_is_final(obj):
+        messages.info(request, f"{obj} has already been approved or rejected.")
+        return redirect(request.META.get("HTTP_REFERER") or "system_home")
     if request.method == "POST":
         if hasattr(obj, "approval_status"):
             obj.approval_status = "rejected"
@@ -78,6 +84,17 @@ def reject_object(request, model, pk):
         messages.warning(request, f"{obj} rejected.")
         return redirect(request.META.get("HTTP_REFERER") or "system_home")
     return render(request, "governance/reject_modal.html", {"object": obj})
+
+
+def _approval_is_final(obj):
+    """Prevent approval actions from being reused after a terminal decision."""
+    approval_status = getattr(obj, "approval_status", None)
+    if approval_status in {"approved", "rejected"}:
+        return True
+    if getattr(obj, "approved", False) or getattr(obj, "rejection_reason", None):
+        return True
+    status = str(getattr(obj, "status", "")).lower()
+    return status in {"approved", "rejected", "implemented"}
 
 
 def can_manage_currency(user):

@@ -23,6 +23,7 @@ class Notification(TimeStampedModel):
         PROCUREMENT = "procurement", "Procurement"
         COMMUNICATION = "communication", "Communication"
         MNE = "mne", "Monitoring & Evaluation"
+        GOVERNANCE = "governance", "Governance"
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,)
     slug = models.SlugField(unique=True, editable=False, blank=True,)
     title = models.CharField(max_length=255)

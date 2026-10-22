@@ -1,10 +1,13 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
+from django.core import mail
+from django.core.management import call_command
 
 from account.models import Profile
 from risk_apps.governance.models import Control, DecisionRecord, Policy, StakeholderEngagement
+from notification.models import Notification, NotificationRecipient
 
 
 class GovernanceModelTests(TestCase):
@@ -100,3 +103,48 @@ class GovernanceAccessTests(TestCase):
         other = Profile.objects.create_user(username="other", password="pass12345")
         self.client.force_login(other)
         self.assertEqual(self.client.get("/governance/").status_code, 403)
+
+
+class GovernanceReminderTests(TestCase):
+    def test_review_reminders_use_milestones_and_stop_after_due_date(self):
+        ed = Profile.objects.create_user(username="ed-reminder", email="ed@example.com")
+        governance = Profile.objects.create_user(username="governance-reminder", email="gov@example.com")
+        ed.groups.add(Group.objects.create(name="ED"))
+        governance.groups.add(Group.objects.create(name="Governance"))
+        target = date.today() + timedelta(days=30)
+        policy = Policy.objects.create(
+            policy_id="POL-REMINDER",
+            title="Reminder Policy",
+            summary="Review this policy.",
+            next_review_date=target,
+        )
+        control = Control.objects.create(
+            control_id="CTRL-REMINDER",
+            title="Near-term Control Test",
+            description="Test this control soon.",
+            next_test_date=date.today() + timedelta(days=1),
+        )
+        Policy.objects.create(
+            policy_id="POL-NON-MILESTONE",
+            title="Non-milestone Policy",
+            summary="This should not send yet.",
+            next_review_date=date.today() + timedelta(days=15),
+        )
+        Policy.objects.create(
+            policy_id="POL-OVERDUE",
+            title="Overdue Policy",
+            summary="This should not send.",
+            next_review_date=date.today() - timedelta(days=1),
+        )
+
+        call_command("send_review_reminders")
+
+        notification = Notification.objects.get(action_url__contains=f"/governance/{policy.pk}/detail/")
+        self.assertEqual(NotificationRecipient.objects.filter(notification=notification).count(), 2)
+        self.assertEqual(Notification.objects.filter(action_url__contains=f"/governance/{control.pk}/detail/").count(), 1)
+        self.assertEqual(Notification.objects.count(), 2)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn(f"/governance/{policy.pk}/detail/", mail.outbox[0].body)
+
+        call_command("send_review_reminders")
+        self.assertEqual(Notification.objects.filter(action_url=notification.action_url).count(), 1)

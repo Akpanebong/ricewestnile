@@ -85,17 +85,15 @@
 
 <a href="{% url 'decision_delete' object.pk %}" class="btn btn-danger w-100 mb-2">Delete</a>
 
-{% if object.status != 'approved' %}
-{% if object.status != 'implemented' %}
+{% if object.approval_status == 'pending' %}
 <a href="{% url 'decision_approve' object.pk %}" class="btn btn-success w-100 mb-2">
     Approve
 </a>
-{% endif %}
-{% endif %}
 
 <a href="{% url 'decision_reject' object.pk %}" class="btn btn-dark w-100">
     Reject
 </a>
+{% endif %}
 {% endif %}
 
 </div>

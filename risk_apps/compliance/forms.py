@@ -10,7 +10,7 @@ class ComplianceFrameworkForm(forms.ModelForm):
         fields = "__all__"
         exclude = ['created_by']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3})
+            'description': forms.Textarea(attrs={'rows': 2})
         }
 
 
@@ -20,8 +20,8 @@ class ComplianceRequirementForm(forms.ModelForm):
         fields = "__all__"
         exclude = ['framework']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
-            'evidence_required': forms.Textarea(attrs={'rows': 3}),
+            'description': forms.Textarea(attrs={'rows': 2}),
+            'evidence_required': forms.Textarea(attrs={'rows': 2}),
         }
 
 
@@ -58,8 +58,8 @@ class ComplianceAssessmentForm(forms.ModelForm):
         exclude = ["requirement", "assessed_at"]
         widgets = {
             "score": forms.NumberInput(attrs={"class": "form-control"}),
-            "gap": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-            "recommendation": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "gap": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
+            "recommendation": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
         }
 
 

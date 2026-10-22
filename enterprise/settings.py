@@ -196,6 +196,7 @@ EMAIL_BACKEND = os.environ.get(
     "django.core.mail.backends.console.EmailBackend" if DEBUG else "django.core.mail.backends.smtp.EmailBackend",
 )
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "RICE WN Support Team <godwithusakpan2015@gmail.com>")
+SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
 
 STAFF_MONTHLY_MEETING_HOUR = int(os.getenv("STAFF_MONTHLY_MEETING_HOUR", "9"))
 STAFF_MONTHLY_MEETING_MINUTE = int(os.getenv("STAFF_MONTHLY_MEETING_MINUTE", "0"))

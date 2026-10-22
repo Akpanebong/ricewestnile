@@ -107,7 +107,9 @@
                            class="btn btn-success w-100 mb-2" onclick="return confirm('N/B: There is no reversal after approval, confirm your approval.')">Approve</a>
                     {% endif %}
 
-                    <a href="{% url 'external_audit_reject' engagement.id %}" class="btn btn-dark w-100">Reject</a>
+                    {% if not engagement.approved and not engagement.rejection_reason %}
+                        <a href="{% url 'external_audit_reject' engagement.id %}" class="btn btn-dark w-100">Reject</a>
+                    {% endif %}
                 </div>
             </div>
 

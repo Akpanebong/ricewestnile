@@ -11,6 +11,7 @@ from django.views.generic import (
 )
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from urllib.parse import urlsplit
 from .forms import (
     NotificationCreateForm,
     NotificationUpdateForm,
@@ -90,6 +91,18 @@ class NotificationDetailView(NotificationRecipientMixin, DetailView):
         obj.mark_as_read()
 
         return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        action_url = self.object.notification.action_url
+        parsed = urlsplit(action_url)
+        # Older reminders stored SITE_URL (often localhost) in action_url. Keep
+        # internal links on the host where the authenticated notification was opened.
+        if parsed.scheme and parsed.netloc != self.request.get_host() and parsed.path.startswith(("/governance/", "/garcis/")):
+            context["notification_action_url"] = parsed.path + (f"?{parsed.query}" if parsed.query else "")
+        else:
+            context["notification_action_url"] = action_url
+        return context
 
 
 class NotificationCreateView(NotificationAdminMixin,LoginRequiredMixin,CreateView,):

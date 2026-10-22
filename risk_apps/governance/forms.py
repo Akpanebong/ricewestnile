@@ -10,6 +10,8 @@ class BaseStyledForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.update({"class": "form-control"})
+            if isinstance(field.widget, forms.Textarea):
+                field.widget.attrs["rows"] = 2
 
 
 class PolicyForm(BaseStyledForm):
@@ -20,7 +22,8 @@ class PolicyForm(BaseStyledForm):
         widgets = {
             'summary': forms.Textarea(attrs={'rows': 2}),
             'next_review_date': forms.DateInput(attrs={'type': 'date'}),
-            'effective_date': forms.DateInput(attrs={'type': 'date'})
+            'effective_date': forms.DateInput(attrs={'type': 'date'}),
+            'approved_at': forms.DateInput(attrs={'type': 'date'})
         }
 
 
@@ -31,7 +34,9 @@ class ControlForm(BaseStyledForm):
         exclude = ["created_by", "approved", "approved_by", "approval_status",  "rejection_reason",]
         widgets = {
             'next_test_date': forms.DateInput(attrs={'type': 'date'}),
-            'description': forms.Textarea(attrs={'rows': 2})
+            'description': forms.Textarea(attrs={'rows': 2}),
+            'approved_at': forms.DateInput(attrs={'type': 'date'})
+
         }
 
 
@@ -42,7 +47,9 @@ class DecisionRecordForm(BaseStyledForm):
         exclude = ["created_by", "approved", "approved_by", "approval_status", "rejection_reason", ]
         widgets = {
             'meeting_date': forms.DateInput(attrs={'type': 'date'}),
-            'resolution': forms.Textarea(attrs={'rows': 2})
+            'resolution': forms.Textarea(attrs={'rows': 2}),
+            'approved_at': forms.DateInput(attrs={'type': 'date'})
+
         }
 
 
