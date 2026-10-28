@@ -547,10 +547,7 @@ def notify(
 
     elif group_name:
 
-        recipients = Profile.objects.filter(
-            groups__name=group_name,
-            is_active=True,
-        ).distinct()
+        recipients = Profile.objects.filter(groups__name=group_name, is_active=True,).distinct()
 
     elif broadcast:
 

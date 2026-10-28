@@ -66,6 +66,16 @@
                             {% endif %}
                         </div>
 
+                        <div class="form-check mb-3">
+                            {{ form.send_to_all }}
+                            {{ form.send_to_all.label_tag }}
+                            {% if form.send_to_all.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.send_to_all.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+
 
                           <div class="mb-3">
                             <label class="form-label fw-semibold">

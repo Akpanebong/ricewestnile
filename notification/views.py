@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -12,6 +13,8 @@ from django.views.generic import (
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from urllib.parse import urlsplit
+
+from com_app.communication.utils import send_notification_email
 from .forms import (
     NotificationCreateForm,
     NotificationUpdateForm,
@@ -19,6 +22,7 @@ from .forms import (
 from .helpers import filter_notifications
 from .mixins import NotificationRecipientMixin
 from .models import Notification, NotificationRecipient
+from .utils import notify_staff, notify
 
 
 class NotificationAdminMixin(UserPassesTestMixin):
@@ -86,7 +90,12 @@ class NotificationDetailView(NotificationRecipientMixin, DetailView):
 
     def get_object(self, queryset=None):
         queryset = self.get_queryset().filter(notification__pk=self.kwargs["pk"])
-        obj = get_object_or_404(queryset)
+        if self.request.user.is_superuser:
+            obj = queryset.order_by("pk").first()
+            if obj is None:
+                raise Http404("Notification not found.")
+        else:
+            obj = get_object_or_404(queryset)
 
         obj.mark_as_read()
 
@@ -117,14 +126,25 @@ class NotificationCreateView(NotificationAdminMixin,LoginRequiredMixin,CreateVie
 
     def form_valid(self, form):
 
-        form.save(
-            created_by=self.request.user
+        notification = form.save(created_by=self.request.user)
+
+        # NotificationCreateForm collects users through ``recipients``; it does
+        # not have a ``recipient_email`` field.  Send the email to the users
+        # that were actually attached to this notification.
+        notification_url = self.request.build_absolute_uri(
+            notification.get_absolute_url()
         )
 
-        messages.success(
-            self.request,
-            "Notification sent successfully."
-        )
+        for notification_recipient in notification.recipients.select_related("recipient"):
+            recipient_email = notification_recipient.recipient.email
+            if send_notification_email(
+                subject=notification.title,
+                message=f"{notification.message}\n\nOpen notification: {notification_url}",
+                recipient_email=recipient_email,
+            ):
+                notification_recipient.mark_email_sent()
+
+        messages.success(self.request, "Notification sent successfully.")
 
         return redirect(self.success_url)
 

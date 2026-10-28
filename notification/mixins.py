@@ -26,9 +26,7 @@ class NotificationRecipientMixin(LoginRequiredMixin):
         )
 
         if self.request.user.is_superuser:
-            return queryset.filter(
-            recipient=self.request.user
-        )
+            return queryset
 
         return queryset.filter(
             recipient=self.request.user
