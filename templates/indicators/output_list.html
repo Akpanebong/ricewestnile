@@ -869,7 +869,7 @@
 
                             <!-- View / Indicators -->
 
-                            <a href="{% url 'monitoring:so_detail' output.so.pk output.so.title %}"
+                            <a href="{% url 'monitoring:so_detail' output.so.pk %}"
                                class="om-action om-action-view"
                                title="View Output">
 
@@ -897,7 +897,7 @@
 
                             <!-- Delete -->
 
-                            <a href="{% url 'monitoring:trash_output' output.pk output.title %}"
+                            <a href="{% url 'monitoring:trash_output' output.pk %}"
                                class="om-action om-action-delete"
                                title="Delete Output"
                                onclick="return confirm('Are you sure you want to remove this output?');">

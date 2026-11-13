@@ -690,8 +690,8 @@ class SoListView(MealTeamAccessMixin, ListView):
 
 
 @meal_team_required(allow_other_departments=True)
-def so_detail(request, pk, title):
-    so = get_object_or_404(StrategicObjective, pk=pk, title=title)
+def so_detail(request, pk):
+    so = get_object_or_404(StrategicObjective, pk=pk)
     return render(request, "indicators/so_detail.html", {"so": so, "output": Output.objects.filter(so=so)})
 
 
@@ -706,8 +706,8 @@ def create_so(request):
 
 
 @superuser_required
-def update_so(request, title, pk):
-    so = get_object_or_404(StrategicObjective, title=title, pk=pk)
+def update_so(request, pk):
+    so = get_object_or_404(StrategicObjective, pk=pk)
     form = StrategicObjectiveForm(request.POST or None, instance=so)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -717,8 +717,8 @@ def update_so(request, title, pk):
 
 
 @superuser_required
-def trash_so(request, pk, title):
-    so = get_object_or_404(StrategicObjective, pk=pk, title=title)
+def trash_so(request, pk):
+    so = get_object_or_404(StrategicObjective, pk=pk)
     if request.method == "POST":
         so.delete()
         messages.success(request, "Strategic objective deleted.")
@@ -735,7 +735,7 @@ def create_output(request, so_id):
         output.so = so
         output.save()
         messages.success(request, "Output created.")
-        return redirect(_monitoring_route(request, "so_detail"), pk=so.pk, title=so.title)
+        return redirect(_monitoring_route(request, "so_detail"), pk=so.pk)
     return render(request, "indicators/create_output.html", {"form": form, "so": so, "output": Output.objects.filter(so=so)})
 
 
@@ -746,24 +746,24 @@ def update_output(request, pk):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Output updated.")
-        return redirect(_monitoring_route(request, "so_detail"), pk=output.so.pk, title=output.so.title)
+        return redirect(_monitoring_route(request, "so_detail"), pk=output.so.pk)
     return render(request, "indicators/create_output.html", {"form": form, "is_update": True, "output": output})
 
 
 @superuser_required
-def trash_output(request, pk, title):
-    output = get_object_or_404(Output, pk=pk, title=title)
+def trash_output(request, pk):
+    output = get_object_or_404(Output, pk=pk)
     if request.method == "POST":
         so = output.so
         output.delete()
         messages.success(request, "Output deleted.")
-        return redirect(_monitoring_route(request, "so_detail"), pk=so.pk, title=so.title)
+        return redirect(_monitoring_route(request, "so_detail"), pk=so.pk)
     return render(request, "delete_confirmation.html", {"delete": output, "cancel_url": reverse(_monitoring_route(request, "so_list"))})
 
 
 @meal_team_required()
-def output_detail(request, pk, title):
-    output = get_object_or_404(Output, pk=pk, title=title)
+def output_detail(request, pk):
+    output = get_object_or_404(Output, pk=pk)
     return render(request, "indicators/output_detail.html", {"output": output, "indicator": Indicator.objects.filter(output=output)})
 
 
@@ -799,7 +799,7 @@ def create_indicator(request, output_id):
         indicator.output = output
         indicator.save()
         messages.success(request, "Indicator created.")
-        return redirect(_monitoring_route(request, "output_detail"), pk=output.pk, title=output.title)
+        return redirect(_monitoring_route(request, "output_detail"), pk=output.pk)
     return render(request, "indicators/create_indicator.html", {"form": form, "output": output})
 
 
@@ -817,8 +817,8 @@ def update_indicator(request, pk):
 
 
 @superuser_required
-def trash_indicator(request, pk, name):
-    indicator = get_object_or_404(Indicator, pk=pk, name=name)
+def trash_indicator(request, pk):
+    indicator = get_object_or_404(Indicator, pk=pk)
     if request.method == "POST":
         indicator.delete()
         messages.success(request, "Indicator deleted.")

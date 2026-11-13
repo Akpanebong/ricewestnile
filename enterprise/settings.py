@@ -188,6 +188,9 @@ SITE_ID = 1
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", default=True)
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", default=False)
+if EMAIL_USE_SSL:
+    EMAIL_USE_TLS = False
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "godwithusakpan2015@gmail.com")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "xfrdxywrdamubphi")
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "20"))

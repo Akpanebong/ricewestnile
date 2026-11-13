@@ -728,7 +728,7 @@
 
                 <tr class="indicator-row">
 
-                    <td><a href="{% url 'monitoring:so_detail' indicator.pk indicator.title %}">
+                    <td><a href="{% url 'monitoring:so_detail' indicator.pk %}">
                         <span class="indicator-code">
                             {{ indicator.code }}
                         </span>
@@ -757,8 +757,8 @@
 
                     <td>
                 {% if request.user.is_superuser %}
-                <a class="btn btn-sm btn-primary" href="{% url 'monitoring:update_so' indicator.title indicator.pk %}"><i class="fa fa-edit"></i></a>
-                <a class="btn btn-sm btn-danger" href="{% url 'monitoring:trash_so' indicator.pk indicator.title %}"><i class="fa fa-trash"></i></a>
+                <a class="btn btn-sm btn-primary" href="{% url 'monitoring:update_so' indicator.pk %}"><i class="fa fa-edit"></i></a>
+                <a class="btn btn-sm btn-danger" href="{% url 'monitoring:trash_so' indicator.pk %}"><i class="fa fa-trash"></i></a>
                 {% endif %}
               </td>
 
