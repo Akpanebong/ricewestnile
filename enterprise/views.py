@@ -3,7 +3,7 @@ import uuid
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage, get_connection
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
@@ -86,26 +86,34 @@ def report_500_error(request):
             "error_message": "This report has expired. Please try again if the problem continues.",
         }, status=410)
 
-    recipient = settings.EMAIL_HOST_USER
+    recipient = getattr(settings, "ERROR_REPORT_RECIPIENT", "") or settings.EMAIL_HOST_USER
     if not recipient:
         logger.error("Cannot send error report %s: EMAIL_HOST_USER is empty", report_id)
         return render(request, "500.html", {
-            "error_message": "The report could not be sent. Please try again later.",
+            "error_message": f"The report could not be sent. Reference: {report_id[:12]}.",
         }, status=503)
 
     try:
-        send_mail(
-            f"RICE WN 500 error report [{report_id[:12]}]",
-            _error_report_message(report_id, report),
-            settings.DEFAULT_FROM_EMAIL or recipient,
-            [recipient],
+        connection = get_connection(
+            backend=settings.EMAIL_BACKEND,
             fail_silently=False,
+            timeout=getattr(settings, "EMAIL_TIMEOUT", 20),
         )
+        EmailMessage(
+            subject=f"RICE WN 500 error report [{report_id[:12]}]",
+            body=_error_report_message(report_id, report),
+            from_email=settings.DEFAULT_FROM_EMAIL or recipient,
+            to=[recipient],
+            connection=connection,
+        ).send(fail_silently=False)
 
     except Exception:
         logger.exception("Could not send error report %s", report_id)
         return render(request, "500.html", {
-            "error_message": "The report could not be sent. Please try again later.",
+            "error_message": (
+                "The report could not be sent. Please try again later. "
+                f"Reference: {report_id[:12]}."
+            ),
         }, status=503)
 
     cache.delete(f"500-report:{report_id}")

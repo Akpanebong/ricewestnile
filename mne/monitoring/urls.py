@@ -11,7 +11,9 @@ urlpatterns = [
     path("indicator/<int:pk>/", views.indicator_detail, name="indicator_detail"),
     path("indicator/", views.IndicatorListView.as_view(), name="indicator_list"),
     path("create/indicator/<int:output_id>/", views.create_indicator, name="create_indicator"),
-    path("update/<str:name>/<int:pk>/", views.update_indicator, name="update_indicator"),
+    # Names/titles are editable free text and may contain slashes.  Keep them
+    # out of the URL and identify records by their immutable primary key.
+    path("update/<int:pk>/", views.update_indicator, name="update_indicator"),
     path("trash/<int:pk>/<str:name>/indicator/", views.trash_indicator, name="trash_indicator"),
     path("so/<int:pk>/<str:title>/", views.so_detail, name="so_detail"),
     path("so/", views.SoListView.as_view(), name="so_list"),
@@ -19,7 +21,7 @@ urlpatterns = [
     path("update/<str:title>/<int:pk>/so/", views.update_so, name="update_so"),
     path("trash/<int:pk>/<str:title>/so/", views.trash_so, name="trash_so"),
     path("create/<int:so_id>/output/", views.create_output, name="create_output"),
-    path("update/<str:title>/<int:pk>/output/", views.update_output, name="update_output"),
+    path("update/<int:pk>/output/", views.update_output, name="update_output"),
     path("trash/<int:pk>/<str:title>/output/", views.trash_output, name="trash_output"),
     path("detail/<int:pk>/<str:title>/output/", views.output_detail, name="output_detail"),
     path("output/", views.OutputListView.as_view(), name="output_list"),

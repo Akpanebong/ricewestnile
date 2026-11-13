@@ -740,8 +740,8 @@ def create_output(request, so_id):
 
 
 @superuser_required
-def update_output(request, title, pk):
-    output = get_object_or_404(Output, title=title, pk=pk)
+def update_output(request, pk):
+    output = get_object_or_404(Output, pk=pk)
     form = OutputForm(request.POST or None, instance=output)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -804,8 +804,8 @@ def create_indicator(request, output_id):
 
 
 @superuser_required
-def update_indicator(request, name, pk):
-    indicator = get_object_or_404(Indicator, name=name, pk=pk)
+def update_indicator(request, pk):
+    indicator = get_object_or_404(Indicator, pk=pk)
     output = indicator.output
     form = IndicatorForm(request.POST or None, instance=indicator)
     if request.method == "POST" and form.is_valid():
