@@ -8,6 +8,8 @@ urlpatterns = [
     path('data/entry/list/', views.data_entry_list, name='data_entry_list'),
     path('data/entry/<int:pk>/update/', views.update_data_entry, name='update_data_entry'),
 
+    # Keep the entry route before the generic two-segment indicator detail route.
+    path('indicator/<int:indicator_id>/entry/', views.entry_form, name='entry_form'),
     path("indicator/<int:pk>/<slug:slug>/", views.indicator_detail, name="indicator_detail"),
     path("indicator/", views.IndicatorListView.as_view(), name="indicator_list"),
     path("create/indicator/<int:output_id>/", views.create_indicator, name="create_indicator"),
@@ -27,7 +29,6 @@ urlpatterns = [
     path('hierarchy/', views.hierarchy_view, name='hierarchy'),
     path('ajax/so/<int:so_id>/outputs/', views.ajax_outputs_for_so, name='ajax_outputs_for_so'),
     path('ajax/output/<int:output_id>/indicators/', views.ajax_indicators_for_output, name='ajax_indicators_for_output'),
-    path('indicator/<int:indicator_id>/entry/', views.entry_form, name='entry_form'),
     path('chart-data/', views.chart_data, name='chart_data'),
 
     # Export endpoints
