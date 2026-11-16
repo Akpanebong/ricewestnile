@@ -633,7 +633,7 @@
 
         <li class="list-inline-item">
 
-            <a href="{% url 'monitoring:so_detail' output.so.pk %}">
+            <a href="{% url 'monitoring:so_detail' output.so.pk output.so.slug %}">
                 {{ output.so.code }}
             </a>
 
@@ -645,7 +645,7 @@
 
         <li class="list-inline-item">
 
-            <a href="{% url 'monitoring:so_detail' output.so.pk %}">
+            <a href="{% url 'monitoring:so_detail' output.so.pk output.so.slug %}">
                 {{ output.code }}
             </a>
 

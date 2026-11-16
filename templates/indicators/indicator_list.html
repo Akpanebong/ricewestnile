@@ -727,9 +727,9 @@
                         Indicator Name
                     </th>
 
-                    <th>
-                        Description
-                    </th>
+<!--                    <th>-->
+<!--                        Description-->
+<!--                    </th>-->
 
                     <th style="width:150px;">
                         Unit of Measure
@@ -788,21 +788,26 @@
                             {{ indicator.name }}
 
                         </div>
-
-                    </td>
-
-
-                    <!-- Description -->
-
-                    <td>
-
-                        <div class="im-description">
+                          <div class="im-description">
 
                             {{ indicator.description|default:"No description provided."|truncatechars:200 }}
 
                         </div>
 
                     </td>
+
+
+                    <!-- Description -->
+
+<!--                    <td>-->
+
+<!--                        <div class="im-description">-->
+
+<!--                            {{ indicator.description|default:"No description provided."|truncatechars:200 }}-->
+
+<!--                        </div>-->
+
+<!--                    </td>-->
 
 
                     <!-- Unit -->
@@ -842,7 +847,7 @@
                             <!-- Edit -->
 
                             <a class="im-action im-action-edit"
-                               href="{% url 'monitoring:update_indicator' indicator.pk %}"
+                               href="{% url 'monitoring:update_indicator' indicator.pk indicator.slug %}"
                                title="Edit Indicator"
                                data-bs-toggle="tooltip">
 
@@ -868,7 +873,7 @@
                             <!-- Delete -->
 
                             <a class="im-action im-action-delete"
-                               href="{% url 'monitoring:trash_indicator' indicator.pk %}"
+                               href="{% url 'monitoring:trash_indicator' indicator.pk indicator.slug %}"
                                title="Delete Indicator"
                                data-bs-toggle="tooltip"
                                onclick="return confirm('Are you sure you want to delete this indicator?');">

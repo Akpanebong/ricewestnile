@@ -711,10 +711,6 @@
                         Strategic Objective
                     </th>
 
-                    <th>
-                        Description
-                    </th>
-
                     <th class="text-end" style="width: 80px;">
                         Action
                     </th>
@@ -728,7 +724,7 @@
 
                 <tr class="indicator-row">
 
-                    <td><a href="{% url 'monitoring:so_detail' indicator.pk %}">
+                    <td><a href="{% url 'monitoring:so_detail' indicator.pk indicator.slug %}">
                         <span class="indicator-code">
                             {{ indicator.code }}
                         </span>
@@ -739,9 +735,6 @@
                         <div class="indicator-name">
                             {{ indicator.title }}
                         </div>
-                    </td>
-
-                    <td>
                         <div class="indicator-description">
 
                             {% if indicator.description %}
@@ -755,10 +748,13 @@
                         </div>
                     </td>
 
+
+
+
                     <td>
                 {% if request.user.is_superuser %}
-                <a class="btn btn-sm btn-primary" href="{% url 'monitoring:update_so' indicator.pk %}"><i class="fa fa-edit"></i></a>
-                <a class="btn btn-sm btn-danger" href="{% url 'monitoring:trash_so' indicator.pk %}"><i class="fa fa-trash"></i></a>
+                <a class="btn btn-sm btn-primary" href="{% url 'monitoring:update_so' indicator.pk indicator.slug %}"><i class="fa fa-edit"></i></a>
+                <a class="btn btn-sm btn-danger" href="{% url 'monitoring:trash_so' indicator.pk indicator.slug %}"><i class="fa fa-trash"></i></a>
                 {% endif %}
               </td>
 

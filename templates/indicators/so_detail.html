@@ -777,7 +777,7 @@
 
 
                 <div class="col-auto">
-<a href="{% url 'monitoring:output_detail' output.pk %}">
+<a href="{% url 'monitoring:output_detail' output.pk output.slug %}">
                     <span class="so-output-code">
                         {{ output.code }}
                     </span>
@@ -830,8 +830,8 @@
 
                 <div class="col-auto">
 
-                   <a class="btn btn-sm btn-primary" href="{% url 'monitoring:update_output' output.pk %}"><i class="fa fa-edit"></i></a>
-                <a class="btn btn-sm btn-danger" href="{% url 'monitoring:trash_output' output.pk %}"><i class="fa fa-trash"></i></a>
+                   <a class="btn btn-sm btn-primary" href="{% url 'monitoring:update_output' output.pk output.slug %}"><i class="fa fa-edit"></i></a>
+                <a class="btn btn-sm btn-danger" href="{% url 'monitoring:trash_output' output.pk output.slug %}"><i class="fa fa-trash"></i></a>
 
 
                 </div>
