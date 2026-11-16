@@ -26,7 +26,8 @@ class StrategicObjective(models.Model):
     slug = models.SlugField(unique=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.title)[:40]
+        if not self.slug:
+            self.slug = slugify(self.title)[:40]
         super().save(*args, **kwargs)
 
     class Meta:
@@ -44,7 +45,8 @@ class Output(models.Model):
     slug = models.SlugField(unique=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.title)[:40]
+        if not self.slug:
+            self.slug = slugify(self.title)[:40]
         super().save(*args, **kwargs)
 
     class Meta:
@@ -64,7 +66,8 @@ class Indicator(models.Model):
     slug = models.SlugField(unique=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)[:40]
+        if not self.slug:
+            self.slug = slugify(self.name)[:40]
         super().save(*args, **kwargs)
 
     class Meta:
