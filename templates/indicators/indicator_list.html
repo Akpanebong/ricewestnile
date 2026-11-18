@@ -735,6 +735,14 @@
                         Unit of Measure
                     </th>
 
+                    <th class="text-end" style="width:120px;">
+                        Target
+                    </th>
+
+                    <th class="text-end" style="width:140px;">
+                        Captured Value
+                    </th>
+
                     {% if request.user|has_group:"MEAL" or request.user.is_superuser %}
 
                     <th class="text-center"
@@ -832,6 +840,22 @@
 
                         {% endif %}
 
+                    </td>
+
+                    <!-- Target -->
+
+                    <td class="text-end">
+                        {% if indicator.target is not None %}
+                            <span class="fw-semibold">{{ indicator.target|floatformat:-2 }}</span>
+                        {% else %}
+                            <span class="text-muted small">Not set</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Captured Value -->
+
+                    <td class="text-end">
+                        <span class="fw-semibold">{{ indicator.captured_value|floatformat:-2 }}</span>
                     </td>
 
 

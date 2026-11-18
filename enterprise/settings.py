@@ -51,6 +51,8 @@ SECURE_REFERRER_POLICY = os.getenv("SECURE_REFERRER_POLICY", "same-origin")
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
+# An authenticated session is ended after this period without activity.
+SESSION_IDLE_TIMEOUT = int(os.getenv("SESSION_IDLE_TIMEOUT", "1800"))
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
@@ -87,6 +89,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "account.middleware.IdleTimeoutMiddleware",
     "enterprise.middleware.ErrorCaptureMiddleware",
     "core.middleware.EditDeleteAuthorizationMiddleware",
     "core.middleware.RequireLoginForModulesMiddleware",

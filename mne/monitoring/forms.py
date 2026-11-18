@@ -64,7 +64,10 @@ class DataEntryForm(forms.ModelForm):
 class IndicatorForm(forms.ModelForm):
     class Meta:
         model = Indicator
-        fields = ["code", "name", "unit_of_measure", "description"]
+        fields = ["code", "name", "unit_of_measure", "target", "description"]
+        widgets = {
+            "target": forms.NumberInput(attrs={"step": "any", "min": "0"}),
+        }
 
 
 class StrategicObjectiveForm(forms.ModelForm):
@@ -77,4 +80,3 @@ class OutputForm(forms.ModelForm):
     class Meta:
         model = Output
         exclude = ["so"]
-

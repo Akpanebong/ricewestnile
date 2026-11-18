@@ -1,6 +1,32 @@
+import time
+
+from django.conf import settings
 from django.urls import resolve
 from django.shortcuts import redirect
 from django.contrib.auth import logout
+
+
+class IdleTimeoutMiddleware:
+    """Log authenticated users out after a period without a request."""
+
+    session_key = "_idle_timeout_last_activity"
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            now = time.time()
+            last_activity = request.session.get(self.session_key)
+            timeout = settings.SESSION_IDLE_TIMEOUT
+
+            if last_activity and now - float(last_activity) >= timeout:
+                logout(request)
+                return redirect("login")
+
+            request.session[self.session_key] = now
+
+        return self.get_response(request)
 
 
 class BlockExitedUserMiddleware:

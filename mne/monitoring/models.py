@@ -63,6 +63,7 @@ class Indicator(models.Model):
     name = models.CharField(max_length=400)
     description = models.TextField(blank=True)
     unit_of_measure = models.CharField(max_length=100, blank=True)
+    target = models.FloatField(null=True, blank=True, help_text='Target value')
     slug = models.SlugField(unique=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
@@ -100,7 +101,7 @@ class DataEntry(models.Model):
     no_of_group_members = models.PositiveIntegerField(null=True, blank=True)
     no_male = models.PositiveIntegerField(null=True, blank=True)
     no_female = models.PositiveIntegerField(null=True, blank=True)
-    value = models.FloatField(null=True, blank=True, help_text='Target')
+    value = models.FloatField(null=True, blank=True, help_text='Captured value')
     program_area = models.ForeignKey(CoreProgram, on_delete=models.SET_NULL, null=True, blank=True)
     notes = models.TextField(blank=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

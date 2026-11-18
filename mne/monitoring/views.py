@@ -782,6 +782,11 @@ class IndicatorListView(MealTeamAccessMixin, ListView):
     context_object_name = "indicator_list"
     ordering = ["code"]
 
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            captured_value=Coalesce(Sum("entries__value"), 0.0)
+        )
+
 
 @meal_team_required()
 def indicator_detail(request, pk, slug):

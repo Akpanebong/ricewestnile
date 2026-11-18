@@ -871,7 +871,7 @@
 
                             <!-- Code -->
 
-                            <div class="col-md-5">
+                            <div class="col-md-4">
 
                                 <div class="if-field">
 
@@ -915,7 +915,7 @@
 
                             <!-- Unit -->
 
-                            <div class="col-md-7">
+                            <div class="col-md-5">
 
                                 <div class="if-field">
 
@@ -955,6 +955,17 @@
 
                                 </div>
 
+                            </div>
+
+                            <!-- Target -->
+
+                            <div class="col-md-3">
+                                <div class="if-field">
+                                    <label for="{{ form.target.id_for_label }}" class="if-label">Target</label>
+                                    {{ form.target }}
+                                    {% if form.target.errors %}<div class="if-error">{{ form.target.errors }}</div>{% endif %}
+                                    <div class="if-help"><i class="fa fa-bullseye"></i><span>Planned value for comparison.</span></div>
+                                </div>
                             </div>
 
                         </div>

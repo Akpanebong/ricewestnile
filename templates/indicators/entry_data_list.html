@@ -660,6 +660,14 @@
                         Indicator
                     </th>
 
+                    <th class="text-end">
+                        Target
+                    </th>
+
+                    <th class="text-end">
+                        Captured Value
+                    </th>
+
                     <th>
                         Year
                     </th>
@@ -731,6 +739,26 @@
 
                         </span>
 
+                    </td>
+
+                    <!-- Target -->
+
+                    <td class="text-end">
+                        {% if e.indicator.target is not None %}
+                            <span class="fw-semibold">{{ e.indicator.target|floatformat:-2 }}</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Captured Value -->
+
+                    <td class="text-end">
+                        {% if e.value is not None %}
+                            <span class="fw-semibold">{{ e.value|floatformat:-2 }}</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
                     </td>
 
 
