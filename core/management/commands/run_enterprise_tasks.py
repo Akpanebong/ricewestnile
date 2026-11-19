@@ -28,6 +28,11 @@ class Command(BaseCommand):
             help="Show the command sequence without executing it.",
         )
         parser.add_argument(
+            "--skip-training",
+            action="store_true",
+            help="Skip risk-model training; useful for frequent scheduled runs.",
+        )
+        parser.add_argument(
             "--date",
             help="Pass YYYY-MM-DD to send_staff_monthly_reminders.",
         )
@@ -53,7 +58,11 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        commands = list(self.ROUTINE_COMMANDS)
+        commands = [
+            command
+            for command in self.ROUTINE_COMMANDS
+            if not (options["skip_training"] and command == "train_risk_model")
+        ]
 
         self.stdout.write(self.style.MIGRATE_HEADING("Enterprise task sequence"))
         self.stdout.write(" -> ".join(commands))

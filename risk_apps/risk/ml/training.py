@@ -5,6 +5,7 @@ from pathlib import Path
 
 
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
+MAX_ARTIFACT_VERSIONS = 3
 DEFAULT_MIN_RECORDS = 50
 
 
@@ -72,6 +73,18 @@ def build_dataset(queryset=None):
         })
 
     return rows
+
+
+def _prune_old_artifacts(keep_versions=MAX_ARTIFACT_VERSIONS):
+    """Keep only the newest complete model artifact sets on disk."""
+    versions = sorted(
+        {path.stem.split("_", 1)[1] for path in ARTIFACT_DIR.glob("meta_v*.json")},
+        reverse=True,
+    )
+    for version in versions[keep_versions:]:
+        for prefix in ("model", "label", "cat", "meta"):
+            path = ARTIFACT_DIR / f"{prefix}_{version}.{'json' if prefix == 'meta' else 'pkl'}"
+            path.unlink(missing_ok=True)
 
 
 def train(min_records=DEFAULT_MIN_RECORDS, test_size=0.2, random_state=42):
@@ -176,6 +189,8 @@ def train(min_records=DEFAULT_MIN_RECORDS, test_size=0.2, random_state=42):
 
     with meta_path.open("w") as f:
         json.dump(meta, f, indent=2)
+
+    _prune_old_artifacts()
 
     meta["meta_path"] = str(meta_path)
 
