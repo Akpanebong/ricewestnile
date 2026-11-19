@@ -670,7 +670,7 @@
                     <input type="text"
                            id="profileSearch"
                            class="form-control"
-                           placeholder="Search objectives, codes or descriptions..."
+                           placeholder="Search objectives, codes or indicators..."
                            autocomplete="off">
 
                     <button type="button"
@@ -736,15 +736,11 @@
                             {{ indicator.title }}
                         </div>
                         <div class="indicator-description">
-
-                            {% if indicator.description %}
-                                {{ indicator.description|truncatechars:180 }}
-                            {% else %}
-                                <span class="text-muted">
-                                    No description provided.
-                                </span>
-                            {% endif %}
-
+                            {% for so_indicator in indicator.indicators.all %}
+                                <span class="d-block"><strong>{{ so_indicator.code }}</strong> — {{ so_indicator.indicator|truncatechars:180 }}</span>
+                            {% empty %}
+                                <span class="text-muted">No indicators added.</span>
+                            {% endfor %}
                         </div>
                     </td>
 
@@ -813,7 +809,7 @@
                     </div>
                 </div>
 
-                <a href=""
+                <a href="{% url 'monitoring:so_detail' indicator.pk indicator.slug %}"
                    class="indicator-action"
                    title="View objective">
 
@@ -826,13 +822,11 @@
 
             <div class="mobile-indicator-description">
 
-                {% if indicator.description %}
-                    {{ indicator.description|truncatechars:220 }}
-                {% else %}
-                    <span class="text-muted">
-                        No description provided.
-                    </span>
-                {% endif %}
+                {% for so_indicator in indicator.indicators.all %}
+                    <span class="d-block"><strong>{{ so_indicator.code }}</strong> — {{ so_indicator.indicator|truncatechars:220 }}</span>
+                {% empty %}
+                    <span class="text-muted">No indicators added.</span>
+                {% endfor %}
 
             </div>
 
@@ -844,7 +838,7 @@
                     Strategic Objective
                 </small>
 
-                <a href=""
+                <a href="{% url 'monitoring:so_detail' indicator.pk indicator.slug %}"
                    class="small text-success text-decoration-none fw-semibold">
 
                     View details
@@ -879,7 +873,7 @@
 
         <p>
             Try searching using another code, objective name,
-            or description.
+            or indicator.
         </p>
 
     </div>

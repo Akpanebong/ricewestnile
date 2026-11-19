@@ -1,4 +1,5 @@
 import uuid
+import re
 
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -22,7 +23,6 @@ ENTERPRISE_TYPES = [
 class StrategicObjective(models.Model):
     code = models.CharField(max_length=50, help_text='E.g: SO 1', unique=True)   # e.g. 'SO1'
     title = models.CharField(max_length=400)
-    description = models.TextField(blank=True)
     slug = models.SlugField(unique=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
@@ -35,6 +35,36 @@ class StrategicObjective(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.title}"
+
+
+class StrategicObjectiveIndicator(models.Model):
+    strategic_objective = models.ForeignKey(
+        StrategicObjective, related_name='indicators', on_delete=models.CASCADE
+    )
+    code = models.CharField(max_length=50, editable=False)
+    indicator = models.TextField()
+
+    class Meta:
+        ordering = ['id']
+        verbose_name = 'Strategic objective indicator'
+        verbose_name_plural = 'Strategic objective indicators'
+
+    def __str__(self):
+        return f"{self.code} - {self.indicator[:100]}"
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            match = re.search(r"(\d+)", self.strategic_objective.code or "")
+            objective_code = match.group(1) if match else self.strategic_objective.code
+            existing_codes = self.strategic_objective.indicators.exclude(pk=self.pk).values_list("code", flat=True)
+            suffixes = [
+                int(code.rsplit(".", 1)[1])
+                for code in existing_codes
+                if code and code.rsplit(".", 1)[-1].isdigit()
+            ]
+            next_number = max(suffixes, default=0) + 1
+            self.code = f"{objective_code}.{next_number}"
+        super().save(*args, **kwargs)
 
 
 class Output(models.Model):

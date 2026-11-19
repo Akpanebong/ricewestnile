@@ -562,6 +562,26 @@
 
 
 <!-- =====================================================
+     STRATEGIC OBJECTIVE INDICATORS
+====================================================== -->
+<div class="so-output-panel mb-4">
+    <div class="so-output-panel-header">
+        <div class="so-output-panel-title">Strategic Objective Indicators</div>
+        <p class="so-output-panel-subtitle">Indicators used to measure this strategic objective.</p>
+    </div>
+    <div class="p-3">
+        {% for so_indicator in so_indicators %}
+            <div class="border rounded p-3 mb-2">
+                <i class="fa fa-line-chart text-success me-2"></i><strong>{{ so_indicator.code }}</strong> — {{ so_indicator.indicator }}
+            </div>
+        {% empty %}
+            <span class="text-muted">No indicators have been added.</span>
+        {% endfor %}
+    </div>
+</div>
+
+
+<!-- =====================================================
      KPI SUMMARY
 ====================================================== -->
 

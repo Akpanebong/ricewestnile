@@ -13,7 +13,7 @@ from .models import StrategicObjective, Output, Indicator, DataEntry, Project, L
 from django.utils.timezone import now
 from django.db.models.functions import Coalesce
 from account.utils import superuser_required, meal_team_required
-from .forms import IndicatorForm, OutputForm, StrategicObjectiveForm
+from .forms import IndicatorForm, OutputForm, StrategicObjectiveForm, StrategicObjectiveIndicatorFormSet
 
 QUARTERS = [
     ("1", "Q1 (Jan-Mar)"),
@@ -471,7 +471,7 @@ def chart_data(request):
 def hierarchy_view(request):
     total_outputs = Output.objects.count()
     total_indicators = Indicator.objects.count()
-    sos = StrategicObjective.objects.prefetch_related('outputs__indicators').all()
+    sos = StrategicObjective.objects.prefetch_related('indicators', 'outputs__indicators').all()
     return render(request, 'hierarchy.html', {'sos': sos, 'total_outputs': total_outputs, 'total_indicators': total_indicators})
 
 
@@ -688,32 +688,46 @@ class SoListView(MealTeamAccessMixin, ListView):
     context_object_name = "so_list"
     ordering = ["code"]
 
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related("indicators")
+
 
 @meal_team_required(allow_other_departments=True)
 def so_detail(request, pk, slug):
     so = get_object_or_404(StrategicObjective, pk=pk, slug=slug)
-    return render(request, "indicators/so_detail.html", {"so": so, "output": Output.objects.filter(so=so)})
+    return render(request, "indicators/so_detail.html", {
+        "so": so,
+        "output": Output.objects.filter(so=so),
+        "so_indicators": so.indicators.all(),
+    })
 
 
 @superuser_required
 def create_so(request):
     form = StrategicObjectiveForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        form.save()
+    formset = StrategicObjectiveIndicatorFormSet(request.POST or None, prefix="indicators")
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        so = form.save()
+        formset.instance = so
+        formset.save()
         messages.success(request, "Strategic objective created.")
         return redirect(_monitoring_route(request, "so_list"))
-    return render(request, "indicators/create_so.html", {"form": form})
+    return render(request, "indicators/create_so.html", {"form": form, "indicator_formset": formset})
 
 
 @superuser_required
 def update_so(request, pk, slug):
     so = get_object_or_404(StrategicObjective, pk=pk, slug=slug)
     form = StrategicObjectiveForm(request.POST or None, instance=so)
-    if request.method == "POST" and form.is_valid():
+    formset = StrategicObjectiveIndicatorFormSet(request.POST or None, instance=so, prefix="indicators")
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
         form.save()
+        formset.save()
         messages.success(request, "Strategic objective updated.")
         return redirect(_monitoring_route(request, "so_list"))
-    return render(request, "indicators/create_so.html", {"form": form, "is_update": True, "so": so})
+    return render(request, "indicators/create_so.html", {
+        "form": form, "indicator_formset": formset, "is_update": True, "so": so
+    })
 
 
 @superuser_required

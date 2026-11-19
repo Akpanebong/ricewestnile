@@ -1,10 +1,16 @@
 from django.contrib import admin
-from .models import StrategicObjective, Output, Indicator, Project, Location, DataEntry, CoreProgram
+from .models import StrategicObjective, StrategicObjectiveIndicator, Output, Indicator, Project, Location, DataEntry, CoreProgram
 
 
 @admin.register(StrategicObjective)
 class SOAdmin(admin.ModelAdmin):
     list_display = ('code','title')
+
+
+@admin.register(StrategicObjectiveIndicator)
+class SOIndicatorAdmin(admin.ModelAdmin):
+    list_display = ('strategic_objective', 'indicator')
+    list_filter = ('strategic_objective',)
 
 
 @admin.register(Output)

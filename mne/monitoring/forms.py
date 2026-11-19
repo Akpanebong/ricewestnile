@@ -1,6 +1,16 @@
 from django import forms
+from django.forms import inlineformset_factory
 
-from .models import DataEntry, StrategicObjective, Indicator, Output
+from .models import DataEntry, StrategicObjective, StrategicObjectiveIndicator, Indicator, Output
+
+
+class StrategicObjectiveIndicatorForm(forms.ModelForm):
+    class Meta:
+        model = StrategicObjectiveIndicator
+        fields = ["indicator"]
+        widgets = {
+            "indicator": forms.Textarea(attrs={"class": "form-control", "rows": 1}),
+        }
 
 class DataEntryForm(forms.ModelForm):
     class Meta:
@@ -73,7 +83,16 @@ class IndicatorForm(forms.ModelForm):
 class StrategicObjectiveForm(forms.ModelForm):
     class Meta:
         model = StrategicObjective
-        fields = ["code", "title", "description"]
+        fields = ["code", "title"]
+
+
+StrategicObjectiveIndicatorFormSet = inlineformset_factory(
+    StrategicObjective,
+    StrategicObjectiveIndicator,
+    form=StrategicObjectiveIndicatorForm,
+    extra=0,
+    can_delete=True,
+)
 
 
 class OutputForm(forms.ModelForm):

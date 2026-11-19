@@ -220,17 +220,12 @@
         color: var(--so-muted);
     }
 
-    /* Description counter */
-    .so-description-meta {
+    /* Indicator helper area */
+    .so-indicator-meta {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-top: 6px;
-    }
-
-    .so-counter {
-        color: #8a938e;
-        font-size: .72rem;
     }
 
     /* Section divider */
@@ -761,55 +756,45 @@
                                 <i class="fa fa-align-left"></i>
                             </span>
 
-                            Strategic Description
+                            Strategic Objective Indicators
 
                         </div>
 
 
-                        <div class="so-field mb-0">
-
-                            <label for="{{ form.description.id_for_label }}"
-                                   class="so-label">
-
-                                Description
-
-                                {% if form.description.field.required %}
-                                    <span class="so-required">*</span>
-                                {% endif %}
-
-                            </label>
-
-                            {{ form.description }}
-
-                            {% if form.description.errors %}
-
-                                <div class="so-error">
-                                    {{ form.description.errors }}
+                        {{ indicator_formset.management_form }}
+                        <div id="so-indicator-forms">
+                            {% for indicator_form in indicator_formset %}
+                                <div class="so-indicator-row border rounded p-3 mb-3">
+                                    {{ indicator_form.id }}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <label for="{{ indicator_form.indicator.id_for_label }}" class="so-label so-indicator-code">
+                                            {{ indicator_form.instance.code|default:"New indicator" }}
+                                        </label>
+                                        {% if indicator_form.DELETE %}
+                                            <button type="button" class="btn btn-sm btn-link text-danger remove-so-indicator" title="Remove this indicator">&times;</button>
+                                        {% endif %}
+                                    </div>
+                                    {{ indicator_form.indicator }}
+                                    {% if indicator_form.DELETE %}
+                                        <span class="d-none">{{ indicator_form.DELETE }}</span>
+                                    {% endif %}
+                                    {% if indicator_form.indicator.errors %}
+                                        <div class="so-error">{{ indicator_form.indicator.errors }}</div>
+                                    {% endif %}
                                 </div>
-
-                            {% endif %}
-
-                            <div class="so-description-meta">
-
-                                <div class="so-help mt-0">
-
-                                    <i class="fa fa-lightbulb-o"></i>
-
-                                    <span>
-                                        Explain the context, intended
-                                        outcome, scope and strategic
-                                        significance.
-                                    </span>
-
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="btn btn-outline-success btn-sm" id="add-so-indicator">
+                            <i class="fa fa-plus me-1"></i> Add indicator
+                        </button>
+                        <div id="so-indicator-empty-form" class="d-none">
+                            <div class="so-indicator-row border rounded p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="so-label so-indicator-code" data-pending-code="true">New indicator</label>
+                                    <button type="button" class="btn btn-sm btn-link text-danger remove-so-indicator" title="Remove this indicator">&times;</button>
                                 </div>
-
-                                <span class="so-counter"
-                                      id="descriptionCounter">
-                                    0 characters
-                                </span>
-
+                                {{ indicator_formset.empty_form.indicator }}
                             </div>
-
                         </div>
 
                     </div>
@@ -997,41 +982,52 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* ---------------------------------------------------------
-       Description character counter
-    --------------------------------------------------------- */
+    const addIndicatorButton = document.getElementById("add-so-indicator");
+    const indicatorForms = document.getElementById("so-indicator-forms");
+    const totalForms = document.getElementById("id_indicators-TOTAL_FORMS");
+    const emptyForm = document.getElementById("so-indicator-empty-form").innerHTML;
+    const soCodeField = document.getElementById("{{ form.code.id_for_label }}");
 
-    const description =
-        document.getElementById(
-            "{{ form.description.id_for_label }}"
-        );
-
-    const counter =
-        document.getElementById(
-            "descriptionCounter"
-        );
-
-    function updateCounter() {
-
-        if (!description || !counter) return;
-
-        const length = description.value.length;
-
-        counter.textContent =
-            length + (length === 1
-                ? " character"
-                : " characters");
+    function refreshPendingIndicatorCodes() {
+        if (!soCodeField) return;
+        const soMatch = soCodeField.value.match(/(\d+)/);
+        if (!soMatch) return;
+        let nextNumber = 1;
+        document.querySelectorAll("#so-indicator-forms .so-indicator-code").forEach(function (label) {
+            if (label.dataset.pendingCode === "true") return;
+            const match = label.textContent.trim().match(/\.(\d+)$/);
+            if (match) nextNumber = Math.max(nextNumber, Number(match[1]) + 1);
+        });
+        document.querySelectorAll("#so-indicator-forms [data-pending-code='true']").forEach(function (label) {
+            label.textContent = soMatch[1] + "." + nextNumber++;
+        });
     }
 
-    if (description) {
-
-        updateCounter();
-
-        description.addEventListener(
-            "input",
-            updateCounter
-        );
-
+    if (addIndicatorButton && indicatorForms && totalForms) {
+        addIndicatorButton.addEventListener("click", function () {
+            const index = Number(totalForms.value);
+            indicatorForms.insertAdjacentHTML(
+                "beforeend", emptyForm.replaceAll("__prefix__", index)
+            );
+            totalForms.value = index + 1;
+            refreshPendingIndicatorCodes();
+        });
+        indicatorForms.addEventListener("click", function (event) {
+            if (event.target.classList.contains("remove-so-indicator")) {
+                const row = event.target.closest(".so-indicator-row");
+                const deleteInput = row.querySelector("input[name$='-DELETE']");
+                if (deleteInput) {
+                    deleteInput.checked = true;
+                    row.classList.add("d-none");
+                } else {
+                    row.remove();
+                }
+            }
+        });
+    }
+    if (soCodeField) {
+        soCodeField.addEventListener("input", refreshPendingIndicatorCodes);
+        refreshPendingIndicatorCodes();
     }
 
 
